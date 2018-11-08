@@ -1,0 +1,12 @@
+[package]
+name = "gba"
+version = "0.0.1"
+authors = ["Lokathor <zefria@gmail.com>", "Ketsuban"]
+edition = "2018"
+license = "Apache2"
+
+[dependencies]
+
+[profile.release]
+lto = true
+panic = "abort"
