@@ -55,3 +55,12 @@ do this stuff.
 
 9) Time to read the [Tonc](https://www.coranac.com/tonc/text/toc.htm) tutorial
    and convert all the C code you see into rust code.
+   * Also of great importance and help is the
+     [gbatek](https://problemkaputt.de/gbatek.htm) document.
+   * In time we'll have our own book that's specific to rust and this crate and
+     all that, but until then you're gonna have to look at a bunch of C code.
+
+# Contribution
+
+This crate is Apache2 licensed and any contributions you submit must also be
+Apache2 licensed.
