@@ -6,6 +6,7 @@ edition = "2018"
 license = "Apache2"
 
 [dependencies]
+gba-proc-macro = "0.1"
 
 [profile.release]
 lto = true

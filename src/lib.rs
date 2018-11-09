@@ -14,6 +14,7 @@
 //! **Do not** use this crate in programs that aren't running on the GBA. If you
 //! do, it's a giant bag of Undefined Behavior.
 
+pub(crate) use gba_proc_macro::bit_register;
 //pub mod macros; // un-comment once we get some
 
 pub mod core_extras;
