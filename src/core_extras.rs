@@ -37,4 +37,14 @@ impl<T> VolatilePtr<T> {
   pub unsafe fn write(&self, data: T) {
     core::ptr::write_volatile(self.0, data);
   }
+
+  /// Offsets this address by the amount given.
+  ///
+  /// # Safety
+  ///
+  /// This is a standard offset, so all safety concerns of a normal raw pointer
+  /// offset apply.
+  pub unsafe fn offset(self, count: isize) -> Self {
+    VolatilePtr(self.0.offset(count))
+  }
 }

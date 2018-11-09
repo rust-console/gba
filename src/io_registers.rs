@@ -22,8 +22,215 @@ use super::*;
 /// * [gbatek entry](http://problemkaputt.de/gbatek.htm#lcdiodisplaycontrol)
 pub const DISPCNT: VolatilePtr<u16> = VolatilePtr(0x4000000 as *mut u16);
 
-/// Undocumented - Green Swap
-pub const GREEN_SWAP: VolatilePtr<u16> = VolatilePtr(0x4000002 as *mut u16);
+/// A newtype over the various display control options that you have on a GBA.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+#[repr(transparent)]
+pub struct DisplayControlSetting(u16);
+
+#[allow(missing_docs)]
+impl DisplayControlSetting {
+  pub const BG_MODE_MASK: u16 = 0b111;
+  pub const PAGE_SELECT_BIT: u16 = 0b1_0000;
+  pub const HBLANK_INTERVAL_FREE_BIT: u16 = 0b10_0000;
+  pub const OBJ_1D_BIT: u16 = 0b100_0000;
+  pub const FORCE_BLANK_BIT: u16 = 0b1000_0000;
+  pub const DISPLAY_BG0_BIT: u16 = 0b1_0000_0000;
+  pub const DISPLAY_BG1_BIT: u16 = 0b10_0000_0000;
+  pub const DISPLAY_BG2_BIT: u16 = 0b100_0000_0000;
+  pub const DISPLAY_BG3_BIT: u16 = 0b1000_0000_0000;
+  pub const DISPLAY_OBJ_BIT: u16 = 0b1_0000_0000_0000;
+  pub const DISPLAY_WINDOW0_BIT: u16 = 0b10_0000_0000_0000;
+  pub const DISPLAY_WINDOW1_BIT: u16 = 0b100_0000_0000_0000;
+  pub const OBJ_WINDOW_BIT: u16 = 0b1000_0000_0000_0000;
+
+  pub fn mode(&self) -> DisplayControlMode {
+    match self.0 & Self::BG_MODE_MASK {
+      0 => DisplayControlMode::Tiled0,
+      1 => DisplayControlMode::Tiled1,
+      2 => DisplayControlMode::Tiled2,
+      3 => DisplayControlMode::Bitmap3,
+      4 => DisplayControlMode::Bitmap4,
+      5 => DisplayControlMode::Bitmap5,
+      _ => unreachable!(),
+    }
+  }
+  pub fn set_mode(&mut self, new_mode: DisplayControlMode) {
+    self.0 &= !Self::BG_MODE_MASK;
+    self.0 |= match new_mode {
+      DisplayControlMode::Tiled0 => 0,
+      DisplayControlMode::Tiled1 => 1,
+      DisplayControlMode::Tiled2 => 2,
+      DisplayControlMode::Bitmap3 => 3,
+      DisplayControlMode::Bitmap4 => 4,
+      DisplayControlMode::Bitmap5 => 5,
+    };
+  }
+
+  pub fn uses_page_1(&self) -> bool {
+    (self.0 & Self::PAGE_SELECT_BIT) != 0
+  }
+  pub fn set_uses_page_1(&mut self, bit: bool) {
+    if bit {
+      self.0 |= Self::PAGE_SELECT_BIT;
+    } else {
+      self.0 &= !Self::PAGE_SELECT_BIT;
+    }
+  }
+
+  pub fn hblank_interval_free(&self) -> bool {
+    (self.0 & Self::HBLANK_INTERVAL_FREE_BIT) != 0
+  }
+  pub fn set_hblank_interval_free(&mut self, bit: bool) {
+    if bit {
+      self.0 |= Self::HBLANK_INTERVAL_FREE_BIT;
+    } else {
+      self.0 &= !Self::HBLANK_INTERVAL_FREE_BIT;
+    }
+  }
+
+  pub fn object_memory_1d(&self) -> bool {
+    (self.0 & Self::OBJ_1D_BIT) != 0
+  }
+  pub fn set_object_memory_1d(&mut self, bit: bool) {
+    if bit {
+      self.0 |= Self::OBJ_1D_BIT;
+    } else {
+      self.0 &= !Self::OBJ_1D_BIT;
+    }
+  }
+
+  pub fn force_blank(&self) -> bool {
+    (self.0 & Self::FORCE_BLANK_BIT) != 0
+  }
+  pub fn set_force_blank(&mut self, bit: bool) {
+    if bit {
+      self.0 |= Self::FORCE_BLANK_BIT;
+    } else {
+      self.0 &= !Self::FORCE_BLANK_BIT;
+    }
+  }
+
+  pub fn display_bg0(&self) -> bool {
+    (self.0 & Self::DISPLAY_BG0_BIT) != 0
+  }
+  pub fn set_display_bg0(&mut self, bit: bool) {
+    if bit {
+      self.0 |= Self::DISPLAY_BG0_BIT;
+    } else {
+      self.0 &= !Self::DISPLAY_BG0_BIT;
+    }
+  }
+
+  pub fn display_bg1(&self) -> bool {
+    (self.0 & Self::DISPLAY_BG1_BIT) != 0
+  }
+  pub fn set_display_bg1(&mut self, bit: bool) {
+    if bit {
+      self.0 |= Self::DISPLAY_BG1_BIT;
+    } else {
+      self.0 &= !Self::DISPLAY_BG1_BIT;
+    }
+  }
+
+  pub fn display_bg2(&self) -> bool {
+    (self.0 & Self::DISPLAY_BG2_BIT) != 0
+  }
+  pub fn set_display_bg2(&mut self, bit: bool) {
+    if bit {
+      self.0 |= Self::DISPLAY_BG2_BIT;
+    } else {
+      self.0 &= !Self::DISPLAY_BG2_BIT;
+    }
+  }
+
+  pub fn display_bg3(&self) -> bool {
+    (self.0 & Self::DISPLAY_BG3_BIT) != 0
+  }
+  pub fn set_display_bg3(&mut self, bit: bool) {
+    if bit {
+      self.0 |= Self::DISPLAY_BG3_BIT;
+    } else {
+      self.0 &= !Self::DISPLAY_BG3_BIT;
+    }
+  }
+
+  pub fn display_object(&self) -> bool {
+    (self.0 & Self::DISPLAY_OBJ_BIT) != 0
+  }
+  pub fn set_display_object(&mut self, bit: bool) {
+    if bit {
+      self.0 |= Self::DISPLAY_OBJ_BIT;
+    } else {
+      self.0 &= !Self::DISPLAY_OBJ_BIT;
+    }
+  }
+
+  pub fn display_window0(&self) -> bool {
+    (self.0 & Self::DISPLAY_WINDOW0_BIT) != 0
+  }
+  pub fn set_display_window0(&mut self, bit: bool) {
+    if bit {
+      self.0 |= Self::DISPLAY_WINDOW0_BIT;
+    } else {
+      self.0 &= !Self::DISPLAY_WINDOW0_BIT;
+    }
+  }
+
+  pub fn display_window1(&self) -> bool {
+    (self.0 & Self::DISPLAY_WINDOW1_BIT) != 0
+  }
+  pub fn set_display_window1(&mut self, bit: bool) {
+    if bit {
+      self.0 |= Self::DISPLAY_WINDOW1_BIT;
+    } else {
+      self.0 &= !Self::DISPLAY_WINDOW1_BIT;
+    }
+  }
+
+  pub fn display_object_window(&self) -> bool {
+    (self.0 & Self::OBJ_WINDOW_BIT) != 0
+  }
+  pub fn set_display_object_window(&mut self, bit: bool) {
+    if bit {
+      self.0 |= Self::OBJ_WINDOW_BIT;
+    } else {
+      self.0 &= !Self::OBJ_WINDOW_BIT;
+    }
+  }
+}
+
+/// The six display modes available on the GBA.
+pub enum DisplayControlMode {
+  /// This basically allows for the most different things at once (all layers,
+  /// 1024 tiles, two palette modes, etc), but you can't do affine
+  /// transformations.
+  Tiled0,
+  /// This is a mix of `Tile0` and `Tile2`: BG0 and BG1 run as if in `Tiled0`,
+  /// and BG2 runs as if in `Tiled2`.
+  Tiled1,
+  /// This allows affine transformations, but only uses BG2 and BG3.
+  Tiled2,
+  /// This is the basic bitmap draw mode. The whole screen is a single bitmap.
+  /// Uses BG2 only.
+  Bitmap3,
+  /// This uses _paletted color_ so that there's enough space to have two pages
+  /// at _full resolution_, allowing page flipping. Uses BG2 only.
+  Bitmap4,
+  /// This uses _reduced resolution_ so that there's enough space to have two
+  /// pages with _full color_, allowing page flipping. Uses BG2 only.
+  Bitmap5,
+}
+
+/// Assigns the given display control setting.
+pub fn set_display_control(setting: DisplayControlSetting) {
+  unsafe {
+    DISPCNT.write(setting.0);
+  }
+}
+/// Obtains the current display control setting.
+pub fn display_control() -> DisplayControlSetting {
+  unsafe { DisplayControlSetting(DISPCNT.read()) }
+}
 
 /// General LCD Status (STAT,LYC)
 pub const DISPSTAT: VolatilePtr<u16> = VolatilePtr(0x4000004 as *mut u16);
@@ -333,9 +540,3 @@ pub const WAITCNT: VolatilePtr<u16> = VolatilePtr(0x4000204 as *mut u16);
 
 /// Interrupt Master Enable Register
 pub const IME: VolatilePtr<u16> = VolatilePtr(0x4000208 as *mut u16);
-
-/// Undocumented - Post Boot Flag
-pub const POSTFLG: VolatilePtr<u8> = VolatilePtr(0x4000300 as *mut u8);
-
-/// Undocumented - Power Down Control
-pub const HALTCNT: VolatilePtr<u8> = VolatilePtr(0x4000301 as *mut u8);
