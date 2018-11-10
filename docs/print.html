@@ -181,7 +181,7 @@ cargo will figure it all out for you.</p>
 You can find them in the root of the <a href="https://github.com/rust-console/gba">rust-console/gba
 repo</a>.</p>
 <ul>
-<li><code>thumbv4-none-eabi.json</code> describes the overall GBA to cargo-xbuild so it knows
+<li><code>thumbv4-nintendo-agb.json</code> describes the overall GBA to cargo-xbuild so it knows
 what to do.</li>
 <li><code>crt0.s</code> describes some ASM startup stuff. If you have more ASM to place here
 later on this is where you can put it. You also need to build it into a
@@ -202,7 +202,7 @@ practically instant operation.</li>
 </ul>
 </li>
 <li>
-<p><code>cargo xbuild --target thumbv4-none-eabi.json</code></p>
+<p><code>cargo xbuild --target thumbv4-nintendo-agb.json</code></p>
 <ul>
 <li>This builds your Rust source. It accepts <em>most of</em> the normal options, such
 as <code>--release</code>, and options, such as <code>--bin foo</code> or <code>--examples</code>, that you'd
@@ -231,7 +231,7 @@ emulators can also do it.</p>
 transfer to a flash cart there's a little more to do.</p>
 <ul>
 <li>
-<p><code>arm-none-eabi-objcopy -O binary target/thumbv4-none-eabi/MODE/BIN_NAME target/ROM_NAME.gba</code></p>
+<p><code>arm-none-eabi-objcopy -O binary target/thumbv4-nintendo-agb/MODE/BIN_NAME target/ROM_NAME.gba</code></p>
 <ul>
 <li>This will perform an <a href="https://linux.die.net/man/1/objcopy">objcopy</a> on our
 program. Here I've named the program <code>arm-none-eabi-objcopy</code>, which is what
@@ -247,7 +247,7 @@ bare memory dump of the program.</li>
 <code>cargo doc</code> and stuff it gets kinda crowded, so it goes like this:
 <ul>
 <li>Since our program was built for a non-local target, first we've got a
-directory named for that target, <code>thumbv4-none-eabi/</code></li>
+directory named for that target, <code>thumbv4-nintendo-agb/</code></li>
 <li>Next, the &quot;MODE&quot; is either <code>debug/</code> or <code>release/</code>, depending on if we had
 the <code>--release</code> flag included. You'll probably only be packing release
 mode programs all the way into GBA roms, but it works with either mode.</li>

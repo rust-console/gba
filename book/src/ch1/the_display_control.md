@@ -43,9 +43,11 @@ locations on the screen.
 
 ## CGB Mode
 
-Bit 3 is read only. It's on if you're running in CGB mode. Since we're making
-GBA games you'd think that it'll never be on at all, but I guess you can change
-it with BIOS stuff. Still, basically not an important bit.
+Bit 3 is effectively read only. Technically it can be flipped using a BIOS call,
+but when you write to the display control normally it won't write to this bit,
+so we'll call it effectively read only.
+
+This bit is on if the CPU is in CGB mode.
 
 ## Page Flipping
 

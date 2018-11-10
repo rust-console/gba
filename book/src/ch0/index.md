@@ -37,8 +37,10 @@ Now you'll need some particular files each time you want to start a new project.
 You can find them in the root of the [rust-console/gba
 repo](https://github.com/rust-console/gba).
 
-* `thumbv4-none-eabi.json` describes the overall GBA to cargo-xbuild so it knows
-  what to do.
+* `thumbv4-nintendo-agb.json` describes the overall GBA to cargo-xbuild so it
+  knows what to do. This is actually a somewhat made up target name since
+  there's no official target name, but this is the best name to pick based on
+  [how target names are decided](https://wiki.osdev.org/Target_Triplet).
 * `crt0.s` describes some ASM startup stuff. If you have more ASM to place here
   later on this is where you can put it. You also need to build it into a
   `crt0.o` file before it can actually be used, but we'll cover that below.
@@ -55,7 +57,7 @@ Once you've got something to build, you perform the following steps:
     might as well do it every time so that you never forget to because it's a
     practically instant operation.
 
-* `cargo xbuild --target thumbv4-none-eabi.json`
+* `cargo xbuild --target thumbv4-nintendo-agb.json`
   * This builds your Rust source. It accepts _most of_ the normal options, such
     as `--release`, and options, such as `--bin foo` or `--examples`, that you'd
     expect `cargo` to accept.
@@ -81,7 +83,7 @@ emulators can also do it.
 However, if you want a "real" ROM that works in all emulators and that you could
 transfer to a flash cart there's a little more to do.
 
-* `arm-none-eabi-objcopy -O binary target/thumbv4-none-eabi/MODE/BIN_NAME target/ROM_NAME.gba`
+* `arm-none-eabi-objcopy -O binary target/thumbv4-nintendo-agb/MODE/BIN_NAME target/ROM_NAME.gba`
   * This will perform an [objcopy](https://linux.die.net/man/1/objcopy) on our
     program. Here I've named the program `arm-none-eabi-objcopy`, which is what
     devkitpro calls their version of `objcopy` that's specific to the GBA in the
@@ -95,7 +97,7 @@ transfer to a flash cart there's a little more to do.
     `cargo` arranges stuff in the `target/` directory, and between RLS and
     `cargo doc` and stuff it gets kinda crowded, so it goes like this:
     * Since our program was built for a non-local target, first we've got a
-      directory named for that target, `thumbv4-none-eabi/`
+      directory named for that target, `thumbv4-nintendo-agb/`
     * Next, the "MODE" is either `debug/` or `release/`, depending on if we had
       the `--release` flag included. You'll probably only be packing release
       mode programs all the way into GBA roms, but it works with either mode.

@@ -30,7 +30,7 @@ do this stuff.
    dots as well as other support files:
   * crt0.s
   * linker.ld
-  * thumbv4-none-eabi.json
+  * thumbv4-nintendo-agb.json
   * build.rs
 
 5) Run `arm-none-eabi-as crt0.s -o crt0.o` to build the `crt0.s` into a `crt0.o`
@@ -38,7 +38,7 @@ do this stuff.
    `build.bat` file it's set to simply run every single time because it's a
    cheap enough operation.
 
-6) Build with `cargo xbuild --target thumbv4-none-eabi.json`
+6) Build with `cargo xbuild --target thumbv4-nintendo-agb.json`
   * The file extension is significant, and `cargo xbuild` takes it as a flag to
     compile dependencies with the same sysroot, so you can include crates
     normally. Well, crates that can run inside a GBA at least (Which means they
@@ -47,7 +47,7 @@ do this stuff.
     helpful because it has debug symbols).
 
 7) Also you can patch up the output to be a "real" ROM file:
-  * `arm-none-eabi-objcopy -O binary target/thumbv4-none-eabi/debug/gbatest target/output.gba`
+  * `arm-none-eabi-objcopy -O binary target/thumbv4-nintendo-agb/debug/gbatest target/output.gba`
   * `gbafix target/output.gba`
 
 8) Alternately, you can use the provided `build.bat` file (or write a similar

@@ -18,7 +18,7 @@
   "linker": "arm-none-eabi-ld",
   "linker-flavor": "ld",
   "linker-is-gnu": true,
-  "llvm-target": "thumbv4-none-eabi",
+  "llvm-target": "thumbv4-nintendo-agb",
   "os": "none",
   "panic-strategy": "abort",
   "pre-link-args": {
