@@ -1,0 +1,356 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>hello1 - Rust GBA Tutorials</title>
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="shortcut icon" href="../favicon.png">
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        <link rel="stylesheet" href="../css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        <link href="https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800" rel="stylesheet" type="text/css">
+        <link href="https://fonts.googleapis.com/css?family=Source+Code+Pro:500" rel="stylesheet" type="text/css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="../highlight.css">
+        <link rel="stylesheet" href="../tomorrow-night.css">
+        <link rel="stylesheet" href="../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        
+
+        
+    </head>
+    <body class="light">
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">var path_to_root = "../";</script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { } 
+            if (theme === null || theme === undefined) { theme = 'light'; }
+            document.body.className = theme;
+            document.querySelector('html').className = theme + ' js';
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <ol class="chapter"><li><a href="../introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><a href="../ch0/index.html"><strong aria-hidden="true">2.</strong> Ch 0: Development Setup</a></li><li><a href="../ch1/index.html"><strong aria-hidden="true">3.</strong> Ch 1: Hello GBA</a></li><li><ol class="section"><li><a href="../ch1/hello1.html" class="active"><strong aria-hidden="true">3.1.</strong> hello1</a></li><li><a href="../ch1/io_registers.html"><strong aria-hidden="true">3.2.</strong> IO Registers</a></li><li><a href="../ch1/the_display_control.html"><strong aria-hidden="true">3.3.</strong> The Display Control</a></li><li><a href="../ch1/video_memory_intro.html"><strong aria-hidden="true">3.4.</strong> Video Memory Intro</a></li></ol></li></ol>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                
+                <div id="menu-bar" class="menu-bar">
+                    <div id="menu-bar-sticky-container">
+                        <div class="left-buttons">
+                            <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                                <i class="fa fa-bars"></i>
+                            </button>
+                            <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                                <i class="fa fa-paint-brush"></i>
+                            </button>
+                            <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                                <li role="none"><button role="menuitem" class="theme" id="light">Light <span class="default">(default)</span></button></li>
+                                <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                                <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                                <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                                <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                            </ul>
+                            
+                            <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                                <i class="fa fa-search"></i>
+                            </button>
+                            
+                        </div>
+
+                        <h1 class="menu-title">Rust GBA Tutorials</h1> 
+
+                        <div class="right-buttons">
+                            <a href="../print.html" title="Print this book" aria-label="Print this book">
+                                <i id="print-button" class="fa fa-print"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" name="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+                
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <a class="header" href="#hello1" id="hello1"><h1>hello1</h1></a>
+<p>Ready? Here goes:</p>
+<p><code>hello1.rs</code></p>
+<pre><pre class="playpen"><code class="language-rust">#![feature(start)]
+#![no_std]
+
+#[cfg(not(test))]
+#[panic_handler]
+fn panic(_info: &amp;core::panic::PanicInfo) -&gt; ! {
+  loop {}
+}
+
+#[start]
+fn main(_argc: isize, _argv: *const *const u8) -&gt; isize {
+  unsafe {
+    (0x04000000 as *mut u16).write_volatile(0x0403);
+    (0x06000000 as *mut u16).offset(120 + 80 * 240).write_volatile(0x001F);
+    (0x06000000 as *mut u16).offset(136 + 80 * 240).write_volatile(0x03E0);
+    (0x06000000 as *mut u16).offset(120 + 96 * 240).write_volatile(0x7C00);
+    loop {}
+  }
+}
+</code></pre></pre>
+<p>Throw that into your project, build the program (as described back in Chapter
+0), and give it a run. You should see a red, green, and blue dot close-ish to
+the middle of the screen. If you don't, something already went wrong. Double
+check things, phone a friend, write your senators, try asking Ketsuban on the
+<a href="https://discordapp.com/invite/aVESxV8">Rust Community Discord</a>, until you're
+able to get your three dots going.</p>
+<a class="header" href="#explaining-hello1" id="explaining-hello1"><h2>Explaining hello1</h2></a>
+<p>So, what just happened? Even if you're used to Rust that might look pretty
+strange. We'll go over each part extra carefully.</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#![feature(start)]
+#fn main() {
+#}</code></pre></pre>
+<p>This enables the <a href="https://doc.rust-lang.org/beta/unstable-book/language-features/start.html">start
+feature</a>,
+which you would normally be able to read about in the unstable book, except that
+the book tells you nothing at all except to look at the <a href="https://github.com/rust-lang/rust/issues/29633">tracking
+issue</a>.</p>
+<p>Basically, a GBA game is even more low-level than the <em>normal</em> amount of
+low-level that you get from Rust, so we have to tell the compiler to account for
+that by specifying a <code>#[start]</code>, and we need this feature on to do that.</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#![no_std]
+#fn main() {
+#}</code></pre></pre>
+<p>There's no standard library available on the GBA, so we'll have to live a core
+only life.</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+#[cfg(not(test))]
+#[panic_handler]
+fn panic(_info: &amp;core::panic::PanicInfo) -&gt; ! {
+  loop {}
+}
+#}</code></pre></pre>
+<p>This sets our <a href="https://doc.rust-lang.org/nightly/nomicon/panic-handler.html">panic
+handler</a>.
+Basically, if we somehow trigger a panic, this is where the program goes.
+However, right now we don't know how to get any sort of message out to the user
+so... we do nothing at all. We <em>can't even return</em> from here, so we just sit in
+an infinite loop. The player will have to reset the universe from the outside.</p>
+<p>The <code>#[cfg(not(test))]</code> part makes this item only exist in the program when
+we're <em>not</em> in a test build. This is so that <code>cargo test</code> and such work right as
+much as possible.</p>
+<pre><pre class="playpen"><code class="language-rust">#[start]
+fn main(_argc: isize, _argv: *const *const u8) -&gt; isize {
+</code></pre></pre>
+<p>This is our <code>#[start]</code>. We call it <code>main</code>, but the signature looks a lot more
+like the main from C than it does the main from Rust. Actually, those inputs are
+useless, because nothing will be calling our code from the outside. Similarly,
+it's totally undefined to return anything, so the fact that we output an <code>isize</code>
+is vacuously true at best. We just have to use this function signature because
+that's how <code>#[start]</code> works, not because the inputs and outputs are meaningful.</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+  unsafe {
+#}</code></pre></pre>
+<p>I hope you're all set for some <code>unsafe</code>, because there's a lot of it to be had.</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+    (0x04000000 as *mut u16).write_volatile(0x0403);
+#}</code></pre></pre>
+<p>Sure!</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+    (0x06000000 as *mut u16).offset(120 + 80 * 240).write_volatile(0x001F);
+    (0x06000000 as *mut u16).offset(136 + 80 * 240).write_volatile(0x03E0);
+    (0x06000000 as *mut u16).offset(120 + 96 * 240).write_volatile(0x7C00);
+#}</code></pre></pre>
+<p>Ah, of course.</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+    loop {}
+  }
+}
+#}</code></pre></pre>
+<p>And, as mentioned above, there's no place for a GBA program to &quot;return to&quot;, so
+we can't ever let <code>main</code> try to return there. Instead, we go into an infinite
+<code>loop</code> that does nothing. The fact that this doesn't ever return an <code>isize</code>
+value doesn't seem to bother Rust, because I guess we're at least not returning
+any other type of thing instead.</p>
+<p>Fun fact: unlike in C++, an infinite loop with no side effects isn't Undefined
+Behavior for us rustaceans... <em>semantically</em>. In truth LLVM has a <a href="https://github.com/rust-lang/rust/issues/28728">known
+bug</a> in this area, so we won't
+actually be relying on empty loops in any future programs.</p>
+<a class="header" href="#all-those-magic-numbers" id="all-those-magic-numbers"><h2>All Those Magic Numbers</h2></a>
+<p>Alright, I cheated quite a bit in the middle there. The program works, but I
+didn't really tell you why because I didn't really tell you what any of those
+magic numbers mean or do.</p>
+<ul>
+<li><code>0x04000000</code> is the address of an IO Register called the Display Control.</li>
+<li><code>0x06000000</code> is the start of Video RAM.</li>
+</ul>
+<p>So we write some magic to the display control register once, then we write some
+other magic to three locations of magic to the Video RAM. We get three dots,
+each in their own location... so that second part makes sense at least.</p>
+<p>We'll get into the magic number details in the other sections of this chapter.</p>
+<a class="header" href="#sidebar-volatile" id="sidebar-volatile"><h2>Sidebar: Volatile</h2></a>
+<p>We'll get into what all that is in a moment, but first let's ask ourselves: Why
+are we doing <em>volatile</em> writes? You've probably never used it before at all.
+What is volatile anyway?</p>
+<p>Well, the optimizer is pretty aggressive some of the time, and so it'll skip
+reads and writes when it thinks can. Like if you write to a pointer once, and
+then again a moment later, and it didn't see any other reads in between, it'll
+think that it can just skip doing that first write since it'll get overwritten
+anyway. Sometimes that's right, but sometimes it's wrong.</p>
+<p>Marking a read or write as <em>volatile</em> tells the compiler that it really must do
+that action, and in the exact order that we wrote it out. It says that there
+might even be special hardware side effects going on that the compiler isn't
+aware of. In this case, the Display Control write sets a video mode, and the
+Video RAM writes set pixels that will show up on the screen.</p>
+<p>Similar to &quot;atomic&quot; operations you might have heard about, all volatile
+operations are enforced to happen in the exact order that you specify them, but
+only relative to other volatile operations. So something like</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+c.volatile_write(5);
+a += b;
+d.volatile_write(7);
+#}</code></pre></pre>
+<p>might end up changing <code>a</code> either before or after the change to <code>c</code>, but the
+write to <code>d</code> will <em>always</em> happen after the write to <code>c</code>.</p>
+<p>If you ever use volatile stuff on other platforms it's important to note that
+volatile doesn't make things thread-safe, you still need atomic for that.
+However, the GBA doesn't have threads, so we don't have to worry about thread
+safety concerns.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                        
+                            <a rel="prev" href="../ch1/index.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+                        
+
+                        
+                            <a rel="next" href="../ch1/io_registers.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+                        
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                
+                    <a href="../ch1/index.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                
+
+                
+                    <a href="../ch1/io_registers.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+                
+            </nav>
+
+        </div>
+
+        
+
+        
+
+        
+
+        
+        <script src="../elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../searcher.js" type="text/javascript" charset="utf-8"></script>
+        
+
+        <script src="../clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+        
+
+        
+
+    </body>
+</html>

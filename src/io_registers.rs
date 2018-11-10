@@ -15,6 +15,8 @@
 
 // TODO(lokathor): IO Register newtypes.
 
+use gba_proc_macro::register_bit;
+
 use super::*;
 
 /// LCD Control. Read/Write.
@@ -30,18 +32,6 @@ pub struct DisplayControlSetting(u16);
 #[allow(missing_docs)]
 impl DisplayControlSetting {
   pub const BG_MODE_MASK: u16 = 0b111;
-  pub const PAGE_SELECT_BIT: u16 = 0b1_0000;
-  pub const HBLANK_INTERVAL_FREE_BIT: u16 = 0b10_0000;
-  pub const OBJ_1D_BIT: u16 = 0b100_0000;
-  pub const FORCE_BLANK_BIT: u16 = 0b1000_0000;
-  pub const DISPLAY_BG0_BIT: u16 = 0b1_0000_0000;
-  pub const DISPLAY_BG1_BIT: u16 = 0b10_0000_0000;
-  pub const DISPLAY_BG2_BIT: u16 = 0b100_0000_0000;
-  pub const DISPLAY_BG3_BIT: u16 = 0b1000_0000_0000;
-  pub const DISPLAY_OBJ_BIT: u16 = 0b1_0000_0000_0000;
-  pub const DISPLAY_WINDOW0_BIT: u16 = 0b10_0000_0000_0000;
-  pub const DISPLAY_WINDOW1_BIT: u16 = 0b100_0000_0000_0000;
-  pub const OBJ_WINDOW_BIT: u16 = 0b1000_0000_0000_0000;
 
   pub fn mode(&self) -> DisplayControlMode {
     match self.0 & Self::BG_MODE_MASK {
@@ -66,137 +56,19 @@ impl DisplayControlSetting {
     };
   }
 
-  pub fn uses_page_1(&self) -> bool {
-    (self.0 & Self::PAGE_SELECT_BIT) != 0
-  }
-  pub fn set_uses_page_1(&mut self, bit: bool) {
-    if bit {
-      self.0 |= Self::PAGE_SELECT_BIT;
-    } else {
-      self.0 &= !Self::PAGE_SELECT_BIT;
-    }
-  }
-
-  pub fn hblank_interval_free(&self) -> bool {
-    (self.0 & Self::HBLANK_INTERVAL_FREE_BIT) != 0
-  }
-  pub fn set_hblank_interval_free(&mut self, bit: bool) {
-    if bit {
-      self.0 |= Self::HBLANK_INTERVAL_FREE_BIT;
-    } else {
-      self.0 &= !Self::HBLANK_INTERVAL_FREE_BIT;
-    }
-  }
-
-  pub fn object_memory_1d(&self) -> bool {
-    (self.0 & Self::OBJ_1D_BIT) != 0
-  }
-  pub fn set_object_memory_1d(&mut self, bit: bool) {
-    if bit {
-      self.0 |= Self::OBJ_1D_BIT;
-    } else {
-      self.0 &= !Self::OBJ_1D_BIT;
-    }
-  }
-
-  pub fn force_blank(&self) -> bool {
-    (self.0 & Self::FORCE_BLANK_BIT) != 0
-  }
-  pub fn set_force_blank(&mut self, bit: bool) {
-    if bit {
-      self.0 |= Self::FORCE_BLANK_BIT;
-    } else {
-      self.0 &= !Self::FORCE_BLANK_BIT;
-    }
-  }
-
-  pub fn display_bg0(&self) -> bool {
-    (self.0 & Self::DISPLAY_BG0_BIT) != 0
-  }
-  pub fn set_display_bg0(&mut self, bit: bool) {
-    if bit {
-      self.0 |= Self::DISPLAY_BG0_BIT;
-    } else {
-      self.0 &= !Self::DISPLAY_BG0_BIT;
-    }
-  }
-
-  pub fn display_bg1(&self) -> bool {
-    (self.0 & Self::DISPLAY_BG1_BIT) != 0
-  }
-  pub fn set_display_bg1(&mut self, bit: bool) {
-    if bit {
-      self.0 |= Self::DISPLAY_BG1_BIT;
-    } else {
-      self.0 &= !Self::DISPLAY_BG1_BIT;
-    }
-  }
-
-  pub fn display_bg2(&self) -> bool {
-    (self.0 & Self::DISPLAY_BG2_BIT) != 0
-  }
-  pub fn set_display_bg2(&mut self, bit: bool) {
-    if bit {
-      self.0 |= Self::DISPLAY_BG2_BIT;
-    } else {
-      self.0 &= !Self::DISPLAY_BG2_BIT;
-    }
-  }
-
-  pub fn display_bg3(&self) -> bool {
-    (self.0 & Self::DISPLAY_BG3_BIT) != 0
-  }
-  pub fn set_display_bg3(&mut self, bit: bool) {
-    if bit {
-      self.0 |= Self::DISPLAY_BG3_BIT;
-    } else {
-      self.0 &= !Self::DISPLAY_BG3_BIT;
-    }
-  }
-
-  pub fn display_object(&self) -> bool {
-    (self.0 & Self::DISPLAY_OBJ_BIT) != 0
-  }
-  pub fn set_display_object(&mut self, bit: bool) {
-    if bit {
-      self.0 |= Self::DISPLAY_OBJ_BIT;
-    } else {
-      self.0 &= !Self::DISPLAY_OBJ_BIT;
-    }
-  }
-
-  pub fn display_window0(&self) -> bool {
-    (self.0 & Self::DISPLAY_WINDOW0_BIT) != 0
-  }
-  pub fn set_display_window0(&mut self, bit: bool) {
-    if bit {
-      self.0 |= Self::DISPLAY_WINDOW0_BIT;
-    } else {
-      self.0 &= !Self::DISPLAY_WINDOW0_BIT;
-    }
-  }
-
-  pub fn display_window1(&self) -> bool {
-    (self.0 & Self::DISPLAY_WINDOW1_BIT) != 0
-  }
-  pub fn set_display_window1(&mut self, bit: bool) {
-    if bit {
-      self.0 |= Self::DISPLAY_WINDOW1_BIT;
-    } else {
-      self.0 &= !Self::DISPLAY_WINDOW1_BIT;
-    }
-  }
-
-  pub fn display_object_window(&self) -> bool {
-    (self.0 & Self::OBJ_WINDOW_BIT) != 0
-  }
-  pub fn set_display_object_window(&mut self, bit: bool) {
-    if bit {
-      self.0 |= Self::OBJ_WINDOW_BIT;
-    } else {
-      self.0 &= !Self::OBJ_WINDOW_BIT;
-    }
-  }
+  register_bit!(CGB_MODE_BIT, u16, 0b1000, cgb_mode, read);
+  register_bit!(PAGE_SELECT_BIT, u16, 0b1_0000, page1_enabled, read_write);
+  register_bit!(HBLANK_INTERVAL_FREE_BIT, u16, 0b10_0000, hblank_interval_free, read_write);
+  register_bit!(OBJECT_MEMORY_1D, u16, 0b100_0000, object_memory_1d, read_write);
+  register_bit!(FORCE_BLANK_BIT, u16, 0b1000_0000, force_blank, read_write);
+  register_bit!(DISPLAY_BG0_BIT, u16, 0b1_0000_0000, display_bg0, read_write);
+  register_bit!(DISPLAY_BG1_BIT, u16, 0b10_0000_0000, display_bg1, read_write);
+  register_bit!(DISPLAY_BG2_BIT, u16, 0b100_0000_0000, display_bg2, read_write);
+  register_bit!(DISPLAY_BG3_BIT, u16, 0b1000_0000_0000, display_bg3, read_write);
+  register_bit!(DISPLAY_OBJECT_BIT, u16, 0b1_0000_0000_0000, display_object, read_write);
+  register_bit!(DISPLAY_WINDOW0_BIT, u16, 0b10_0000_0000_0000, display_window0, read_write);
+  register_bit!(DISPLAY_WINDOW1_BIT, u16, 0b100_0000_0000_0000, display_window1, read_write);
+  register_bit!(OBJECT_WINDOW_BIT, u16, 0b1000_0000_0000_0000, display_object_window, read_write);
 }
 
 /// The six display modes available on the GBA.
