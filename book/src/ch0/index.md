@@ -78,7 +78,7 @@ Once you've got something to build, you perform the following steps:
 
 At this point you have an ELF binary that some emulators can execute directly.
 This is helpful because it'll have debug symbols and all that, assuming a debug
-build. Specifically, [mgba 0.1 beta
+build. Specifically, [mgba 0.7 beta
 1](https://mgba.io/2018/09/24/mgba-0.7-beta1/) can do it, and perhaps other
 emulators can also do it.
 
