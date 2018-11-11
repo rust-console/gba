@@ -27,9 +27,10 @@ own demos and chapters later on, so that's all we'll say about them for now.
 Modes 3, 4, and 5 are "Bitmap" modes. These let you write individual pixels to
 locations on the screen.
 
-* **Mode 3** is full resolution (240w x 160h) RBG15 color. You might not be used to
-  RGB15, since modern computers have 24 or 32 bit colors. In RGB15, there's 5
-  bits for each color channel, and the highest bit is totally ignored.
+* **Mode 3** is full resolution (240w x 160h) RBG15 color. You might not be used
+  to RGB15, since modern computers have 24 or 32 bit colors. In RGB15, there's 5
+  bits for each color channel stored within a `u16` value, and the highest bit is
+  simply ignored.
 * **Mode 4** is full resolution paletted color. Instead of being a `u16` color, each
   pixel value is a `u8` palette index entry, and then the display uses the
   palette memory (which we'll talk about later) to store the actual color data.
@@ -99,3 +100,6 @@ First let's [convert that to
 binary](https://www.wolframalpha.com/input/?i=0x0403), and we get
 `0b100_0000_0011`. So, that's setting Mode 3 with background 2 enabled and
 nothing else special.
+
+However, I think we can do better than that. This is a prime target for more
+newtyping as we attempt a `hello2` program.

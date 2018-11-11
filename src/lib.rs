@@ -28,5 +28,5 @@ pub mod video_ram;
 
 /// Combines the Red, Blue, and Green provided into a single color value.
 pub const fn rgb16(red: u16, green: u16, blue: u16) -> u16 {
-  red | green << 5 | blue << 10
+  blue << 10 | green << 5 | red
 }

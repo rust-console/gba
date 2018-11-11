@@ -72,7 +72,7 @@
         </script>
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
-            <ol class="chapter"><li><a href="../introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><a href="../ch0/index.html"><strong aria-hidden="true">2.</strong> Ch 0: Development Setup</a></li><li><a href="../ch1/index.html"><strong aria-hidden="true">3.</strong> Ch 1: Hello GBA</a></li><li><ol class="section"><li><a href="../ch1/hello1.html"><strong aria-hidden="true">3.1.</strong> hello1</a></li><li><a href="../ch1/io_registers.html"><strong aria-hidden="true">3.2.</strong> IO Registers</a></li><li><a href="../ch1/the_display_control.html"><strong aria-hidden="true">3.3.</strong> The Display Control</a></li><li><a href="../ch1/video_memory_intro.html" class="active"><strong aria-hidden="true">3.4.</strong> Video Memory Intro</a></li></ol></li></ol>
+            <ol class="chapter"><li><a href="../introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><a href="../ch0/index.html"><strong aria-hidden="true">2.</strong> Ch 0: Development Setup</a></li><li><a href="../ch1/index.html"><strong aria-hidden="true">3.</strong> Ch 1: Hello GBA</a></li><li><ol class="section"><li><a href="../ch1/hello1.html"><strong aria-hidden="true">3.1.</strong> hello1</a></li><li><a href="../ch1/io_registers.html"><strong aria-hidden="true">3.2.</strong> IO Registers</a></li><li><a href="../ch1/the_display_control.html"><strong aria-hidden="true">3.3.</strong> The Display Control</a></li><li><a href="../ch1/video_memory_intro.html" class="active"><strong aria-hidden="true">3.4.</strong> Video Memory Intro</a></li><li><a href="../ch1/hello2.html"><strong aria-hidden="true">3.5.</strong> hello2</a></li></ol></li></ol>
         </nav>
 
         <div id="page-wrapper" class="page-wrapper">
@@ -151,15 +151,88 @@ trying to set an individual byte, and we also have to be careful if we use
 <code>memcopy</code> or <code>memset</code> as well, because they're byte oriented by default and
 don't know to follow the special rules.</p>
 <a class="header" href="#rgb15" id="rgb15"><h2>RGB15</h2></a>
-<p>TODO</p>
+<p>As I said before, RGB15 stores a color within a <code>u16</code> value using 5 bits for
+each color channel.</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+pub const RED:   u16 = 0b0_00000_00000_11111;
+pub const GREEN: u16 = 0b0_00000_11111_00000;
+pub const BLUE:  u16 = 0b0_11111_00000_00000;
+#}</code></pre></pre>
+<p>In Mode 3 and Mode 5 we write direct color values into VRAM, and in Mode 4 we
+write palette index values, and then the color values go into the PALRAM.</p>
 <a class="header" href="#mode-3" id="mode-3"><h2>Mode 3</h2></a>
-<p>TODO</p>
+<p>Mode 3 is pretty easy. We have a full resolution grid of rgb15 pixels. There's
+160 rows of 240 pixels each, with the base address being the top left corner. A
+particular pixel uses normal &quot;2d indexing&quot; math:</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+let row_five_col_seven = 5 + (7 * SCREEN_WIDTH);
+#}</code></pre></pre>
+<p>To draw a pixel, we just write a value at the address for the row and col that
+we want to draw to.</p>
 <a class="header" href="#mode-4" id="mode-4"><h2>Mode 4</h2></a>
-<p>TODO</p>
+<p>Mode 4 introduces page flipping. Instead of one giant page at <code>0x0600_0000</code>,
+there's Page 0 at <code>0x0600_0000</code> and then Page 1 at <code>0x0600_A000</code>. The resolution
+for each page is the same as above, but instead of writing <code>u16</code> values, the
+memory is treated as <code>u8</code> indexes into PALRAM. The PALRAM starts at
+<code>0x0500_0000</code>, and there's enough space for 256 palette entries (each a <code>u16</code>).</p>
+<p>To set the color of a palette entry we just do a normal <code>u16</code> write_volatile.</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+(0x0500_0000 as *mut u16).offset(target_index).write_volatile(new_color)
+#}</code></pre></pre>
+<p>To draw a pixel we set the palette entry that we want the pixel to use. However,
+we must remember the &quot;minimum size&quot; write limitation that applies to VRAM. So,
+if we want to change just a single pixel at a time we must</p>
+<ol>
+<li>Read the full <code>u16</code> it's a part of.</li>
+<li>Clear the half of the <code>u16</code> we're going to replace</li>
+<li>Write the half of the <code>u16</code> we're going to replace with the new value</li>
+<li>Write that result back to the address.</li>
+</ol>
+<p>So, the math for finding a byte offset is the same as Mode 3 (since they're both
+a 2d grid). If the byte offset is EVEN it'll be the high bits of the <code>u16</code> at
+half the byte offset rounded down. If the offset is ODD it'll be the low bits of
+the <code>u16</code> at half the byte.</p>
+<p>Does that make sense?</p>
+<ul>
+<li>If we want to write pixel (0,0) the byte offset is 0, so we change the high
+bits of <code>u16</code> offset 0. Then we want to write to (1,0), so the byte offset is
+1, so we change the low bits of <code>u16</code> offset 0. The pixels are next to each
+other, and the target bytes are next to each other, good so far.</li>
+<li>If we want to write to (5,6) that'd be byte <code>5 + 6 * 240 = 1445</code>, so we'd
+target the low bits of <code>u16</code> offset <code>floor(1445/2) = 722</code>.</li>
+</ul>
+<p>As you can see, trying to write individual pixels in Mode 4 is mostly a bad
+time. Fret not! We don't <em>have</em> to write individual bytes. If our data is
+arranged correctly ahead of time we can just write <code>u16</code> or <code>u32</code> values
+directly. The video hardware doesn't care, it'll get along just fine.</p>
 <a class="header" href="#mode-5" id="mode-5"><h2>Mode 5</h2></a>
-<p>TODO</p>
+<p>Mode 5 is also a two page mode, but instead of compressing the size of a pixel's
+data to fit in two pages, we compress the resolution.</p>
+<p>Mode 5 is full <code>u16</code> color, but only 160w x 128h per page.</p>
 <a class="header" href="#in-conclusion" id="in-conclusion"><h2>In Conclusion...</h2></a>
-<p>TODO</p>
+<p>So what got written into VRAM in <code>hello1</code>?</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+    (0x06000000 as *mut u16).offset(120 + 80 * 240).write_volatile(0x001F);
+    (0x06000000 as *mut u16).offset(136 + 80 * 240).write_volatile(0x03E0);
+    (0x06000000 as *mut u16).offset(120 + 96 * 240).write_volatile(0x7C00);
+#}</code></pre></pre>
+<p>So at pixels <code>(120,80)</code>, <code>(136,80)</code>, and <code>(120,96)</code> we write three values. Once
+again we probably need to <a href="https://www.wolframalpha.com/">convert them</a> into
+binary to make sense of it.</p>
+<ul>
+<li>0x001F: 0b11111</li>
+<li>0x03E0: 0b11111_00000</li>
+<li>0x7C00: 0b11111_00000_00000</li>
+</ul>
+<p>Ah, of course, a red pixel, a green pixel, and a blue pixel.</p>
 
                     </main>
 
@@ -171,6 +244,10 @@ don't know to follow the special rules.</p>
                             </a>
                         
 
+                        
+                            <a rel="next" href="../ch1/hello2.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
                         
 
                         <div style="clear: both"></div>
@@ -185,6 +262,10 @@ don't know to follow the special rules.</p>
                     </a>
                 
 
+                
+                    <a href="../ch1/hello2.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
                 
             </nav>
 

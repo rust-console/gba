@@ -28,6 +28,13 @@ pub const SCREEN_HEIGHT: isize = 160;
 /// value as just being a `usize`.
 pub const VRAM_BASE_ADDRESS: usize = 0x0600_0000;
 
+/// Draws a pixel to the screen while in Display Mode 3, with bounds checks.
+pub fn mode3_pixel(col: isize, row: isize, color: u16) {
+  assert!(col >= 0 && col < SCREEN_WIDTH);
+  assert!(row >= 0 && row < SCREEN_HEIGHT);
+  unsafe { mode3_pixel_unchecked(col, row, color) }
+}
+
 /// Draws a pixel to the screen while in Display Mode 3.
 ///
 /// Coordinates are relative to the top left corner.
@@ -39,13 +46,6 @@ pub const VRAM_BASE_ADDRESS: usize = 0x0600_0000;
 ///
 /// * `col` must be in `0..SCREEN_WIDTH`
 /// * `row` must be in `0..SCREEN_HEIGHT`
-pub unsafe fn mode3_plot_unchecked(col: isize, row: isize, color: u16) {
+pub unsafe fn mode3_pixel_unchecked(col: isize, row: isize, color: u16) {
   core::ptr::write_volatile((VRAM_BASE_ADDRESS as *mut u16).offset(col + row * SCREEN_WIDTH), color);
-}
-
-/// Draws a pixel to the screen while in Display Mode 3, with bounds checks.
-pub fn mode3_plot(col: isize, row: isize, color: u16) {
-  assert!(col >= 0 && col < SCREEN_WIDTH);
-  assert!(row >= 0 && row < SCREEN_HEIGHT);
-  unsafe { mode3_plot_unchecked(col, row, color) }
 }

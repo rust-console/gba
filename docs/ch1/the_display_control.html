@@ -72,7 +72,7 @@
         </script>
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
-            <ol class="chapter"><li><a href="../introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><a href="../ch0/index.html"><strong aria-hidden="true">2.</strong> Ch 0: Development Setup</a></li><li><a href="../ch1/index.html"><strong aria-hidden="true">3.</strong> Ch 1: Hello GBA</a></li><li><ol class="section"><li><a href="../ch1/hello1.html"><strong aria-hidden="true">3.1.</strong> hello1</a></li><li><a href="../ch1/io_registers.html"><strong aria-hidden="true">3.2.</strong> IO Registers</a></li><li><a href="../ch1/the_display_control.html" class="active"><strong aria-hidden="true">3.3.</strong> The Display Control</a></li><li><a href="../ch1/video_memory_intro.html"><strong aria-hidden="true">3.4.</strong> Video Memory Intro</a></li></ol></li></ol>
+            <ol class="chapter"><li><a href="../introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><a href="../ch0/index.html"><strong aria-hidden="true">2.</strong> Ch 0: Development Setup</a></li><li><a href="../ch1/index.html"><strong aria-hidden="true">3.</strong> Ch 1: Hello GBA</a></li><li><ol class="section"><li><a href="../ch1/hello1.html"><strong aria-hidden="true">3.1.</strong> hello1</a></li><li><a href="../ch1/io_registers.html"><strong aria-hidden="true">3.2.</strong> IO Registers</a></li><li><a href="../ch1/the_display_control.html" class="active"><strong aria-hidden="true">3.3.</strong> The Display Control</a></li><li><a href="../ch1/video_memory_intro.html"><strong aria-hidden="true">3.4.</strong> Video Memory Intro</a></li><li><a href="../ch1/hello2.html"><strong aria-hidden="true">3.5.</strong> hello2</a></li></ol></li></ol>
         </nav>
 
         <div id="page-wrapper" class="page-wrapper">
@@ -157,9 +157,10 @@ own demos and chapters later on, so that's all we'll say about them for now.</p>
 <p>Modes 3, 4, and 5 are &quot;Bitmap&quot; modes. These let you write individual pixels to
 locations on the screen.</p>
 <ul>
-<li><strong>Mode 3</strong> is full resolution (240w x 160h) RBG15 color. You might not be used to
-RGB15, since modern computers have 24 or 32 bit colors. In RGB15, there's 5
-bits for each color channel, and the highest bit is totally ignored.</li>
+<li><strong>Mode 3</strong> is full resolution (240w x 160h) RBG15 color. You might not be used
+to RGB15, since modern computers have 24 or 32 bit colors. In RGB15, there's 5
+bits for each color channel stored within a <code>u16</code> value, and the highest bit is
+simply ignored.</li>
 <li><strong>Mode 4</strong> is full resolution paletted color. Instead of being a <code>u16</code> color, each
 pixel value is a <code>u8</code> palette index entry, and then the display uses the
 palette memory (which we'll talk about later) to store the actual color data.
@@ -172,9 +173,10 @@ reduced resolution to compensate (video memory is only so big!). The screen is
 effectively only 160w x 128h in this mode.</li>
 </ul>
 <a class="header" href="#cgb-mode" id="cgb-mode"><h2>CGB Mode</h2></a>
-<p>Bit 3 is read only. It's on if you're running in CGB mode. Since we're making
-GBA games you'd think that it'll never be on at all, but I guess you can change
-it with BIOS stuff. Still, basically not an important bit.</p>
+<p>Bit 3 is effectively read only. Technically it can be flipped using a BIOS call,
+but when you write to the display control normally it won't write to this bit,
+so we'll call it effectively read only.</p>
+<p>This bit is on if the CPU is in CGB mode.</p>
 <a class="header" href="#page-flipping" id="page-flipping"><h2>Page Flipping</h2></a>
 <p>Bit 4 lets you pick which page to use. This is only relevent in video modes 4 or
 5, and is just ignored otherwise. It's very easy to remember: when the bit is 0
@@ -213,6 +215,8 @@ some nifty graphical effects.</p>
 binary</a>, and we get
 <code>0b100_0000_0011</code>. So, that's setting Mode 3 with background 2 enabled and
 nothing else special.</p>
+<p>However, I think we can do better than that. This is a prime target for more
+newtyping as we attempt a <code>hello2</code> program.</p>
 
                     </main>
 

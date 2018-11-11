@@ -177,3 +177,8 @@ If you ever use volatile stuff on other platforms it's important to note that
 volatile doesn't make things thread-safe, you still need atomic for that.
 However, the GBA doesn't have threads, so we don't have to worry about thread
 safety concerns.
+
+Accordingly, our first bit of code for our library will be a _newtype_ over a
+normal `*mut T` so that it has volatile reads and writes as the default. We'll
+cover the details later on when we try writing a `hello2` program, once we know
+more of what's going on.

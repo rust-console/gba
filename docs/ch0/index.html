@@ -72,7 +72,7 @@
         </script>
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
-            <ol class="chapter"><li><a href="../introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><a href="../ch0/index.html" class="active"><strong aria-hidden="true">2.</strong> Ch 0: Development Setup</a></li><li><a href="../ch1/index.html"><strong aria-hidden="true">3.</strong> Ch 1: Hello GBA</a></li><li><ol class="section"><li><a href="../ch1/hello1.html"><strong aria-hidden="true">3.1.</strong> hello1</a></li><li><a href="../ch1/io_registers.html"><strong aria-hidden="true">3.2.</strong> IO Registers</a></li><li><a href="../ch1/the_display_control.html"><strong aria-hidden="true">3.3.</strong> The Display Control</a></li><li><a href="../ch1/video_memory_intro.html"><strong aria-hidden="true">3.4.</strong> Video Memory Intro</a></li></ol></li></ol>
+            <ol class="chapter"><li><a href="../introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><a href="../ch0/index.html" class="active"><strong aria-hidden="true">2.</strong> Ch 0: Development Setup</a></li><li><a href="../ch1/index.html"><strong aria-hidden="true">3.</strong> Ch 1: Hello GBA</a></li><li><ol class="section"><li><a href="../ch1/hello1.html"><strong aria-hidden="true">3.1.</strong> hello1</a></li><li><a href="../ch1/io_registers.html"><strong aria-hidden="true">3.2.</strong> IO Registers</a></li><li><a href="../ch1/the_display_control.html"><strong aria-hidden="true">3.3.</strong> The Display Control</a></li><li><a href="../ch1/video_memory_intro.html"><strong aria-hidden="true">3.4.</strong> Video Memory Intro</a></li><li><a href="../ch1/hello2.html"><strong aria-hidden="true">3.5.</strong> hello2</a></li></ol></li></ol>
         </nav>
 
         <div id="page-wrapper" class="page-wrapper">
@@ -169,8 +169,12 @@ cargo will figure it all out for you.</p>
 You can find them in the root of the <a href="https://github.com/rust-console/gba">rust-console/gba
 repo</a>.</p>
 <ul>
-<li><code>thumbv4-nintendo-agb.json</code> describes the overall GBA to cargo-xbuild so it knows
-what to do.</li>
+<li><code>thumbv4-none-agb.json</code> describes the overall GBA to cargo-xbuild so it knows
+what to do. This is actually a somewhat made up target name since there's no
+official target name. The GBA is essentially the same as a normal
+<code>thumbv4-none-eabi</code> device, but we give it the &quot;agb&quot; signifier so that later
+on we'll be able to use rust's <code>cfg</code> ability to allow our code to know if it's
+specifically targeting a GBA or some other similar device (like an NDS).</li>
 <li><code>crt0.s</code> describes some ASM startup stuff. If you have more ASM to place here
 later on this is where you can put it. You also need to build it into a
 <code>crt0.o</code> file before it can actually be used, but we'll cover that below.</li>
@@ -190,7 +194,7 @@ practically instant operation.</li>
 </ul>
 </li>
 <li>
-<p><code>cargo xbuild --target thumbv4-nintendo-agb.json</code></p>
+<p><code>cargo xbuild --target thumbv4-none-agb.json</code></p>
 <ul>
 <li>This builds your Rust source. It accepts <em>most of</em> the normal options, such
 as <code>--release</code>, and options, such as <code>--bin foo</code> or <code>--examples</code>, that you'd
@@ -219,7 +223,7 @@ emulators can also do it.</p>
 transfer to a flash cart there's a little more to do.</p>
 <ul>
 <li>
-<p><code>arm-none-eabi-objcopy -O binary target/thumbv4-nintendo-agb/MODE/BIN_NAME target/ROM_NAME.gba</code></p>
+<p><code>arm-none-eabi-objcopy -O binary target/thumbv4-none-agb/MODE/BIN_NAME target/ROM_NAME.gba</code></p>
 <ul>
 <li>This will perform an <a href="https://linux.die.net/man/1/objcopy">objcopy</a> on our
 program. Here I've named the program <code>arm-none-eabi-objcopy</code>, which is what
@@ -235,7 +239,7 @@ bare memory dump of the program.</li>
 <code>cargo doc</code> and stuff it gets kinda crowded, so it goes like this:
 <ul>
 <li>Since our program was built for a non-local target, first we've got a
-directory named for that target, <code>thumbv4-nintendo-agb/</code></li>
+directory named for that target, <code>thumbv4-none-agb/</code></li>
 <li>Next, the &quot;MODE&quot; is either <code>debug/</code> or <code>release/</code>, depending on if we had
 the <code>--release</code> flag included. You'll probably only be packing release
 mode programs all the way into GBA roms, but it works with either mode.</li>
