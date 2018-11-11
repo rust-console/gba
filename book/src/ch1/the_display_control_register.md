@@ -10,7 +10,7 @@ that we can get a hint of what's to come.
 Also it's the one that you basically always need to set at least once in every
 GBA game, so it's a good starting one to go over for that reason too.
 
-The Display Control is a `u16` value located at `0x0400_0000`.
+The display control register holds a `u16` value, and is located at `0x0400_0000`.
 
 ## Video Modes
 
@@ -45,8 +45,8 @@ locations on the screen.
 ## CGB Mode
 
 Bit 3 is effectively read only. Technically it can be flipped using a BIOS call,
-but when you write to the display control normally it won't write to this bit,
-so we'll call it effectively read only.
+but when you write to the display control register normally it won't write to
+this bit, so we'll call it effectively read only.
 
 This bit is on if the CPU is in CGB mode.
 
@@ -90,7 +90,7 @@ some nifty graphical effects.
 
 ## In Conclusion...
 
-So what did we do to the display control in `hello1`?
+So what did we do to the display control register in `hello1`?
 
 ```rust
     (0x04000000 as *mut u16).write_volatile(0x0403);

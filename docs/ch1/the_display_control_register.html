@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>The Display Control - Rust GBA Tutorials</title>
+        <title>The Display Control Register - Rust GBA Tutorials</title>
         <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -72,7 +72,7 @@
         </script>
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
-            <ol class="chapter"><li><a href="../introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><a href="../ch0/index.html"><strong aria-hidden="true">2.</strong> Ch 0: Development Setup</a></li><li><a href="../ch1/index.html"><strong aria-hidden="true">3.</strong> Ch 1: Hello GBA</a></li><li><ol class="section"><li><a href="../ch1/hello1.html"><strong aria-hidden="true">3.1.</strong> hello1</a></li><li><a href="../ch1/io_registers.html"><strong aria-hidden="true">3.2.</strong> IO Registers</a></li><li><a href="../ch1/the_display_control.html" class="active"><strong aria-hidden="true">3.3.</strong> The Display Control</a></li><li><a href="../ch1/video_memory_intro.html"><strong aria-hidden="true">3.4.</strong> Video Memory Intro</a></li><li><a href="../ch1/hello2.html"><strong aria-hidden="true">3.5.</strong> hello2</a></li></ol></li></ol>
+            <ol class="chapter"><li><a href="../introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><a href="../ch0/index.html"><strong aria-hidden="true">2.</strong> Ch 0: Development Setup</a></li><li><a href="../ch1/index.html"><strong aria-hidden="true">3.</strong> Ch 1: Hello GBA</a></li><li><ol class="section"><li><a href="../ch1/hello1.html"><strong aria-hidden="true">3.1.</strong> hello1</a></li><li><a href="../ch1/io_registers.html"><strong aria-hidden="true">3.2.</strong> IO Registers</a></li><li><a href="../ch1/the_display_control_register.html" class="active"><strong aria-hidden="true">3.3.</strong> The Display Control Register</a></li><li><a href="../ch1/video_memory_intro.html"><strong aria-hidden="true">3.4.</strong> Video Memory Intro</a></li><li><a href="../ch1/hello2.html"><strong aria-hidden="true">3.5.</strong> hello2</a></li></ol></li></ol>
         </nav>
 
         <div id="page-wrapper" class="page-wrapper">
@@ -136,15 +136,15 @@
 
                 <div id="content" class="content">
                     <main>
-                        <a class="header" href="#the-display-control" id="the-display-control"><h1>The Display Control</h1></a>
-<p>The Display Control is our first actual IO Register. GBATEK gives it the
+                        <a class="header" href="#the-display-control-register" id="the-display-control-register"><h1>The Display Control Register</h1></a>
+<p>The display control register is our first actual IO Register. GBATEK gives it the
 shorthand <a href="http://problemkaputt.de/gbatek.htm#lcdiodisplaycontrol">DISPCNT</a>, so
 you might see it under that name if you read other guides.</p>
 <p>Among IO Registers, it's one of the simpler ones, but it's got enough complexity
 that we can get a hint of what's to come.</p>
 <p>Also it's the one that you basically always need to set at least once in every
 GBA game, so it's a good starting one to go over for that reason too.</p>
-<p>The Display Control is a <code>u16</code> value located at <code>0x0400_0000</code>.</p>
+<p>The display control register holds a <code>u16</code> value, and is located at <code>0x0400_0000</code>.</p>
 <a class="header" href="#video-modes" id="video-modes"><h2>Video Modes</h2></a>
 <p>The lowest three bits (0-2) let you select from among the GBA's six video modes.
 You'll notice that 3 bits allows for eight modes, but the values 6 and 7 are
@@ -174,8 +174,8 @@ effectively only 160w x 128h in this mode.</li>
 </ul>
 <a class="header" href="#cgb-mode" id="cgb-mode"><h2>CGB Mode</h2></a>
 <p>Bit 3 is effectively read only. Technically it can be flipped using a BIOS call,
-but when you write to the display control normally it won't write to this bit,
-so we'll call it effectively read only.</p>
+but when you write to the display control register normally it won't write to
+this bit, so we'll call it effectively read only.</p>
 <p>This bit is on if the CPU is in CGB mode.</p>
 <a class="header" href="#page-flipping" id="page-flipping"><h2>Page Flipping</h2></a>
 <p>Bit 4 lets you pick which page to use. This is only relevent in video modes 4 or
@@ -205,7 +205,7 @@ be okay to use for a moment or two every once in a while.</p>
 object display window. We'll get into how windows work later on, they let you do
 some nifty graphical effects.</p>
 <a class="header" href="#in-conclusion" id="in-conclusion"><h2>In Conclusion...</h2></a>
-<p>So what did we do to the display control in <code>hello1</code>?</p>
+<p>So what did we do to the display control register in <code>hello1</code>?</p>
 <pre><pre class="playpen"><code class="language-rust">
 # #![allow(unused_variables)]
 #fn main() {
