@@ -14,10 +14,14 @@
 //! **Do not** use this crate in programs that aren't running on the GBA. If you
 //! do, it's a giant bag of Undefined Behavior.
 
-//pub mod macros; // un-comment once we get some
-
 pub mod core_extras;
 pub(crate) use crate::core_extras::*;
 
 pub mod io_registers;
-//pub(crate) use crate::io_registers::*;
+
+pub mod video_ram;
+
+/// Combines the Red, Blue, and Green provided into a single color value.
+pub const fn rgb16(red: u16, green: u16, blue: u16) -> u16 {
+  blue << 10 | green << 5 | red
+}

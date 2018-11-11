@@ -15,6 +15,8 @@
 
 // TODO(lokathor): IO Register newtypes.
 
+use gba_proc_macro::register_bit;
+
 use super::*;
 
 /// LCD Control. Read/Write.
@@ -22,8 +24,85 @@ use super::*;
 /// * [gbatek entry](http://problemkaputt.de/gbatek.htm#lcdiodisplaycontrol)
 pub const DISPCNT: VolatilePtr<u16> = VolatilePtr(0x4000000 as *mut u16);
 
-/// Undocumented - Green Swap
-pub const GREEN_SWAP: VolatilePtr<u16> = VolatilePtr(0x4000002 as *mut u16);
+/// A newtype over the various display control options that you have on a GBA.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+#[repr(transparent)]
+pub struct DisplayControlSetting(u16);
+
+#[allow(missing_docs)]
+impl DisplayControlSetting {
+  pub const BG_MODE_MASK: u16 = 0b111;
+
+  pub fn mode(&self) -> DisplayControlMode {
+    match self.0 & Self::BG_MODE_MASK {
+      0 => DisplayControlMode::Tiled0,
+      1 => DisplayControlMode::Tiled1,
+      2 => DisplayControlMode::Tiled2,
+      3 => DisplayControlMode::Bitmap3,
+      4 => DisplayControlMode::Bitmap4,
+      5 => DisplayControlMode::Bitmap5,
+      _ => unreachable!(),
+    }
+  }
+  pub fn set_mode(&mut self, new_mode: DisplayControlMode) {
+    self.0 &= !Self::BG_MODE_MASK;
+    self.0 |= match new_mode {
+      DisplayControlMode::Tiled0 => 0,
+      DisplayControlMode::Tiled1 => 1,
+      DisplayControlMode::Tiled2 => 2,
+      DisplayControlMode::Bitmap3 => 3,
+      DisplayControlMode::Bitmap4 => 4,
+      DisplayControlMode::Bitmap5 => 5,
+    };
+  }
+
+  register_bit!(CGB_MODE_BIT, u16, 0b1000, cgb_mode, read);
+  register_bit!(PAGE_SELECT_BIT, u16, 0b1_0000, page1_enabled, read_write);
+  register_bit!(HBLANK_INTERVAL_FREE_BIT, u16, 0b10_0000, hblank_interval_free, read_write);
+  register_bit!(OBJECT_MEMORY_1D, u16, 0b100_0000, object_memory_1d, read_write);
+  register_bit!(FORCE_BLANK_BIT, u16, 0b1000_0000, force_blank, read_write);
+  register_bit!(DISPLAY_BG0_BIT, u16, 0b1_0000_0000, display_bg0, read_write);
+  register_bit!(DISPLAY_BG1_BIT, u16, 0b10_0000_0000, display_bg1, read_write);
+  register_bit!(DISPLAY_BG2_BIT, u16, 0b100_0000_0000, display_bg2, read_write);
+  register_bit!(DISPLAY_BG3_BIT, u16, 0b1000_0000_0000, display_bg3, read_write);
+  register_bit!(DISPLAY_OBJECT_BIT, u16, 0b1_0000_0000_0000, display_object, read_write);
+  register_bit!(DISPLAY_WINDOW0_BIT, u16, 0b10_0000_0000_0000, display_window0, read_write);
+  register_bit!(DISPLAY_WINDOW1_BIT, u16, 0b100_0000_0000_0000, display_window1, read_write);
+  register_bit!(OBJECT_WINDOW_BIT, u16, 0b1000_0000_0000_0000, display_object_window, read_write);
+}
+
+/// The six display modes available on the GBA.
+pub enum DisplayControlMode {
+  /// This basically allows for the most different things at once (all layers,
+  /// 1024 tiles, two palette modes, etc), but you can't do affine
+  /// transformations.
+  Tiled0,
+  /// This is a mix of `Tile0` and `Tile2`: BG0 and BG1 run as if in `Tiled0`,
+  /// and BG2 runs as if in `Tiled2`.
+  Tiled1,
+  /// This allows affine transformations, but only uses BG2 and BG3.
+  Tiled2,
+  /// This is the basic bitmap draw mode. The whole screen is a single bitmap.
+  /// Uses BG2 only.
+  Bitmap3,
+  /// This uses _paletted color_ so that there's enough space to have two pages
+  /// at _full resolution_, allowing page flipping. Uses BG2 only.
+  Bitmap4,
+  /// This uses _reduced resolution_ so that there's enough space to have two
+  /// pages with _full color_, allowing page flipping. Uses BG2 only.
+  Bitmap5,
+}
+
+/// Assigns the given display control setting.
+pub fn set_display_control(setting: DisplayControlSetting) {
+  unsafe {
+    DISPCNT.write(setting.0);
+  }
+}
+/// Obtains the current display control setting.
+pub fn display_control() -> DisplayControlSetting {
+  unsafe { DisplayControlSetting(DISPCNT.read()) }
+}
 
 /// General LCD Status (STAT,LYC)
 pub const DISPSTAT: VolatilePtr<u16> = VolatilePtr(0x4000004 as *mut u16);
@@ -333,9 +412,3 @@ pub const WAITCNT: VolatilePtr<u16> = VolatilePtr(0x4000204 as *mut u16);
 
 /// Interrupt Master Enable Register
 pub const IME: VolatilePtr<u16> = VolatilePtr(0x4000208 as *mut u16);
-
-/// Undocumented - Post Boot Flag
-pub const POSTFLG: VolatilePtr<u8> = VolatilePtr(0x4000300 as *mut u8);
-
-/// Undocumented - Power Down Control
-pub const HALTCNT: VolatilePtr<u8> = VolatilePtr(0x4000301 as *mut u8);

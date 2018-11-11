@@ -1,13 +1,13 @@
 //! Things that I wish were in core, but aren't.
 
-#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, PartialOrd, Ord)]
-#[repr(transparent)]
 /// A simple wrapper to any `*mut T` so that the basic "read" and "write"
 /// operations are volatile.
 ///
 /// Accessing the GBA's IO registers and video ram and specific other places on
 /// **must** be done with volatile operations. Having this wrapper makes that
 /// more clear for all the global const values into IO registers.
+#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, PartialOrd, Ord)]
+#[repr(transparent)]
 pub struct VolatilePtr<T>(pub *mut T);
 
 impl<T> core::fmt::Pointer for VolatilePtr<T> {
@@ -36,5 +36,15 @@ impl<T> VolatilePtr<T> {
   /// for a normal raw pointer volatile write apply.
   pub unsafe fn write(&self, data: T) {
     core::ptr::write_volatile(self.0, data);
+  }
+
+  /// Offsets this address by the amount given.
+  ///
+  /// # Safety
+  ///
+  /// This is a standard offset, so all safety concerns of a normal raw pointer
+  /// offset apply.
+  pub unsafe fn offset(self, count: isize) -> Self {
+    VolatilePtr(self.0.offset(count))
   }
 }

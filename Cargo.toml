@@ -1,11 +1,12 @@
 [package]
 name = "gba"
-version = "0.0.1"
+version = "0.1.0"
 authors = ["Lokathor <zefria@gmail.com>", "Ketsuban"]
 edition = "2018"
-license = "Apache2"
+license = "Apache-2.0"
 
 [dependencies]
+gba-proc-macro = "0.1.1"
 
 [profile.release]
 lto = true
