@@ -1,6 +1,6 @@
 # The Display Control Register
 
-The Display Control is our first actual IO Register. GBATEK gives it the
+The display control register is our first actual IO Register. GBATEK gives it the
 shorthand [DISPCNT](http://problemkaputt.de/gbatek.htm#lcdiodisplaycontrol), so
 you might see it under that name if you read other guides.
 
