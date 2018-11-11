@@ -209,12 +209,17 @@ much as possible.</p>
 <pre><pre class="playpen"><code class="language-rust">#[start]
 fn main(_argc: isize, _argv: *const *const u8) -&gt; isize {
 </code></pre></pre>
-<p>This is our <code>#[start]</code>. We call it <code>main</code>, but the signature looks a lot more
-like the main from C than it does the main from Rust. Actually, those inputs are
-useless, because nothing will be calling our code from the outside. Similarly,
-it's totally undefined to return anything, so the fact that we output an <code>isize</code>
-is vacuously true at best. We just have to use this function signature because
-that's how <code>#[start]</code> works, not because the inputs and outputs are meaningful.</p>
+<p>This is our <code>#[start]</code>. We call it <code>main</code>, but it's not like a <code>main</code> that you'd
+see in a Rust program. It's <em>more like</em> the sort of <code>main</code> that you'd see in a C
+program, but it's still <strong>not</strong> that either. If you compile a <code>#[start]</code> program
+for a target with an OS such as <code>arm-none-eabi-nm</code> you can open up the debug
+info and see that your result will have the symbol for the C <code>main</code> along side
+the symbol for the start <code>main</code> that we write here. Our start <code>main</code> is just its
+own unique thing, and the inputs and outputs have to be like that because that's
+how <code>#[start]</code> is specified to work in Rust.</p>
+<p>If you think about it for a moment you'll probably realize that, those inputs
+and outputs are totally useless to us on a GBA. There's no OS on the GBA to call
+our program, and there's no place for our program to &quot;return to&quot; when it's done.</p>
 <pre><pre class="playpen"><code class="language-rust">
 # #![allow(unused_variables)]
 #fn main() {

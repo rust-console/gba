@@ -234,6 +234,10 @@ pub unsafe fn mode3_pixel(col: isize, row: isize, color: u16) {
   (VRAM as *mut u16).offset(col + row * SCREEN_WIDTH).write_volatile(color);
 }
 </code></pre></pre>
+<p>Exact same program that we started with, but much easier to read.</p>
+<p>Of course, in the full <code>gba</code> crate that this book is a part of we have these and
+other elements all labeled and sorted out for you. Still, for educational
+purposes it's often best to do it yourself at least once.</p>
 
                     </main>
 

@@ -83,12 +83,18 @@ much as possible.
 fn main(_argc: isize, _argv: *const *const u8) -> isize {
 ```
 
-This is our `#[start]`. We call it `main`, but the signature looks a lot more
-like the main from C than it does the main from Rust. Actually, those inputs are
-useless, because nothing will be calling our code from the outside. Similarly,
-it's totally undefined to return anything, so the fact that we output an `isize`
-is vacuously true at best. We just have to use this function signature because
-that's how `#[start]` works, not because the inputs and outputs are meaningful.
+This is our `#[start]`. We call it `main`, but it's not like a `main` that you'd
+see in a Rust program. It's _more like_ the sort of `main` that you'd see in a C
+program, but it's still **not** that either. If you compile a `#[start]` program
+for a target with an OS such as `arm-none-eabi-nm` you can open up the debug
+info and see that your result will have the symbol for the C `main` along side
+the symbol for the start `main` that we write here. Our start `main` is just its
+own unique thing, and the inputs and outputs have to be like that because that's
+how `#[start]` is specified to work in Rust.
+
+If you think about it for a moment you'll probably realize that, those inputs
+and outputs are totally useless to us on a GBA. There's no OS on the GBA to call
+our program, and there's no place for our program to "return to" when it's done.
 
 ```rust
   unsafe {
