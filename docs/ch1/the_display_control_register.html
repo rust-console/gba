@@ -145,19 +145,23 @@ that we can get a hint of what's to come.</p>
 <p>Also it's the one that you basically always need to set at least once in every
 GBA game, so it's a good starting one to go over for that reason too.</p>
 <p>The display control register holds a <code>u16</code> value, and is located at <code>0x0400_0000</code>.</p>
+<p>Many of the bits here won't mean much to you right now. <strong>That is fine.</strong> You do
+NOT need to memorize them all or what they all do right away. We'll just skim
+over all the parts of this register to start, and then we'll go into more detail
+in later chapters when we need to come back and use more of the bits.</p>
 <a class="header" href="#video-modes" id="video-modes"><h2>Video Modes</h2></a>
 <p>The lowest three bits (0-2) let you select from among the GBA's six video modes.
 You'll notice that 3 bits allows for eight modes, but the values 6 and 7 are
 prohibited.</p>
-<p>Modes 0, 1, and 2 are &quot;Tiled&quot; modes. These are actually the modes that you
+<p>Modes 0, 1, and 2 are &quot;tiled&quot; modes. These are actually the modes that you
 should eventually learn to use as much as possible. It lets the GBA's limited
 video hardware do as much of the work as possible, leaving more of your CPU time
 for gameplay computations. However, they're also complex enough to deserve their
 own demos and chapters later on, so that's all we'll say about them for now.</p>
-<p>Modes 3, 4, and 5 are &quot;Bitmap&quot; modes. These let you write individual pixels to
+<p>Modes 3, 4, and 5 are &quot;bitmap&quot; modes. These let you write individual pixels to
 locations on the screen.</p>
 <ul>
-<li><strong>Mode 3</strong> is full resolution (240w x 160h) RBG15 color. You might not be used
+<li><strong>Mode 3</strong> is full resolution (240w x 160h) RGB15 color. You might not be used
 to RGB15, since modern computers have 24 or 32 bit colors. In RGB15, there's 5
 bits for each color channel stored within a <code>u16</code> value, and the highest bit is
 simply ignored.</li>
@@ -186,7 +190,9 @@ the 0th page is used, and when the bit is 1 the 1st page is used.</p>
 <p>Bit 5 lets you access OAM during HBlank if enabled. This is cool, but it reduces
 the maximum sprites per scanline, so it's not default.</p>
 <p>Bit 6 lets you adjust if the GBA should treat Object Character VRAM as being 2d
-(off) or 1d (on).</p>
+(off) or 1d (on). This particular control can be kinda tricky to wrap your head
+around, so we'll be sure to have some extra diagrams in the chapter that deals
+with it.</p>
 <p>Bit 7 forces the screen to stay in vblank as long as it's set. This allows the
 fastest use of the VRAM, Palette, and Object Attribute Memory. Obviously if you
 leave this on for too long the player will notice a blank screen, but it might

@@ -12,22 +12,27 @@ GBA game, so it's a good starting one to go over for that reason too.
 
 The display control register holds a `u16` value, and is located at `0x0400_0000`.
 
+Many of the bits here won't mean much to you right now. **That is fine.** You do
+NOT need to memorize them all or what they all do right away. We'll just skim
+over all the parts of this register to start, and then we'll go into more detail
+in later chapters when we need to come back and use more of the bits.
+
 ## Video Modes
 
 The lowest three bits (0-2) let you select from among the GBA's six video modes.
 You'll notice that 3 bits allows for eight modes, but the values 6 and 7 are
 prohibited.
 
-Modes 0, 1, and 2 are "Tiled" modes. These are actually the modes that you
+Modes 0, 1, and 2 are "tiled" modes. These are actually the modes that you
 should eventually learn to use as much as possible. It lets the GBA's limited
 video hardware do as much of the work as possible, leaving more of your CPU time
 for gameplay computations. However, they're also complex enough to deserve their
 own demos and chapters later on, so that's all we'll say about them for now.
 
-Modes 3, 4, and 5 are "Bitmap" modes. These let you write individual pixels to
+Modes 3, 4, and 5 are "bitmap" modes. These let you write individual pixels to
 locations on the screen.
 
-* **Mode 3** is full resolution (240w x 160h) RBG15 color. You might not be used
+* **Mode 3** is full resolution (240w x 160h) RGB15 color. You might not be used
   to RGB15, since modern computers have 24 or 32 bit colors. In RGB15, there's 5
   bits for each color channel stored within a `u16` value, and the highest bit is
   simply ignored.
@@ -64,7 +69,9 @@ Bit 5 lets you access OAM during HBlank if enabled. This is cool, but it reduces
 the maximum sprites per scanline, so it's not default.
 
 Bit 6 lets you adjust if the GBA should treat Object Character VRAM as being 2d
-(off) or 1d (on).
+(off) or 1d (on). This particular control can be kinda tricky to wrap your head
+around, so we'll be sure to have some extra diagrams in the chapter that deals
+with it.
 
 Bit 7 forces the screen to stay in vblank as long as it's set. This allows the
 fastest use of the VRAM, Palette, and Object Attribute Memory. Obviously if you
