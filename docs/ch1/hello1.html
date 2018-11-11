@@ -220,6 +220,10 @@ how <code>#[start]</code> is specified to work in Rust.</p>
 <p>If you think about it for a moment you'll probably realize that, those inputs
 and outputs are totally useless to us on a GBA. There's no OS on the GBA to call
 our program, and there's no place for our program to &quot;return to&quot; when it's done.</p>
+<p>Side note: if you want to learn more about stuff &quot;before main gets called&quot; you
+can watch a great <a href="https://www.youtube.com/watch?v=dOfucXtyEsU">CppCon talk</a> by
+Matt Godbolt (yes, that Godbolt) where he delves into quite a bit of it. The
+talk doesn't really apply to the GBA, but it's pretty good.</p>
 <pre><pre class="playpen"><code class="language-rust">
 # #![allow(unused_variables)]
 #fn main() {

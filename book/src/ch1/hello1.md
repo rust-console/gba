@@ -96,6 +96,11 @@ If you think about it for a moment you'll probably realize that, those inputs
 and outputs are totally useless to us on a GBA. There's no OS on the GBA to call
 our program, and there's no place for our program to "return to" when it's done.
 
+Side note: if you want to learn more about stuff "before main gets called" you
+can watch a great [CppCon talk](https://www.youtube.com/watch?v=dOfucXtyEsU) by
+Matt Godbolt (yes, that Godbolt) where he delves into quite a bit of it. The
+talk doesn't really apply to the GBA, but it's pretty good.
+
 ```rust
   unsafe {
 ```
