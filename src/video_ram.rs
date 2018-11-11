@@ -1,6 +1,6 @@
 //! Module for all things relating to the Video RAM.
 //!
-//! Note that that GBA has six different display modes available, and the
+//! Note that the GBA has six different display modes available, and the
 //! _meaning_ of Video RAM depends on which display mode is active. In all
 //! cases, Video RAM is **96kb** from `0x0600_0000` to `0x0601_7FFF`.
 //!
@@ -12,8 +12,6 @@
 //! Accordingly, the "safe" functions here will check that you're in bounds, but
 //! they won't bother to check that you've set the video mode they're designed
 //! for.
-
-//use super::*;
 
 /// The physical width in pixels of the GBA screen.
 pub const SCREEN_WIDTH: isize = 240;
