@@ -163,8 +163,9 @@ anyway. Sometimes that's right, but sometimes it's wrong.
 Marking a read or write as _volatile_ tells the compiler that it really must do
 that action, and in the exact order that we wrote it out. It says that there
 might even be special hardware side effects going on that the compiler isn't
-aware of. In this case, the Display Control write sets a video mode, and the
-Video RAM writes set pixels that will show up on the screen.
+aware of. In this case, the write to the display control register sets a video
+mode, and the writes to the Video RAM set pixels that will show up on the
+screen.
 
 Similar to "atomic" operations you might have heard about, all volatile
 operations are enforced to happen in the exact order that you specify them, but
@@ -176,15 +177,12 @@ a += b;
 d.volatile_write(7);
 ```
 
-might end up changing `a` either before or after the change to `c`, but the
-write to `d` will _always_ happen after the write to `c`.
+might end up changing `a` either before or after the change to `c` (since the
+value of `a` doesn't affect the write to `c`), but the write to `d` will
+_always_ happen after the write to `c` even though the compiler doesn't see any
+direct data dependency there.
 
 If you ever use volatile stuff on other platforms it's important to note that
 volatile doesn't make things thread-safe, you still need atomic for that.
 However, the GBA doesn't have threads, so we don't have to worry about thread
 safety concerns.
-
-Accordingly, our first bit of code for our library will be a _newtype_ over a
-normal `*mut T` so that it has volatile reads and writes as the default. We'll
-cover the details later on when we try writing a `hello2` program, once we know
-more of what's going on.
