@@ -388,9 +388,62 @@ pub const KEYINPUT: VolatilePtr<u16> = VolatilePtr(0x4000130 as *mut u16);
 #[repr(transparent)]
 pub struct KeyInputSetting(u16);
 
+/// A "tribool" value helps us interpret the arrow pad.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[repr(i32)]
+#[allow(missing_docs)]
+pub enum TriBool {
+  Minus = -1,
+  Neutral = 0,
+  Plus = 1,
+}
+
 #[allow(missing_docs)]
 impl KeyInputSetting {
-  register_bit!(A_BIT, u16, 0b1, a_pressed, read_write);
+  register_bit!(A_BIT, u16, 1 << 0, a_pressed, read_write);
+  register_bit!(B_BIT, u16, 1 << 1, b_pressed, read_write);
+  register_bit!(SELECT_BIT, u16, 1 << 2, select_pressed, read_write);
+  register_bit!(START_BIT, u16, 1 << 3, start_pressed, read_write);
+  register_bit!(RIGHT_BIT, u16, 1 << 4, right_pressed, read_write);
+  register_bit!(LEFT_BIT, u16, 1 << 5, left_pressed, read_write);
+  register_bit!(UP_BIT, u16, 1 << 6, up_pressed, read_write);
+  register_bit!(DOWN_BIT, u16, 1 << 7, down_pressed, read_write);
+  register_bit!(R_BIT, u16, 1 << 8, r_pressed, read_write);
+  register_bit!(L_BIT, u16, 1 << 9, l_pressed, read_write);
+
+  /// Takes the difference between these keys and another set of keys.
+  pub fn difference(&self, other: KeyInputSetting) -> KeyInputSetting {
+    KeyInputSetting(self.0 ^ other.0)
+  }
+
+  /// Gives the arrow pad value as a tribool, with Plus being increased column
+  /// value (right).
+  pub fn column_direction(&self) -> TriBool {
+    if self.right_pressed() {
+      TriBool::Plus
+    } else if self.left_pressed() {
+      TriBool::Minus
+    } else {
+      TriBool::Neutral
+    }
+  }
+
+  /// Gives the arrow pad value as a tribool, with Plus being increased row
+  /// value (down).
+  pub fn row_direction(&self) -> TriBool {
+    if self.down_pressed() {
+      TriBool::Plus
+    } else if self.up_pressed() {
+      TriBool::Minus
+    } else {
+      TriBool::Neutral
+    }
+  }
+}
+
+/// Gets the current state of the keys
+pub fn read_key_input() -> KeyInputSetting {
+  unsafe { KeyInputSetting(KEYINPUT.read() ^ 0b1111_1111_1111_1111) }
 }
 
 /// Key Interrupt Control
