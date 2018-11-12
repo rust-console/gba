@@ -205,6 +205,6 @@ So then every frame we can check for `column_direction` and `row_direction` and
 then apply those to the snake's current position to make it move around the
 screen.
 
-With that I think we're all done with user input for now. There's some other
+With that, I think we're all done with user input for now. There's some other
 things to eventually know about like key interrupts that you can set and stuff,
 but we'll cover that later on because it's not necessary right now.
