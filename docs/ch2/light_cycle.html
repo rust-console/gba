@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>gba_snake - Rust GBA Tutorials</title>
+        <title>light_cycle - Rust GBA Tutorials</title>
         <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -72,7 +72,7 @@
         </script>
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
-            <ol class="chapter"><li><a href="../introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><a href="../ch0/index.html"><strong aria-hidden="true">2.</strong> Ch 0: Development Setup</a></li><li><a href="../ch1/index.html"><strong aria-hidden="true">3.</strong> Ch 1: Hello GBA</a></li><li><ol class="section"><li><a href="../ch1/hello1.html"><strong aria-hidden="true">3.1.</strong> hello1</a></li><li><a href="../ch1/io_registers.html"><strong aria-hidden="true">3.2.</strong> IO Registers</a></li><li><a href="../ch1/the_display_control_register.html"><strong aria-hidden="true">3.3.</strong> The Display Control Register</a></li><li><a href="../ch1/video_memory_intro.html"><strong aria-hidden="true">3.4.</strong> Video Memory Intro</a></li><li><a href="../ch1/hello2.html"><strong aria-hidden="true">3.5.</strong> hello2</a></li></ol></li><li><a href="../ch2/index.html"><strong aria-hidden="true">4.</strong> Ch 2: User Input</a></li><li><ol class="section"><li><a href="../ch2/the_key_input_register.html"><strong aria-hidden="true">4.1.</strong> The Key Input Register</a></li><li><a href="../ch2/the_vcount_register.html"><strong aria-hidden="true">4.2.</strong> The VCount Register</a></li><li><a href="../ch2/gba_snake.html" class="active"><strong aria-hidden="true">4.3.</strong> gba_snake</a></li></ol></li></ol>
+            <ol class="chapter"><li><a href="../introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><a href="../ch0/index.html"><strong aria-hidden="true">2.</strong> Ch 0: Development Setup</a></li><li><a href="../ch1/index.html"><strong aria-hidden="true">3.</strong> Ch 1: Hello GBA</a></li><li><ol class="section"><li><a href="../ch1/hello1.html"><strong aria-hidden="true">3.1.</strong> hello1</a></li><li><a href="../ch1/io_registers.html"><strong aria-hidden="true">3.2.</strong> IO Registers</a></li><li><a href="../ch1/the_display_control_register.html"><strong aria-hidden="true">3.3.</strong> The Display Control Register</a></li><li><a href="../ch1/video_memory_intro.html"><strong aria-hidden="true">3.4.</strong> Video Memory Intro</a></li><li><a href="../ch1/hello2.html"><strong aria-hidden="true">3.5.</strong> hello2</a></li></ol></li><li><a href="../ch2/index.html"><strong aria-hidden="true">4.</strong> Ch 2: User Input</a></li><li><ol class="section"><li><a href="../ch2/the_key_input_register.html"><strong aria-hidden="true">4.1.</strong> The Key Input Register</a></li><li><a href="../ch2/the_vcount_register.html"><strong aria-hidden="true">4.2.</strong> The VCount Register</a></li><li><a href="../ch2/light_cycle.html" class="active"><strong aria-hidden="true">4.3.</strong> light_cycle</a></li></ol></li></ol>
         </nav>
 
         <div id="page-wrapper" class="page-wrapper">
@@ -136,8 +136,109 @@
 
                 <div id="content" class="content">
                     <main>
-                        <a class="header" href="#gba_snake" id="gba_snake"><h1>gba_snake</h1></a>
-<p>TODO: make a &quot;snake game&quot; using arrow key input and vsync</p>
+                        <a class="header" href="#light_cycle" id="light_cycle"><h1>light_cycle</h1></a>
+<p>Now let's make a game of &quot;light_cycle&quot; with our new knowledge.</p>
+<a class="header" href="#gameplay" id="gameplay"><h2>Gameplay</h2></a>
+<p><code>light_cycle</code> is pretty simple, and very obvious if you've ever seen Tron. The
+player moves around the screen with a trail left behind them. They die if they
+go off the screen or if they touch their own trail.</p>
+<a class="header" href="#operations" id="operations"><h2>Operations</h2></a>
+<p>We need some better drawing operations this time around.</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+pub unsafe fn mode3_clear_screen(color: u16) {
+  let color = color as u32;
+  let bulk_color = color &lt;&lt; 16 | color;
+  let mut ptr = VRAM as *mut u32;
+  for _ in 0..SCREEN_HEIGHT {
+    for _ in 0..(SCREEN_WIDTH / 2) {
+      ptr.write_volatile(bulk_color);
+      ptr = ptr.offset(1);
+    }
+  }
+}
+
+pub unsafe fn mode3_draw_pixel(col: isize, row: isize, color: u16) {
+  (VRAM as *mut u16).offset(col + row * SCREEN_WIDTH).write_volatile(color);
+}
+
+pub unsafe fn mode3_read_pixel(col: isize, row: isize) -&gt; u16 {
+  (VRAM as *mut u16).offset(col + row * SCREEN_WIDTH).read_volatile()
+}
+#}</code></pre></pre>
+<p>The draw pixel and read pixel are both pretty obvious. What's new is the clear
+screen operation. It changes the <code>u16</code> color into a <code>u32</code> and then packs the
+value in twice. Then we write out <code>u32</code> values the whole way through screen
+memory. This means we have to do less write operations overall, and so the
+screen clear is twice as fast.</p>
+<p>Now we just have to fill in the main function:</p>
+<pre><pre class="playpen"><code class="language-rust">#[start]
+fn main(_argc: isize, _argv: *const *const u8) -&gt; isize {
+  unsafe {
+    DISPCNT.write_volatile(MODE3 | BG2);
+  }
+
+  let mut px = SCREEN_WIDTH / 2;
+  let mut py = SCREEN_HEIGHT / 2;
+  let mut color = rgb16(31, 0, 0);
+
+  loop {
+    // read the input for this frame
+    let this_frame_keys = read_key_input();
+
+    // adjust game state and wait for vblank
+    px += 2 * this_frame_keys.column_direction() as isize;
+    py += 2 * this_frame_keys.row_direction() as isize;
+    wait_until_vblank();
+
+    // draw the new game and wait until the next frame starts.
+    unsafe {
+      if px &lt; 0 || py &lt; 0 || px == SCREEN_WIDTH || py == SCREEN_HEIGHT {
+        // out of bounds, reset the screen and position.
+        mode3_clear_screen(0);
+        color = color.rotate_left(5);
+        px = SCREEN_WIDTH / 2;
+        py = SCREEN_HEIGHT / 2;
+      } else {
+        let color_here = mode3_read_pixel(px, py);
+        if color_here != 0 {
+          // crashed into our own line, reset the screen
+          mode3_clear_screen(0);
+          color = color.rotate_left(5);
+        } else {
+          // draw the new part of the line
+          mode3_draw_pixel(px, py, color);
+          mode3_draw_pixel(px, py + 1, color);
+          mode3_draw_pixel(px + 1, py, color);
+          mode3_draw_pixel(px + 1, py + 1, color);
+        }
+      }
+    }
+    wait_until_vdraw();
+  }
+}
+</code></pre></pre>
+<p>Oh that's a lot more than before!</p>
+<p>First we set Mode 3 and Background 2, we know about that.</p>
+<p>Then we're going to store the player's x and y, along with a color value for
+their light cycle. Then we enter the core loop.</p>
+<p>We read the keys for input, and then do as much as we can without touching video
+memory. Since we're using video memory as the place to store the player's light
+trail, we can't do much, we just update their position and wait for vblank to
+start. The player will be a 2x2 square, so the arrows will move you 2 pixels per
+frame.</p>
+<p>Once we're in vblank we check to see what kind of drawing we're doing. If the
+player has gone out of bounds, we clear the screen, rotate their color, and then
+reset their position. Why rotate the color? Just because it's fun to have
+different colors.</p>
+<p>Next, if the player is in bounds we read the video memory for their position. If
+it's not black that means we've been here before and the player has crashed into
+their own line. In this case, we reset the game without moving them to a new
+location.</p>
+<p>Finally, if the player is in bounds and they haven't crashed, we write their color into memory at this position.</p>
+<p>Regardless of how it worked out, we hold here until vdraw starts before going to
+the next loop.</p>
 
                     </main>
 

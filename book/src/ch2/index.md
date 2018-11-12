@@ -12,8 +12,11 @@ modern computer or console you do this with vsync info from the GPU and Monitor,
 and on the GBA we'll be using vsync info from an IO register that tracks what
 the display hardware is doing.
 
-For this chapter we'll make a copy of `hello2.rs` named `snake.rs` and then fill
-it in as we go. Normally you might not place the entire program into a single
-source file, but since these are examples it's slightly better to have them be
-completely self contained than it is to have them be "properly organized" for
-the long term.
+As a way to apply our knowledge We'll make a simply "light cycle" game where
+your dot leaves a trail behind them and you die if you go off the screen or if
+you touch your own trail. We just make a copy of `hello2.rs` named
+`light_cycle.rs` and then fill it in as we go through the chapter. Normally you
+might not place the entire program into a single source file, particularly as it
+grows over time, but since these are small examples it's much better to have
+them be completely self contained than it is to have them be "properly
+organized" for the long term.

@@ -72,7 +72,7 @@
         </script>
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
-            <ol class="chapter"><li><a href="introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><a href="ch0/index.html"><strong aria-hidden="true">2.</strong> Ch 0: Development Setup</a></li><li><a href="ch1/index.html"><strong aria-hidden="true">3.</strong> Ch 1: Hello GBA</a></li><li><ol class="section"><li><a href="ch1/hello1.html"><strong aria-hidden="true">3.1.</strong> hello1</a></li><li><a href="ch1/io_registers.html"><strong aria-hidden="true">3.2.</strong> IO Registers</a></li><li><a href="ch1/the_display_control_register.html"><strong aria-hidden="true">3.3.</strong> The Display Control Register</a></li><li><a href="ch1/video_memory_intro.html"><strong aria-hidden="true">3.4.</strong> Video Memory Intro</a></li><li><a href="ch1/hello2.html"><strong aria-hidden="true">3.5.</strong> hello2</a></li></ol></li><li><a href="ch2/index.html"><strong aria-hidden="true">4.</strong> Ch 2: User Input</a></li><li><ol class="section"><li><a href="ch2/the_key_input_register.html"><strong aria-hidden="true">4.1.</strong> The Key Input Register</a></li><li><a href="ch2/the_vcount_register.html"><strong aria-hidden="true">4.2.</strong> The VCount Register</a></li><li><a href="ch2/gba_snake.html"><strong aria-hidden="true">4.3.</strong> gba_snake</a></li></ol></li></ol>
+            <ol class="chapter"><li><a href="introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><a href="ch0/index.html"><strong aria-hidden="true">2.</strong> Ch 0: Development Setup</a></li><li><a href="ch1/index.html"><strong aria-hidden="true">3.</strong> Ch 1: Hello GBA</a></li><li><ol class="section"><li><a href="ch1/hello1.html"><strong aria-hidden="true">3.1.</strong> hello1</a></li><li><a href="ch1/io_registers.html"><strong aria-hidden="true">3.2.</strong> IO Registers</a></li><li><a href="ch1/the_display_control_register.html"><strong aria-hidden="true">3.3.</strong> The Display Control Register</a></li><li><a href="ch1/video_memory_intro.html"><strong aria-hidden="true">3.4.</strong> Video Memory Intro</a></li><li><a href="ch1/hello2.html"><strong aria-hidden="true">3.5.</strong> hello2</a></li></ol></li><li><a href="ch2/index.html"><strong aria-hidden="true">4.</strong> Ch 2: User Input</a></li><li><ol class="section"><li><a href="ch2/the_key_input_register.html"><strong aria-hidden="true">4.1.</strong> The Key Input Register</a></li><li><a href="ch2/the_vcount_register.html"><strong aria-hidden="true">4.2.</strong> The VCount Register</a></li><li><a href="ch2/light_cycle.html"><strong aria-hidden="true">4.3.</strong> light_cycle</a></li></ol></li></ol>
         </nav>
 
         <div id="page-wrapper" class="page-wrapper">
@@ -147,6 +147,9 @@ for C, but it's what I based the ordering of this book's sections on.</li>
 <li><a href="http://problemkaputt.de/gbatek.htm">GBATEK</a>, a homebrew tech manual for
 GBA/NDS/DSi. We will regularly link to parts of it when talking about various
 bits of the GBA.</li>
+<li><a href="https://www.cs.rit.edu/%7Etjh8300/CowBite/CowBiteSpec.htm">CowBite</a> is another
+tech specification that's more GBA specific. It's sometimes got more ASCII
+art diagrams and example C struct layouts than GBATEK does.</li>
 </ul>
 <a class="header" href="#chapter-0-development-setup" id="chapter-0-development-setup"><h1>Chapter 0: Development Setup</h1></a>
 <p>Before you can build a GBA game you'll have to follow some special steps to
@@ -789,11 +792,14 @@ SNES had. As you can guess, we get key state info from an IO register.</p>
 modern computer or console you do this with vsync info from the GPU and Monitor,
 and on the GBA we'll be using vsync info from an IO register that tracks what
 the display hardware is doing.</p>
-<p>For this chapter we'll make a copy of <code>hello2.rs</code> named <code>snake.rs</code> and then fill
-it in as we go. Normally you might not place the entire program into a single
-source file, but since these are examples it's slightly better to have them be
-completely self contained than it is to have them be &quot;properly organized&quot; for
-the long term.</p>
+<p>As a way to apply our knowledge We'll make a simply &quot;light cycle&quot; game where
+your dot leaves a trail behind them and you die if you go off the screen or if
+you touch your own trail. We just make a copy of <code>hello2.rs</code> named
+<code>light_cycle.rs</code> and then fill it in as we go through the chapter. Normally you
+might not place the entire program into a single source file, particularly as it
+grows over time, but since these are small examples it's much better to have
+them be completely self contained than it is to have them be &quot;properly
+organized&quot; for the long term.</p>
 <a class="header" href="#the-key-input-register" id="the-key-input-register"><h1>The Key Input Register</h1></a>
 <p>The Key Input Register is our next IO register. Its shorthand name is
 <a href="http://problemkaputt.de/gbatek.htm#gbakeypadinput">KEYINPUT</a> and it's a <code>u16</code>
@@ -851,7 +857,7 @@ pub const KEYINPUT: *mut u16 = 0x400_0130 as *mut u16;
 pub struct KeyInputSetting(u16);
 
 pub fn read_key_input() -&gt; KeyInputSetting {
-  unsafe { KeyInputSetting(KEYINPUT.volatile_read()) }
+  unsafe { KeyInputSetting(KEYINPUT.read_volatile()) }
 }
 #}</code></pre></pre>
 <p>Now we want a way to check if a key is <em>being pressed</em>, since that's normally
@@ -872,16 +878,16 @@ something. Also, we've set the target to <code>thumbv6m-none-eabi</code>, which 
 slightly later version of ARM than the actual GBA, but it's close enough for
 just checking. Of course, in a full program small functions like these will
 probably get inlined into the calling code and disappear entirely as they're
-folded and refolded by the compiler, and so on. Still, we can see that in the
-simple case when the compiler doesn't know any extra context, the <code>!=0</code> test is
-4 instructions and the <code>==0</code> test is six instructions. Since we want to get
-saving where we can, we'll always use a <code>!=0</code> test and we'll adjust how we
-initially read the register to compensate.</p>
+folded and refolded by the compiler, but we can just check.</p>
+<p>It turns out that the <code>!=0</code> test is 4 instructions and the <code>==0</code> test is 6
+instructions. Since we want to get savings where we can, and we'll probably
+check the keys of an input often enough, we'll just always use a <code>!=0</code> test and
+then adjust how we initially read the register to compensate.</p>
 <pre><pre class="playpen"><code class="language-rust">
 # #![allow(unused_variables)]
 #fn main() {
 pub fn read_key_input() -&gt; KeyInputSetting {
-  unsafe { KeyInputSetting(KEYINPUT.volatile_read() ^ 0b1111_1111_1111_1111) }
+  unsafe { KeyInputSetting(KEYINPUT.read_volatile() ^ 0b1111_1111_1111_1111) }
 }
 #}</code></pre></pre>
 <p>Now we add a method for seeing if a key is pressed. In the full library there's
@@ -985,19 +991,184 @@ somehow later on.</p>
     }
   }
 #}</code></pre></pre>
-<p>So then every frame we can check for <code>column_direction</code> and <code>row_direction</code> and
-then apply those to the snake's current position to make it move around the
-screen.</p>
+<p>So then in our game, every frame we can check for <code>column_direction</code> and
+<code>row_direction</code> and then apply those to the player's current position to make
+them move around the screen.</p>
 <p>With that settled I think we're all done with user input for now. There's some
 other things to eventually know about like key interrupts that you can set and
 stuff, but we'll cover that later on because it's not necessary right now.</p>
 <a class="header" href="#the-vcount-register" id="the-vcount-register"><h1>The VCount Register</h1></a>
-<p>TODO: describe all the stuff about vcount</p>
-<p>TODO: mention vblank and hblank</p>
-<p>TODO: mention that this just using this is a BAD way to vsync that will draw a
-ton of extra power</p>
-<a class="header" href="#gba_snake" id="gba_snake"><h1>gba_snake</h1></a>
-<p>TODO: make a &quot;snake game&quot; using arrow key input and vsync</p>
+<p>There's an IO register called
+<a href="http://problemkaputt.de/gbatek.htm#lcdiointerruptsandstatus">VCOUNT</a> that shows
+you, what else, the Vertical (row) COUNT(er). It's a <code>u16</code> at address
+<code>0x0400_0006</code>, and it's how we'll be doing our very poor quality vertical sync
+code to start.</p>
+<ul>
+<li><strong>What makes it poor?</strong> Well, we're just going to read from the vcount value as
+often as possible every time we need to wait for a specific value to come up,
+and then proceed once it hits the point we're looking for.</li>
+<li><strong>Why is this bad?</strong> Because we're making the CPU do a lot of useless work,
+which uses a lot more power that necessary. Even if you're not on an actual
+GBA you might be running inside an emulator on a phone or other handheld. You
+wanna try to save battery if all you're doing with that power use is waiting
+instead of making a game actually do something.</li>
+<li><strong>Can we do better?</strong> We can, but not yet. The better way to do things is to
+use a BIOS call to put the CPU into low power mode until a VBlank interrupt
+happens. However, we don't know about interrupts yet, and we don't know about
+BIOS calls yet, so we'll do the basic thing for now and then upgrade later.</li>
+</ul>
+<p>So the way that display hardware actually displays each frame is that it moves a
+tiny pointer left to right across each pixel row one pixel at a time. When it's
+within the actual screen width (240px) it's drawing out those pixels. Then it
+goes <em>past</em> the edge of the screen for 68px during a period known as the
+&quot;horizontal blank&quot; (hblank). Then it starts on the next row and does that loop
+over again. This happens for the whole screen height (160px) and then once again
+it goes past the last row for another 68px into a &quot;vertical blank&quot; (vblank)
+period.</p>
+<ul>
+<li>One pixel is 4 CPU cycles</li>
+<li>HDraw is 240 pixels, HBlank is 68 pixels (1,232 cycles per full scanline)</li>
+<li>VDraw is 150 scanlines, VBlank is 68 scanlines (280,896 cycles per full refresh)</li>
+</ul>
+<p>Now you may remember some stuff from the display control register section where
+it was mentioned that some parts of memory are best accessed during vblank, and
+also during hblank with a setting applied. These blanking periods are what was
+being talked about. At other times if you attempt to access video or object
+memory you (the CPU) might try touching the same memory that the display device
+is trying to use, in which case you get bumped back a cycle so that the display
+can finish what it's doing. Also, if you really insist on doing video memory
+changes while the screen is being drawn then you might get some visual glitches.
+If you can, just prepare all your changes ahead of time and then assign then all
+quickly during the blank period.</p>
+<p>So first we want a way to check the vcount value at all:</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+pub const VCOUNT: *mut u16 = 0x0400_0006 as *mut u16;
+
+pub fn read_vcount() -&gt; u16 {
+  unsafe { VCOUNT.read_volatile() }
+}
+#}</code></pre></pre>
+<p>Then we want two little helper functions to wait until vblank and vdraw.</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+pub const SCREEN_HEIGHT: isize = 160;
+
+pub fn wait_until_vblank() {
+  while read_vcount() &lt; SCREEN_HEIGHT as u16 {}
+}
+
+pub fn wait_until_vdraw() {
+  while read_vcount() &gt;= SCREEN_HEIGHT as u16 {}
+}
+#}</code></pre></pre>
+<p>And... that's it. No special types to be made this time around, it's just a
+number we read out of memory.</p>
+<a class="header" href="#light_cycle" id="light_cycle"><h1>light_cycle</h1></a>
+<p>Now let's make a game of &quot;light_cycle&quot; with our new knowledge.</p>
+<a class="header" href="#gameplay" id="gameplay"><h2>Gameplay</h2></a>
+<p><code>light_cycle</code> is pretty simple, and very obvious if you've ever seen Tron. The
+player moves around the screen with a trail left behind them. They die if they
+go off the screen or if they touch their own trail.</p>
+<a class="header" href="#operations" id="operations"><h2>Operations</h2></a>
+<p>We need some better drawing operations this time around.</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+pub unsafe fn mode3_clear_screen(color: u16) {
+  let color = color as u32;
+  let bulk_color = color &lt;&lt; 16 | color;
+  let mut ptr = VRAM as *mut u32;
+  for _ in 0..SCREEN_HEIGHT {
+    for _ in 0..(SCREEN_WIDTH / 2) {
+      ptr.write_volatile(bulk_color);
+      ptr = ptr.offset(1);
+    }
+  }
+}
+
+pub unsafe fn mode3_draw_pixel(col: isize, row: isize, color: u16) {
+  (VRAM as *mut u16).offset(col + row * SCREEN_WIDTH).write_volatile(color);
+}
+
+pub unsafe fn mode3_read_pixel(col: isize, row: isize) -&gt; u16 {
+  (VRAM as *mut u16).offset(col + row * SCREEN_WIDTH).read_volatile()
+}
+#}</code></pre></pre>
+<p>The draw pixel and read pixel are both pretty obvious. What's new is the clear
+screen operation. It changes the <code>u16</code> color into a <code>u32</code> and then packs the
+value in twice. Then we write out <code>u32</code> values the whole way through screen
+memory. This means we have to do less write operations overall, and so the
+screen clear is twice as fast.</p>
+<p>Now we just have to fill in the main function:</p>
+<pre><pre class="playpen"><code class="language-rust">#[start]
+fn main(_argc: isize, _argv: *const *const u8) -&gt; isize {
+  unsafe {
+    DISPCNT.write_volatile(MODE3 | BG2);
+  }
+
+  let mut px = SCREEN_WIDTH / 2;
+  let mut py = SCREEN_HEIGHT / 2;
+  let mut color = rgb16(31, 0, 0);
+
+  loop {
+    // read the input for this frame
+    let this_frame_keys = read_key_input();
+
+    // adjust game state and wait for vblank
+    px += 2 * this_frame_keys.column_direction() as isize;
+    py += 2 * this_frame_keys.row_direction() as isize;
+    wait_until_vblank();
+
+    // draw the new game and wait until the next frame starts.
+    unsafe {
+      if px &lt; 0 || py &lt; 0 || px == SCREEN_WIDTH || py == SCREEN_HEIGHT {
+        // out of bounds, reset the screen and position.
+        mode3_clear_screen(0);
+        color = color.rotate_left(5);
+        px = SCREEN_WIDTH / 2;
+        py = SCREEN_HEIGHT / 2;
+      } else {
+        let color_here = mode3_read_pixel(px, py);
+        if color_here != 0 {
+          // crashed into our own line, reset the screen
+          mode3_clear_screen(0);
+          color = color.rotate_left(5);
+        } else {
+          // draw the new part of the line
+          mode3_draw_pixel(px, py, color);
+          mode3_draw_pixel(px, py + 1, color);
+          mode3_draw_pixel(px + 1, py, color);
+          mode3_draw_pixel(px + 1, py + 1, color);
+        }
+      }
+    }
+    wait_until_vdraw();
+  }
+}
+</code></pre></pre>
+<p>Oh that's a lot more than before!</p>
+<p>First we set Mode 3 and Background 2, we know about that.</p>
+<p>Then we're going to store the player's x and y, along with a color value for
+their light cycle. Then we enter the core loop.</p>
+<p>We read the keys for input, and then do as much as we can without touching video
+memory. Since we're using video memory as the place to store the player's light
+trail, we can't do much, we just update their position and wait for vblank to
+start. The player will be a 2x2 square, so the arrows will move you 2 pixels per
+frame.</p>
+<p>Once we're in vblank we check to see what kind of drawing we're doing. If the
+player has gone out of bounds, we clear the screen, rotate their color, and then
+reset their position. Why rotate the color? Just because it's fun to have
+different colors.</p>
+<p>Next, if the player is in bounds we read the video memory for their position. If
+it's not black that means we've been here before and the player has crashed into
+their own line. In this case, we reset the game without moving them to a new
+location.</p>
+<p>Finally, if the player is in bounds and they haven't crashed, we write their color into memory at this position.</p>
+<p>Regardless of how it worked out, we hold here until vdraw starts before going to
+the next loop.</p>
 
                     </main>
 

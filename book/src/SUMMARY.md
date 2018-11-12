@@ -12,4 +12,4 @@
 * [Ch 2: User Input](ch2/index.md)
   * [The Key Input Register](ch2/the_key_input_register.md)
   * [The VCount Register](ch2/the_vcount_register.md)
-  * [gba_snake](ch2/gba_snake.md)
+  * [light_cycle](ch2/light_cycle.md)

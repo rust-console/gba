@@ -64,7 +64,7 @@ pub const KEYINPUT: *mut u16 = 0x400_0130 as *mut u16;
 pub struct KeyInputSetting(u16);
 
 pub fn read_key_input() -> KeyInputSetting {
-  unsafe { KeyInputSetting(KEYINPUT.volatile_read()) }
+  unsafe { KeyInputSetting(KEYINPUT.read_volatile()) }
 }
 ```
 
@@ -88,15 +88,16 @@ something. Also, we've set the target to `thumbv6m-none-eabi`, which is a
 slightly later version of ARM than the actual GBA, but it's close enough for
 just checking. Of course, in a full program small functions like these will
 probably get inlined into the calling code and disappear entirely as they're
-folded and refolded by the compiler, and so on. Still, we can see that in the
-simple case when the compiler doesn't know any extra context, the `!=0` test is
-4 instructions and the `==0` test is six instructions. Since we want to get
-saving where we can, we'll always use a `!=0` test and we'll adjust how we
-initially read the register to compensate.
+folded and refolded by the compiler, but we can just check.
+
+It turns out that the `!=0` test is 4 instructions and the `==0` test is 6
+instructions. Since we want to get savings where we can, and we'll probably
+check the keys of an input often enough, we'll just always use a `!=0` test and
+then adjust how we initially read the register to compensate.
 
 ```rust
 pub fn read_key_input() -> KeyInputSetting {
-  unsafe { KeyInputSetting(KEYINPUT.volatile_read() ^ 0b1111_1111_1111_1111) }
+  unsafe { KeyInputSetting(KEYINPUT.read_volatile() ^ 0b1111_1111_1111_1111) }
 }
 ```
 
@@ -201,9 +202,9 @@ somehow later on.
   }
 ```
 
-So then every frame we can check for `column_direction` and `row_direction` and
-then apply those to the snake's current position to make it move around the
-screen.
+So then in our game, every frame we can check for `column_direction` and
+`row_direction` and then apply those to the player's current position to make
+them move around the screen.
 
 With that settled I think we're all done with user input for now. There's some
 other things to eventually know about like key interrupts that you can set and
