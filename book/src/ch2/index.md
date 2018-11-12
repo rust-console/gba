@@ -11,3 +11,9 @@ Also, we will need a way to keep the program from running "too fast". On a
 modern computer or console you do this with vsync info from the GPU and Monitor,
 and on the GBA we'll be using vsync info from an IO register that tracks what
 the display hardware is doing.
+
+For this chapter we'll make a copy of `hello2.rs` named `snake.rs` and then fill
+it in as we go. Normally you might not place the entire program into a single
+source file, but since these are examples it's slightly better to have them be
+completely self contained than it is to have them be "properly organized" for
+the long term.

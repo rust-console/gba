@@ -383,6 +383,16 @@ pub const SIODATA8: VolatilePtr<u16> = VolatilePtr(0x400012A as *mut u16);
 /// Key Status
 pub const KEYINPUT: VolatilePtr<u16> = VolatilePtr(0x4000130 as *mut u16);
 
+/// A newtype over the key input state of the GBA.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+#[repr(transparent)]
+pub struct KeyInputSetting(u16);
+
+#[allow(missing_docs)]
+impl KeyInputSetting {
+  register_bit!(A_BIT, u16, 0b1, a_pressed, read_write);
+}
+
 /// Key Interrupt Control
 pub const KEYCNT: VolatilePtr<u16> = VolatilePtr(0x4000132 as *mut u16);
 
