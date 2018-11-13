@@ -138,10 +138,10 @@
                     <main>
                         <a class="header" href="#video-memory-intro" id="video-memory-intro"><h1>Video Memory Intro</h1></a>
 <p>The GBA's Video RAM is 96k stretching from <code>0x0600_0000</code> to <code>0x0601_7FFF</code>.</p>
-<p>The Video RAM can only be accessed totally freely during a Vertical Blank
-(aka &quot;vblank&quot;). At other times, if the CPU tries to touch the same part of video
-memory as the display controller is accessing then the CPU gets bumped by a
-cycle to avoid a clash.</p>
+<p>The Video RAM can only be accessed totally freely during a Vertical Blank (aka
+&quot;VBlank&quot;, though sometimes I forget and don't capitalize it properly). At other
+times, if the CPU tries to touch the same part of video memory as the display
+controller is accessing then the CPU gets bumped by a cycle to avoid a clash.</p>
 <p>Annoyingly, VRAM can only be properly written to in 16 and 32 bit segments (same
 with PALRAM and OAM). If you try to write just an 8 bit segment, then both parts
 of the 16 bit segment get the same value written to them. In other words, if you

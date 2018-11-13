@@ -138,7 +138,7 @@
                     <main>
                         <a class="header" href="#ch-2-user-input" id="ch-2-user-input"><h1>Ch 2: User Input</h1></a>
 <p>It's all well and good to draw three pixels, but they don't do anything yet. We
-want them to to something, and for that we need to get some input from the user.</p>
+want them to do something, and for that we need to get some input from the user.</p>
 <p>The GBA, as I'm sure you know, has an arrow pad, A and B, L and R, Start and
 Select. That's a little more than the NES/GB/CGB had, and a little less than the
 SNES had. As you can guess, we get key state info from an IO register.</p>
@@ -146,7 +146,7 @@ SNES had. As you can guess, we get key state info from an IO register.</p>
 modern computer or console you do this with vsync info from the GPU and Monitor,
 and on the GBA we'll be using vsync info from an IO register that tracks what
 the display hardware is doing.</p>
-<p>As a way to apply our knowledge We'll make a simply &quot;light cycle&quot; game where
+<p>As a way to apply our knowledge We'll make a simple &quot;light cycle&quot; game where
 your dot leaves a trail behind them and you die if you go off the screen or if
 you touch your own trail. We just make a copy of <code>hello2.rs</code> named
 <code>light_cycle.rs</code> and then fill it in as we go through the chapter. Normally you

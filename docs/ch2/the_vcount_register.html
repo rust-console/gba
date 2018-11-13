@@ -160,9 +160,9 @@ BIOS calls yet, so we'll do the basic thing for now and then upgrade later.</li>
 tiny pointer left to right across each pixel row one pixel at a time. When it's
 within the actual screen width (240px) it's drawing out those pixels. Then it
 goes <em>past</em> the edge of the screen for 68px during a period known as the
-&quot;horizontal blank&quot; (hblank). Then it starts on the next row and does that loop
+&quot;horizontal blank&quot; (HBlank). Then it starts on the next row and does that loop
 over again. This happens for the whole screen height (160px) and then once again
-it goes past the last row for another 68px into a &quot;vertical blank&quot; (vblank)
+it goes past the last row for another 68px into a &quot;vertical blank&quot; (VBlank)
 period.</p>
 <ul>
 <li>One pixel is 4 CPU cycles</li>
@@ -170,7 +170,7 @@ period.</p>
 <li>VDraw is 150 scanlines, VBlank is 68 scanlines (280,896 cycles per full refresh)</li>
 </ul>
 <p>Now you may remember some stuff from the display control register section where
-it was mentioned that some parts of memory are best accessed during vblank, and
+it was mentioned that some parts of memory are best accessed during VBlank, and
 also during hblank with a setting applied. These blanking periods are what was
 being talked about. At other times if you attempt to access video or object
 memory you (the CPU) might try touching the same memory that the display device
@@ -189,7 +189,7 @@ pub fn read_vcount() -&gt; u16 {
   unsafe { VCOUNT.read_volatile() }
 }
 #}</code></pre></pre>
-<p>Then we want two little helper functions to wait until vblank and vdraw.</p>
+<p>Then we want two little helper functions to wait until VBlank and vdraw.</p>
 <pre><pre class="playpen"><code class="language-rust">
 # #![allow(unused_variables)]
 #fn main() {

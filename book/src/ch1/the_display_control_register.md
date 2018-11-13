@@ -73,7 +73,7 @@ Bit 6 lets you adjust if the GBA should treat Object Character VRAM as being 2d
 around, so we'll be sure to have some extra diagrams in the chapter that deals
 with it.
 
-Bit 7 forces the screen to stay in vblank as long as it's set. This allows the
+Bit 7 forces the screen to stay in VBlank as long as it's set. This allows the
 fastest use of the VRAM, Palette, and Object Attribute Memory. Obviously if you
 leave this on for too long the player will notice a blank screen, but it might
 be okay to use for a moment or two every once in a while.

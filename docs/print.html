@@ -556,7 +556,7 @@ the maximum sprites per scanline, so it's not default.</p>
 (off) or 1d (on). This particular control can be kinda tricky to wrap your head
 around, so we'll be sure to have some extra diagrams in the chapter that deals
 with it.</p>
-<p>Bit 7 forces the screen to stay in vblank as long as it's set. This allows the
+<p>Bit 7 forces the screen to stay in VBlank as long as it's set. This allows the
 fastest use of the VRAM, Palette, and Object Attribute Memory. Obviously if you
 leave this on for too long the player will notice a blank screen, but it might
 be okay to use for a moment or two every once in a while.</p>
@@ -588,10 +588,10 @@ nothing else special.</p>
 newtyping as we attempt a <code>hello2</code> program.</p>
 <a class="header" href="#video-memory-intro" id="video-memory-intro"><h1>Video Memory Intro</h1></a>
 <p>The GBA's Video RAM is 96k stretching from <code>0x0600_0000</code> to <code>0x0601_7FFF</code>.</p>
-<p>The Video RAM can only be accessed totally freely during a Vertical Blank
-(aka &quot;vblank&quot;). At other times, if the CPU tries to touch the same part of video
-memory as the display controller is accessing then the CPU gets bumped by a
-cycle to avoid a clash.</p>
+<p>The Video RAM can only be accessed totally freely during a Vertical Blank (aka
+&quot;VBlank&quot;, though sometimes I forget and don't capitalize it properly). At other
+times, if the CPU tries to touch the same part of video memory as the display
+controller is accessing then the CPU gets bumped by a cycle to avoid a clash.</p>
 <p>Annoyingly, VRAM can only be properly written to in 16 and 32 bit segments (same
 with PALRAM and OAM). If you try to write just an 8 bit segment, then both parts
 of the 16 bit segment get the same value written to them. In other words, if you
@@ -787,7 +787,7 @@ other elements all labeled and sorted out for you. Still, for educational
 purposes it's often best to do it yourself at least once.</p>
 <a class="header" href="#ch-2-user-input" id="ch-2-user-input"><h1>Ch 2: User Input</h1></a>
 <p>It's all well and good to draw three pixels, but they don't do anything yet. We
-want them to to something, and for that we need to get some input from the user.</p>
+want them to do something, and for that we need to get some input from the user.</p>
 <p>The GBA, as I'm sure you know, has an arrow pad, A and B, L and R, Start and
 Select. That's a little more than the NES/GB/CGB had, and a little less than the
 SNES had. As you can guess, we get key state info from an IO register.</p>
@@ -795,7 +795,7 @@ SNES had. As you can guess, we get key state info from an IO register.</p>
 modern computer or console you do this with vsync info from the GPU and Monitor,
 and on the GBA we'll be using vsync info from an IO register that tracks what
 the display hardware is doing.</p>
-<p>As a way to apply our knowledge We'll make a simply &quot;light cycle&quot; game where
+<p>As a way to apply our knowledge We'll make a simple &quot;light cycle&quot; game where
 your dot leaves a trail behind them and you die if you go off the screen or if
 you touch your own trail. We just make a copy of <code>hello2.rs</code> named
 <code>light_cycle.rs</code> and then fill it in as we go through the chapter. Normally you
@@ -806,7 +806,7 @@ organized&quot; for the long term.</p>
 <a class="header" href="#the-key-input-register" id="the-key-input-register"><h1>The Key Input Register</h1></a>
 <p>The Key Input Register is our next IO register. Its shorthand name is
 <a href="http://problemkaputt.de/gbatek.htm#gbakeypadinput">KEYINPUT</a> and it's a <code>u16</code>
-at <code>0x4000130</code>. The entire register is obviosuly read only, you can't tell the
+at <code>0x4000130</code>. The entire register is obviously read only, you can't tell the
 GBA what buttons are pressed.</p>
 <p>Each button is exactly one bit:</p>
 <table><thead><tr><th align="center"> Bit </th><th align="center"> Button </th></tr></thead><tbody>
@@ -1024,9 +1024,9 @@ BIOS calls yet, so we'll do the basic thing for now and then upgrade later.</li>
 tiny pointer left to right across each pixel row one pixel at a time. When it's
 within the actual screen width (240px) it's drawing out those pixels. Then it
 goes <em>past</em> the edge of the screen for 68px during a period known as the
-&quot;horizontal blank&quot; (hblank). Then it starts on the next row and does that loop
+&quot;horizontal blank&quot; (HBlank). Then it starts on the next row and does that loop
 over again. This happens for the whole screen height (160px) and then once again
-it goes past the last row for another 68px into a &quot;vertical blank&quot; (vblank)
+it goes past the last row for another 68px into a &quot;vertical blank&quot; (VBlank)
 period.</p>
 <ul>
 <li>One pixel is 4 CPU cycles</li>
@@ -1034,7 +1034,7 @@ period.</p>
 <li>VDraw is 150 scanlines, VBlank is 68 scanlines (280,896 cycles per full refresh)</li>
 </ul>
 <p>Now you may remember some stuff from the display control register section where
-it was mentioned that some parts of memory are best accessed during vblank, and
+it was mentioned that some parts of memory are best accessed during VBlank, and
 also during hblank with a setting applied. These blanking periods are what was
 being talked about. At other times if you attempt to access video or object
 memory you (the CPU) might try touching the same memory that the display device
@@ -1053,7 +1053,7 @@ pub fn read_vcount() -&gt; u16 {
   unsafe { VCOUNT.read_volatile() }
 }
 #}</code></pre></pre>
-<p>Then we want two little helper functions to wait until vblank and vdraw.</p>
+<p>Then we want two little helper functions to wait until VBlank and vdraw.</p>
 <pre><pre class="playpen"><code class="language-rust">
 # #![allow(unused_variables)]
 #fn main() {
@@ -1158,10 +1158,10 @@ fn main(_argc: isize, _argv: *const *const u8) -&gt; isize {
 their light cycle. Then we enter the core loop.</p>
 <p>We read the keys for input, and then do as much as we can without touching video
 memory. Since we're using video memory as the place to store the player's light
-trail, we can't do much, we just update their position and wait for vblank to
+trail, we can't do much, we just update their position and wait for VBlank to
 start. The player will be a 2x2 square, so the arrows will move you 2 pixels per
 frame.</p>
-<p>Once we're in vblank we check to see what kind of drawing we're doing. If the
+<p>Once we're in VBlank we check to see what kind of drawing we're doing. If the
 player has gone out of bounds, we clear the screen, rotate their color, and then
 reset their position. Why rotate the color? Just because it's fun to have
 different colors.</p>

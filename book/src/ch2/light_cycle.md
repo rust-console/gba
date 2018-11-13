@@ -99,11 +99,11 @@ their light cycle. Then we enter the core loop.
 
 We read the keys for input, and then do as much as we can without touching video
 memory. Since we're using video memory as the place to store the player's light
-trail, we can't do much, we just update their position and wait for vblank to
+trail, we can't do much, we just update their position and wait for VBlank to
 start. The player will be a 2x2 square, so the arrows will move you 2 pixels per
 frame.
 
-Once we're in vblank we check to see what kind of drawing we're doing. If the
+Once we're in VBlank we check to see what kind of drawing we're doing. If the
 player has gone out of bounds, we clear the screen, rotate their color, and then
 reset their position. Why rotate the color? Just because it's fun to have
 different colors.

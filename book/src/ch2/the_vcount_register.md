@@ -23,9 +23,9 @@ So the way that display hardware actually displays each frame is that it moves a
 tiny pointer left to right across each pixel row one pixel at a time. When it's
 within the actual screen width (240px) it's drawing out those pixels. Then it
 goes _past_ the edge of the screen for 68px during a period known as the
-"horizontal blank" (hblank). Then it starts on the next row and does that loop
+"horizontal blank" (HBlank). Then it starts on the next row and does that loop
 over again. This happens for the whole screen height (160px) and then once again
-it goes past the last row for another 68px into a "vertical blank" (vblank)
+it goes past the last row for another 68px into a "vertical blank" (VBlank)
 period.
 
 * One pixel is 4 CPU cycles
@@ -33,7 +33,7 @@ period.
 * VDraw is 150 scanlines, VBlank is 68 scanlines (280,896 cycles per full refresh)
 
 Now you may remember some stuff from the display control register section where
-it was mentioned that some parts of memory are best accessed during vblank, and
+it was mentioned that some parts of memory are best accessed during VBlank, and
 also during hblank with a setting applied. These blanking periods are what was
 being talked about. At other times if you attempt to access video or object
 memory you (the CPU) might try touching the same memory that the display device
@@ -53,7 +53,7 @@ pub fn read_vcount() -> u16 {
 }
 ```
 
-Then we want two little helper functions to wait until vblank and vdraw.
+Then we want two little helper functions to wait until VBlank and vdraw.
 
 ```rust
 pub const SCREEN_HEIGHT: isize = 160;
