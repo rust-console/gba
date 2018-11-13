@@ -55,6 +55,10 @@ repo](https://github.com/rust-console/gba).
 
 ## Compiling
 
+The next steps only work once you've got some source code to build. If you need
+a quick test, copy the `hello1.rs` file from our examples directory in the
+repository.
+
 Once you've got something to build, you perform the following steps:
 
 * `arm-none-eabi-as crt0.s -o crt0.o`
