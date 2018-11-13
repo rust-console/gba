@@ -4,6 +4,10 @@ Before you can build a GBA game you'll have to follow some special steps to
 setup the development environment. Perhaps unfortunately, there's enough detail
 here to warrant a mini-chapter all on its own.
 
+Before we begin I'd like to give a special thanks to **Ketsuban**, who is the
+wizard that arranged for all of this to be able to happen and laid out the
+details of the plan to the rest of the world.
+
 ## Per System Setup
 
 Obviously you need your computer to have a working rust installation. However,
