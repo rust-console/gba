@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>hello2 - Rust GBA Tutorials</title>
+        <title>Ch 2: User Input - Rust GBA Tutorials</title>
         <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -72,7 +72,7 @@
         </script>
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
-            <ol class="chapter"><li><a href="../introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><a href="../ch0/index.html"><strong aria-hidden="true">2.</strong> Ch 0: Development Setup</a></li><li><a href="../ch1/index.html"><strong aria-hidden="true">3.</strong> Ch 1: Hello GBA</a></li><li><ol class="section"><li><a href="../ch1/hello1.html"><strong aria-hidden="true">3.1.</strong> hello1</a></li><li><a href="../ch1/io_registers.html"><strong aria-hidden="true">3.2.</strong> IO Registers</a></li><li><a href="../ch1/the_display_control_register.html"><strong aria-hidden="true">3.3.</strong> The Display Control Register</a></li><li><a href="../ch1/video_memory_intro.html"><strong aria-hidden="true">3.4.</strong> Video Memory Intro</a></li><li><a href="../ch1/hello2.html" class="active"><strong aria-hidden="true">3.5.</strong> hello2</a></li></ol></li><li><a href="../ch2/index.html"><strong aria-hidden="true">4.</strong> Ch 2: User Input</a></li><li><ol class="section"><li><a href="../ch2/the_key_input_register.html"><strong aria-hidden="true">4.1.</strong> The Key Input Register</a></li><li><a href="../ch2/the_vcount_register.html"><strong aria-hidden="true">4.2.</strong> The VCount Register</a></li><li><a href="../ch2/light_cycle.html"><strong aria-hidden="true">4.3.</strong> light_cycle</a></li></ol></li></ol>
+            <ol class="chapter"><li><a href="../introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><a href="../ch0/index.html"><strong aria-hidden="true">2.</strong> Ch 0: Development Setup</a></li><li><a href="../ch1/index.html"><strong aria-hidden="true">3.</strong> Ch 1: Hello GBA</a></li><li><ol class="section"><li><a href="../ch1/hello1.html"><strong aria-hidden="true">3.1.</strong> hello1</a></li><li><a href="../ch1/io_registers.html"><strong aria-hidden="true">3.2.</strong> IO Registers</a></li><li><a href="../ch1/the_display_control_register.html"><strong aria-hidden="true">3.3.</strong> The Display Control Register</a></li><li><a href="../ch1/video_memory_intro.html"><strong aria-hidden="true">3.4.</strong> Video Memory Intro</a></li><li><a href="../ch1/hello2.html"><strong aria-hidden="true">3.5.</strong> hello2</a></li></ol></li><li><a href="../ch2/index.html" class="active"><strong aria-hidden="true">4.</strong> Ch 2: User Input</a></li><li><ol class="section"><li><a href="../ch2/the_key_input_register.html"><strong aria-hidden="true">4.1.</strong> The Key Input Register</a></li><li><a href="../ch2/the_vcount_register.html"><strong aria-hidden="true">4.2.</strong> The VCount Register</a></li><li><a href="../ch2/light_cycle.html"><strong aria-hidden="true">4.3.</strong> light_cycle</a></li></ol></li></ol>
         </nav>
 
         <div id="page-wrapper" class="page-wrapper">
@@ -136,121 +136,37 @@
 
                 <div id="content" class="content">
                     <main>
-                        <a class="header" href="#hello2" id="hello2"><h1>hello2</h1></a>
-<p>Okay so let's have a look again:</p>
-<p><code>hello1</code></p>
-<pre><pre class="playpen"><code class="language-rust">#![feature(start)]
-#![no_std]
-
-#[cfg(not(test))]
-#[panic_handler]
-fn panic(_info: &amp;core::panic::PanicInfo) -&gt; ! {
-  loop {}
-}
-
-#[start]
-fn main(_argc: isize, _argv: *const *const u8) -&gt; isize {
-  unsafe {
-    (0x04000000 as *mut u16).write_volatile(0x0403);
-    (0x06000000 as *mut u16).offset(120 + 80 * 240).write_volatile(0x001F);
-    (0x06000000 as *mut u16).offset(136 + 80 * 240).write_volatile(0x03E0);
-    (0x06000000 as *mut u16).offset(120 + 96 * 240).write_volatile(0x7C00);
-    loop {}
-  }
-}
-</code></pre></pre>
-<p>Now let's clean this up so that it's clearer what's going on.</p>
-<p>First we'll label that display control stuff:</p>
-<pre><pre class="playpen"><code class="language-rust">
-# #![allow(unused_variables)]
-#fn main() {
-pub const DISPCNT: *mut u16 = 0x04000000 as *mut u16;
-pub const MODE3: u16 = 3;
-pub const BG2: u16 = 0b100_0000_0000;
-#}</code></pre></pre>
-<p>Next we make some const values for the actual pixel drawing</p>
-<pre><pre class="playpen"><code class="language-rust">
-# #![allow(unused_variables)]
-#fn main() {
-pub const VRAM: usize = 0x06000000;
-pub const SCREEN_WIDTH: isize = 240;
-#}</code></pre></pre>
-<p>And then we want a small helper function for putting together a color value.</p>
-<p>Happily, this one can even be declared as a const function. At the time of
-writing, we've got the &quot;minimal const fn&quot; support in nightly. It really is quite
-limited, but I'm happy to let rustc and LLVM pre-compute as much as they can
-when it comes to the GBA's tiny CPU.</p>
-<pre><pre class="playpen"><code class="language-rust">
-# #![allow(unused_variables)]
-#fn main() {
-pub const fn rgb16(red: u16, green: u16, blue: u16) -&gt; u16 {
-  blue &lt;&lt; 10 | green &lt;&lt; 5 | red
-}
-#}</code></pre></pre>
-<p>Finally, we'll make a function for drawing a pixel in Mode 3. Even though it's
-just a one-liner, having the &quot;important parts&quot; be labeled as function arguments
-usually helps you think about it a lot better.</p>
-<pre><pre class="playpen"><code class="language-rust">
-# #![allow(unused_variables)]
-#fn main() {
-pub unsafe fn mode3_pixel(col: isize, row: isize, color: u16) {
-  (VRAM as *mut u16).offset(col + row * SCREEN_WIDTH).write_volatile(color);
-}
-#}</code></pre></pre>
-<p>So now we've got this:</p>
-<p><code>hello2</code></p>
-<pre><pre class="playpen"><code class="language-rust">#![feature(start)]
-#![no_std]
-
-#[cfg(not(test))]
-#[panic_handler]
-fn panic(_info: &amp;core::panic::PanicInfo) -&gt; ! {
-  loop {}
-}
-
-#[start]
-fn main(_argc: isize, _argv: *const *const u8) -&gt; isize {
-  unsafe {
-    DISPCNT.write_volatile(MODE3 | BG2);
-    mode3_pixel(120, 80, rgb16(31, 0, 0));
-    mode3_pixel(136, 80, rgb16(0, 31, 0));
-    mode3_pixel(120, 96, rgb16(0, 0, 31));
-    loop {}
-  }
-}
-
-pub const DISPCNT: *mut u16 = 0x04000000 as *mut u16;
-pub const MODE3: u16 = 3;
-pub const BG2: u16 = 0b100_0000_0000;
-
-pub const VRAM: usize = 0x06000000;
-pub const SCREEN_WIDTH: isize = 240;
-
-pub const fn rgb16(red: u16, green: u16, blue: u16) -&gt; u16 {
-  blue &lt;&lt; 10 | green &lt;&lt; 5 | red
-}
-
-pub unsafe fn mode3_pixel(col: isize, row: isize, color: u16) {
-  (VRAM as *mut u16).offset(col + row * SCREEN_WIDTH).write_volatile(color);
-}
-</code></pre></pre>
-<p>Exact same program that we started with, but much easier to read.</p>
-<p>Of course, in the full <code>gba</code> crate that this book is a part of we have these and
-other elements all labeled and sorted out for you. Still, for educational
-purposes it's often best to do it yourself at least once.</p>
+                        <a class="header" href="#ch-2-user-input" id="ch-2-user-input"><h1>Ch 2: User Input</h1></a>
+<p>It's all well and good to draw three pixels, but they don't do anything yet. We
+want them to do something, and for that we need to get some input from the user.</p>
+<p>The GBA, as I'm sure you know, has an arrow pad, A and B, L and R, Start and
+Select. That's a little more than the NES/GB/CGB had, and a little less than the
+SNES had. As you can guess, we get key state info from an IO register.</p>
+<p>Also, we will need a way to keep the program from running &quot;too fast&quot;. On a
+modern computer or console you do this with vsync info from the GPU and Monitor,
+and on the GBA we'll be using vsync info from an IO register that tracks what
+the display hardware is doing.</p>
+<p>As a way to apply our knowledge We'll make a simple &quot;light cycle&quot; game where
+your dot leaves a trail behind them and you die if you go off the screen or if
+you touch your own trail. We just make a copy of <code>hello2.rs</code> named
+<code>light_cycle.rs</code> and then fill it in as we go through the chapter. Normally you
+might not place the entire program into a single source file, particularly as it
+grows over time, but since these are small examples it's much better to have
+them be completely self contained than it is to have them be &quot;properly
+organized&quot; for the long term.</p>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
                         
-                            <a rel="prev" href="../ch1/video_memory_intro.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="../ch1/hello2.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <i class="fa fa-angle-left"></i>
                             </a>
                         
 
                         
-                            <a rel="next" href="../ch2/index.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next" href="../ch2/the_key_input_register.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
                         
@@ -262,13 +178,13 @@ purposes it's often best to do it yourself at least once.</p>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
                 
-                    <a href="../ch1/video_memory_intro.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a href="../ch1/hello2.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <i class="fa fa-angle-left"></i>
                     </a>
                 
 
                 
-                    <a href="../ch2/index.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a href="../ch2/the_key_input_register.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
                 

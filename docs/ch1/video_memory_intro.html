@@ -72,7 +72,7 @@
         </script>
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
-            <ol class="chapter"><li><a href="../introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><a href="../ch0/index.html"><strong aria-hidden="true">2.</strong> Ch 0: Development Setup</a></li><li><a href="../ch1/index.html"><strong aria-hidden="true">3.</strong> Ch 1: Hello GBA</a></li><li><ol class="section"><li><a href="../ch1/hello1.html"><strong aria-hidden="true">3.1.</strong> hello1</a></li><li><a href="../ch1/io_registers.html"><strong aria-hidden="true">3.2.</strong> IO Registers</a></li><li><a href="../ch1/the_display_control_register.html"><strong aria-hidden="true">3.3.</strong> The Display Control Register</a></li><li><a href="../ch1/video_memory_intro.html" class="active"><strong aria-hidden="true">3.4.</strong> Video Memory Intro</a></li><li><a href="../ch1/hello2.html"><strong aria-hidden="true">3.5.</strong> hello2</a></li></ol></li></ol>
+            <ol class="chapter"><li><a href="../introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><a href="../ch0/index.html"><strong aria-hidden="true">2.</strong> Ch 0: Development Setup</a></li><li><a href="../ch1/index.html"><strong aria-hidden="true">3.</strong> Ch 1: Hello GBA</a></li><li><ol class="section"><li><a href="../ch1/hello1.html"><strong aria-hidden="true">3.1.</strong> hello1</a></li><li><a href="../ch1/io_registers.html"><strong aria-hidden="true">3.2.</strong> IO Registers</a></li><li><a href="../ch1/the_display_control_register.html"><strong aria-hidden="true">3.3.</strong> The Display Control Register</a></li><li><a href="../ch1/video_memory_intro.html" class="active"><strong aria-hidden="true">3.4.</strong> Video Memory Intro</a></li><li><a href="../ch1/hello2.html"><strong aria-hidden="true">3.5.</strong> hello2</a></li></ol></li><li><a href="../ch2/index.html"><strong aria-hidden="true">4.</strong> Ch 2: User Input</a></li><li><ol class="section"><li><a href="../ch2/the_key_input_register.html"><strong aria-hidden="true">4.1.</strong> The Key Input Register</a></li><li><a href="../ch2/the_vcount_register.html"><strong aria-hidden="true">4.2.</strong> The VCount Register</a></li><li><a href="../ch2/light_cycle.html"><strong aria-hidden="true">4.3.</strong> light_cycle</a></li></ol></li></ol>
         </nav>
 
         <div id="page-wrapper" class="page-wrapper">
@@ -138,10 +138,10 @@
                     <main>
                         <a class="header" href="#video-memory-intro" id="video-memory-intro"><h1>Video Memory Intro</h1></a>
 <p>The GBA's Video RAM is 96k stretching from <code>0x0600_0000</code> to <code>0x0601_7FFF</code>.</p>
-<p>The Video RAM can only be accessed totally freely during a Vertical Blank
-(aka &quot;vblank&quot;). At other times, if the CPU tries to touch the same part of video
-memory as the display controller is accessing then the CPU gets bumped by a
-cycle to avoid a clash.</p>
+<p>The Video RAM can only be accessed totally freely during a Vertical Blank (aka
+&quot;VBlank&quot;, though sometimes I forget and don't capitalize it properly). At other
+times, if the CPU tries to touch the same part of video memory as the display
+controller is accessing then the CPU gets bumped by a cycle to avoid a clash.</p>
 <p>Annoyingly, VRAM can only be properly written to in 16 and 32 bit segments (same
 with PALRAM and OAM). If you try to write just an 8 bit segment, then both parts
 of the 16 bit segment get the same value written to them. In other words, if you

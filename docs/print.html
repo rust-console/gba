@@ -72,7 +72,7 @@
         </script>
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
-            <ol class="chapter"><li><a href="introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><a href="ch0/index.html"><strong aria-hidden="true">2.</strong> Ch 0: Development Setup</a></li><li><a href="ch1/index.html"><strong aria-hidden="true">3.</strong> Ch 1: Hello GBA</a></li><li><ol class="section"><li><a href="ch1/hello1.html"><strong aria-hidden="true">3.1.</strong> hello1</a></li><li><a href="ch1/io_registers.html"><strong aria-hidden="true">3.2.</strong> IO Registers</a></li><li><a href="ch1/the_display_control_register.html"><strong aria-hidden="true">3.3.</strong> The Display Control Register</a></li><li><a href="ch1/video_memory_intro.html"><strong aria-hidden="true">3.4.</strong> Video Memory Intro</a></li><li><a href="ch1/hello2.html"><strong aria-hidden="true">3.5.</strong> hello2</a></li></ol></li></ol>
+            <ol class="chapter"><li><a href="introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><a href="ch0/index.html"><strong aria-hidden="true">2.</strong> Ch 0: Development Setup</a></li><li><a href="ch1/index.html"><strong aria-hidden="true">3.</strong> Ch 1: Hello GBA</a></li><li><ol class="section"><li><a href="ch1/hello1.html"><strong aria-hidden="true">3.1.</strong> hello1</a></li><li><a href="ch1/io_registers.html"><strong aria-hidden="true">3.2.</strong> IO Registers</a></li><li><a href="ch1/the_display_control_register.html"><strong aria-hidden="true">3.3.</strong> The Display Control Register</a></li><li><a href="ch1/video_memory_intro.html"><strong aria-hidden="true">3.4.</strong> Video Memory Intro</a></li><li><a href="ch1/hello2.html"><strong aria-hidden="true">3.5.</strong> hello2</a></li></ol></li><li><a href="ch2/index.html"><strong aria-hidden="true">4.</strong> Ch 2: User Input</a></li><li><ol class="section"><li><a href="ch2/the_key_input_register.html"><strong aria-hidden="true">4.1.</strong> The Key Input Register</a></li><li><a href="ch2/the_vcount_register.html"><strong aria-hidden="true">4.2.</strong> The VCount Register</a></li><li><a href="ch2/light_cycle.html"><strong aria-hidden="true">4.3.</strong> light_cycle</a></li></ol></li></ol>
         </nav>
 
         <div id="page-wrapper" class="page-wrapper">
@@ -147,11 +147,17 @@ for C, but it's what I based the ordering of this book's sections on.</li>
 <li><a href="http://problemkaputt.de/gbatek.htm">GBATEK</a>, a homebrew tech manual for
 GBA/NDS/DSi. We will regularly link to parts of it when talking about various
 bits of the GBA.</li>
+<li><a href="https://www.cs.rit.edu/%7Etjh8300/CowBite/CowBiteSpec.htm">CowBite</a> is another
+tech specification that's more GBA specific. It's sometimes got more ASCII
+art diagrams and example C struct layouts than GBATEK does.</li>
 </ul>
 <a class="header" href="#chapter-0-development-setup" id="chapter-0-development-setup"><h1>Chapter 0: Development Setup</h1></a>
 <p>Before you can build a GBA game you'll have to follow some special steps to
 setup the development environment. Perhaps unfortunately, there's enough detail
 here to warrant a mini-chapter all on its own.</p>
+<p>Before we begin I'd like to give a special thanks to <strong>Ketsuban</strong>, who is the
+wizard that arranged for all of this to be able to happen and laid out the
+details of the plan to the rest of the world.</p>
 <a class="header" href="#per-system-setup" id="per-system-setup"><h2>Per System Setup</h2></a>
 <p>Obviously you need your computer to have a working rust installation. However,
 you'll also need to ensure that you're using a nightly toolchain. You can run
@@ -194,6 +200,9 @@ later on this is where you can put it. You also need to build it into a
 that the GBA has about our program.</li>
 </ul>
 <a class="header" href="#compiling" id="compiling"><h2>Compiling</h2></a>
+<p>The next steps only work once you've got some source code to build. If you need
+a quick test, copy the <code>hello1.rs</code> file from our examples directory in the
+repository.</p>
 <p>Once you've got something to build, you perform the following steps:</p>
 <ul>
 <li>
@@ -374,6 +383,10 @@ how <code>#[start]</code> is specified to work in Rust.</p>
 <p>If you think about it for a moment you'll probably realize that, those inputs
 and outputs are totally useless to us on a GBA. There's no OS on the GBA to call
 our program, and there's no place for our program to &quot;return to&quot; when it's done.</p>
+<p>Side note: if you want to learn more about stuff &quot;before main gets called&quot; you
+can watch a great <a href="https://www.youtube.com/watch?v=dOfucXtyEsU">CppCon talk</a> by
+Matt Godbolt (yes, that Godbolt) where he delves into quite a bit of it. The
+talk doesn't really apply to the GBA, but it's pretty good.</p>
 <pre><pre class="playpen"><code class="language-rust">
 # #![allow(unused_variables)]
 #fn main() {
@@ -434,8 +447,9 @@ anyway. Sometimes that's right, but sometimes it's wrong.</p>
 <p>Marking a read or write as <em>volatile</em> tells the compiler that it really must do
 that action, and in the exact order that we wrote it out. It says that there
 might even be special hardware side effects going on that the compiler isn't
-aware of. In this case, the Display Control write sets a video mode, and the
-Video RAM writes set pixels that will show up on the screen.</p>
+aware of. In this case, the write to the display control register sets a video
+mode, and the writes to the Video RAM set pixels that will show up on the
+screen.</p>
 <p>Similar to &quot;atomic&quot; operations you might have heard about, all volatile
 operations are enforced to happen in the exact order that you specify them, but
 only relative to other volatile operations. So something like</p>
@@ -446,16 +460,14 @@ c.volatile_write(5);
 a += b;
 d.volatile_write(7);
 #}</code></pre></pre>
-<p>might end up changing <code>a</code> either before or after the change to <code>c</code>, but the
-write to <code>d</code> will <em>always</em> happen after the write to <code>c</code>.</p>
+<p>might end up changing <code>a</code> either before or after the change to <code>c</code> (since the
+value of <code>a</code> doesn't affect the write to <code>c</code>), but the write to <code>d</code> will
+<em>always</em> happen after the write to <code>c</code> even though the compiler doesn't see any
+direct data dependency there.</p>
 <p>If you ever use volatile stuff on other platforms it's important to note that
 volatile doesn't make things thread-safe, you still need atomic for that.
 However, the GBA doesn't have threads, so we don't have to worry about thread
 safety concerns.</p>
-<p>Accordingly, our first bit of code for our library will be a <em>newtype</em> over a
-normal <code>*mut T</code> so that it has volatile reads and writes as the default. We'll
-cover the details later on when we try writing a <code>hello2</code> program, once we know
-more of what's going on.</p>
 <a class="header" href="#io-registers" id="io-registers"><h1>IO Registers</h1></a>
 <p>The GBA has a large number of <strong>IO Registers</strong> (not to be confused with CPU
 registers). These are special memory locations from <code>0x04000000</code> to
@@ -547,7 +559,7 @@ the maximum sprites per scanline, so it's not default.</p>
 (off) or 1d (on). This particular control can be kinda tricky to wrap your head
 around, so we'll be sure to have some extra diagrams in the chapter that deals
 with it.</p>
-<p>Bit 7 forces the screen to stay in vblank as long as it's set. This allows the
+<p>Bit 7 forces the screen to stay in VBlank as long as it's set. This allows the
 fastest use of the VRAM, Palette, and Object Attribute Memory. Obviously if you
 leave this on for too long the player will notice a blank screen, but it might
 be okay to use for a moment or two every once in a while.</p>
@@ -579,10 +591,10 @@ nothing else special.</p>
 newtyping as we attempt a <code>hello2</code> program.</p>
 <a class="header" href="#video-memory-intro" id="video-memory-intro"><h1>Video Memory Intro</h1></a>
 <p>The GBA's Video RAM is 96k stretching from <code>0x0600_0000</code> to <code>0x0601_7FFF</code>.</p>
-<p>The Video RAM can only be accessed totally freely during a Vertical Blank
-(aka &quot;vblank&quot;). At other times, if the CPU tries to touch the same part of video
-memory as the display controller is accessing then the CPU gets bumped by a
-cycle to avoid a clash.</p>
+<p>The Video RAM can only be accessed totally freely during a Vertical Blank (aka
+&quot;VBlank&quot;, though sometimes I forget and don't capitalize it properly). At other
+times, if the CPU tries to touch the same part of video memory as the display
+controller is accessing then the CPU gets bumped by a cycle to avoid a clash.</p>
 <p>Annoyingly, VRAM can only be properly written to in 16 and 32 bit segments (same
 with PALRAM and OAM). If you try to write just an 8 bit segment, then both parts
 of the 16 bit segment get the same value written to them. In other words, if you
@@ -776,6 +788,393 @@ pub unsafe fn mode3_pixel(col: isize, row: isize, color: u16) {
 <p>Of course, in the full <code>gba</code> crate that this book is a part of we have these and
 other elements all labeled and sorted out for you. Still, for educational
 purposes it's often best to do it yourself at least once.</p>
+<a class="header" href="#ch-2-user-input" id="ch-2-user-input"><h1>Ch 2: User Input</h1></a>
+<p>It's all well and good to draw three pixels, but they don't do anything yet. We
+want them to do something, and for that we need to get some input from the user.</p>
+<p>The GBA, as I'm sure you know, has an arrow pad, A and B, L and R, Start and
+Select. That's a little more than the NES/GB/CGB had, and a little less than the
+SNES had. As you can guess, we get key state info from an IO register.</p>
+<p>Also, we will need a way to keep the program from running &quot;too fast&quot;. On a
+modern computer or console you do this with vsync info from the GPU and Monitor,
+and on the GBA we'll be using vsync info from an IO register that tracks what
+the display hardware is doing.</p>
+<p>As a way to apply our knowledge We'll make a simple &quot;light cycle&quot; game where
+your dot leaves a trail behind them and you die if you go off the screen or if
+you touch your own trail. We just make a copy of <code>hello2.rs</code> named
+<code>light_cycle.rs</code> and then fill it in as we go through the chapter. Normally you
+might not place the entire program into a single source file, particularly as it
+grows over time, but since these are small examples it's much better to have
+them be completely self contained than it is to have them be &quot;properly
+organized&quot; for the long term.</p>
+<a class="header" href="#the-key-input-register" id="the-key-input-register"><h1>The Key Input Register</h1></a>
+<p>The Key Input Register is our next IO register. Its shorthand name is
+<a href="http://problemkaputt.de/gbatek.htm#gbakeypadinput">KEYINPUT</a> and it's a <code>u16</code>
+at <code>0x4000130</code>. The entire register is obviously read only, you can't tell the
+GBA what buttons are pressed.</p>
+<p>Each button is exactly one bit:</p>
+<table><thead><tr><th align="center"> Bit </th><th align="center"> Button </th></tr></thead><tbody>
+<tr><td align="center">  0  </td><td align="center"> A </td></tr>
+<tr><td align="center">  1  </td><td align="center"> B </td></tr>
+<tr><td align="center">  2  </td><td align="center"> Select </td></tr>
+<tr><td align="center">  3  </td><td align="center"> Start </td></tr>
+<tr><td align="center">  4  </td><td align="center"> Right </td></tr>
+<tr><td align="center">  5  </td><td align="center"> Left </td></tr>
+<tr><td align="center">  6  </td><td align="center"> Up </td></tr>
+<tr><td align="center">  7  </td><td align="center"> Down </td></tr>
+<tr><td align="center">  8  </td><td align="center"> R </td></tr>
+<tr><td align="center">  9  </td><td align="center"> L </td></tr>
+</tbody></table>
+<p>The higher bits above are not used at all.</p>
+<p>Similar to other old hardware devices, the convention here is that a button's
+bit is <strong>clear when pressed, active when released</strong>. In other words, when the
+user is not touching the device at all the KEYINPUT value will read
+<code>0b0000_0011_1111_1111</code>. There's similar values for when the user is pressing as
+many buttons as possible, but since the left/right and up/down keys are on an
+arrow pad the value can never be 0 since you can't ever press every single key
+at once.</p>
+<p>When dealing with key input, the register always shows the exact key values at
+any moment you read it. Obviously that's what it should do, but what it means to
+you as a programmer is that you should usually gather input once at the top of a
+game frame and then use that single input poll as the input values across the
+whole game frame.</p>
+<p>Of course, you might want to know if a user's key state changed from frame to
+frame. That's fairly easy too: We just store the last frame keys as well as the
+current frame keys (it's only a <code>u16</code>) and then we can xor the two values.
+Anything that shows up in the xor result is a key that changed. If it's changed
+and it's now down, that means it was pushed this frame. If it's changed and it's
+now up, that means it was released this frame.</p>
+<p>The other major thing you might frequently want is to know &quot;which way&quot; the arrow
+pad is pointing: Up/Down/None and Left/Right/None. Sounds like an enum to me.
+Except that often time we'll have situations where the direction just needs to
+be multiplied by a speed and applied as a delta to a position. We want to
+support that as well as we can too.</p>
+<a class="header" href="#key-input-code" id="key-input-code"><h2>Key Input Code</h2></a>
+<p>Let's get down to some code. First we want to make a way to read the address as
+a <code>u16</code> and then wrap that in our newtype which will implement methods for
+reading and writing the key bits.</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+pub const KEYINPUT: *mut u16 = 0x400_0130 as *mut u16;
+
+/// A newtype over the key input state of the GBA.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+#[repr(transparent)]
+pub struct KeyInputSetting(u16);
+
+pub fn read_key_input() -&gt; KeyInputSetting {
+  unsafe { KeyInputSetting(KEYINPUT.read_volatile()) }
+}
+#}</code></pre></pre>
+<p>Now we want a way to check if a key is <em>being pressed</em>, since that's normally
+how we think of things as a game designer and even as a player. That is, usually
+you'd say &quot;if you press A, then X happens&quot; instead of &quot;if you don't press A,
+then X does not happen&quot;.</p>
+<p>Normally we'd pick a constant for the bit we want, <code>&amp;</code> it with our value, and
+then check for <code>val != 0</code>. Since the bit we're looking for is <code>0</code> in the &quot;true&quot;
+state we still pick the same constant and we still do the <code>&amp;</code>, but we test with
+<code>== 0</code>. Practically the same, right? Well, since I'm asking a rhetorical
+question like that you can probably already guess that it's not the same. I was
+shocked to learn this too.</p>
+<p>All we have to do is ask our good friend
+<a href="https://rust.godbolt.org/z/d-8oCe">Godbolt</a> what's gonna happen when the code
+compiles. The link there has the page set for the <code>stable</code> 1.30 compiler just so
+that the link results stay consistent if you read this book in a year or
+something. Also, we've set the target to <code>thumbv6m-none-eabi</code>, which is a
+slightly later version of ARM than the actual GBA, but it's close enough for
+just checking. Of course, in a full program small functions like these will
+probably get inlined into the calling code and disappear entirely as they're
+folded and refolded by the compiler, but we can just check.</p>
+<p>It turns out that the <code>!=0</code> test is 4 instructions and the <code>==0</code> test is 6
+instructions. Since we want to get savings where we can, and we'll probably
+check the keys of an input often enough, we'll just always use a <code>!=0</code> test and
+then adjust how we initially read the register to compensate.</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+pub fn read_key_input() -&gt; KeyInputSetting {
+  unsafe { KeyInputSetting(KEYINPUT.read_volatile() ^ 0b1111_1111_1111_1111) }
+}
+#}</code></pre></pre>
+<p>Now we add a method for seeing if a key is pressed. In the full library there's
+a more advanced version of this that's built up via macro, but for this example
+we'll just name a bunch of <code>const</code> values and then have a method that takes a
+value and says if that bit is on.</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+pub const KEY_A: u16 = 1 &lt;&lt; 0;
+pub const KEY_B: u16 = 1 &lt;&lt; 1;
+pub const KEY_SELECT: u16 = 1 &lt;&lt; 2;
+pub const KEY_START: u16 = 1 &lt;&lt; 3;
+pub const KEY_RIGHT: u16 = 1 &lt;&lt; 4;
+pub const KEY_LEFT: u16 = 1 &lt;&lt; 5;
+pub const KEY_UP: u16 = 1 &lt;&lt; 6;
+pub const KEY_DOWN: u16 = 1 &lt;&lt; 7;
+pub const KEY_R: u16 = 1 &lt;&lt; 8;
+pub const KEY_L: u16 = 1 &lt;&lt; 9;
+
+impl KeyInputSetting {
+  pub fn contains(&amp;self, key: u16) -&gt; bool {
+    (self.0 &amp; key) != 0
+  }
+}
+#}</code></pre></pre>
+<p>Because each key is a unique bit you can even check for more than one key at
+once by just adding two key values together.</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+let input_contains_a_and_l = input.contains(KEY_A + KEY_L);
+#}</code></pre></pre>
+<p>And we wanted to save the state of an old frame and compare it to the current
+frame to see what was different:</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+  pub fn difference(&amp;self, other: KeyInputSetting) -&gt; KeyInputSetting {
+    KeyInputSetting(self.0 ^ other.0)
+  }
+#}</code></pre></pre>
+<p>Anything that's &quot;in&quot; the difference output is a key that <em>changed</em>, and then if
+the key reads as pressed this frame that means it was just pressed. The exact
+mechanics of all the ways you might care to do something based on new key
+presses is obviously quite varied, but it might be something like this:</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+let this_frame_diff = this_frame_input.difference(last_frame_input);
+
+if this_frame_diff.contains(KEY_B) &amp;&amp; this_frame_input.contains(KEY_B) {
+  // the user just pressed B, react in some way
+}
+#}</code></pre></pre>
+<p>And for the arrow pad, we'll make an enum that easily casts into <code>i32</code>. Whenever
+we're working with stuff we can try to use <code>i32</code> / <code>isize</code> as often as possible
+just because it's easier on the GBA's CPU if we stick to its native number size.
+Having it be an enum lets us use <code>match</code> and be sure that we've covered all our
+cases.</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+/// A &quot;tribool&quot; value helps us interpret the arrow pad.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+#[repr(i32)]
+pub enum TriBool {
+  Minus = -1,
+  Neutral = 0,
+  Plus = +1,
+}
+#}</code></pre></pre>
+<p>Now, how do we determine <em>which way</em> is plus or minus? Well... I don't know.
+Really. I'm not sure what the best one is because the GBA really wants the
+origin at 0,0 with higher rows going down and higher cols going right. On the
+other hand, all the normal math you and I learned in school is oriented with
+increasing Y being upward on the page. So, at least for this demo, we're going
+to go with what the GBA wants us to do and give it a try. If we don't end up
+confusing ourselves then we can stick with that. Maybe we can cover it over
+somehow later on.</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+  pub fn column_direction(&amp;self) -&gt; TriBool {
+    if self.contains(KEY_RIGHT) {
+      TriBool::Plus
+    } else if self.contains(KEY_LEFT) {
+      TriBool::Minus
+    } else {
+      TriBool::Neutral
+    }
+  }
+
+  pub fn row_direction(&amp;self) -&gt; TriBool {
+    if self.contains(KEY_DOWN) {
+      TriBool::Plus
+    } else if self.contains(KEY_UP) {
+      TriBool::Minus
+    } else {
+      TriBool::Neutral
+    }
+  }
+#}</code></pre></pre>
+<p>So then in our game, every frame we can check for <code>column_direction</code> and
+<code>row_direction</code> and then apply those to the player's current position to make
+them move around the screen.</p>
+<p>With that settled I think we're all done with user input for now. There's some
+other things to eventually know about like key interrupts that you can set and
+stuff, but we'll cover that later on because it's not necessary right now.</p>
+<a class="header" href="#the-vcount-register" id="the-vcount-register"><h1>The VCount Register</h1></a>
+<p>There's an IO register called
+<a href="http://problemkaputt.de/gbatek.htm#lcdiointerruptsandstatus">VCOUNT</a> that shows
+you, what else, the Vertical (row) COUNT(er). It's a <code>u16</code> at address
+<code>0x0400_0006</code>, and it's how we'll be doing our very poor quality vertical sync
+code to start.</p>
+<ul>
+<li><strong>What makes it poor?</strong> Well, we're just going to read from the vcount value as
+often as possible every time we need to wait for a specific value to come up,
+and then proceed once it hits the point we're looking for.</li>
+<li><strong>Why is this bad?</strong> Because we're making the CPU do a lot of useless work,
+which uses a lot more power that necessary. Even if you're not on an actual
+GBA you might be running inside an emulator on a phone or other handheld. You
+wanna try to save battery if all you're doing with that power use is waiting
+instead of making a game actually do something.</li>
+<li><strong>Can we do better?</strong> We can, but not yet. The better way to do things is to
+use a BIOS call to put the CPU into low power mode until a VBlank interrupt
+happens. However, we don't know about interrupts yet, and we don't know about
+BIOS calls yet, so we'll do the basic thing for now and then upgrade later.</li>
+</ul>
+<p>So the way that display hardware actually displays each frame is that it moves a
+tiny pointer left to right across each pixel row one pixel at a time. When it's
+within the actual screen width (240px) it's drawing out those pixels. Then it
+goes <em>past</em> the edge of the screen for 68px during a period known as the
+&quot;horizontal blank&quot; (HBlank). Then it starts on the next row and does that loop
+over again. This happens for the whole screen height (160px) and then once again
+it goes past the last row for another 68px into a &quot;vertical blank&quot; (VBlank)
+period.</p>
+<ul>
+<li>One pixel is 4 CPU cycles</li>
+<li>HDraw is 240 pixels, HBlank is 68 pixels (1,232 cycles per full scanline)</li>
+<li>VDraw is 150 scanlines, VBlank is 68 scanlines (280,896 cycles per full refresh)</li>
+</ul>
+<p>Now you may remember some stuff from the display control register section where
+it was mentioned that some parts of memory are best accessed during VBlank, and
+also during hblank with a setting applied. These blanking periods are what was
+being talked about. At other times if you attempt to access video or object
+memory you (the CPU) might try touching the same memory that the display device
+is trying to use, in which case you get bumped back a cycle so that the display
+can finish what it's doing. Also, if you really insist on doing video memory
+changes while the screen is being drawn then you might get some visual glitches.
+If you can, just prepare all your changes ahead of time and then assign then all
+quickly during the blank period.</p>
+<p>So first we want a way to check the vcount value at all:</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+pub const VCOUNT: *mut u16 = 0x0400_0006 as *mut u16;
+
+pub fn read_vcount() -&gt; u16 {
+  unsafe { VCOUNT.read_volatile() }
+}
+#}</code></pre></pre>
+<p>Then we want two little helper functions to wait until VBlank and vdraw.</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+pub const SCREEN_HEIGHT: isize = 160;
+
+pub fn wait_until_vblank() {
+  while read_vcount() &lt; SCREEN_HEIGHT as u16 {}
+}
+
+pub fn wait_until_vdraw() {
+  while read_vcount() &gt;= SCREEN_HEIGHT as u16 {}
+}
+#}</code></pre></pre>
+<p>And... that's it. No special types to be made this time around, it's just a
+number we read out of memory.</p>
+<a class="header" href="#light_cycle" id="light_cycle"><h1>light_cycle</h1></a>
+<p>Now let's make a game of &quot;light_cycle&quot; with our new knowledge.</p>
+<a class="header" href="#gameplay" id="gameplay"><h2>Gameplay</h2></a>
+<p><code>light_cycle</code> is pretty simple, and very obvious if you've ever seen Tron. The
+player moves around the screen with a trail left behind them. They die if they
+go off the screen or if they touch their own trail.</p>
+<a class="header" href="#operations" id="operations"><h2>Operations</h2></a>
+<p>We need some better drawing operations this time around.</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+pub unsafe fn mode3_clear_screen(color: u16) {
+  let color = color as u32;
+  let bulk_color = color &lt;&lt; 16 | color;
+  let mut ptr = VRAM as *mut u32;
+  for _ in 0..SCREEN_HEIGHT {
+    for _ in 0..(SCREEN_WIDTH / 2) {
+      ptr.write_volatile(bulk_color);
+      ptr = ptr.offset(1);
+    }
+  }
+}
+
+pub unsafe fn mode3_draw_pixel(col: isize, row: isize, color: u16) {
+  (VRAM as *mut u16).offset(col + row * SCREEN_WIDTH).write_volatile(color);
+}
+
+pub unsafe fn mode3_read_pixel(col: isize, row: isize) -&gt; u16 {
+  (VRAM as *mut u16).offset(col + row * SCREEN_WIDTH).read_volatile()
+}
+#}</code></pre></pre>
+<p>The draw pixel and read pixel are both pretty obvious. What's new is the clear
+screen operation. It changes the <code>u16</code> color into a <code>u32</code> and then packs the
+value in twice. Then we write out <code>u32</code> values the whole way through screen
+memory. This means we have to do less write operations overall, and so the
+screen clear is twice as fast.</p>
+<p>Now we just have to fill in the main function:</p>
+<pre><pre class="playpen"><code class="language-rust">#[start]
+fn main(_argc: isize, _argv: *const *const u8) -&gt; isize {
+  unsafe {
+    DISPCNT.write_volatile(MODE3 | BG2);
+  }
+
+  let mut px = SCREEN_WIDTH / 2;
+  let mut py = SCREEN_HEIGHT / 2;
+  let mut color = rgb16(31, 0, 0);
+
+  loop {
+    // read the input for this frame
+    let this_frame_keys = read_key_input();
+
+    // adjust game state and wait for vblank
+    px += 2 * this_frame_keys.column_direction() as isize;
+    py += 2 * this_frame_keys.row_direction() as isize;
+    wait_until_vblank();
+
+    // draw the new game and wait until the next frame starts.
+    unsafe {
+      if px &lt; 0 || py &lt; 0 || px == SCREEN_WIDTH || py == SCREEN_HEIGHT {
+        // out of bounds, reset the screen and position.
+        mode3_clear_screen(0);
+        color = color.rotate_left(5);
+        px = SCREEN_WIDTH / 2;
+        py = SCREEN_HEIGHT / 2;
+      } else {
+        let color_here = mode3_read_pixel(px, py);
+        if color_here != 0 {
+          // crashed into our own line, reset the screen
+          mode3_clear_screen(0);
+          color = color.rotate_left(5);
+        } else {
+          // draw the new part of the line
+          mode3_draw_pixel(px, py, color);
+          mode3_draw_pixel(px, py + 1, color);
+          mode3_draw_pixel(px + 1, py, color);
+          mode3_draw_pixel(px + 1, py + 1, color);
+        }
+      }
+    }
+    wait_until_vdraw();
+  }
+}
+</code></pre></pre>
+<p>Oh that's a lot more than before!</p>
+<p>First we set Mode 3 and Background 2, we know about that.</p>
+<p>Then we're going to store the player's x and y, along with a color value for
+their light cycle. Then we enter the core loop.</p>
+<p>We read the keys for input, and then do as much as we can without touching video
+memory. Since we're using video memory as the place to store the player's light
+trail, we can't do much, we just update their position and wait for VBlank to
+start. The player will be a 2x2 square, so the arrows will move you 2 pixels per
+frame.</p>
+<p>Once we're in VBlank we check to see what kind of drawing we're doing. If the
+player has gone out of bounds, we clear the screen, rotate their color, and then
+reset their position. Why rotate the color? Just because it's fun to have
+different colors.</p>
+<p>Next, if the player is in bounds we read the video memory for their position. If
+it's not black that means we've been here before and the player has crashed into
+their own line. In this case, we reset the game without moving them to a new
+location.</p>
+<p>Finally, if the player is in bounds and they haven't crashed, we write their color into memory at this position.</p>
+<p>Regardless of how it worked out, we hold here until vdraw starts before going to
+the next loop.</p>
 
                     </main>
 
