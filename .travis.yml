@@ -5,7 +5,7 @@ cache:
   - cargo
 
 rust:
-  - stable
+  - nightly
 
 before_script:
   - (test -x $HOME/.cargo/bin/cargo-install-update || cargo install cargo-update)
@@ -22,6 +22,9 @@ deploy:
   skip-cleanup: true
   github-token: $GITHUB_TOKEN
   local-dir: docs
-  keep-history: false
+  target-branch: master
+  keep-history: true
+  name: DocsBot
+  verbose: true
   on:
     branch: master
