@@ -2,7 +2,7 @@
 
 The Key Input Register is our next IO register. Its shorthand name is
 [KEYINPUT](http://problemkaputt.de/gbatek.htm#gbakeypadinput) and it's a `u16`
-at `0x4000130`. The entire register is obviosuly read only, you can't tell the
+at `0x4000130`. The entire register is obviously read only, you can't tell the
 GBA what buttons are pressed.
 
 Each button is exactly one bit:
