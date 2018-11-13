@@ -4,6 +4,16 @@ Here's a book that'll help you program in Rust on the GBA.
 
 It's very "work in progress". At the moment there's only one demo program.
 
+## Getting Help
+
+If you want to contact us you should join the [Rust Community
+Discord](https://discordapp.com/invite/aVESxV8) and ask in the `#gamedev`
+channel. `Ketsuban` is the wizard who knows much more about how it all works,
+and `Lokathor` is the fool who decided to write a crate and book for it.
+
+If it's _not_ a GBA specific question then you can also ask any of the few
+hundred other folks in the server as well.
+
 ## Other Works
 
 If you want to read more about developing on the GBA there are some other good resources as well:

@@ -13,7 +13,9 @@ before_script:
   - cargo install-update -a
 
 script:
-  - cd book && mdbook build && mdbook test
+  - cargo check && cargo check --release
+  # at the moment we DO NOT run "cargo test" because of lang-item issues
+  - cd book && mdbook build
 
 deploy:
   provider: pages
