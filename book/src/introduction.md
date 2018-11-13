@@ -13,8 +13,8 @@ channel.
 * `Ketsuban` is the wizard who knows much more about how it all works
 * `Lokathor` is the fool who decided to write a crate and book for it.
 
-If it's _not_ a GBA specific question then you can also ask any of the few
-hundred other folks in the server as well.
+If it's _not_ a GBA specific question then you can probably ask any of the other
+folks in the server as well.
 
 ## Other Works
 
