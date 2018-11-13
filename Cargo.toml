@@ -1,0 +1,17 @@
+[package]
+name = "gba"
+description = "A crate (and book) for making GBA games with Rust."
+version = "0.1.0"
+authors = ["Lokathor <zefria@gmail.com>", "Ketsuban"]
+repository = "https://github.com/rust-console/gba"
+readme = "README.md"
+keywords = ["gba"]
+edition = "2018"
+license = "Apache-2.0"
+
+[dependencies]
+gba-proc-macro = "0.1.1"
+
+[profile.release]
+lto = true
+panic = "abort"

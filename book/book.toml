@@ -1,0 +1,8 @@
+[book]
+title = "Rust GBA Tutorials"
+authors = ["Lokathor"]
+#description = "Rust GBA Tutorials."
+
+[build]
+build-dir = "../docs"
+create-missing = true
