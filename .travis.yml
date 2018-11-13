@@ -21,7 +21,6 @@ deploy:
   provider: pages
   skip-cleanup: true
   github-token: $GITHUB_TOKEN
-  local-dir: docs
   target-branch: master
   keep-history: true
   name: DocsBot
