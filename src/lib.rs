@@ -1,4 +1,4 @@
-#![no_std]
+#![cfg_attr(not(test), no_std)]
 #![warn(missing_docs)]
 
 //! This crate helps you write GBA ROMs.
@@ -13,11 +13,20 @@
 //!
 //! **Do not** use this crate in programs that aren't running on the GBA. If you
 //! do, it's a giant bag of Undefined Behavior.
+//!
+//! # TESTING POLICY
+//!
+//! It is the intent of the crate authors that as much of the crate as possible
+//! be written so that you can use `cargo test` for at least some parts of your
+//! code without everything exploding instantly. To that end, where possible we
+//! attempt to use `cfg` flags to make things safe for `cargo test`. Hopefully
+//! we got it all.
 
 pub mod core_extras;
 pub(crate) use crate::core_extras::*;
 
 pub mod io_registers;
+pub(crate) use crate::io_registers::*;
 
 pub mod video_ram;
 
