@@ -28,18 +28,6 @@ pub const SCREEN_HEIGHT: isize = 160;
 /// value as just being a `usize`.
 pub const VRAM_BASE_ADDRESS: usize = 0x0600_0000;
 
-/// Performs a busy loop until VBlank starts.
-pub fn wait_until_vblank() {
-  // TODO: make this the better version with BIOS and interrupts and such.
-  while vcount() < SCREEN_HEIGHT as u16 {}
-}
-
-/// Performs a busy loop until VDraw starts.
-pub fn wait_until_vdraw() {
-  // TODO: make this the better version with BIOS and interrupts and such.
-  while vcount() >= SCREEN_HEIGHT as u16 {}
-}
-
 /// Draws a pixel to the screen while in Display Mode 3, with bounds checks.
 ///
 /// # Panics

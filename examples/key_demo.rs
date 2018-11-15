@@ -34,6 +34,7 @@ fn main(_argc: isize, _argv: *const *const u8) -> isize {
       let key = ((this_frame_key_raw >> i) & 1) > 0;
       mode3_draw_pixel(15 - i, 0, if key { green } else { red });
       mode3_draw_pixel(15 - i, 1, if key { green } else { red });
+      mode3_draw_pixel(50 - i, 10 / i, if key { green } else { red });
     }
 
     wait_until_vdraw();

@@ -116,6 +116,18 @@ pub fn vcount() -> u16 {
   unsafe { VCOUNT.read() }
 }
 
+/// Performs a busy loop until VBlank starts.
+pub fn wait_until_vblank() {
+  // TODO: make this the better version with BIOS and interrupts and such.
+  while vcount() < SCREEN_HEIGHT as u16 {}
+}
+
+/// Performs a busy loop until VDraw starts.
+pub fn wait_until_vdraw() {
+  // TODO: make this the better version with BIOS and interrupts and such.
+  while vcount() >= SCREEN_HEIGHT as u16 {}
+}
+
 /// BG0 Control
 pub const BG0CNT: VolatilePtr<u16> = VolatilePtr(0x4000008 as *mut u16);
 
