@@ -56,19 +56,19 @@ impl DisplayControlSetting {
     };
   }
 
-  register_bit!(CGB_MODE_BIT, u16, 0b1000, cgb_mode, read);
-  register_bit!(PAGE_SELECT_BIT, u16, 0b1_0000, page1_enabled, read_write);
-  register_bit!(HBLANK_INTERVAL_FREE_BIT, u16, 0b10_0000, hblank_interval_free, read_write);
-  register_bit!(OBJECT_MEMORY_1D, u16, 0b100_0000, object_memory_1d, read_write);
-  register_bit!(FORCE_BLANK_BIT, u16, 0b1000_0000, force_blank, read_write);
-  register_bit!(DISPLAY_BG0_BIT, u16, 0b1_0000_0000, display_bg0, read_write);
-  register_bit!(DISPLAY_BG1_BIT, u16, 0b10_0000_0000, display_bg1, read_write);
-  register_bit!(DISPLAY_BG2_BIT, u16, 0b100_0000_0000, display_bg2, read_write);
-  register_bit!(DISPLAY_BG3_BIT, u16, 0b1000_0000_0000, display_bg3, read_write);
-  register_bit!(DISPLAY_OBJECT_BIT, u16, 0b1_0000_0000_0000, display_object, read_write);
-  register_bit!(DISPLAY_WINDOW0_BIT, u16, 0b10_0000_0000_0000, display_window0, read_write);
-  register_bit!(DISPLAY_WINDOW1_BIT, u16, 0b100_0000_0000_0000, display_window1, read_write);
-  register_bit!(OBJECT_WINDOW_BIT, u16, 0b1000_0000_0000_0000, display_object_window, read_write);
+  register_bit!(CGB_MODE_BIT, u16, 0b1000, cgb_mode);
+  register_bit!(PAGE_SELECT_BIT, u16, 0b1_0000, page1_enabled);
+  register_bit!(HBLANK_INTERVAL_FREE_BIT, u16, 0b10_0000, hblank_interval_free);
+  register_bit!(OBJECT_MEMORY_1D, u16, 0b100_0000, object_memory_1d);
+  register_bit!(FORCE_BLANK_BIT, u16, 0b1000_0000, force_blank);
+  register_bit!(DISPLAY_BG0_BIT, u16, 0b1_0000_0000, display_bg0);
+  register_bit!(DISPLAY_BG1_BIT, u16, 0b10_0000_0000, display_bg1);
+  register_bit!(DISPLAY_BG2_BIT, u16, 0b100_0000_0000, display_bg2);
+  register_bit!(DISPLAY_BG3_BIT, u16, 0b1000_0000_0000, display_bg3);
+  register_bit!(DISPLAY_OBJECT_BIT, u16, 0b1_0000_0000_0000, display_object);
+  register_bit!(DISPLAY_WINDOW0_BIT, u16, 0b10_0000_0000_0000, display_window0);
+  register_bit!(DISPLAY_WINDOW1_BIT, u16, 0b100_0000_0000_0000, display_window1);
+  register_bit!(OBJECT_WINDOW_BIT, u16, 0b1000_0000_0000_0000, display_object_window);
 }
 
 /// The six display modes available on the GBA.
@@ -109,6 +109,11 @@ pub const DISPSTAT: VolatilePtr<u16> = VolatilePtr(0x4000004 as *mut u16);
 
 /// Vertical Counter (LY)
 pub const VCOUNT: VolatilePtr<u16> = VolatilePtr(0x4000006 as *mut u16);
+
+/// Obtains the current VCount value.
+pub fn vcount() -> u16 {
+  unsafe { VCOUNT.read() }
+}
 
 /// BG0 Control
 pub const BG0CNT: VolatilePtr<u16> = VolatilePtr(0x4000008 as *mut u16);
@@ -400,16 +405,16 @@ pub enum TriBool {
 
 #[allow(missing_docs)]
 impl KeyInputSetting {
-  register_bit!(A_BIT, u16, 1 << 0, a_pressed, read_write);
-  register_bit!(B_BIT, u16, 1 << 1, b_pressed, read_write);
-  register_bit!(SELECT_BIT, u16, 1 << 2, select_pressed, read_write);
-  register_bit!(START_BIT, u16, 1 << 3, start_pressed, read_write);
-  register_bit!(RIGHT_BIT, u16, 1 << 4, right_pressed, read_write);
-  register_bit!(LEFT_BIT, u16, 1 << 5, left_pressed, read_write);
-  register_bit!(UP_BIT, u16, 1 << 6, up_pressed, read_write);
-  register_bit!(DOWN_BIT, u16, 1 << 7, down_pressed, read_write);
-  register_bit!(R_BIT, u16, 1 << 8, r_pressed, read_write);
-  register_bit!(L_BIT, u16, 1 << 9, l_pressed, read_write);
+  register_bit!(A_BIT, u16, 1 << 0, a_pressed);
+  register_bit!(B_BIT, u16, 1 << 1, b_pressed);
+  register_bit!(SELECT_BIT, u16, 1 << 2, select_pressed);
+  register_bit!(START_BIT, u16, 1 << 3, start_pressed);
+  register_bit!(RIGHT_BIT, u16, 1 << 4, right_pressed);
+  register_bit!(LEFT_BIT, u16, 1 << 5, left_pressed);
+  register_bit!(UP_BIT, u16, 1 << 6, up_pressed);
+  register_bit!(DOWN_BIT, u16, 1 << 7, down_pressed);
+  register_bit!(R_BIT, u16, 1 << 8, r_pressed);
+  register_bit!(L_BIT, u16, 1 << 9, l_pressed);
 
   /// Takes the difference between these keys and another set of keys.
   pub fn difference(&self, other: KeyInputSetting) -> KeyInputSetting {
@@ -442,8 +447,11 @@ impl KeyInputSetting {
 }
 
 /// Gets the current state of the keys
-pub fn read_key_input() -> KeyInputSetting {
-  unsafe { KeyInputSetting(KEYINPUT.read() ^ 0b1111_1111_1111_1111) }
+pub fn key_input() -> KeyInputSetting {
+  // Note(Lokathor): The 10 used bits are "low when pressed" style, but the 6
+  // unused bits are always low, so we XOR with this mask to get a result where
+  // the only active bits are currently pressed keys.
+  unsafe { KeyInputSetting(KEYINPUT.read() ^ 0b0000_0011_1111_1111) }
 }
 
 /// Key Interrupt Control
