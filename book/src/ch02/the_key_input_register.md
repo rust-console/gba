@@ -93,11 +93,13 @@ folded and refolded by the compiler, but we can just check.
 It turns out that the `!=0` test is 4 instructions and the `==0` test is 6
 instructions. Since we want to get savings where we can, and we'll probably
 check the keys of an input often enough, we'll just always use a `!=0` test and
-then adjust how we initially read the register to compensate.
+then adjust how we initially read the register to compensate. By using xor with
+a mask for only the 10 used bits we can flip the "low when pressed" values so
+that the entire result has active bits in all positions where a key is pressed.
 
 ```rust
 pub fn read_key_input() -> KeyInputSetting {
-  unsafe { KeyInputSetting(KEYINPUT.read_volatile() ^ 0b1111_1111_1111_1111) }
+  unsafe { KeyInputSetting(KEYINPUT.read_volatile() ^ 0b0000_0011_1111_1111) }
 }
 ```
 

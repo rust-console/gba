@@ -113,7 +113,23 @@ it's not black that means we've been here before and the player has crashed into
 their own line. In this case, we reset the game without moving them to a new
 location.
 
-Finally, if the player is in bounds and they haven't crashed, we write their color into memory at this position.
+Finally, if the player is in bounds and they haven't crashed, we write their
+color into memory at this position.
 
 Regardless of how it worked out, we hold here until vdraw starts before going to
-the next loop.
+the next loop. That's all there is to it.
+
+## The gba crate doesn't quite work like this
+
+Once again, as with the `hello1` and `hello2` examples, the `gba` crate covers
+much of this same ground as our example here, but in slightly different ways.
+
+Better organization and abstractions are usually only realized once you've used
+more of the whole thing you're trying to work with. If we want to have a crate
+where the whole thing is well integrated with itself, then the examples would
+also end up having to explain about things we haven't really touched on much
+yet. It becomes a lot harder to teach.
+
+So, going forward, we will continue to teach concepts and build examples that
+don't directly depend on the `gba` crate. This allows the crate to freely grow
+without all the past examples becoming a great inertia upon it.

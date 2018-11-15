@@ -110,5 +110,6 @@ pub unsafe fn mode3_pixel(col: isize, row: isize, color: u16) {
 Exact same program that we started with, but much easier to read.
 
 Of course, in the full `gba` crate that this book is a part of we have these and
-other elements all labeled and sorted out for you. Still, for educational
-purposes it's often best to do it yourself at least once.
+other elements all labeled and sorted out for you (not identically, but
+similarly). Still, for educational purposes it's often best to do it yourself at
+least once.
