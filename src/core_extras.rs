@@ -1,11 +1,13 @@
 //! Things that I wish were in core, but aren't.
 
-/// A simple wrapper to any `*mut T` so that the basic "read" and "write"
-/// operations are volatile.
+/// A simple wrapper for any `*mut T` to adjust the basic operations.
 ///
-/// Accessing the GBA's IO registers and video ram and specific other places on
-/// **must** be done with volatile operations. Having this wrapper makes that
-/// more clear for all the const value IO registers.
+/// Read and Write are made to be volatile. Offset is made to be
+/// wrapping_offset. This makes it much easier to correctly work with IO
+/// Registers and all display related memory on the GBA.
+///
+/// As a bonus, use of this type is mostly `cargo test` safe. Reads will return
+/// a `zeroed()` value instead, and writes will do nothing.
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, PartialOrd, Ord)]
 #[repr(transparent)]
 pub struct VolatilePtr<T>(pub *mut T);
@@ -52,20 +54,13 @@ impl<T> VolatilePtr<T> {
     }
   }
 
-  /// Offsets this address by the amount given.
+  /// Performs a wrapping_offset by the number of slots given to a new position.
   ///
   /// # Safety
   ///
-  /// This is a standard offset, so all safety concerns of a normal raw pointer
-  /// offset apply.
+  /// This is a wrapping_offset, so all safety concerns of a normal raw pointer
+  /// wrapping_offset apply.
   pub unsafe fn offset(self, count: isize) -> Self {
-    #[cfg(not(test))]
-    {
-      VolatilePtr(self.0.offset(count))
-    }
-    #[cfg(test)]
-    {
-      VolatilePtr(self.0.wrapping_offset(count))
-    }
+    VolatilePtr(self.0.wrapping_offset(count))
   }
 }
