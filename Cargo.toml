@@ -12,7 +12,7 @@ license = "Apache-2.0"
 publish = false
 
 [dependencies]
-gba-proc-macro = "0.2"
+gba-proc-macro = "0.2.1"
 
 [profile.release]
 lto = true

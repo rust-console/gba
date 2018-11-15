@@ -15,7 +15,7 @@
 
 // TODO(lokathor): IO Register newtypes.
 
-use gba_proc_macro::register_bit;
+use gba_proc_macro::{newtype, register_bit};
 
 use super::*;
 
@@ -24,10 +24,11 @@ use super::*;
 /// * [gbatek entry](http://problemkaputt.de/gbatek.htm#lcdiodisplaycontrol)
 pub const DISPCNT: VolatilePtr<u16> = VolatilePtr(0x4000000 as *mut u16);
 
-/// A newtype over the various display control options that you have on a GBA.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
-#[repr(transparent)]
-pub struct DisplayControlSetting(u16);
+newtype!(
+  DisplayControlSetting,
+  u16,
+  "A newtype over the various display control options that you have on a GBA."
+);
 
 #[allow(missing_docs)]
 impl DisplayControlSetting {
@@ -388,11 +389,6 @@ pub const SIODATA8: VolatilePtr<u16> = VolatilePtr(0x400012A as *mut u16);
 /// Key Status
 pub const KEYINPUT: VolatilePtr<u16> = VolatilePtr(0x4000130 as *mut u16);
 
-/// A newtype over the key input state of the GBA.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
-#[repr(transparent)]
-pub struct KeyInputSetting(u16);
-
 /// A "tribool" value helps us interpret the arrow pad.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(i32)]
@@ -402,6 +398,8 @@ pub enum TriBool {
   Neutral = 0,
   Plus = 1,
 }
+
+newtype!(KeyInputSetting, u16, "A newtype over the key input state of the GBA");
 
 #[allow(missing_docs)]
 impl KeyInputSetting {
