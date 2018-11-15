@@ -13,6 +13,8 @@
 //! they won't bother to check that you've set the video mode they're designed
 //! for.
 
+pub use super::*;
+
 /// The physical width in pixels of the GBA screen.
 pub const SCREEN_WIDTH: isize = 240;
 
@@ -26,11 +28,27 @@ pub const SCREEN_HEIGHT: isize = 160;
 /// value as just being a `usize`.
 pub const VRAM_BASE_ADDRESS: usize = 0x0600_0000;
 
+/// Performs a busy loop until VBlank starts.
+pub fn wait_until_vblank() {
+  // TODO: make this the better version with BIOS and interrupts and such.
+  while vcount() < SCREEN_HEIGHT as u16 {}
+}
+
+/// Performs a busy loop until VDraw starts.
+pub fn wait_until_vdraw() {
+  // TODO: make this the better version with BIOS and interrupts and such.
+  while vcount() >= SCREEN_HEIGHT as u16 {}
+}
+
 /// Draws a pixel to the screen while in Display Mode 3, with bounds checks.
-pub fn mode3_pixel(col: isize, row: isize, color: u16) {
+///
+/// # Panics
+///
+/// If `col` or `row` are out of bounds this will panic.
+pub fn mode3_draw_pixel(col: isize, row: isize, color: u16) {
   assert!(col >= 0 && col < SCREEN_WIDTH);
   assert!(row >= 0 && row < SCREEN_HEIGHT);
-  unsafe { mode3_pixel_unchecked(col, row, color) }
+  unsafe { mode3_draw_pixel_unchecked(col, row, color) }
 }
 
 /// Draws a pixel to the screen while in Display Mode 3.
@@ -44,6 +62,32 @@ pub fn mode3_pixel(col: isize, row: isize, color: u16) {
 ///
 /// * `col` must be in `0..SCREEN_WIDTH`
 /// * `row` must be in `0..SCREEN_HEIGHT`
-pub unsafe fn mode3_pixel_unchecked(col: isize, row: isize, color: u16) {
-  core::ptr::write_volatile((VRAM_BASE_ADDRESS as *mut u16).offset(col + row * SCREEN_WIDTH), color);
+pub unsafe fn mode3_draw_pixel_unchecked(col: isize, row: isize, color: u16) {
+  VolatilePtr(VRAM_BASE_ADDRESS as *mut u16).offset(col + row * SCREEN_WIDTH).write(color);
+}
+
+/// Reads the given pixel of video memory according to Mode 3 placement.
+///
+/// # Failure
+///
+/// If the location is out of bounds you get `None`.
+pub fn mode3_read_pixel(col: isize, row: isize) -> Option<u16> {
+  if col >= 0 && col < SCREEN_WIDTH && row >= 0 && row < SCREEN_HEIGHT {
+    unsafe { Some(VolatilePtr(VRAM_BASE_ADDRESS as *mut u16).offset(col + row * SCREEN_WIDTH).read()) }
+  } else {
+    None
+  }
+}
+
+/// Clears the entire screen to the color specified.
+pub unsafe fn mode3_clear_screen(color: u16) {
+  let color = color as u32;
+  let bulk_color = color << 16 | color;
+  let mut ptr = VolatilePtr(VRAM_BASE_ADDRESS as *mut u32);
+  for _ in 0..SCREEN_HEIGHT {
+    for _ in 0..(SCREEN_WIDTH / 2) {
+      ptr.write(bulk_color);
+      ptr = ptr.offset(1);
+    }
+  }
 }
