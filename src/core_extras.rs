@@ -5,7 +5,7 @@
 ///
 /// Accessing the GBA's IO registers and video ram and specific other places on
 /// **must** be done with volatile operations. Having this wrapper makes that
-/// more clear for all the global const values into IO registers.
+/// more clear for all the const value IO registers.
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, PartialOrd, Ord)]
 #[repr(transparent)]
 pub struct VolatilePtr<T>(pub *mut T);
@@ -25,7 +25,14 @@ impl<T> VolatilePtr<T> {
   /// This method adds absolutely no additional safety, so all safety concerns
   /// for a normal raw pointer volatile read apply.
   pub unsafe fn read(&self) -> T {
-    core::ptr::read_volatile(self.0)
+    #[cfg(not(test))]
+    {
+      core::ptr::read_volatile(self.0)
+    }
+    #[cfg(test)]
+    {
+      core::mem::zeroed::<T>()
+    }
   }
 
   /// Performs a volatile write.
@@ -35,7 +42,14 @@ impl<T> VolatilePtr<T> {
   /// This method adds absolutely no additional safety, so all safety concerns
   /// for a normal raw pointer volatile write apply.
   pub unsafe fn write(&self, data: T) {
-    core::ptr::write_volatile(self.0, data);
+    #[cfg(not(test))]
+    {
+      core::ptr::write_volatile(self.0, data);
+    }
+    #[cfg(test)]
+    {
+      drop(data)
+    }
   }
 
   /// Offsets this address by the amount given.
@@ -45,6 +59,13 @@ impl<T> VolatilePtr<T> {
   /// This is a standard offset, so all safety concerns of a normal raw pointer
   /// offset apply.
   pub unsafe fn offset(self, count: isize) -> Self {
-    VolatilePtr(self.0.offset(count))
+    #[cfg(not(test))]
+    {
+      VolatilePtr(self.0.offset(count))
+    }
+    #[cfg(test)]
+    {
+      VolatilePtr(self.0.wrapping_offset(count))
+    }
   }
 }
