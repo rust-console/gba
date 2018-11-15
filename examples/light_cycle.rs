@@ -102,7 +102,7 @@ pub enum TriBool {
 }
 
 pub fn read_key_input() -> KeyInputSetting {
-  unsafe { KeyInputSetting(KEYINPUT.read_volatile() ^ 0b1111_1111_1111_1111) }
+  unsafe { KeyInputSetting(KEYINPUT.read_volatile() ^ 0b0000_0011_1111_1111) }
 }
 
 pub const KEY_A: u16 = 1 << 0;
