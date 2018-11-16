@@ -31,8 +31,6 @@ pub mod io_registers;
 pub mod video_ram;
 pub(crate) use crate::video_ram::*;
 
-pub mod intrinsics;
-
 /// Combines the Red, Blue, and Green provided into a single color value.
 pub const fn rgb16(red: u16, green: u16, blue: u16) -> u16 {
   blue << 10 | green << 5 | red
@@ -40,18 +38,37 @@ pub const fn rgb16(red: u16, green: u16, blue: u16) -> u16 {
 
 /// BIOS Call: Div (GBA SWI 0x06).
 ///
-/// Gives the DIV and MOD output of `numerator / denominator`.
+/// Gives just the DIV output of `numerator / denominator`.
 ///
 /// # Panics
 ///
 /// If `denominator` is 0.
 #[inline]
-pub fn div_mod(numerator: i32, denominator: i32) -> (i32, i32) {
-  // The BIOS includes several System Call Functions which can be accessed by
-  // SWI instructions. Incoming parameters are usually passed through registers
-  // R0,R1,R2,R3. Outgoing registers R0,R1,R3 are typically containing either
-  // garbage, or return value(s). All other registers (R2,R4-R14) are kept
-  // unchanged. --GBATEK
+pub fn div(numerator: i32, denominator: i32) -> i32 {
+  div_modulus(numerator, denominator).0
+}
+
+/// BIOS Call: Div (GBA SWI 0x06).
+///
+/// Gives just the MOD output of `numerator / denominator`.
+///
+/// # Panics
+///
+/// If `denominator` is 0.
+#[inline]
+pub fn modulus(numerator: i32, denominator: i32) -> i32 {
+  div_modulus(numerator, denominator).1
+}
+
+/// BIOS Call: Div (GBA SWI 0x06).
+///
+/// Gives both the DIV and MOD output of `numerator / denominator`.
+///
+/// # Panics
+///
+/// If `denominator` is 0.
+#[inline]
+pub fn div_modulus(numerator: i32, denominator: i32) -> (i32, i32) {
   assert!(denominator != 0);
   let div_out: i32;
   let mod_out: i32;

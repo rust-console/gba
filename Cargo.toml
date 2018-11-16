@@ -14,9 +14,6 @@ publish = false
 [dependencies]
 gba-proc-macro = "0.2.1"
 
-[profile.dev]
-panic = "abort"
-
 [profile.release]
 lto = true
 panic = "abort"
