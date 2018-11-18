@@ -16,12 +16,12 @@ dependencies = ["create-target-dir"]
 command = "arm-none-eabi-as"
 args = ["crt0.s", "-o", "target/crt0.o"]
 
-[tasks.build-debug]
+[tasks.build-examples-debug]
 dependencies = ["assemble"]
 command = "cargo"
 args = ["xbuild", "--examples", "--target", "thumbv4-none-agb.json"]
 
-[tasks.build-release]
+[tasks.build-examples-release]
 dependencies = ["assemble"]
 command = "cargo"
 args = ["xbuild", "--examples", "--target", "thumbv4-none-agb.json", "--release"]
@@ -56,4 +56,8 @@ fn main() -> std::io::Result<()> {
 ]
 
 [tasks.build]
-dependencies = ["build-debug", "build-release", "pack-roms"]
+dependencies = ["build-examples-debug", "build-examples-release", "pack-roms"]
+
+[tasks.test]
+command = "cargo"
+args = ["test", "--lib"]

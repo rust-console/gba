@@ -4,26 +4,25 @@ Before you can build a GBA game you'll have to follow some special steps to
 setup the development environment. Perhaps unfortunately, there's enough detail
 here to warrant a mini-chapter all on its own.
 
-Before we begin I'd like to give a special thanks to **Ketsuban**, who is the
-wizard that arranged for all of this to be able to happen and laid out the
-details of the plan to the rest of the world.
+Once again, extra special thanks to **Ketsuban**, who first dove into how to
+make this all work with rust and then shared it with the world.
 
 ## Per System Setup
 
-Obviously you need your computer to have a working rust installation. However,
-you'll also need to ensure that you're using a nightly toolchain. You can run
-`rustup default nightly` to set nightly as the system wide default toolchain, or
-you can use a [toolchain
+Obviously you need your computer to have a [working rust
+installation](https://rustup.rs/). However, you'll also need to ensure that
+you're using a nightly toolchain. You can run `rustup default nightly` to set
+nightly as the system wide default toolchain, or you can use a [toolchain
 file](https://github.com/rust-lang-nursery/rustup.rs#the-toolchain-file) to use
-nightly just on a specific project, but either way we'll be assuming nightly
-from now on.
+nightly just on a specific project, but either way we'll be assuming the use of
+nightly from now on.
 
-Next you need [devkitpro](https://devkitpro.org/wiki/Getting_Started). They've
+Next, you need [devkitpro](https://devkitpro.org/wiki/Getting_Started). They've
 got a graphical installer for Windows, and `pacman` support on Linux. We'll be
-using a few of their binutils for the `arm-none-eabi` target, and we'll also be
-using some of their tools that are specific to GBA development, so _even if_ you
-already have the right binutils for whatever reason, you'll still want devkitpro
-for the `gbafix` utility.
+using a few of general their binutils for the `arm-none-eabi` target, and we'll
+also be using some of their tools that are specific to GBA development, so _even
+if_ you already have the right binutils for whatever reason, you'll still want
+devkitpro for the `gbafix` utility.
 
 * On Windows you'll want something like `C:\devkitpro\devkitARM\bin` and
   `C:\devkitpro\tools\bin` to be [added to your
@@ -37,21 +36,20 @@ cargo will figure it all out for you.
 
 ## Per Project Setup
 
-Now you'll need some particular files each time you want to start a new project.
-You can find them in the root of the [rust-console/gba
-repo](https://github.com/rust-console/gba).
+Once the system wide tools are ready, you'll need some particular files each
+time you want to start a new project. You can find them in the root of the
+[rust-console/gba repo](https://github.com/rust-console/gba).
 
-* `thumbv4-none-agb.json` describes the overall GBA to cargo-xbuild so it knows
-  what to do. This is actually a somewhat made up target name since there's no
-  official target name. The GBA is essentially the same as a normal
-  `thumbv4-none-eabi` device, but we give it the "agb" signifier so that later
-  on we'll be able to use rust's `cfg` ability to allow our code to know if it's
-  specifically targeting a GBA or some other similar device (like an NDS).
+* `thumbv4-none-agb.json` describes the overall GBA to cargo-xbuild (and LLVM)
+  so it knows what to do. Technically the GBA is `thumbv4-none-eabi`, but we
+  change the `eabi` to `agb` so that we can distinguish it from other `eabi`
+  devices when using `cfg` flags.
 * `crt0.s` describes some ASM startup stuff. If you have more ASM to place here
   later on this is where you can put it. You also need to build it into a
   `crt0.o` file before it can actually be used, but we'll cover that below.
-* `linker.ld` tells the linker more critical info about the layout expectations
-  that the GBA has about our program.
+* `linker.ld` tells the linker all the critical info about the layout
+  expectations that the GBA has about our program, and that it should also
+  include the `crt0.o` file with our compiled rust code.
 
 ## Compiling
 
@@ -72,13 +70,13 @@ Once you've got something to build, you perform the following steps:
     as `--release`, and options, such as `--bin foo` or `--examples`, that you'd
     expect `cargo` to accept.
   * You **can not** build and run tests this way, because they require `std`,
-    which the GBA doesn't have. You can still run some of your project's tests
-    with `cargo test`, but that builds for your local machine, so anything
-    specific to the GBA (such as reading and writing registers) won't be
-    testable that way. If you want to isolate and try out some piece code
-    running on the GBA you'll unfortunately have to make a demo for it in your
-    `examples/` directory and then run the demo in an emulator and see if it
-    does what you expect.
+    which the GBA doesn't have. If you want you can still run some of your
+    project's tests with `cargo test --lib` or similar, but that builds for your
+    local machine, so anything specific to the GBA (such as reading and writing
+    registers) won't be testable that way. If you want to isolate and try out
+    some piece code running on the GBA you'll unfortunately have to make a demo
+    for it in your `examples/` directory and then run the demo in an emulator
+    and see if it does what you expect.
   * The file extension is important. `cargo xbuild` takes it as a flag to
     compile dependencies with the same sysroot, so you can include crates
     normally. Well, creates that work in the GBA's limited environment, but you
@@ -132,3 +130,6 @@ transfer to a flash cart there's a little more to do.
 And you're finally done!
 
 Of course, you probably want to make a script for all that, but it's up to you.
+On our own project we have it mostly set up within a `Makefile.toml` which runs
+using the [cargo-make](https://github.com/sagiegurari/cargo-make) plugin. It's
+not really the best plugin, but it's what's available.

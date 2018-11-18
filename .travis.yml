@@ -14,7 +14,7 @@ before_script:
 
 script:
   - cargo check && cargo check --release
-  # exclude the examples from the test build, just the lib
+  # Only run a test build for the library itself
   - cargo test --lib && cargo test --lib --release
   - cd book && mdbook build
 

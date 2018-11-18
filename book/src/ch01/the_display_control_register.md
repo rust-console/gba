@@ -107,6 +107,3 @@ First let's [convert that to
 binary](https://www.wolframalpha.com/input/?i=0x0403), and we get
 `0b100_0000_0011`. So, that's setting Mode 3 with background 2 enabled and
 nothing else special.
-
-However, I think we can do better than that. This is a prime target for more
-newtyping as we attempt a `hello2` program.

@@ -1,7 +1,6 @@
 #![feature(start)]
 #![no_std]
 
-#[cfg(not(test))]
 #[panic_handler]
 fn panic(_info: &core::panic::PanicInfo) -> ! {
   loop {}
@@ -10,7 +9,7 @@ fn panic(_info: &core::panic::PanicInfo) -> ! {
 #[start]
 fn main(_argc: isize, _argv: *const *const u8) -> isize {
   unsafe {
-    DISPCNT.write_volatile(MODE3 | BG2);
+    DISPCNT.write(MODE3 | BG2);
   }
 
   let mut px = SCREEN_WIDTH / 2;
@@ -19,7 +18,7 @@ fn main(_argc: isize, _argv: *const *const u8) -> isize {
 
   loop {
     // read the input for this frame
-    let this_frame_keys = read_key_input();
+    let this_frame_keys = key_input();
 
     // adjust game state and wait for vblank
     px += 2 * this_frame_keys.column_direction() as isize;
@@ -53,7 +52,22 @@ fn main(_argc: isize, _argv: *const *const u8) -> isize {
   }
 }
 
-pub const DISPCNT: *mut u16 = 0x04000000 as *mut u16;
+#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, PartialOrd, Ord)]
+#[repr(transparent)]
+pub struct VolatilePtr<T>(pub *mut T);
+impl<T> VolatilePtr<T> {
+  pub unsafe fn read(&self) -> T {
+    core::ptr::read_volatile(self.0)
+  }
+  pub unsafe fn write(&self, data: T) {
+    core::ptr::write_volatile(self.0, data);
+  }
+  pub unsafe fn offset(self, count: isize) -> Self {
+    VolatilePtr(self.0.wrapping_offset(count))
+  }
+}
+
+pub const DISPCNT: VolatilePtr<u16> = VolatilePtr(0x04000000 as *mut u16);
 pub const MODE3: u16 = 3;
 pub const BG2: u16 = 0b100_0000_0000;
 
@@ -68,24 +82,24 @@ pub const fn rgb16(red: u16, green: u16, blue: u16) -> u16 {
 pub unsafe fn mode3_clear_screen(color: u16) {
   let color = color as u32;
   let bulk_color = color << 16 | color;
-  let mut ptr = VRAM as *mut u32;
+  let mut ptr = VolatilePtr(VRAM as *mut u32);
   for _ in 0..SCREEN_HEIGHT {
     for _ in 0..(SCREEN_WIDTH / 2) {
-      ptr.write_volatile(bulk_color);
+      ptr.write(bulk_color);
       ptr = ptr.offset(1);
     }
   }
 }
 
 pub unsafe fn mode3_draw_pixel(col: isize, row: isize, color: u16) {
-  (VRAM as *mut u16).offset(col + row * SCREEN_WIDTH).write_volatile(color);
+  VolatilePtr(VRAM as *mut u16).offset(col + row * SCREEN_WIDTH).write(color);
 }
 
 pub unsafe fn mode3_read_pixel(col: isize, row: isize) -> u16 {
-  (VRAM as *mut u16).offset(col + row * SCREEN_WIDTH).read_volatile()
+  VolatilePtr(VRAM as *mut u16).offset(col + row * SCREEN_WIDTH).read()
 }
 
-pub const KEYINPUT: *mut u16 = 0x400_0130 as *mut u16;
+pub const KEYINPUT: VolatilePtr<u16> = VolatilePtr(0x400_0130 as *mut u16);
 
 /// A newtype over the key input state of the GBA.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
@@ -101,8 +115,8 @@ pub enum TriBool {
   Plus = 1,
 }
 
-pub fn read_key_input() -> KeyInputSetting {
-  unsafe { KeyInputSetting(KEYINPUT.read_volatile() ^ 0b0000_0011_1111_1111) }
+pub fn key_input() -> KeyInputSetting {
+  unsafe { KeyInputSetting(KEYINPUT.read() ^ 0b0000_0011_1111_1111) }
 }
 
 pub const KEY_A: u16 = 1 << 0;
@@ -146,16 +160,16 @@ impl KeyInputSetting {
   }
 }
 
-pub const VCOUNT: *mut u16 = 0x0400_0006 as *mut u16;
+pub const VCOUNT: VolatilePtr<u16> = VolatilePtr(0x0400_0006 as *mut u16);
 
-pub fn read_vcount() -> u16 {
-  unsafe { VCOUNT.read_volatile() }
+pub fn vcount() -> u16 {
+  unsafe { VCOUNT.read() }
 }
 
 pub fn wait_until_vblank() {
-  while read_vcount() < SCREEN_HEIGHT as u16 {}
+  while vcount() < SCREEN_HEIGHT as u16 {}
 }
 
 pub fn wait_until_vdraw() {
-  while read_vcount() >= SCREEN_HEIGHT as u16 {}
+  while vcount() >= SCREEN_HEIGHT as u16 {}
 }

@@ -1,7 +1,6 @@
 [book]
-title = "Rust GBA Tutorials"
+title = "Rust GBA Guide"
 authors = ["Lokathor"]
-#description = "Rust GBA Tutorials."
 
 [build]
 build-dir = "../docs"

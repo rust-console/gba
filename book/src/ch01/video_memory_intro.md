@@ -106,8 +106,8 @@ So at pixels `(120,80)`, `(136,80)`, and `(120,96)` we write three values. Once
 again we probably need to [convert them](https://www.wolframalpha.com/) into
 binary to make sense of it.
 
-* 0x001F: 0b11111
-* 0x03E0: 0b11111_00000
-* 0x7C00: 0b11111_00000_00000
+* 0x001F: 0b0_00000_00000_11111
+* 0x03E0: 0b0_00000_11111_00000
+* 0x7C00: 0b0_11111_00000_00000
 
 Ah, of course, a red pixel, a green pixel, and a blue pixel.

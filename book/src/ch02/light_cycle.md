@@ -16,21 +16,21 @@ We need some better drawing operations this time around.
 pub unsafe fn mode3_clear_screen(color: u16) {
   let color = color as u32;
   let bulk_color = color << 16 | color;
-  let mut ptr = VRAM as *mut u32;
+  let mut ptr = VolatilePtr(VRAM as *mut u32);
   for _ in 0..SCREEN_HEIGHT {
     for _ in 0..(SCREEN_WIDTH / 2) {
-      ptr.write_volatile(bulk_color);
+      ptr.write(bulk_color);
       ptr = ptr.offset(1);
     }
   }
 }
 
 pub unsafe fn mode3_draw_pixel(col: isize, row: isize, color: u16) {
-  (VRAM as *mut u16).offset(col + row * SCREEN_WIDTH).write_volatile(color);
+  VolatilePtr(VRAM as *mut u16).offset(col + row * SCREEN_WIDTH).write(color);
 }
 
 pub unsafe fn mode3_read_pixel(col: isize, row: isize) -> u16 {
-  (VRAM as *mut u16).offset(col + row * SCREEN_WIDTH).read_volatile()
+  VolatilePtr(VRAM as *mut u16).offset(col + row * SCREEN_WIDTH).read()
 }
 ```
 
@@ -46,7 +46,7 @@ Now we just have to fill in the main function:
 #[start]
 fn main(_argc: isize, _argv: *const *const u8) -> isize {
   unsafe {
-    DISPCNT.write_volatile(MODE3 | BG2);
+    DISPCNT.write(MODE3 | BG2);
   }
 
   let mut px = SCREEN_WIDTH / 2;
@@ -55,7 +55,7 @@ fn main(_argc: isize, _argv: *const *const u8) -> isize {
 
   loop {
     // read the input for this frame
-    let this_frame_keys = read_key_input();
+    let this_frame_keys = key_input();
 
     // adjust game state and wait for vblank
     px += 2 * this_frame_keys.column_direction() as isize;

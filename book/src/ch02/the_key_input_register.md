@@ -56,15 +56,15 @@ a `u16` and then wrap that in our newtype which will implement methods for
 reading and writing the key bits.
 
 ```rust
-pub const KEYINPUT: *mut u16 = 0x400_0130 as *mut u16;
+pub const KEYINPUT: VolatilePtr<u16> = VolatilePtr(0x400_0130 as *mut u16);
 
 /// A newtype over the key input state of the GBA.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 #[repr(transparent)]
 pub struct KeyInputSetting(u16);
 
-pub fn read_key_input() -> KeyInputSetting {
-  unsafe { KeyInputSetting(KEYINPUT.read_volatile()) }
+pub fn key_input() -> KeyInputSetting {
+  unsafe { KeyInputSetting(KEYINPUT.read()) }
 }
 ```
 
@@ -98,7 +98,7 @@ a mask for only the 10 used bits we can flip the "low when pressed" values so
 that the entire result has active bits in all positions where a key is pressed.
 
 ```rust
-pub fn read_key_input() -> KeyInputSetting {
+pub fn key_input() -> KeyInputSetting {
   unsafe { KeyInputSetting(KEYINPUT.read_volatile() ^ 0b0000_0011_1111_1111) }
 }
 ```

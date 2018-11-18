@@ -46,10 +46,10 @@ quickly during the blank period.
 So first we want a way to check the vcount value at all:
 
 ```rust
-pub const VCOUNT: *mut u16 = 0x0400_0006 as *mut u16;
+pub const VCOUNT: VolatilePtr<u16> = VolatilePtr(0x0400_0006 as *mut u16);
 
-pub fn read_vcount() -> u16 {
-  unsafe { VCOUNT.read_volatile() }
+pub fn vcount() -> u16 {
+  unsafe { VCOUNT.read() }
 }
 ```
 
@@ -59,11 +59,11 @@ Then we want two little helper functions to wait until VBlank and vdraw.
 pub const SCREEN_HEIGHT: isize = 160;
 
 pub fn wait_until_vblank() {
-  while read_vcount() < SCREEN_HEIGHT as u16 {}
+  while vcount() < SCREEN_HEIGHT as u16 {}
 }
 
 pub fn wait_until_vdraw() {
-  while read_vcount() >= SCREEN_HEIGHT as u16 {}
+  while vcount() >= SCREEN_HEIGHT as u16 {}
 }
 ```
 

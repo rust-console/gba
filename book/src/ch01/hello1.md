@@ -1,5 +1,6 @@
 # hello1
 
+Our first example will be a totally minimal, full magic number crazy town.
 Ready? Here goes:
 
 `hello1.rs`
@@ -8,7 +9,6 @@ Ready? Here goes:
 #![feature(start)]
 #![no_std]
 
-#[cfg(not(test))]
 #[panic_handler]
 fn panic(_info: &core::panic::PanicInfo) -> ! {
   loop {}
@@ -26,17 +26,18 @@ fn main(_argc: isize, _argv: *const *const u8) -> isize {
 }
 ```
 
-Throw that into your project, build the program (as described back in Chapter
-0), and give it a run. You should see a red, green, and blue dot close-ish to
-the middle of the screen. If you don't, something already went wrong. Double
-check things, phone a friend, write your senators, try asking Ketsuban on the
-[Rust Community Discord](https://discordapp.com/invite/aVESxV8), until you're
-able to get your three dots going.
+Throw that into your project skeleton, build the program (as described back in
+Chapter 0), and give it a run in your emulator. You should see a red, green, and
+blue dot close-ish to the middle of the screen. If you don't, something already
+went wrong. Double check things, phone a friend, write your senators, try asking
+Ketsuban on the [Rust Community Discord](https://discordapp.com/invite/aVESxV8),
+until you're able to get your three dots going.
 
-## Explaining hello1
+## A basic hello1 explanation
 
 So, what just happened? Even if you're used to Rust that might look pretty
-strange. We'll go over each part extra carefully.
+strange. We'll go over most of the little parts right here, and then bigger
+parts will get their own sections.
 
 ```rust
 #![feature(start)]
@@ -60,7 +61,6 @@ There's no standard library available on the GBA, so we'll have to live a core
 only life.
 
 ```rust
-#[cfg(not(test))]
 #[panic_handler]
 fn panic(_info: &core::panic::PanicInfo) -> ! {
   loop {}
@@ -73,10 +73,6 @@ Basically, if we somehow trigger a panic, this is where the program goes.
 However, right now we don't know how to get any sort of message out to the user
 so... we do nothing at all. We _can't even return_ from here, so we just sit in
 an infinite loop. The player will have to reset the universe from the outside.
-
-The `#[cfg(not(test))]` part makes this item only exist in the program when
-we're _not_ in a test build. This is so that `cargo test` and such work right as
-much as possible.
 
 ```rust
 #[start]
@@ -148,46 +144,5 @@ magic numbers mean or do.
 * `0x06000000` is the start of Video RAM.
 
 So we write some magic to the display control register once, then we write some
-other magic to three locations of magic to the Video RAM. We get three dots,
-each in their own location... so that second part makes sense at least.
-
-We'll get into the magic number details in the other sections of this chapter.
-
-## Sidebar: Volatile
-
-We'll get into what all that is in a moment, but first let's ask ourselves: Why
-are we doing _volatile_ writes? You've probably never used it before at all.
-What is volatile anyway?
-
-Well, the optimizer is pretty aggressive some of the time, and so it'll skip
-reads and writes when it thinks can. Like if you write to a pointer once, and
-then again a moment later, and it didn't see any other reads in between, it'll
-think that it can just skip doing that first write since it'll get overwritten
-anyway. Sometimes that's right, but sometimes it's wrong.
-
-Marking a read or write as _volatile_ tells the compiler that it really must do
-that action, and in the exact order that we wrote it out. It says that there
-might even be special hardware side effects going on that the compiler isn't
-aware of. In this case, the write to the display control register sets a video
-mode, and the writes to the Video RAM set pixels that will show up on the
-screen.
-
-Similar to "atomic" operations you might have heard about, all volatile
-operations are enforced to happen in the exact order that you specify them, but
-only relative to other volatile operations. So something like
-
-```rust
-c.volatile_write(5);
-a += b;
-d.volatile_write(7);
-```
-
-might end up changing `a` either before or after the change to `c` (since the
-value of `a` doesn't affect the write to `c`), but the write to `d` will
-_always_ happen after the write to `c` even though the compiler doesn't see any
-direct data dependency there.
-
-If you ever use volatile stuff on other platforms it's important to note that
-volatile doesn't make things thread-safe, you still need atomic for that.
-However, the GBA doesn't have threads, so we don't have to worry about thread
-safety concerns.
+other magic to three magic locations in the Video RAM. Somehow that shows three
+dots. Gotta read on to find out why!

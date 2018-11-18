@@ -5,6 +5,7 @@
 * [Ch 0: Development Setup](ch00/index.md)
 * [Ch 1: Hello GBA](ch01/index.md)
   * [hello1](ch01/hello1.md)
+  * [Volatile](ch01/volatile.md)
   * [IO Registers](ch01/io_registers.md)
   * [The Display Control Register](ch01/the_display_control_register.md)
   * [Video Memory Intro](ch01/video_memory_intro.md)
