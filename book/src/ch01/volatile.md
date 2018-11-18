@@ -22,9 +22,9 @@ operations are enforced to happen in the exact order that you specify them, but
 only relative to other volatile operations. So something like
 
 ```rust
-c.volatile_write(5);
+c.write_volatile(5);
 a += b;
-d.volatile_write(7);
+d.write_volatile(7);
 ```
 
 might end up changing `a` either before or after the change to `c` (since the
