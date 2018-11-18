@@ -11,6 +11,12 @@ detailed for you [in the 0th chapter of the
 book](https://rust-console.github.io/gba/ch0/index.html) that goes with this
 crate.
 
+## For a fast initialization start
+
+```sh
+curl https://raw.githubusercontent.com/rust-console/gba/master/init.sh -sSf | sh
+```
+
 # Contribution
 
 This crate is Apache2 licensed and any contributions you submit must also be
