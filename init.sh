@@ -1,6 +1,11 @@
 #!/bin/sh
 
 APP_NAME=$1
+if [ -z "$APP_NAME"]
+  then
+    APP_NAME="rust-console-hello"
+fi
+
 TARGET="thumbv4-none-agb"
 CRT_LOCAL="crt0.s"
 
