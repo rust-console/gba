@@ -1,10 +1,7 @@
 #!/bin/sh
 
 APP_NAME=$1
-if [ -z "$APP_NAME"]
-  then
-    APP_NAME="rust-console-hello"
-fi
+if [ -z "$APP_NAME"]; then APP_NAME="rust-console-hello"; fi
 
 TARGET="thumbv4-none-agb"
 CRT_LOCAL="crt0.s"
@@ -37,7 +34,7 @@ wget https://raw.githubusercontent.com/rust-console/gba/master/examples/hello1.r
 mv hello1.rs $APP_NAME/src/main.rs
 
 # setup make file
-echo "CRT_FILE=$(echo $CRT_LOCAL)
+echo -e "CRT_FILE=$(echo $CRT_LOCAL)
 CRT_OUTPUT=crt0.o
 PROJECT_NAME=$(echo $APP_NAME)
 TARGET=$(echo $TARGET)
@@ -57,7 +54,7 @@ build-prod:
 " > $APP_NAME/Makefile
 
 # setup the readme file
-echo "Rust console project
+echo -e "Rust console project
 ----
 
 ## Development
