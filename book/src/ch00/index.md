@@ -11,25 +11,31 @@ make this all work with rust and then shared it with the world.
 
 Obviously you need your computer to have a [working rust
 installation](https://rustup.rs/). However, you'll also need to ensure that
-you're using a nightly toolchain. You can run `rustup default nightly` to set
+you're using a nightly toolchain (we will need it for inline assembly, among
+other potential useful features). You can run `rustup default nightly` to set
 nightly as the system wide default toolchain, or you can use a [toolchain
 file](https://github.com/rust-lang-nursery/rustup.rs#the-toolchain-file) to use
 nightly just on a specific project, but either way we'll be assuming the use of
-nightly from now on.
+nightly from now on. You'll also need the `rust-src` component so that
+`cargo-xbuild` will be able to compile the core crate for us in a bit, so run
+`rustup component add rust-src`.
 
 Next, you need [devkitpro](https://devkitpro.org/wiki/Getting_Started). They've
-got a graphical installer for Windows, and `pacman` support on Linux. We'll be
-using a few of general their binutils for the `arm-none-eabi` target, and we'll
-also be using some of their tools that are specific to GBA development, so _even
-if_ you already have the right binutils for whatever reason, you'll still want
-devkitpro for the `gbafix` utility.
+got a graphical installer for Windows that runs nicely, and I guess `pacman`
+support on Linux (I'm on Windows so I haven't tried the Linux install myself).
+We'll be using a few of their general binutils for the `arm-none-eabi` target,
+and we'll also be using some of their tools that are specific to GBA
+development, so _even if_ you already have the right binutils for whatever
+reason, you'll still want devkitpro for the `gbafix` utility.
 
 * On Windows you'll want something like `C:\devkitpro\devkitARM\bin` and
   `C:\devkitpro\tools\bin` to be [added to your
   PATH](https://stackoverflow.com/q/44272416/455232), depending on where you
   installed it to and such.
 * On Linux you'll also want it to be added to your path, but if you're using
-  Linux I'll just assume you know how to do all that.
+  Linux I'll just assume you know how to do all that. I'm told that the default
+  installation path is `/opt/devkitpro/devkitARM/bin`, so look there first if
+  you didn't select some other place.
 
 Finally, you'll need `cargo-xbuild`. Just run `cargo install cargo-xbuild` and
 cargo will figure it all out for you.
