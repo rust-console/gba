@@ -1,10 +1,10 @@
 #!/bin/sh
 
-echo -n "Type the name of the application / game, followed by [ENTER]: "
-read APP_NAME
-
+APP_NAME=$1
 TARGET="thumbv4-none-agb"
 CRT_LOCAL="crt0.s"
+
+echo "Initializing rust-console gba at: $1"
 
 # initialize cargo
 cargo init $APP_NAME --bin

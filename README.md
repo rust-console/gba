@@ -14,7 +14,7 @@ crate.
 ## For a fast initialization start
 
 ```sh
-curl https://raw.githubusercontent.com/rust-console/gba/master/init.sh -sSf | sh
+curl https://raw.githubusercontent.com/rust-console/gba/master/init.sh -sSf | sh APP_NAME
 ```
 
 # Contribution
