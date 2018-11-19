@@ -72,7 +72,7 @@
         </script>
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
-            <ol class="chapter"><li><a href="../introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><a href="../ch00/index.html"><strong aria-hidden="true">2.</strong> Ch 0: Development Setup</a></li><li><a href="../ch01/index.html"><strong aria-hidden="true">3.</strong> Ch 1: Hello GBA</a></li><li><ol class="section"><li><a href="../ch01/hello1.html"><strong aria-hidden="true">3.1.</strong> hello1</a></li><li><a href="../ch01/volatile.html"><strong aria-hidden="true">3.2.</strong> Volatile</a></li><li><a href="../ch01/io_registers.html"><strong aria-hidden="true">3.3.</strong> IO Registers</a></li><li><a href="../ch01/the_display_control_register.html"><strong aria-hidden="true">3.4.</strong> The Display Control Register</a></li><li><a href="../ch01/video_memory_intro.html"><strong aria-hidden="true">3.5.</strong> Video Memory Intro</a></li><li><a href="../ch01/hello2.html"><strong aria-hidden="true">3.6.</strong> hello2</a></li></ol></li><li><a href="../ch02/index.html"><strong aria-hidden="true">4.</strong> Ch 2: User Input</a></li><li><ol class="section"><li><a href="../ch02/the_key_input_register.html"><strong aria-hidden="true">4.1.</strong> The Key Input Register</a></li><li><a href="../ch02/the_vcount_register.html"><strong aria-hidden="true">4.2.</strong> The VCount Register</a></li><li><a href="../ch02/light_cycle.html"><strong aria-hidden="true">4.3.</strong> light_cycle</a></li></ol></li><li><a href="../ch03/index.html" class="active"><strong aria-hidden="true">5.</strong> Ch 3: Memory and Objects</a></li></ol>
+            <ol class="chapter"><li><a href="../introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><a href="../ch00/index.html"><strong aria-hidden="true">2.</strong> Ch 0: Development Setup</a></li><li><a href="../ch01/index.html"><strong aria-hidden="true">3.</strong> Ch 1: Hello GBA</a></li><li><ol class="section"><li><a href="../ch01/hello1.html"><strong aria-hidden="true">3.1.</strong> hello1</a></li><li><a href="../ch01/volatile.html"><strong aria-hidden="true">3.2.</strong> Volatile</a></li><li><a href="../ch01/io_registers.html"><strong aria-hidden="true">3.3.</strong> IO Registers</a></li><li><a href="../ch01/the_display_control_register.html"><strong aria-hidden="true">3.4.</strong> The Display Control Register</a></li><li><a href="../ch01/video_memory_intro.html"><strong aria-hidden="true">3.5.</strong> Video Memory Intro</a></li><li><a href="../ch01/hello2.html"><strong aria-hidden="true">3.6.</strong> hello2</a></li></ol></li><li><a href="../ch02/index.html"><strong aria-hidden="true">4.</strong> Ch 2: User Input</a></li><li><ol class="section"><li><a href="../ch02/the_key_input_register.html"><strong aria-hidden="true">4.1.</strong> The Key Input Register</a></li><li><a href="../ch02/the_vcount_register.html"><strong aria-hidden="true">4.2.</strong> The VCount Register</a></li><li><a href="../ch02/light_cycle.html"><strong aria-hidden="true">4.3.</strong> light_cycle</a></li></ol></li><li><a href="../ch03/index.html" class="active"><strong aria-hidden="true">5.</strong> Ch 3: Memory and Objects</a></li><li><ol class="section"><li><a href="../ch03/gba_memory.html"><strong aria-hidden="true">5.1.</strong> GBA Memory</a></li><li><a href="../ch03/tiled_backgrounds.html"><strong aria-hidden="true">5.2.</strong> Tiled Backgrounds</a></li><li><a href="../ch03/object_basics.html"><strong aria-hidden="true">5.3.</strong> Object Basics</a></li><li><a href="../ch03/gba_rng.html"><strong aria-hidden="true">5.4.</strong> GBA RNG</a></li><li><a href="../ch03/memory_game.html"><strong aria-hidden="true">5.5.</strong> memory_game</a></li></ol></li></ol>
         </nav>
 
         <div id="page-wrapper" class="page-wrapper">
@@ -137,6 +137,34 @@
                 <div id="content" class="content">
                     <main>
                         <a class="header" href="#ch-3-memory-and-objects" id="ch-3-memory-and-objects"><h1>Ch 3: Memory and Objects</h1></a>
+<p>Alright so we can do some basic &quot;movement&quot;, but we left a big trail in the video
+memory of everywhere we went. Most of the time that's not what we want at all.
+If we want more hardware support we're going to have to use a new video mode. So
+far we've only used Mode 3, but modes 4 and 5 are basically the same. Instead,
+we'll switch focus to using a tiled graphical mode.</p>
+<p>First we will go over the complete GBA memory mapping. Part of this is the
+memory for tiled graphics, but also things like all those IO registers, where
+our RAM is for scratch space, all that stuff. Even if we can't put all of them
+to use at once, it's helpful to have an idea of what will be available in the
+long run.</p>
+<p>Tiled modes bring us two big new concepts that each have their own complexity:
+backgrounds and objects. They share some concepts, but fundamentally the
+background is for creating a very large static space that you can scroll around
+the view within, and the objects are about having a few moving bits that appear
+over the background. Careful use of backgrounds and objects is key to having the
+best looking GBA game, so we won't even be able to cover it all in a single
+chapter.</p>
+<p>And, of course, since most games are pretty boring if they're totally static
+we'll touch on the kinds of RNG implementations you might want to have on a GBA.
+Most general purpose RNGs that you find are rather big compared to the amount of
+memory we want to give them, and they often use a lot of <code>u64</code> operations, so
+they end up much slower on a 32-bit machine like the GBA (you can lower 64-bit
+ops to combinations of 32-bit ops, but that's quite a bit more work). We'll
+cover a few RNG options that size down the RNG to a good size and a good speed
+without trading away too much in terms of quality.</p>
+<p>To top it all off, we'll make a simple &quot;memory game&quot; sort of thing. There's some
+face down cards in a grid, you pick one to check, then you pick the other to
+check, and then if they match the pair disappears.</p>
 
                     </main>
 
@@ -148,6 +176,10 @@
                             </a>
                         
 
+                        
+                            <a rel="next" href="../ch03/gba_memory.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
                         
 
                         <div style="clear: both"></div>
@@ -162,6 +194,10 @@
                     </a>
                 
 
+                
+                    <a href="../ch03/gba_memory.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
                 
             </nav>
 

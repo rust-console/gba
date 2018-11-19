@@ -72,7 +72,7 @@
         </script>
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
-            <ol class="chapter"><li><a href="../introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><a href="../ch00/index.html"><strong aria-hidden="true">2.</strong> Ch 0: Development Setup</a></li><li><a href="../ch01/index.html"><strong aria-hidden="true">3.</strong> Ch 1: Hello GBA</a></li><li><ol class="section"><li><a href="../ch01/hello1.html"><strong aria-hidden="true">3.1.</strong> hello1</a></li><li><a href="../ch01/volatile.html"><strong aria-hidden="true">3.2.</strong> Volatile</a></li><li><a href="../ch01/io_registers.html"><strong aria-hidden="true">3.3.</strong> IO Registers</a></li><li><a href="../ch01/the_display_control_register.html"><strong aria-hidden="true">3.4.</strong> The Display Control Register</a></li><li><a href="../ch01/video_memory_intro.html"><strong aria-hidden="true">3.5.</strong> Video Memory Intro</a></li><li><a href="../ch01/hello2.html" class="active"><strong aria-hidden="true">3.6.</strong> hello2</a></li></ol></li><li><a href="../ch02/index.html"><strong aria-hidden="true">4.</strong> Ch 2: User Input</a></li><li><ol class="section"><li><a href="../ch02/the_key_input_register.html"><strong aria-hidden="true">4.1.</strong> The Key Input Register</a></li><li><a href="../ch02/the_vcount_register.html"><strong aria-hidden="true">4.2.</strong> The VCount Register</a></li><li><a href="../ch02/light_cycle.html"><strong aria-hidden="true">4.3.</strong> light_cycle</a></li></ol></li><li><a href="../ch03/index.html"><strong aria-hidden="true">5.</strong> Ch 3: Memory and Objects</a></li></ol>
+            <ol class="chapter"><li><a href="../introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><a href="../ch00/index.html"><strong aria-hidden="true">2.</strong> Ch 0: Development Setup</a></li><li><a href="../ch01/index.html"><strong aria-hidden="true">3.</strong> Ch 1: Hello GBA</a></li><li><ol class="section"><li><a href="../ch01/hello1.html"><strong aria-hidden="true">3.1.</strong> hello1</a></li><li><a href="../ch01/volatile.html"><strong aria-hidden="true">3.2.</strong> Volatile</a></li><li><a href="../ch01/io_registers.html"><strong aria-hidden="true">3.3.</strong> IO Registers</a></li><li><a href="../ch01/the_display_control_register.html"><strong aria-hidden="true">3.4.</strong> The Display Control Register</a></li><li><a href="../ch01/video_memory_intro.html"><strong aria-hidden="true">3.5.</strong> Video Memory Intro</a></li><li><a href="../ch01/hello2.html" class="active"><strong aria-hidden="true">3.6.</strong> hello2</a></li></ol></li><li><a href="../ch02/index.html"><strong aria-hidden="true">4.</strong> Ch 2: User Input</a></li><li><ol class="section"><li><a href="../ch02/the_key_input_register.html"><strong aria-hidden="true">4.1.</strong> The Key Input Register</a></li><li><a href="../ch02/the_vcount_register.html"><strong aria-hidden="true">4.2.</strong> The VCount Register</a></li><li><a href="../ch02/light_cycle.html"><strong aria-hidden="true">4.3.</strong> light_cycle</a></li></ol></li><li><a href="../ch03/index.html"><strong aria-hidden="true">5.</strong> Ch 3: Memory and Objects</a></li><li><ol class="section"><li><a href="../ch03/gba_memory.html"><strong aria-hidden="true">5.1.</strong> GBA Memory</a></li><li><a href="../ch03/tiled_backgrounds.html"><strong aria-hidden="true">5.2.</strong> Tiled Backgrounds</a></li><li><a href="../ch03/object_basics.html"><strong aria-hidden="true">5.3.</strong> Object Basics</a></li><li><a href="../ch03/gba_rng.html"><strong aria-hidden="true">5.4.</strong> GBA RNG</a></li><li><a href="../ch03/memory_game.html"><strong aria-hidden="true">5.5.</strong> memory_game</a></li></ol></li></ol>
         </nav>
 
         <div id="page-wrapper" class="page-wrapper">
@@ -159,11 +159,12 @@ fn main(_argc: isize, _argv: *const *const u8) -&gt; isize {
 }
 </code></pre></pre>
 <p>Now let's clean this up so that it's clearer what's going on.</p>
-<p>First we'll label that display control stuff:</p>
+<p>First we'll label that display control stuff, including using the <code>VolatilePtr</code>
+type from the volatile explanation:</p>
 <pre><pre class="playpen"><code class="language-rust">
 # #![allow(unused_variables)]
 #fn main() {
-pub const DISPCNT: *mut u16 = 0x04000000 as *mut u16;
+pub const DISPCNT: VolatilePtr&lt;u16&gt; = VolatilePtr(0x04000000 as *mut u16);
 pub const MODE3: u16 = 3;
 pub const BG2: u16 = 0b100_0000_0000;
 #}</code></pre></pre>
@@ -174,8 +175,11 @@ pub const BG2: u16 = 0b100_0000_0000;
 pub const VRAM: usize = 0x06000000;
 pub const SCREEN_WIDTH: isize = 240;
 #}</code></pre></pre>
-<p>And then we want a small helper function for putting together a color value.</p>
-<p>Happily, this one can even be declared as a const function. At the time of
+<p>Note that VRAM has to be interpreted in different ways depending on mode, so we
+just leave it as <code>usize</code> and we'll cast it into the right form closer to the
+actual use.</p>
+<p>Next we want a small helper function for putting together a color value.
+Happily, this one can even be declared as a <code>const</code> function. At the time of
 writing, we've got the &quot;minimal const fn&quot; support in nightly. It really is quite
 limited, but I'm happy to let rustc and LLVM pre-compute as much as they can
 when it comes to the GBA's tiny CPU.</p>
@@ -193,7 +197,7 @@ usually helps you think about it a lot better.</p>
 # #![allow(unused_variables)]
 #fn main() {
 pub unsafe fn mode3_pixel(col: isize, row: isize, color: u16) {
-  (VRAM as *mut u16).offset(col + row * SCREEN_WIDTH).write_volatile(color);
+  VolatilePtr(VRAM as *mut u16).offset(col + row * SCREEN_WIDTH).write(color);
 }
 #}</code></pre></pre>
 <p>So now we've got this:</p>
@@ -209,7 +213,7 @@ fn panic(_info: &amp;core::panic::PanicInfo) -&gt; ! {
 #[start]
 fn main(_argc: isize, _argv: *const *const u8) -&gt; isize {
   unsafe {
-    DISPCNT.write_volatile(MODE3 | BG2);
+    DISPCNT.write(MODE3 | BG2);
     mode3_pixel(120, 80, rgb16(31, 0, 0));
     mode3_pixel(136, 80, rgb16(0, 31, 0));
     mode3_pixel(120, 96, rgb16(0, 0, 31));
@@ -217,7 +221,22 @@ fn main(_argc: isize, _argv: *const *const u8) -&gt; isize {
   }
 }
 
-pub const DISPCNT: *mut u16 = 0x04000000 as *mut u16;
+#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, PartialOrd, Ord)]
+#[repr(transparent)]
+pub struct VolatilePtr&lt;T&gt;(pub *mut T);
+impl&lt;T&gt; VolatilePtr&lt;T&gt; {
+  pub unsafe fn read(&amp;self) -&gt; T {
+    core::ptr::read_volatile(self.0)
+  }
+  pub unsafe fn write(&amp;self, data: T) {
+    core::ptr::write_volatile(self.0, data);
+  }
+  pub unsafe fn offset(self, count: isize) -&gt; Self {
+    VolatilePtr(self.0.wrapping_offset(count))
+  }
+}
+
+pub const DISPCNT: VolatilePtr&lt;u16&gt; = VolatilePtr(0x04000000 as *mut u16);
 pub const MODE3: u16 = 3;
 pub const BG2: u16 = 0b100_0000_0000;
 
@@ -229,7 +248,7 @@ pub const fn rgb16(red: u16, green: u16, blue: u16) -&gt; u16 {
 }
 
 pub unsafe fn mode3_pixel(col: isize, row: isize, color: u16) {
-  (VRAM as *mut u16).offset(col + row * SCREEN_WIDTH).write_volatile(color);
+  VolatilePtr(VRAM as *mut u16).offset(col + row * SCREEN_WIDTH).write(color);
 }
 </code></pre></pre>
 <p>Exact same program that we started with, but much easier to read.</p>

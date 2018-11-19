@@ -72,7 +72,7 @@
         </script>
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
-            <ol class="chapter"><li><a href="../introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><a href="../ch00/index.html" class="active"><strong aria-hidden="true">2.</strong> Ch 0: Development Setup</a></li><li><a href="../ch01/index.html"><strong aria-hidden="true">3.</strong> Ch 1: Hello GBA</a></li><li><ol class="section"><li><a href="../ch01/hello1.html"><strong aria-hidden="true">3.1.</strong> hello1</a></li><li><a href="../ch01/volatile.html"><strong aria-hidden="true">3.2.</strong> Volatile</a></li><li><a href="../ch01/io_registers.html"><strong aria-hidden="true">3.3.</strong> IO Registers</a></li><li><a href="../ch01/the_display_control_register.html"><strong aria-hidden="true">3.4.</strong> The Display Control Register</a></li><li><a href="../ch01/video_memory_intro.html"><strong aria-hidden="true">3.5.</strong> Video Memory Intro</a></li><li><a href="../ch01/hello2.html"><strong aria-hidden="true">3.6.</strong> hello2</a></li></ol></li><li><a href="../ch02/index.html"><strong aria-hidden="true">4.</strong> Ch 2: User Input</a></li><li><ol class="section"><li><a href="../ch02/the_key_input_register.html"><strong aria-hidden="true">4.1.</strong> The Key Input Register</a></li><li><a href="../ch02/the_vcount_register.html"><strong aria-hidden="true">4.2.</strong> The VCount Register</a></li><li><a href="../ch02/light_cycle.html"><strong aria-hidden="true">4.3.</strong> light_cycle</a></li></ol></li><li><a href="../ch03/index.html"><strong aria-hidden="true">5.</strong> Ch 3: Memory and Objects</a></li></ol>
+            <ol class="chapter"><li><a href="../introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><a href="../ch00/index.html" class="active"><strong aria-hidden="true">2.</strong> Ch 0: Development Setup</a></li><li><a href="../ch01/index.html"><strong aria-hidden="true">3.</strong> Ch 1: Hello GBA</a></li><li><ol class="section"><li><a href="../ch01/hello1.html"><strong aria-hidden="true">3.1.</strong> hello1</a></li><li><a href="../ch01/volatile.html"><strong aria-hidden="true">3.2.</strong> Volatile</a></li><li><a href="../ch01/io_registers.html"><strong aria-hidden="true">3.3.</strong> IO Registers</a></li><li><a href="../ch01/the_display_control_register.html"><strong aria-hidden="true">3.4.</strong> The Display Control Register</a></li><li><a href="../ch01/video_memory_intro.html"><strong aria-hidden="true">3.5.</strong> Video Memory Intro</a></li><li><a href="../ch01/hello2.html"><strong aria-hidden="true">3.6.</strong> hello2</a></li></ol></li><li><a href="../ch02/index.html"><strong aria-hidden="true">4.</strong> Ch 2: User Input</a></li><li><ol class="section"><li><a href="../ch02/the_key_input_register.html"><strong aria-hidden="true">4.1.</strong> The Key Input Register</a></li><li><a href="../ch02/the_vcount_register.html"><strong aria-hidden="true">4.2.</strong> The VCount Register</a></li><li><a href="../ch02/light_cycle.html"><strong aria-hidden="true">4.3.</strong> light_cycle</a></li></ol></li><li><a href="../ch03/index.html"><strong aria-hidden="true">5.</strong> Ch 3: Memory and Objects</a></li><li><ol class="section"><li><a href="../ch03/gba_memory.html"><strong aria-hidden="true">5.1.</strong> GBA Memory</a></li><li><a href="../ch03/tiled_backgrounds.html"><strong aria-hidden="true">5.2.</strong> Tiled Backgrounds</a></li><li><a href="../ch03/object_basics.html"><strong aria-hidden="true">5.3.</strong> Object Basics</a></li><li><a href="../ch03/gba_rng.html"><strong aria-hidden="true">5.4.</strong> GBA RNG</a></li><li><a href="../ch03/memory_game.html"><strong aria-hidden="true">5.5.</strong> memory_game</a></li></ol></li></ol>
         </nav>
 
         <div id="page-wrapper" class="page-wrapper">
@@ -140,49 +140,53 @@
 <p>Before you can build a GBA game you'll have to follow some special steps to
 setup the development environment. Perhaps unfortunately, there's enough detail
 here to warrant a mini-chapter all on its own.</p>
-<p>Before we begin I'd like to give a special thanks to <strong>Ketsuban</strong>, who is the
-wizard that arranged for all of this to be able to happen and laid out the
-details of the plan to the rest of the world.</p>
+<p>Once again, extra special thanks to <strong>Ketsuban</strong>, who first dove into how to
+make this all work with rust and then shared it with the world.</p>
 <a class="header" href="#per-system-setup" id="per-system-setup"><h2>Per System Setup</h2></a>
-<p>Obviously you need your computer to have a working rust installation. However,
-you'll also need to ensure that you're using a nightly toolchain. You can run
-<code>rustup default nightly</code> to set nightly as the system wide default toolchain, or
-you can use a <a href="https://github.com/rust-lang-nursery/rustup.rs#the-toolchain-file">toolchain
+<p>Obviously you need your computer to have a <a href="https://rustup.rs/">working rust
+installation</a>. However, you'll also need to ensure that
+you're using a nightly toolchain (we will need it for inline assembly, among
+other potential useful features). You can run <code>rustup default nightly</code> to set
+nightly as the system wide default toolchain, or you can use a <a href="https://github.com/rust-lang-nursery/rustup.rs#the-toolchain-file">toolchain
 file</a> to use
-nightly just on a specific project, but either way we'll be assuming nightly
-from now on.</p>
-<p>Next you need <a href="https://devkitpro.org/wiki/Getting_Started">devkitpro</a>. They've
-got a graphical installer for Windows, and <code>pacman</code> support on Linux. We'll be
-using a few of their binutils for the <code>arm-none-eabi</code> target, and we'll also be
-using some of their tools that are specific to GBA development, so <em>even if</em> you
-already have the right binutils for whatever reason, you'll still want devkitpro
-for the <code>gbafix</code> utility.</p>
+nightly just on a specific project, but either way we'll be assuming the use of
+nightly from now on. You'll also need the <code>rust-src</code> component so that
+<code>cargo-xbuild</code> will be able to compile the core crate for us in a bit, so run
+<code>rustup component add rust-src</code>.</p>
+<p>Next, you need <a href="https://devkitpro.org/wiki/Getting_Started">devkitpro</a>. They've
+got a graphical installer for Windows that runs nicely, and I guess <code>pacman</code>
+support on Linux (I'm on Windows so I haven't tried the Linux install myself).
+We'll be using a few of their general binutils for the <code>arm-none-eabi</code> target,
+and we'll also be using some of their tools that are specific to GBA
+development, so <em>even if</em> you already have the right binutils for whatever
+reason, you'll still want devkitpro for the <code>gbafix</code> utility.</p>
 <ul>
 <li>On Windows you'll want something like <code>C:\devkitpro\devkitARM\bin</code> and
 <code>C:\devkitpro\tools\bin</code> to be <a href="https://stackoverflow.com/q/44272416/455232">added to your
 PATH</a>, depending on where you
 installed it to and such.</li>
 <li>On Linux you'll also want it to be added to your path, but if you're using
-Linux I'll just assume you know how to do all that.</li>
+Linux I'll just assume you know how to do all that. I'm told that the default
+installation path is <code>/opt/devkitpro/devkitARM/bin</code>, so look there first if
+you didn't select some other place.</li>
 </ul>
 <p>Finally, you'll need <code>cargo-xbuild</code>. Just run <code>cargo install cargo-xbuild</code> and
 cargo will figure it all out for you.</p>
 <a class="header" href="#per-project-setup" id="per-project-setup"><h2>Per Project Setup</h2></a>
-<p>Now you'll need some particular files each time you want to start a new project.
-You can find them in the root of the <a href="https://github.com/rust-console/gba">rust-console/gba
-repo</a>.</p>
+<p>Once the system wide tools are ready, you'll need some particular files each
+time you want to start a new project. You can find them in the root of the
+<a href="https://github.com/rust-console/gba">rust-console/gba repo</a>.</p>
 <ul>
-<li><code>thumbv4-none-agb.json</code> describes the overall GBA to cargo-xbuild so it knows
-what to do. This is actually a somewhat made up target name since there's no
-official target name. The GBA is essentially the same as a normal
-<code>thumbv4-none-eabi</code> device, but we give it the &quot;agb&quot; signifier so that later
-on we'll be able to use rust's <code>cfg</code> ability to allow our code to know if it's
-specifically targeting a GBA or some other similar device (like an NDS).</li>
+<li><code>thumbv4-none-agb.json</code> describes the overall GBA to cargo-xbuild (and LLVM)
+so it knows what to do. Technically the GBA is <code>thumbv4-none-eabi</code>, but we
+change the <code>eabi</code> to <code>agb</code> so that we can distinguish it from other <code>eabi</code>
+devices when using <code>cfg</code> flags.</li>
 <li><code>crt0.s</code> describes some ASM startup stuff. If you have more ASM to place here
 later on this is where you can put it. You also need to build it into a
 <code>crt0.o</code> file before it can actually be used, but we'll cover that below.</li>
-<li><code>linker.ld</code> tells the linker more critical info about the layout expectations
-that the GBA has about our program.</li>
+<li><code>linker.ld</code> tells the linker all the critical info about the layout
+expectations that the GBA has about our program, and that it should also
+include the <code>crt0.o</code> file with our compiled rust code.</li>
 </ul>
 <a class="header" href="#compiling" id="compiling"><h2>Compiling</h2></a>
 <p>The next steps only work once you've got some source code to build. If you need
@@ -206,13 +210,13 @@ practically instant operation.</li>
 as <code>--release</code>, and options, such as <code>--bin foo</code> or <code>--examples</code>, that you'd
 expect <code>cargo</code> to accept.</li>
 <li>You <strong>can not</strong> build and run tests this way, because they require <code>std</code>,
-which the GBA doesn't have. You can still run some of your project's tests
-with <code>cargo test</code>, but that builds for your local machine, so anything
-specific to the GBA (such as reading and writing registers) won't be
-testable that way. If you want to isolate and try out some piece code
-running on the GBA you'll unfortunately have to make a demo for it in your
-<code>examples/</code> directory and then run the demo in an emulator and see if it
-does what you expect.</li>
+which the GBA doesn't have. If you want you can still run some of your
+project's tests with <code>cargo test --lib</code> or similar, but that builds for your
+local machine, so anything specific to the GBA (such as reading and writing
+registers) won't be testable that way. If you want to isolate and try out
+some piece code running on the GBA you'll unfortunately have to make a demo
+for it in your <code>examples/</code> directory and then run the demo in an emulator
+and see if it does what you expect.</li>
 <li>The file extension is important. <code>cargo xbuild</code> takes it as a flag to
 compile dependencies with the same sysroot, so you can include crates
 normally. Well, creates that work in the GBA's limited environment, but you

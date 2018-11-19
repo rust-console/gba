@@ -72,7 +72,7 @@
         </script>
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
-            <ol class="chapter"><li><a href="../introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><a href="../ch00/index.html"><strong aria-hidden="true">2.</strong> Ch 0: Development Setup</a></li><li><a href="../ch01/index.html"><strong aria-hidden="true">3.</strong> Ch 1: Hello GBA</a></li><li><ol class="section"><li><a href="../ch01/hello1.html"><strong aria-hidden="true">3.1.</strong> hello1</a></li><li><a href="../ch01/volatile.html" class="active"><strong aria-hidden="true">3.2.</strong> Volatile</a></li><li><a href="../ch01/io_registers.html"><strong aria-hidden="true">3.3.</strong> IO Registers</a></li><li><a href="../ch01/the_display_control_register.html"><strong aria-hidden="true">3.4.</strong> The Display Control Register</a></li><li><a href="../ch01/video_memory_intro.html"><strong aria-hidden="true">3.5.</strong> Video Memory Intro</a></li><li><a href="../ch01/hello2.html"><strong aria-hidden="true">3.6.</strong> hello2</a></li></ol></li><li><a href="../ch02/index.html"><strong aria-hidden="true">4.</strong> Ch 2: User Input</a></li><li><ol class="section"><li><a href="../ch02/the_key_input_register.html"><strong aria-hidden="true">4.1.</strong> The Key Input Register</a></li><li><a href="../ch02/the_vcount_register.html"><strong aria-hidden="true">4.2.</strong> The VCount Register</a></li><li><a href="../ch02/light_cycle.html"><strong aria-hidden="true">4.3.</strong> light_cycle</a></li></ol></li><li><a href="../ch03/index.html"><strong aria-hidden="true">5.</strong> Ch 3: Memory and Objects</a></li></ol>
+            <ol class="chapter"><li><a href="../introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><a href="../ch00/index.html"><strong aria-hidden="true">2.</strong> Ch 0: Development Setup</a></li><li><a href="../ch01/index.html"><strong aria-hidden="true">3.</strong> Ch 1: Hello GBA</a></li><li><ol class="section"><li><a href="../ch01/hello1.html"><strong aria-hidden="true">3.1.</strong> hello1</a></li><li><a href="../ch01/volatile.html" class="active"><strong aria-hidden="true">3.2.</strong> Volatile</a></li><li><a href="../ch01/io_registers.html"><strong aria-hidden="true">3.3.</strong> IO Registers</a></li><li><a href="../ch01/the_display_control_register.html"><strong aria-hidden="true">3.4.</strong> The Display Control Register</a></li><li><a href="../ch01/video_memory_intro.html"><strong aria-hidden="true">3.5.</strong> Video Memory Intro</a></li><li><a href="../ch01/hello2.html"><strong aria-hidden="true">3.6.</strong> hello2</a></li></ol></li><li><a href="../ch02/index.html"><strong aria-hidden="true">4.</strong> Ch 2: User Input</a></li><li><ol class="section"><li><a href="../ch02/the_key_input_register.html"><strong aria-hidden="true">4.1.</strong> The Key Input Register</a></li><li><a href="../ch02/the_vcount_register.html"><strong aria-hidden="true">4.2.</strong> The VCount Register</a></li><li><a href="../ch02/light_cycle.html"><strong aria-hidden="true">4.3.</strong> light_cycle</a></li></ol></li><li><a href="../ch03/index.html"><strong aria-hidden="true">5.</strong> Ch 3: Memory and Objects</a></li><li><ol class="section"><li><a href="../ch03/gba_memory.html"><strong aria-hidden="true">5.1.</strong> GBA Memory</a></li><li><a href="../ch03/tiled_backgrounds.html"><strong aria-hidden="true">5.2.</strong> Tiled Backgrounds</a></li><li><a href="../ch03/object_basics.html"><strong aria-hidden="true">5.3.</strong> Object Basics</a></li><li><a href="../ch03/gba_rng.html"><strong aria-hidden="true">5.4.</strong> GBA RNG</a></li><li><a href="../ch03/memory_game.html"><strong aria-hidden="true">5.5.</strong> memory_game</a></li></ol></li></ol>
         </nav>
 
         <div id="page-wrapper" class="page-wrapper">
@@ -157,9 +157,9 @@ only relative to other volatile operations. So something like</p>
 <pre><pre class="playpen"><code class="language-rust">
 # #![allow(unused_variables)]
 #fn main() {
-c.volatile_write(5);
+c.write_volatile(5);
 a += b;
-d.volatile_write(7);
+d.write_volatile(7);
 #}</code></pre></pre>
 <p>might end up changing <code>a</code> either before or after the change to <code>c</code> (since the
 value of <code>a</code> doesn't affect the write to <code>c</code>), but the write to <code>d</code> will
@@ -170,6 +170,35 @@ note that volatile doesn't make things thread-safe, you still need atomic for
 that. However, the GBA doesn't have threads, so we don't have to worry about
 those sorts of thread safety concerns (there's interrupts, but that's another
 matter).</p>
+<a class="header" href="#volatile-by-default" id="volatile-by-default"><h2>Volatile by default</h2></a>
+<p>Of course, writing out <code>volatile_write</code> every time is more than we wanna do.
+There's clarity and then there's excessive. This is a chance to write our first
+<a href="https://doc.rust-lang.org/1.0.0/style/features/types/newtype.html">newtype</a>.
+Basically a type that's got the exact same binary representation as some other
+type, but new methods and trait implementations.</p>
+<p>We want a <code>*mut T</code> that's volatile by default, and also when we offset it...
+well the verdict is slightly unclear on how <code>offset</code> vs <code>wrapping_offset</code> work
+when you're using pointers that you made up out of nowhere. I've asked the
+experts and they genuinely weren't sure, so we'll make an <code>offset</code> method that
+does a <code>wrapping_offset</code> just to be careful.</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, PartialOrd, Ord)]
+#[repr(transparent)]
+pub struct VolatilePtr&lt;T&gt;(pub *mut T);
+impl&lt;T&gt; VolatilePtr&lt;T&gt; {
+  pub unsafe fn read(&amp;self) -&gt; T {
+    core::ptr::read_volatile(self.0)
+  }
+  pub unsafe fn write(&amp;self, data: T) {
+    core::ptr::write_volatile(self.0, data);
+  }
+  pub unsafe fn offset(self, count: isize) -&gt; Self {
+    VolatilePtr(self.0.wrapping_offset(count))
+  }
+}
+#}</code></pre></pre>
 
                     </main>
 
