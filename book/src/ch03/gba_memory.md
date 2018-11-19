@@ -226,7 +226,7 @@ builds starts with `thumbv4`.
 
 * `0xE000000` to `0xE00FFFF` (64k)
 
-The game pak SRAM has an 8-bit bus. Why did pokemon always take so long to save?
+The game pak SRAM has an 8-bit bus. Why did Pokémon always take so long to save?
 This is why. It also has some amount of wait, but as with the ROM, the details
 depend on your game pak hardware (and also as with ROM, you can adjust the
 settings with an IO register, should you need to).
