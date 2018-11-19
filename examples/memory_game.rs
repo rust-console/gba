@@ -173,3 +173,25 @@ pub fn wait_until_vblank() {
 pub fn wait_until_vdraw() {
   while vcount() >= SCREEN_HEIGHT as u16 {}
 }
+
+#[repr(C)]
+#[align(4)]
+pub struct ObjectAttributes {
+  attr0: u16,
+  attr1: u16,
+  attr2: u16,
+  filler: i16,
+}
+
+#[repr(C)]
+#[align(4)]
+pub struct ObjectAffine {
+  filler0: [u16; 3],
+  pa: i16,
+  filler1: [u16; 3],
+  pb: i16,
+  filler2: [u16; 3],
+  pc: i16,
+  filler3: [u16; 3],
+  pd: i16,
+}

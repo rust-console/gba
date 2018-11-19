@@ -8,7 +8,7 @@ MEMORY {
 
 SECTIONS {
     .text : {
-        KEEP(crt0.o(.text));
+        KEEP(target/crt0.o(.text));
         *(.text .text.*);
         . = ALIGN(4);
     } >rom = 0xff

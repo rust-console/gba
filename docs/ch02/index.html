@@ -3,27 +3,27 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Introduction - Rust GBA Guide</title>
+        <title>Ch 2: User Input - Rust GBA Guide</title>
         <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="theme-color" content="#ffffff" />
 
-        <link rel="shortcut icon" href="favicon.png">
-        <link rel="stylesheet" href="css/variables.css">
-        <link rel="stylesheet" href="css/general.css">
-        <link rel="stylesheet" href="css/chrome.css">
-        <link rel="stylesheet" href="css/print.css" media="print">
+        <link rel="shortcut icon" href="../favicon.png">
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        <link rel="stylesheet" href="../css/print.css" media="print">
 
         <!-- Fonts -->
-        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
         <link href="https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800" rel="stylesheet" type="text/css">
         <link href="https://fonts.googleapis.com/css?family=Source+Code+Pro:500" rel="stylesheet" type="text/css">
 
         <!-- Highlight.js Stylesheets -->
-        <link rel="stylesheet" href="highlight.css">
-        <link rel="stylesheet" href="tomorrow-night.css">
-        <link rel="stylesheet" href="ayu-highlight.css">
+        <link rel="stylesheet" href="../highlight.css">
+        <link rel="stylesheet" href="../tomorrow-night.css">
+        <link rel="stylesheet" href="../ayu-highlight.css">
 
         <!-- Custom theme stylesheets -->
         
@@ -32,7 +32,7 @@
     </head>
     <body class="light">
         <!-- Provide site root to javascript -->
-        <script type="text/javascript">var path_to_root = "";</script>
+        <script type="text/javascript">var path_to_root = "../";</script>
 
         <!-- Work around some values being stored in localStorage wrapped in quotes -->
         <script type="text/javascript">
@@ -72,7 +72,7 @@
         </script>
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
-            <ol class="chapter"><li><a href="introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><a href="ch00/index.html"><strong aria-hidden="true">2.</strong> Ch 0: Development Setup</a></li><li><a href="ch01/index.html"><strong aria-hidden="true">3.</strong> Ch 1: Hello GBA</a></li><li><ol class="section"><li><a href="ch01/hello1.html"><strong aria-hidden="true">3.1.</strong> hello1</a></li><li><a href="ch01/volatile.html"><strong aria-hidden="true">3.2.</strong> Volatile</a></li><li><a href="ch01/io_registers.html"><strong aria-hidden="true">3.3.</strong> IO Registers</a></li><li><a href="ch01/the_display_control_register.html"><strong aria-hidden="true">3.4.</strong> The Display Control Register</a></li><li><a href="ch01/video_memory_intro.html"><strong aria-hidden="true">3.5.</strong> Video Memory Intro</a></li><li><a href="ch01/hello2.html"><strong aria-hidden="true">3.6.</strong> hello2</a></li></ol></li><li><a href="ch02/index.html"><strong aria-hidden="true">4.</strong> Ch 2: User Input</a></li><li><ol class="section"><li><a href="ch02/the_key_input_register.html"><strong aria-hidden="true">4.1.</strong> The Key Input Register</a></li><li><a href="ch02/the_vcount_register.html"><strong aria-hidden="true">4.2.</strong> The VCount Register</a></li><li><a href="ch02/light_cycle.html"><strong aria-hidden="true">4.3.</strong> light_cycle</a></li></ol></li><li><a href="ch03/index.html"><strong aria-hidden="true">5.</strong> Ch 3: Memory and Objects</a></li><li><ol class="section"><li><a href="ch03/gba_memory.html"><strong aria-hidden="true">5.1.</strong> GBA Memory</a></li><li><a href="ch03/tiled_backgrounds.html"><strong aria-hidden="true">5.2.</strong> Tiled Backgrounds</a></li><li><a href="ch03/object_basics.html"><strong aria-hidden="true">5.3.</strong> Object Basics</a></li><li><a href="ch03/gba_rng.html"><strong aria-hidden="true">5.4.</strong> GBA RNG</a></li><li><a href="ch03/memory_game.html"><strong aria-hidden="true">5.5.</strong> memory_game</a></li></ol></li></ol>
+            <ol class="chapter"><li><a href="../introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><a href="../ch00/index.html"><strong aria-hidden="true">2.</strong> Ch 0: Development Setup</a></li><li><a href="../ch01/index.html"><strong aria-hidden="true">3.</strong> Ch 1: Hello GBA</a></li><li><ol class="section"><li><a href="../ch01/hello1.html"><strong aria-hidden="true">3.1.</strong> hello1</a></li><li><a href="../ch01/volatile.html"><strong aria-hidden="true">3.2.</strong> Volatile</a></li><li><a href="../ch01/io_registers.html"><strong aria-hidden="true">3.3.</strong> IO Registers</a></li><li><a href="../ch01/the_display_control_register.html"><strong aria-hidden="true">3.4.</strong> The Display Control Register</a></li><li><a href="../ch01/video_memory_intro.html"><strong aria-hidden="true">3.5.</strong> Video Memory Intro</a></li><li><a href="../ch01/hello2.html"><strong aria-hidden="true">3.6.</strong> hello2</a></li></ol></li><li><a href="../ch02/index.html" class="active"><strong aria-hidden="true">4.</strong> Ch 2: User Input</a></li><li><ol class="section"><li><a href="../ch02/the_key_input_register.html"><strong aria-hidden="true">4.1.</strong> The Key Input Register</a></li><li><a href="../ch02/the_vcount_register.html"><strong aria-hidden="true">4.2.</strong> The VCount Register</a></li><li><a href="../ch02/light_cycle.html"><strong aria-hidden="true">4.3.</strong> light_cycle</a></li></ol></li><li><a href="../ch03/index.html"><strong aria-hidden="true">5.</strong> Ch 3: Memory and Objects</a></li><li><ol class="section"><li><a href="../ch03/gba_memory.html"><strong aria-hidden="true">5.1.</strong> GBA Memory</a></li><li><a href="../ch03/tiled_backgrounds.html"><strong aria-hidden="true">5.2.</strong> Tiled Backgrounds</a></li><li><a href="../ch03/object_basics.html"><strong aria-hidden="true">5.3.</strong> Object Basics</a></li><li><a href="../ch03/gba_rng.html"><strong aria-hidden="true">5.4.</strong> GBA RNG</a></li><li><a href="../ch03/memory_game.html"><strong aria-hidden="true">5.5.</strong> memory_game</a></li></ol></li></ol>
         </nav>
 
         <div id="page-wrapper" class="page-wrapper">
@@ -105,7 +105,7 @@
                         <h1 class="menu-title">Rust GBA Guide</h1> 
 
                         <div class="right-buttons">
-                            <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <a href="../print.html" title="Print this book" aria-label="Print this book">
                                 <i id="print-button" class="fa fa-print"></i>
                             </a>
                         </div>
@@ -136,62 +136,39 @@
 
                 <div id="content" class="content">
                     <main>
-                        <a class="header" href="#introduction" id="introduction"><h1>Introduction</h1></a>
-<p>Here's a book that'll help you program in Rust on the Game Boy Advance (GBA).</p>
-<p>It's a work in progress of course, but so is most of everything in Rust.</p>
-<a class="header" href="#style-and-purpose" id="style-and-purpose"><h2>Style and Purpose</h2></a>
-<p>I'm out to teach you how to program in Rust on the GBA, obviously. However,
-while there <em>is</em> a <a href="https://github.com/rust-console/gba">gba</a> crate, and while I
-genuinely believe it to be a good and useful crate for GBA programming, we <em>will
-not</em> be using the <code>gba</code> crate within this book. In fact we won't be using any
-crates at all. We can call it the <a href="https://handmadehero.org/">Handmade Hero</a>
-approach, if you like.</p>
-<p>I don't want to just teach you how to use the <code>gba</code> crate, I want to teach you
-what you'd need to know to write the crate from scratch if it wasn't there.</p>
-<p>Each chapter of the book will focus on a few things you'll need to know about
-GBA programming and then present a fully self-contained example that puts those
-ideas into action. Just one file per example, no dependencies, no external
-assets, no fuss. The examples will be in the text of the book within code
-blocks, but also you can find them in the <a href="https://github.com/rust-console/gba/tree/master/examples">examples
-directory</a> of the repo
-if you want to get them that way.</p>
-<a class="header" href="#expected-knowledge" id="expected-knowledge"><h2>Expected Knowledge</h2></a>
-<p>I will try not to ask too much of the reader ahead of time, but you are expected
-to have already read <a href="https://doc.rust-lang.org/book/">The Rust Book</a>.</p>
-<p>It's very difficult to know when you've said something that someone else won't
-already know about, or if you're presenting ideas out of order. If things aren't
-clear please <a href="https://github.com/rust-console/gba/issues">file an issue</a> and
-we'll try to address it.</p>
-<a class="header" href="#getting-help" id="getting-help"><h2>Getting Help</h2></a>
-<p>If you want to contact us you should join the <a href="https://discordapp.com/invite/aVESxV8">Rust Community
-Discord</a> and ask in the <code>#gamedev</code>
-channel.</p>
-<ul>
-<li><code>Ketsuban</code> is the wizard who knows much more about how it all works</li>
-<li><code>Lokathor</code> is the fool who decided to write a crate and book for it.</li>
-</ul>
-<p>If it's <em>not</em> a GBA specific question then you can probably ask any of the other
-folks in the server as well (there's a few hundred folks).</p>
-<a class="header" href="#further-reading" id="further-reading"><h2>Further Reading</h2></a>
-<p>If you want to read more about developing on the GBA there are some other good
-resources as well:</p>
-<ul>
-<li><a href="https://www.coranac.com/tonc/text/toc.htm">Tonc</a>, a tutorial series written
-for C, but it's what I based the ordering of this book's sections on.</li>
-<li><a href="http://problemkaputt.de/gbatek.htm">GBATEK</a>, a homebrew tech manual for
-GBA/NDS/DSi. We will regularly link to parts of it when talking about various
-bits of the GBA.</li>
-<li><a href="https://www.cs.rit.edu/%7Etjh8300/CowBite/CowBiteSpec.htm">CowBite</a> is another
-tech specification that's more GBA specific. It's sometimes got more ASCII
-art diagrams and example C struct layouts than GBATEK does.</li>
-</ul>
+                        <a class="header" href="#ch-2-user-input" id="ch-2-user-input"><h1>Ch 2: User Input</h1></a>
+<p>It's all well and good to draw three pixels, but they don't do anything yet. We
+want them to do something, and for that we need to get some input from the user.</p>
+<p>The GBA, as I'm sure you know, has an arrow pad, A and B, L and R, Start and
+Select. That's a little more than the NES/GB/CGB had, and a little less than the
+SNES had. As you can guess, we get key state info from an IO register.</p>
+<p>Also, we will need a way to keep the program from running &quot;too fast&quot;. On a
+modern computer or console you do this with vsync info from the GPU and Monitor,
+and on the GBA we'll be using vsync info from an IO register that tracks what
+the display hardware is doing.</p>
+<p>As a way to apply our knowledge We'll make a simple &quot;light cycle&quot; game where
+your dot leaves a trail behind them and you die if you go off the screen or if
+you touch your own trail. We just make a copy of <code>hello2.rs</code> named
+<code>light_cycle.rs</code> and then fill it in as we go through the chapter. Normally you
+might not place the entire program into a single source file, particularly as it
+grows over time, but since these are small examples it's much better to have
+them be completely self contained than it is to have them be &quot;properly
+organized&quot; for the long term.</p>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
                         
+                            <a rel="prev" href="../ch01/hello2.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+                        
 
+                        
+                            <a rel="next" href="../ch02/the_key_input_register.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
                         
 
                         <div style="clear: both"></div>
@@ -201,7 +178,15 @@ art diagrams and example C struct layouts than GBATEK does.</li>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
                 
+                    <a href="../ch01/hello2.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                
 
+                
+                    <a href="../ch02/the_key_input_register.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
                 
             </nav>
 
@@ -214,14 +199,14 @@ art diagrams and example C struct layouts than GBATEK does.</li>
         
 
         
-        <script src="elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
-        <script src="mark.min.js" type="text/javascript" charset="utf-8"></script>
-        <script src="searcher.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../searcher.js" type="text/javascript" charset="utf-8"></script>
         
 
-        <script src="clipboard.min.js" type="text/javascript" charset="utf-8"></script>
-        <script src="highlight.js" type="text/javascript" charset="utf-8"></script>
-        <script src="book.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../book.js" type="text/javascript" charset="utf-8"></script>
 
         <!-- Custom JS scripts -->
         

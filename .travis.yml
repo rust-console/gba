@@ -14,7 +14,8 @@ before_script:
 
 script:
   - cargo check && cargo check --release
-  # at the moment we DO NOT run "cargo test" because of lang-item issues
+  # Only run a test build for the library itself
+  - cargo test --lib && cargo test --lib --release
   - cd book && mdbook build
 
 deploy:

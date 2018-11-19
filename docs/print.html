@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Rust GBA Tutorials</title>
+        <title>Rust GBA Guide</title>
         <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -72,7 +72,7 @@
         </script>
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
-            <ol class="chapter"><li><a href="introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><a href="ch0/index.html"><strong aria-hidden="true">2.</strong> Ch 0: Development Setup</a></li><li><a href="ch1/index.html"><strong aria-hidden="true">3.</strong> Ch 1: Hello GBA</a></li><li><ol class="section"><li><a href="ch1/hello1.html"><strong aria-hidden="true">3.1.</strong> hello1</a></li><li><a href="ch1/io_registers.html"><strong aria-hidden="true">3.2.</strong> IO Registers</a></li><li><a href="ch1/the_display_control_register.html"><strong aria-hidden="true">3.3.</strong> The Display Control Register</a></li><li><a href="ch1/video_memory_intro.html"><strong aria-hidden="true">3.4.</strong> Video Memory Intro</a></li><li><a href="ch1/hello2.html"><strong aria-hidden="true">3.5.</strong> hello2</a></li></ol></li><li><a href="ch2/index.html"><strong aria-hidden="true">4.</strong> Ch 2: User Input</a></li><li><ol class="section"><li><a href="ch2/the_key_input_register.html"><strong aria-hidden="true">4.1.</strong> The Key Input Register</a></li><li><a href="ch2/the_vcount_register.html"><strong aria-hidden="true">4.2.</strong> The VCount Register</a></li><li><a href="ch2/light_cycle.html"><strong aria-hidden="true">4.3.</strong> light_cycle</a></li></ol></li></ol>
+            <ol class="chapter"><li><a href="introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><a href="ch00/index.html"><strong aria-hidden="true">2.</strong> Ch 0: Development Setup</a></li><li><a href="ch01/index.html"><strong aria-hidden="true">3.</strong> Ch 1: Hello GBA</a></li><li><ol class="section"><li><a href="ch01/hello1.html"><strong aria-hidden="true">3.1.</strong> hello1</a></li><li><a href="ch01/volatile.html"><strong aria-hidden="true">3.2.</strong> Volatile</a></li><li><a href="ch01/io_registers.html"><strong aria-hidden="true">3.3.</strong> IO Registers</a></li><li><a href="ch01/the_display_control_register.html"><strong aria-hidden="true">3.4.</strong> The Display Control Register</a></li><li><a href="ch01/video_memory_intro.html"><strong aria-hidden="true">3.5.</strong> Video Memory Intro</a></li><li><a href="ch01/hello2.html"><strong aria-hidden="true">3.6.</strong> hello2</a></li></ol></li><li><a href="ch02/index.html"><strong aria-hidden="true">4.</strong> Ch 2: User Input</a></li><li><ol class="section"><li><a href="ch02/the_key_input_register.html"><strong aria-hidden="true">4.1.</strong> The Key Input Register</a></li><li><a href="ch02/the_vcount_register.html"><strong aria-hidden="true">4.2.</strong> The VCount Register</a></li><li><a href="ch02/light_cycle.html"><strong aria-hidden="true">4.3.</strong> light_cycle</a></li></ol></li><li><a href="ch03/index.html"><strong aria-hidden="true">5.</strong> Ch 3: Memory and Objects</a></li><li><ol class="section"><li><a href="ch03/gba_memory.html"><strong aria-hidden="true">5.1.</strong> GBA Memory</a></li><li><a href="ch03/tiled_backgrounds.html"><strong aria-hidden="true">5.2.</strong> Tiled Backgrounds</a></li><li><a href="ch03/object_basics.html"><strong aria-hidden="true">5.3.</strong> Object Basics</a></li><li><a href="ch03/gba_rng.html"><strong aria-hidden="true">5.4.</strong> GBA RNG</a></li><li><a href="ch03/memory_game.html"><strong aria-hidden="true">5.5.</strong> memory_game</a></li></ol></li></ol>
         </nav>
 
         <div id="page-wrapper" class="page-wrapper">
@@ -102,7 +102,7 @@
                             
                         </div>
 
-                        <h1 class="menu-title">Rust GBA Tutorials</h1> 
+                        <h1 class="menu-title">Rust GBA Guide</h1> 
 
                         <div class="right-buttons">
                             <a href="print.html" title="Print this book" aria-label="Print this book">
@@ -137,8 +137,31 @@
                 <div id="content" class="content">
                     <main>
                         <a class="header" href="#introduction" id="introduction"><h1>Introduction</h1></a>
-<p>Here's a book that'll help you program in Rust on the GBA.</p>
-<p>It's very &quot;work in progress&quot;. At the moment there's only one demo program.</p>
+<p>Here's a book that'll help you program in Rust on the Game Boy Advance (GBA).</p>
+<p>It's a work in progress of course, but so is most of everything in Rust.</p>
+<a class="header" href="#style-and-purpose" id="style-and-purpose"><h2>Style and Purpose</h2></a>
+<p>I'm out to teach you how to program in Rust on the GBA, obviously. However,
+while there <em>is</em> a <a href="https://github.com/rust-console/gba">gba</a> crate, and while I
+genuinely believe it to be a good and useful crate for GBA programming, we <em>will
+not</em> be using the <code>gba</code> crate within this book. In fact we won't be using any
+crates at all. We can call it the <a href="https://handmadehero.org/">Handmade Hero</a>
+approach, if you like.</p>
+<p>I don't want to just teach you how to use the <code>gba</code> crate, I want to teach you
+what you'd need to know to write the crate from scratch if it wasn't there.</p>
+<p>Each chapter of the book will focus on a few things you'll need to know about
+GBA programming and then present a fully self-contained example that puts those
+ideas into action. Just one file per example, no dependencies, no external
+assets, no fuss. The examples will be in the text of the book within code
+blocks, but also you can find them in the <a href="https://github.com/rust-console/gba/tree/master/examples">examples
+directory</a> of the repo
+if you want to get them that way.</p>
+<a class="header" href="#expected-knowledge" id="expected-knowledge"><h2>Expected Knowledge</h2></a>
+<p>I will try not to ask too much of the reader ahead of time, but you are expected
+to have already read <a href="https://doc.rust-lang.org/book/">The Rust Book</a>.</p>
+<p>It's very difficult to know when you've said something that someone else won't
+already know about, or if you're presenting ideas out of order. If things aren't
+clear please <a href="https://github.com/rust-console/gba/issues">file an issue</a> and
+we'll try to address it.</p>
 <a class="header" href="#getting-help" id="getting-help"><h2>Getting Help</h2></a>
 <p>If you want to contact us you should join the <a href="https://discordapp.com/invite/aVESxV8">Rust Community
 Discord</a> and ask in the <code>#gamedev</code>
@@ -148,9 +171,10 @@ channel.</p>
 <li><code>Lokathor</code> is the fool who decided to write a crate and book for it.</li>
 </ul>
 <p>If it's <em>not</em> a GBA specific question then you can probably ask any of the other
-folks in the server as well.</p>
-<a class="header" href="#other-works" id="other-works"><h2>Other Works</h2></a>
-<p>If you want to read more about developing on the GBA there are some other good resources as well:</p>
+folks in the server as well (there's a few hundred folks).</p>
+<a class="header" href="#further-reading" id="further-reading"><h2>Further Reading</h2></a>
+<p>If you want to read more about developing on the GBA there are some other good
+resources as well:</p>
 <ul>
 <li><a href="https://www.coranac.com/tonc/text/toc.htm">Tonc</a>, a tutorial series written
 for C, but it's what I based the ordering of this book's sections on.</li>
@@ -165,49 +189,53 @@ art diagrams and example C struct layouts than GBATEK does.</li>
 <p>Before you can build a GBA game you'll have to follow some special steps to
 setup the development environment. Perhaps unfortunately, there's enough detail
 here to warrant a mini-chapter all on its own.</p>
-<p>Before we begin I'd like to give a special thanks to <strong>Ketsuban</strong>, who is the
-wizard that arranged for all of this to be able to happen and laid out the
-details of the plan to the rest of the world.</p>
+<p>Once again, extra special thanks to <strong>Ketsuban</strong>, who first dove into how to
+make this all work with rust and then shared it with the world.</p>
 <a class="header" href="#per-system-setup" id="per-system-setup"><h2>Per System Setup</h2></a>
-<p>Obviously you need your computer to have a working rust installation. However,
-you'll also need to ensure that you're using a nightly toolchain. You can run
-<code>rustup default nightly</code> to set nightly as the system wide default toolchain, or
-you can use a <a href="https://github.com/rust-lang-nursery/rustup.rs#the-toolchain-file">toolchain
+<p>Obviously you need your computer to have a <a href="https://rustup.rs/">working rust
+installation</a>. However, you'll also need to ensure that
+you're using a nightly toolchain (we will need it for inline assembly, among
+other potential useful features). You can run <code>rustup default nightly</code> to set
+nightly as the system wide default toolchain, or you can use a <a href="https://github.com/rust-lang-nursery/rustup.rs#the-toolchain-file">toolchain
 file</a> to use
-nightly just on a specific project, but either way we'll be assuming nightly
-from now on.</p>
-<p>Next you need <a href="https://devkitpro.org/wiki/Getting_Started">devkitpro</a>. They've
-got a graphical installer for Windows, and <code>pacman</code> support on Linux. We'll be
-using a few of their binutils for the <code>arm-none-eabi</code> target, and we'll also be
-using some of their tools that are specific to GBA development, so <em>even if</em> you
-already have the right binutils for whatever reason, you'll still want devkitpro
-for the <code>gbafix</code> utility.</p>
+nightly just on a specific project, but either way we'll be assuming the use of
+nightly from now on. You'll also need the <code>rust-src</code> component so that
+<code>cargo-xbuild</code> will be able to compile the core crate for us in a bit, so run
+<code>rustup component add rust-src</code>.</p>
+<p>Next, you need <a href="https://devkitpro.org/wiki/Getting_Started">devkitpro</a>. They've
+got a graphical installer for Windows that runs nicely, and I guess <code>pacman</code>
+support on Linux (I'm on Windows so I haven't tried the Linux install myself).
+We'll be using a few of their general binutils for the <code>arm-none-eabi</code> target,
+and we'll also be using some of their tools that are specific to GBA
+development, so <em>even if</em> you already have the right binutils for whatever
+reason, you'll still want devkitpro for the <code>gbafix</code> utility.</p>
 <ul>
 <li>On Windows you'll want something like <code>C:\devkitpro\devkitARM\bin</code> and
 <code>C:\devkitpro\tools\bin</code> to be <a href="https://stackoverflow.com/q/44272416/455232">added to your
 PATH</a>, depending on where you
 installed it to and such.</li>
 <li>On Linux you'll also want it to be added to your path, but if you're using
-Linux I'll just assume you know how to do all that.</li>
+Linux I'll just assume you know how to do all that. I'm told that the default
+installation path is <code>/opt/devkitpro/devkitARM/bin</code>, so look there first if
+you didn't select some other place.</li>
 </ul>
 <p>Finally, you'll need <code>cargo-xbuild</code>. Just run <code>cargo install cargo-xbuild</code> and
 cargo will figure it all out for you.</p>
 <a class="header" href="#per-project-setup" id="per-project-setup"><h2>Per Project Setup</h2></a>
-<p>Now you'll need some particular files each time you want to start a new project.
-You can find them in the root of the <a href="https://github.com/rust-console/gba">rust-console/gba
-repo</a>.</p>
+<p>Once the system wide tools are ready, you'll need some particular files each
+time you want to start a new project. You can find them in the root of the
+<a href="https://github.com/rust-console/gba">rust-console/gba repo</a>.</p>
 <ul>
-<li><code>thumbv4-none-agb.json</code> describes the overall GBA to cargo-xbuild so it knows
-what to do. This is actually a somewhat made up target name since there's no
-official target name. The GBA is essentially the same as a normal
-<code>thumbv4-none-eabi</code> device, but we give it the &quot;agb&quot; signifier so that later
-on we'll be able to use rust's <code>cfg</code> ability to allow our code to know if it's
-specifically targeting a GBA or some other similar device (like an NDS).</li>
+<li><code>thumbv4-none-agb.json</code> describes the overall GBA to cargo-xbuild (and LLVM)
+so it knows what to do. Technically the GBA is <code>thumbv4-none-eabi</code>, but we
+change the <code>eabi</code> to <code>agb</code> so that we can distinguish it from other <code>eabi</code>
+devices when using <code>cfg</code> flags.</li>
 <li><code>crt0.s</code> describes some ASM startup stuff. If you have more ASM to place here
 later on this is where you can put it. You also need to build it into a
 <code>crt0.o</code> file before it can actually be used, but we'll cover that below.</li>
-<li><code>linker.ld</code> tells the linker more critical info about the layout expectations
-that the GBA has about our program.</li>
+<li><code>linker.ld</code> tells the linker all the critical info about the layout
+expectations that the GBA has about our program, and that it should also
+include the <code>crt0.o</code> file with our compiled rust code.</li>
 </ul>
 <a class="header" href="#compiling" id="compiling"><h2>Compiling</h2></a>
 <p>The next steps only work once you've got some source code to build. If you need
@@ -231,13 +259,13 @@ practically instant operation.</li>
 as <code>--release</code>, and options, such as <code>--bin foo</code> or <code>--examples</code>, that you'd
 expect <code>cargo</code> to accept.</li>
 <li>You <strong>can not</strong> build and run tests this way, because they require <code>std</code>,
-which the GBA doesn't have. You can still run some of your project's tests
-with <code>cargo test</code>, but that builds for your local machine, so anything
-specific to the GBA (such as reading and writing registers) won't be
-testable that way. If you want to isolate and try out some piece code
-running on the GBA you'll unfortunately have to make a demo for it in your
-<code>examples/</code> directory and then run the demo in an emulator and see if it
-does what you expect.</li>
+which the GBA doesn't have. If you want you can still run some of your
+project's tests with <code>cargo test --lib</code> or similar, but that builds for your
+local machine, so anything specific to the GBA (such as reading and writing
+registers) won't be testable that way. If you want to isolate and try out
+some piece code running on the GBA you'll unfortunately have to make a demo
+for it in your <code>examples/</code> directory and then run the demo in an emulator
+and see if it does what you expect.</li>
 <li>The file extension is important. <code>cargo xbuild</code> takes it as a flag to
 compile dependencies with the same sysroot, so you can include crates
 normally. Well, creates that work in the GBA's limited environment, but you
@@ -300,7 +328,10 @@ ROM is patched in place, so we don't even need to specify a new destination.</li
 </li>
 </ul>
 <p>And you're finally done!</p>
-<p>Of course, you probably want to make a script for all that, but it's up to you.</p>
+<p>Of course, you probably want to make a script for all that, but it's up to you.
+On our own project we have it mostly set up within a <code>Makefile.toml</code> which runs
+using the <a href="https://github.com/sagiegurari/cargo-make">cargo-make</a> plugin. It's
+not really the best plugin, but it's what's available.</p>
 <a class="header" href="#ch-1-hello-gba" id="ch-1-hello-gba"><h1>Ch 1: Hello GBA</h1></a>
 <p>Traditionally a person writes a &quot;hello, world&quot; program so that they can test
 that their development environment is setup properly and to just get a feel for
@@ -310,12 +341,12 @@ will look like. All that stuff.</p>
 GBA has no terminal, but it does have a screen, so instead we're going to draw
 three dots to the screen.</p>
 <a class="header" href="#hello1" id="hello1"><h1>hello1</h1></a>
-<p>Ready? Here goes:</p>
+<p>Our first example will be a totally minimal, full magic number crazy town.
+Ready? Here goes:</p>
 <p><code>hello1.rs</code></p>
 <pre><pre class="playpen"><code class="language-rust">#![feature(start)]
 #![no_std]
 
-#[cfg(not(test))]
 #[panic_handler]
 fn panic(_info: &amp;core::panic::PanicInfo) -&gt; ! {
   loop {}
@@ -332,15 +363,16 @@ fn main(_argc: isize, _argv: *const *const u8) -&gt; isize {
   }
 }
 </code></pre></pre>
-<p>Throw that into your project, build the program (as described back in Chapter
-0), and give it a run. You should see a red, green, and blue dot close-ish to
-the middle of the screen. If you don't, something already went wrong. Double
-check things, phone a friend, write your senators, try asking Ketsuban on the
-<a href="https://discordapp.com/invite/aVESxV8">Rust Community Discord</a>, until you're
-able to get your three dots going.</p>
-<a class="header" href="#explaining-hello1" id="explaining-hello1"><h2>Explaining hello1</h2></a>
+<p>Throw that into your project skeleton, build the program (as described back in
+Chapter 0), and give it a run in your emulator. You should see a red, green, and
+blue dot close-ish to the middle of the screen. If you don't, something already
+went wrong. Double check things, phone a friend, write your senators, try asking
+Ketsuban on the <a href="https://discordapp.com/invite/aVESxV8">Rust Community Discord</a>,
+until you're able to get your three dots going.</p>
+<a class="header" href="#a-basic-hello1-explanation" id="a-basic-hello1-explanation"><h2>A basic hello1 explanation</h2></a>
 <p>So, what just happened? Even if you're used to Rust that might look pretty
-strange. We'll go over each part extra carefully.</p>
+strange. We'll go over most of the little parts right here, and then bigger
+parts will get their own sections.</p>
 <pre><pre class="playpen"><code class="language-rust">
 # #![allow(unused_variables)]
 #![feature(start)]
@@ -364,7 +396,6 @@ only life.</p>
 <pre><pre class="playpen"><code class="language-rust">
 # #![allow(unused_variables)]
 #fn main() {
-#[cfg(not(test))]
 #[panic_handler]
 fn panic(_info: &amp;core::panic::PanicInfo) -&gt; ! {
   loop {}
@@ -376,9 +407,6 @@ Basically, if we somehow trigger a panic, this is where the program goes.
 However, right now we don't know how to get any sort of message out to the user
 so... we do nothing at all. We <em>can't even return</em> from here, so we just sit in
 an infinite loop. The player will have to reset the universe from the outside.</p>
-<p>The <code>#[cfg(not(test))]</code> part makes this item only exist in the program when
-we're <em>not</em> in a test build. This is so that <code>cargo test</code> and such work right as
-much as possible.</p>
 <pre><pre class="playpen"><code class="language-rust">#[start]
 fn main(_argc: isize, _argv: *const *const u8) -&gt; isize {
 </code></pre></pre>
@@ -442,18 +470,17 @@ magic numbers mean or do.</p>
 <li><code>0x06000000</code> is the start of Video RAM.</li>
 </ul>
 <p>So we write some magic to the display control register once, then we write some
-other magic to three locations of magic to the Video RAM. We get three dots,
-each in their own location... so that second part makes sense at least.</p>
-<p>We'll get into the magic number details in the other sections of this chapter.</p>
-<a class="header" href="#sidebar-volatile" id="sidebar-volatile"><h2>Sidebar: Volatile</h2></a>
-<p>We'll get into what all that is in a moment, but first let's ask ourselves: Why
-are we doing <em>volatile</em> writes? You've probably never used it before at all.
-What is volatile anyway?</p>
-<p>Well, the optimizer is pretty aggressive some of the time, and so it'll skip
-reads and writes when it thinks can. Like if you write to a pointer once, and
-then again a moment later, and it didn't see any other reads in between, it'll
-think that it can just skip doing that first write since it'll get overwritten
-anyway. Sometimes that's right, but sometimes it's wrong.</p>
+other magic to three magic locations in the Video RAM. Somehow that shows three
+dots. Gotta read on to find out why!</p>
+<a class="header" href="#volatile" id="volatile"><h1>Volatile</h1></a>
+<p>Before we focus on what the numbers mean, first let's ask ourselves: Why are we
+doing <em>volatile</em> writes? You've probably never used that keywords before at all.
+What <em>is</em> volatile anyway?</p>
+<p>Well, the optimizer is pretty aggressive, and so it'll skip reads and writes
+when it thinks can. Like if you write to a pointer once, and then again a moment
+later, and it didn't see any other reads in between, it'll think that it can
+just skip doing that first write since it'll get overwritten anyway. Sometimes
+that's correct, but sometimes it's not.</p>
 <p>Marking a read or write as <em>volatile</em> tells the compiler that it really must do
 that action, and in the exact order that we wrote it out. It says that there
 might even be special hardware side effects going on that the compiler isn't
@@ -466,18 +493,48 @@ only relative to other volatile operations. So something like</p>
 <pre><pre class="playpen"><code class="language-rust">
 # #![allow(unused_variables)]
 #fn main() {
-c.volatile_write(5);
+c.write_volatile(5);
 a += b;
-d.volatile_write(7);
+d.write_volatile(7);
 #}</code></pre></pre>
 <p>might end up changing <code>a</code> either before or after the change to <code>c</code> (since the
 value of <code>a</code> doesn't affect the write to <code>c</code>), but the write to <code>d</code> will
-<em>always</em> happen after the write to <code>c</code> even though the compiler doesn't see any
+<em>always</em> happen after the write to <code>c</code>, even though the compiler doesn't see any
 direct data dependency there.</p>
-<p>If you ever use volatile stuff on other platforms it's important to note that
-volatile doesn't make things thread-safe, you still need atomic for that.
-However, the GBA doesn't have threads, so we don't have to worry about thread
-safety concerns.</p>
+<p>If you ever go on to use volatile stuff on other platforms it's important to
+note that volatile doesn't make things thread-safe, you still need atomic for
+that. However, the GBA doesn't have threads, so we don't have to worry about
+those sorts of thread safety concerns (there's interrupts, but that's another
+matter).</p>
+<a class="header" href="#volatile-by-default" id="volatile-by-default"><h2>Volatile by default</h2></a>
+<p>Of course, writing out <code>volatile_write</code> every time is more than we wanna do.
+There's clarity and then there's excessive. This is a chance to write our first
+<a href="https://doc.rust-lang.org/1.0.0/style/features/types/newtype.html">newtype</a>.
+Basically a type that's got the exact same binary representation as some other
+type, but new methods and trait implementations.</p>
+<p>We want a <code>*mut T</code> that's volatile by default, and also when we offset it...
+well the verdict is slightly unclear on how <code>offset</code> vs <code>wrapping_offset</code> work
+when you're using pointers that you made up out of nowhere. I've asked the
+experts and they genuinely weren't sure, so we'll make an <code>offset</code> method that
+does a <code>wrapping_offset</code> just to be careful.</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, PartialOrd, Ord)]
+#[repr(transparent)]
+pub struct VolatilePtr&lt;T&gt;(pub *mut T);
+impl&lt;T&gt; VolatilePtr&lt;T&gt; {
+  pub unsafe fn read(&amp;self) -&gt; T {
+    core::ptr::read_volatile(self.0)
+  }
+  pub unsafe fn write(&amp;self, data: T) {
+    core::ptr::write_volatile(self.0, data);
+  }
+  pub unsafe fn offset(self, count: isize) -&gt; Self {
+    VolatilePtr(self.0.wrapping_offset(count))
+  }
+}
+#}</code></pre></pre>
 <a class="header" href="#io-registers" id="io-registers"><h1>IO Registers</h1></a>
 <p>The GBA has a large number of <strong>IO Registers</strong> (not to be confused with CPU
 registers). These are special memory locations from <code>0x04000000</code> to
@@ -597,8 +654,6 @@ some nifty graphical effects.</p>
 binary</a>, and we get
 <code>0b100_0000_0011</code>. So, that's setting Mode 3 with background 2 enabled and
 nothing else special.</p>
-<p>However, I think we can do better than that. This is a prime target for more
-newtyping as we attempt a <code>hello2</code> program.</p>
 <a class="header" href="#video-memory-intro" id="video-memory-intro"><h1>Video Memory Intro</h1></a>
 <p>The GBA's Video RAM is 96k stretching from <code>0x0600_0000</code> to <code>0x0601_7FFF</code>.</p>
 <p>The Video RAM can only be accessed totally freely during a Vertical Blank (aka
@@ -691,9 +746,9 @@ data to fit in two pages, we compress the resolution.</p>
 again we probably need to <a href="https://www.wolframalpha.com/">convert them</a> into
 binary to make sense of it.</p>
 <ul>
-<li>0x001F: 0b11111</li>
-<li>0x03E0: 0b11111_00000</li>
-<li>0x7C00: 0b11111_00000_00000</li>
+<li>0x001F: 0b0_00000_00000_11111</li>
+<li>0x03E0: 0b0_00000_11111_00000</li>
+<li>0x7C00: 0b0_11111_00000_00000</li>
 </ul>
 <p>Ah, of course, a red pixel, a green pixel, and a blue pixel.</p>
 <a class="header" href="#hello2" id="hello2"><h1>hello2</h1></a>
@@ -702,7 +757,6 @@ binary to make sense of it.</p>
 <pre><pre class="playpen"><code class="language-rust">#![feature(start)]
 #![no_std]
 
-#[cfg(not(test))]
 #[panic_handler]
 fn panic(_info: &amp;core::panic::PanicInfo) -&gt; ! {
   loop {}
@@ -720,11 +774,12 @@ fn main(_argc: isize, _argv: *const *const u8) -&gt; isize {
 }
 </code></pre></pre>
 <p>Now let's clean this up so that it's clearer what's going on.</p>
-<p>First we'll label that display control stuff:</p>
+<p>First we'll label that display control stuff, including using the <code>VolatilePtr</code>
+type from the volatile explanation:</p>
 <pre><pre class="playpen"><code class="language-rust">
 # #![allow(unused_variables)]
 #fn main() {
-pub const DISPCNT: *mut u16 = 0x04000000 as *mut u16;
+pub const DISPCNT: VolatilePtr&lt;u16&gt; = VolatilePtr(0x04000000 as *mut u16);
 pub const MODE3: u16 = 3;
 pub const BG2: u16 = 0b100_0000_0000;
 #}</code></pre></pre>
@@ -735,8 +790,11 @@ pub const BG2: u16 = 0b100_0000_0000;
 pub const VRAM: usize = 0x06000000;
 pub const SCREEN_WIDTH: isize = 240;
 #}</code></pre></pre>
-<p>And then we want a small helper function for putting together a color value.</p>
-<p>Happily, this one can even be declared as a const function. At the time of
+<p>Note that VRAM has to be interpreted in different ways depending on mode, so we
+just leave it as <code>usize</code> and we'll cast it into the right form closer to the
+actual use.</p>
+<p>Next we want a small helper function for putting together a color value.
+Happily, this one can even be declared as a <code>const</code> function. At the time of
 writing, we've got the &quot;minimal const fn&quot; support in nightly. It really is quite
 limited, but I'm happy to let rustc and LLVM pre-compute as much as they can
 when it comes to the GBA's tiny CPU.</p>
@@ -754,7 +812,7 @@ usually helps you think about it a lot better.</p>
 # #![allow(unused_variables)]
 #fn main() {
 pub unsafe fn mode3_pixel(col: isize, row: isize, color: u16) {
-  (VRAM as *mut u16).offset(col + row * SCREEN_WIDTH).write_volatile(color);
+  VolatilePtr(VRAM as *mut u16).offset(col + row * SCREEN_WIDTH).write(color);
 }
 #}</code></pre></pre>
 <p>So now we've got this:</p>
@@ -762,7 +820,6 @@ pub unsafe fn mode3_pixel(col: isize, row: isize, color: u16) {
 <pre><pre class="playpen"><code class="language-rust">#![feature(start)]
 #![no_std]
 
-#[cfg(not(test))]
 #[panic_handler]
 fn panic(_info: &amp;core::panic::PanicInfo) -&gt; ! {
   loop {}
@@ -771,7 +828,7 @@ fn panic(_info: &amp;core::panic::PanicInfo) -&gt; ! {
 #[start]
 fn main(_argc: isize, _argv: *const *const u8) -&gt; isize {
   unsafe {
-    DISPCNT.write_volatile(MODE3 | BG2);
+    DISPCNT.write(MODE3 | BG2);
     mode3_pixel(120, 80, rgb16(31, 0, 0));
     mode3_pixel(136, 80, rgb16(0, 31, 0));
     mode3_pixel(120, 96, rgb16(0, 0, 31));
@@ -779,7 +836,22 @@ fn main(_argc: isize, _argv: *const *const u8) -&gt; isize {
   }
 }
 
-pub const DISPCNT: *mut u16 = 0x04000000 as *mut u16;
+#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, PartialOrd, Ord)]
+#[repr(transparent)]
+pub struct VolatilePtr&lt;T&gt;(pub *mut T);
+impl&lt;T&gt; VolatilePtr&lt;T&gt; {
+  pub unsafe fn read(&amp;self) -&gt; T {
+    core::ptr::read_volatile(self.0)
+  }
+  pub unsafe fn write(&amp;self, data: T) {
+    core::ptr::write_volatile(self.0, data);
+  }
+  pub unsafe fn offset(self, count: isize) -&gt; Self {
+    VolatilePtr(self.0.wrapping_offset(count))
+  }
+}
+
+pub const DISPCNT: VolatilePtr&lt;u16&gt; = VolatilePtr(0x04000000 as *mut u16);
 pub const MODE3: u16 = 3;
 pub const BG2: u16 = 0b100_0000_0000;
 
@@ -791,13 +863,14 @@ pub const fn rgb16(red: u16, green: u16, blue: u16) -&gt; u16 {
 }
 
 pub unsafe fn mode3_pixel(col: isize, row: isize, color: u16) {
-  (VRAM as *mut u16).offset(col + row * SCREEN_WIDTH).write_volatile(color);
+  VolatilePtr(VRAM as *mut u16).offset(col + row * SCREEN_WIDTH).write(color);
 }
 </code></pre></pre>
 <p>Exact same program that we started with, but much easier to read.</p>
 <p>Of course, in the full <code>gba</code> crate that this book is a part of we have these and
-other elements all labeled and sorted out for you. Still, for educational
-purposes it's often best to do it yourself at least once.</p>
+other elements all labeled and sorted out for you (not identically, but
+similarly). Still, for educational purposes it's often best to do it yourself at
+least once.</p>
 <a class="header" href="#ch-2-user-input" id="ch-2-user-input"><h1>Ch 2: User Input</h1></a>
 <p>It's all well and good to draw three pixels, but they don't do anything yet. We
 want them to do something, and for that we need to get some input from the user.</p>
@@ -865,15 +938,15 @@ reading and writing the key bits.</p>
 <pre><pre class="playpen"><code class="language-rust">
 # #![allow(unused_variables)]
 #fn main() {
-pub const KEYINPUT: *mut u16 = 0x400_0130 as *mut u16;
+pub const KEYINPUT: VolatilePtr&lt;u16&gt; = VolatilePtr(0x400_0130 as *mut u16);
 
 /// A newtype over the key input state of the GBA.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 #[repr(transparent)]
 pub struct KeyInputSetting(u16);
 
-pub fn read_key_input() -&gt; KeyInputSetting {
-  unsafe { KeyInputSetting(KEYINPUT.read_volatile()) }
+pub fn key_input() -&gt; KeyInputSetting {
+  unsafe { KeyInputSetting(KEYINPUT.read()) }
 }
 #}</code></pre></pre>
 <p>Now we want a way to check if a key is <em>being pressed</em>, since that's normally
@@ -898,12 +971,14 @@ folded and refolded by the compiler, but we can just check.</p>
 <p>It turns out that the <code>!=0</code> test is 4 instructions and the <code>==0</code> test is 6
 instructions. Since we want to get savings where we can, and we'll probably
 check the keys of an input often enough, we'll just always use a <code>!=0</code> test and
-then adjust how we initially read the register to compensate.</p>
+then adjust how we initially read the register to compensate. By using xor with
+a mask for only the 10 used bits we can flip the &quot;low when pressed&quot; values so
+that the entire result has active bits in all positions where a key is pressed.</p>
 <pre><pre class="playpen"><code class="language-rust">
 # #![allow(unused_variables)]
 #fn main() {
-pub fn read_key_input() -&gt; KeyInputSetting {
-  unsafe { KeyInputSetting(KEYINPUT.read_volatile() ^ 0b1111_1111_1111_1111) }
+pub fn key_input() -&gt; KeyInputSetting {
+  unsafe { KeyInputSetting(KEYINPUT.read_volatile() ^ 0b0000_0011_1111_1111) }
 }
 #}</code></pre></pre>
 <p>Now we add a method for seeing if a key is pressed. In the full library there's
@@ -1060,10 +1135,10 @@ quickly during the blank period.</p>
 <pre><pre class="playpen"><code class="language-rust">
 # #![allow(unused_variables)]
 #fn main() {
-pub const VCOUNT: *mut u16 = 0x0400_0006 as *mut u16;
+pub const VCOUNT: VolatilePtr&lt;u16&gt; = VolatilePtr(0x0400_0006 as *mut u16);
 
-pub fn read_vcount() -&gt; u16 {
-  unsafe { VCOUNT.read_volatile() }
+pub fn vcount() -&gt; u16 {
+  unsafe { VCOUNT.read() }
 }
 #}</code></pre></pre>
 <p>Then we want two little helper functions to wait until VBlank and vdraw.</p>
@@ -1073,11 +1148,11 @@ pub fn read_vcount() -&gt; u16 {
 pub const SCREEN_HEIGHT: isize = 160;
 
 pub fn wait_until_vblank() {
-  while read_vcount() &lt; SCREEN_HEIGHT as u16 {}
+  while vcount() &lt; SCREEN_HEIGHT as u16 {}
 }
 
 pub fn wait_until_vdraw() {
-  while read_vcount() &gt;= SCREEN_HEIGHT as u16 {}
+  while vcount() &gt;= SCREEN_HEIGHT as u16 {}
 }
 #}</code></pre></pre>
 <p>And... that's it. No special types to be made this time around, it's just a
@@ -1096,21 +1171,21 @@ go off the screen or if they touch their own trail.</p>
 pub unsafe fn mode3_clear_screen(color: u16) {
   let color = color as u32;
   let bulk_color = color &lt;&lt; 16 | color;
-  let mut ptr = VRAM as *mut u32;
+  let mut ptr = VolatilePtr(VRAM as *mut u32);
   for _ in 0..SCREEN_HEIGHT {
     for _ in 0..(SCREEN_WIDTH / 2) {
-      ptr.write_volatile(bulk_color);
+      ptr.write(bulk_color);
       ptr = ptr.offset(1);
     }
   }
 }
 
 pub unsafe fn mode3_draw_pixel(col: isize, row: isize, color: u16) {
-  (VRAM as *mut u16).offset(col + row * SCREEN_WIDTH).write_volatile(color);
+  VolatilePtr(VRAM as *mut u16).offset(col + row * SCREEN_WIDTH).write(color);
 }
 
 pub unsafe fn mode3_read_pixel(col: isize, row: isize) -&gt; u16 {
-  (VRAM as *mut u16).offset(col + row * SCREEN_WIDTH).read_volatile()
+  VolatilePtr(VRAM as *mut u16).offset(col + row * SCREEN_WIDTH).read()
 }
 #}</code></pre></pre>
 <p>The draw pixel and read pixel are both pretty obvious. What's new is the clear
@@ -1122,7 +1197,7 @@ screen clear is twice as fast.</p>
 <pre><pre class="playpen"><code class="language-rust">#[start]
 fn main(_argc: isize, _argv: *const *const u8) -&gt; isize {
   unsafe {
-    DISPCNT.write_volatile(MODE3 | BG2);
+    DISPCNT.write(MODE3 | BG2);
   }
 
   let mut px = SCREEN_WIDTH / 2;
@@ -1131,7 +1206,7 @@ fn main(_argc: isize, _argv: *const *const u8) -&gt; isize {
 
   loop {
     // read the input for this frame
-    let this_frame_keys = read_key_input();
+    let this_frame_keys = key_input();
 
     // adjust game state and wait for vblank
     px += 2 * this_frame_keys.column_direction() as isize;
@@ -1182,9 +1257,271 @@ different colors.</p>
 it's not black that means we've been here before and the player has crashed into
 their own line. In this case, we reset the game without moving them to a new
 location.</p>
-<p>Finally, if the player is in bounds and they haven't crashed, we write their color into memory at this position.</p>
+<p>Finally, if the player is in bounds and they haven't crashed, we write their
+color into memory at this position.</p>
 <p>Regardless of how it worked out, we hold here until vdraw starts before going to
-the next loop.</p>
+the next loop. That's all there is to it.</p>
+<a class="header" href="#the-gba-crate-doesnt-quite-work-like-this" id="the-gba-crate-doesnt-quite-work-like-this"><h2>The gba crate doesn't quite work like this</h2></a>
+<p>Once again, as with the <code>hello1</code> and <code>hello2</code> examples, the <code>gba</code> crate covers
+much of this same ground as our example here, but in slightly different ways.</p>
+<p>Better organization and abstractions are usually only realized once you've used
+more of the whole thing you're trying to work with. If we want to have a crate
+where the whole thing is well integrated with itself, then the examples would
+also end up having to explain about things we haven't really touched on much
+yet. It becomes a lot harder to teach.</p>
+<p>So, going forward, we will continue to teach concepts and build examples that
+don't directly depend on the <code>gba</code> crate. This allows the crate to freely grow
+without all the past examples becoming a great inertia upon it.</p>
+<a class="header" href="#ch-3-memory-and-objects" id="ch-3-memory-and-objects"><h1>Ch 3: Memory and Objects</h1></a>
+<p>Alright so we can do some basic &quot;movement&quot;, but we left a big trail in the video
+memory of everywhere we went. Most of the time that's not what we want at all.
+If we want more hardware support we're going to have to use a new video mode. So
+far we've only used Mode 3, but modes 4 and 5 are basically the same. Instead,
+we'll switch focus to using a tiled graphical mode.</p>
+<p>First we will go over the complete GBA memory mapping. Part of this is the
+memory for tiled graphics, but also things like all those IO registers, where
+our RAM is for scratch space, all that stuff. Even if we can't put all of them
+to use at once, it's helpful to have an idea of what will be available in the
+long run.</p>
+<p>Tiled modes bring us two big new concepts that each have their own complexity:
+backgrounds and objects. They share some concepts, but fundamentally the
+background is for creating a very large static space that you can scroll around
+the view within, and the objects are about having a few moving bits that appear
+over the background. Careful use of backgrounds and objects is key to having the
+best looking GBA game, so we won't even be able to cover it all in a single
+chapter.</p>
+<p>And, of course, since most games are pretty boring if they're totally static
+we'll touch on the kinds of RNG implementations you might want to have on a GBA.
+Most general purpose RNGs that you find are rather big compared to the amount of
+memory we want to give them, and they often use a lot of <code>u64</code> operations, so
+they end up much slower on a 32-bit machine like the GBA (you can lower 64-bit
+ops to combinations of 32-bit ops, but that's quite a bit more work). We'll
+cover a few RNG options that size down the RNG to a good size and a good speed
+without trading away too much in terms of quality.</p>
+<p>To top it all off, we'll make a simple &quot;memory game&quot; sort of thing. There's some
+face down cards in a grid, you pick one to check, then you pick the other to
+check, and then if they match the pair disappears.</p>
+<a class="header" href="#gba-memory" id="gba-memory"><h1>GBA Memory</h1></a>
+<p>The <a href="http://problemkaputt.de/gbatek.htm#gbamemorymap">GBA Memory Map</a> has
+several memory portions to it, each with their own little differences. Most of
+the memory has pre-determined use according to the hardware, but there is also
+space for games to use as a scratch pad in whatever way the game sees fit.</p>
+<p>The memory ranges listed here are <em>inclusive</em>, so they end with a lot of <code>F</code>s
+and <code>E</code>s.</p>
+<p>We've talked about volatile memory before, but just as a reminder I'll say that
+all of the memory we'll talk about here should be accessed with volatile with
+two exceptions:</p>
+<ol>
+<li>Work RAM (both internal and external) can be used normally, and if the
+compiler is able to totally elide any reads and writes that's okay.</li>
+<li>However, if you set aside any space in Work RAM where an interrupt will
+communicate with the main program then that specific location will have to
+keep using volatile access, since the compiler never knows when an interrupt
+will actually happen.</li>
+</ol>
+<a class="header" href="#bios--system-rom" id="bios--system-rom"><h2>BIOS / System ROM</h2></a>
+<ul>
+<li><code>0x0</code> to <code>0x3FFF</code> (16k)</li>
+</ul>
+<p>This is special memory for the BIOS. It is &quot;read-only&quot;, but even then it's only
+accessible when the program counter is pointing into the BIOS region. At all
+other times you get a <a href="http://problemkaputt.de/gbatek.htm#gbaunpredictablethings">garbage
+value</a> back when you
+try to read out of the BIOS.</p>
+<a class="header" href="#external-work-ram--ewram" id="external-work-ram--ewram"><h2>External Work RAM / EWRAM</h2></a>
+<ul>
+<li><code>0x2000000</code> to <code>0x203FFFF</code> (256k)</li>
+</ul>
+<p>This is a big pile of space, the use of which is up to each game. However, the
+external work ram has only a 16-bit bus (if you read/write a 32-bit value it
+silently breaks it up into two 16-bit operations) and also 2 wait cycles (extra
+CPU cycles that you have to expend <em>per 16-bit bus use</em>).</p>
+<p>In other words, we should think of EWRAM as if it was &quot;heap space&quot; in a normal
+application. You can take the time to go store something within EWRAM, or to
+load it out of EWRAM, but you should always avoid doing a critical computation
+on values in EWRAM. It's a bit of a pain, but if you wanna be speedy and you
+have more than just one manipulation that you want to do, you should pull the
+value into a local variable, do all of your manipulations, and then push it back
+out at the end.</p>
+<a class="header" href="#internal-work-ram--iwram" id="internal-work-ram--iwram"><h2>Internal Work RAM / IWRAM</h2></a>
+<ul>
+<li><code>0x3000000</code> to <code>0x3007FFF</code> (32k)</li>
+</ul>
+<p>This is a smaller pile of space, but it has a 32-bit bus and no wait.</p>
+<p>By default, <code>0x3007F00</code> to <code>0x3007FFF</code> is reserved for interrupt and BIOS use.
+The rest of it is totally up to you. The user's stack space starts at
+<code>0x3007F00</code> and proceeds <em>down</em> from there. In other words, if you start your
+own customized IWRAM use at <code>0x3000000</code> and go up, eventually you might hit your
+stack. However, most reasonable uses won't actually cause a memory collision.
+It's just something you should know about if you're using a ton of stack or
+IWRAM and then get problems.</p>
+<a class="header" href="#io-registers-1" id="io-registers-1"><h2>IO Registers</h2></a>
+<ul>
+<li><code>0x4000000</code> to <code>0x40003FE</code></li>
+</ul>
+<p>We've touched upon a few of these so far, and we'll get to more later. At the
+moment it is enough to say that, as you might have guessed, all of them live in
+this region. Each individual register is a <code>u16</code> or <code>u32</code> and they control all
+sorts of things. We'll actually be talking about some more of them in this very
+chapter, because that's how we'll control some of the background and object
+stuff.</p>
+<a class="header" href="#palette-ram--palram" id="palette-ram--palram"><h2>Palette RAM / PALRAM</h2></a>
+<ul>
+<li><code>0x5000000</code> to <code>0x50003FF</code> (1k)</li>
+</ul>
+<p>Palette RAM has a 16-bit bus, which isn't really a problem because it
+conceptually just holds <code>u16</code> values. There's no automatic wait state, but if
+you try to access the same location that the display controller is accessing you
+get bumped by 1 cycle. Since the display controller can use the palette ram any
+number of times per scanline it's basically impossible to predict if you'll have
+to do a wait or not during VDraw. During VBlank you won't have any wait of
+course.</p>
+<p>PALRAM is among the memory where there's weirdness if you try to write just one
+byte: if you try to write just 1 byte, it writes that byte into <em>both</em> parts of
+the larger 16-bit location. This doesn't really affect us much with PALRAM,
+because palette values are all supposed to be <code>u16</code> anyway.</p>
+<p>The palette memory actually contains not one, but <em>two</em> sets of palettes. First
+there's 256 entries for the background palette data (starting at <code>0x5000000</code>),
+and then there's 256 entries for object palette data (starting at <code>0x5000200</code>).</p>
+<p>The GBA also has two modes for palette access: 8-bits-per-pixel (8bpp) and
+4-bits-per-pixel (4bpp).</p>
+<ul>
+<li>In 8bpp mode an (8-bit) palette index value within a background or sprite
+simply indexes directly into the 256 slots for that type of thing.</li>
+<li>In 4bpp mode a (4-bit) palette index value within a background or sprite
+specifies an index within a particular &quot;palbank&quot; (16 palette entries each),
+and then a <em>separate</em> setting outside of the graphical data determines which
+palbank is to be used for that background or object (the screen entry data for
+backgrounds, and the object attributes for objects).</li>
+</ul>
+<a class="header" href="#video-ram--vram" id="video-ram--vram"><h2>Video RAM / VRAM</h2></a>
+<ul>
+<li><code>0x6000000</code> to <code>0x6017FFF</code> (96k)</li>
+</ul>
+<p>We've used this before! VRAM has a 16-bit bus and no wait. However, the same as
+with PALRAM, the &quot;you might have to wait if the display controller is looking at
+it&quot; rule applies here.</p>
+<p>Unfortunately there's not much more exact detail that can be given about VRAM.
+The use of the memory depends on the video mode that you're using.</p>
+<p>One general detail of note is that you can't write individual bytes to any part
+of VRAM. Depending on mode and location, you'll either get your bytes doubled
+into both the upper and lower parts of the 16-bit location targeted, or you
+won't even affect the memory. This usually isn't a big deal, except in two
+situations:</p>
+<ul>
+<li>In Mode 4, if you want to change just 1 pixel, you'll have to be very careful
+to read the old <code>u16</code>, overwrite just the byte you wanted to change, and then
+write that back.</li>
+<li>In any display mode, avoid using <code>memcopy</code> to place things into VRAM.
+It's written to be byte oriented, and only does 32-bit transfers under select
+conditions. The rest of the time it'll copy one byte at a time and you'll get
+either garbage or nothing at all.</li>
+</ul>
+<a class="header" href="#object-attribute-memory--oam" id="object-attribute-memory--oam"><h2>Object Attribute Memory / OAM</h2></a>
+<ul>
+<li><code>0x7000000</code> to <code>0x70003FF</code> (1k)</li>
+</ul>
+<p>The Object Attribute Memory has a 32-bit bus and no default wait, but suffers
+from the &quot;you might have to wait if the display controller is looking at it&quot;
+rule. You cannot write individual bytes to OAM at all, but that's not really a
+problem because all the fields of the data types within OAM are either <code>i16</code> or
+<code>u16</code> anyway.</p>
+<p>Object attribute memory is the wildest yet: it conceptually contains two types
+of things, but they're <em>interlaced</em> with each other all the way through.</p>
+<p>Now, <a href="http://problemkaputt.de/gbatek.htm#lcdobjoamattributes">GBATEK</a> and
+<a href="https://www.cs.rit.edu/%7Etjh8300/CowBite/CowBiteSpec.htm#OAM%20(sprites)">CowByte</a>
+doesn't quite give names to the two data types, though
+<a href="https://www.coranac.com/tonc/text/regobj.htm#sec-oam">TONC</a> calls them
+<code>OBJ_ATTR</code> and <code>OBJ_AFFINE</code>. We'll give them Rust names of course. In Rust terms
+their layout would look like this:</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+#[repr(C)]
+pub struct ObjectAttribute {
+  attr0: u16,
+  attr1: u16,
+  attr2: u16,
+  filler: i16,
+}
+
+#[repr(C)]
+pub struct AffineMatrix {
+  filler0: [u16; 3],
+  pa: i16,
+  filler1: [u16; 3],
+  pb: i16,
+  filler2: [u16; 3],
+  pc: i16,
+  filler3: [u16; 3],
+  pd: i16,
+}
+#}</code></pre></pre>
+<p>(Note: the <code>#[repr(C)]</code> part just means that Rust must lay out the data exactly
+in the order we specify, which otherwise it is not required to do).</p>
+<p>So, we've got 1024 bytes in OAM and each <code>ObjectAttribute</code> value is 8 bytes, so
+naturally we can support up to 128 objects.</p>
+<p><em>At the same time</em>, we've got 1024 bytes in OAM and each <code>AffineMatrix</code> is 32
+bytes, so we can have 32 of them.</p>
+<p>But, as I said, these things are all <em>interlaced</em> with each other. See how
+there's &quot;filler&quot; fields in each struct? If we imagine the OAM as being just an
+array of one type or the other, indexes 0/1/2/3 of the <code>ObjectAttribute</code> array
+would line up with index 0 of the <code>AffineMatrix</code> array. It's kinda weird, but
+that's just how it works. When we setup functions to read and write these values
+we'll have to be careful with how we do it. We probably <em>won't</em> want to use
+those representations above, at least not with the <code>AffineMatrix</code> type, because
+they're quite wasteful if you want to store just object attributes or just
+affine matrices.</p>
+<a class="header" href="#game-pak-rom--flash-rom" id="game-pak-rom--flash-rom"><h2>Game Pak ROM / Flash ROM</h2></a>
+<ul>
+<li><code>0x8000000</code> to <code>0x9FFFFFF</code> (wait 0)</li>
+<li><code>0xA000000</code> to <code>0xBFFFFFF</code> (wait 1)</li>
+<li><code>0xC000000</code> to <code>0xDFFFFFF</code> (wait 2)</li>
+<li>Max of 32Mb</li>
+</ul>
+<p>These portions of the memory are less fixed, because they depend on the precise
+details of the game pak you've inserted into the GBA. In general, they connect
+to the game pak ROM and/or Flash memory, using a 16-bit bus. The ROM is
+read-only, but the Flash memory (if any) allows writes.</p>
+<p>The game pak ROM is listed as being in three sections, but it's actually the
+same memory being effectively mirrored into three different locations. The
+mirror that you choose to access the game pak through affects which wait state
+setting it uses (configured via IO register of course). Unfortunately, the
+details come down more to the game pak hardware that you load your game onto
+than anything else, so there's not much I can say right here. We'll eventually
+talk about it more later,</p>
+<p>One thing of note is the way that the 16-bit bus affects us: the instructions to
+execute are coming through the same bus as the rest of the game data, so we want
+them to be as compact as possible. The ARM chip in the GBA supports two
+different instruction sets, &quot;thumb&quot; and &quot;non-thumb&quot;. The thumb mode instructions
+are 16-bit, so they can each be loaded one at a time, and the non-thumb
+instructions are 32-bit, so we're at a penalty if we execute them directly out
+of the game pak. However, some things will demand that we use non-thumb code, so
+we'll have to deal with that eventually. It's possible to switch between modes,
+but it's a pain to keep track of what mode you're in because there's not
+currently support for it in Rust itself (perhaps some day). So we'll stick with
+thumb code as much as we possibly can, that's why our target profile for our
+builds starts with <code>thumbv4</code>.</p>
+<a class="header" href="#game-pak-sram" id="game-pak-sram"><h2>Game Pak SRAM</h2></a>
+<ul>
+<li><code>0xE000000</code> to <code>0xE00FFFF</code> (64k)</li>
+</ul>
+<p>The game pak SRAM has an 8-bit bus. Why did pokemon always take so long to save?
+This is why. It also has some amount of wait, but as with the ROM, the details
+depend on your game pak hardware (and also as with ROM, you can adjust the
+settings with an IO register, should you need to).</p>
+<p>One thing to note about the SRAM is that the GBA has a Direct Memory Access
+(DMA) feature that can be used for bulk memory movements in some cases, but the
+DMA <em>cannot</em> access the SRAM region. You really are stuck reading and writing
+one byte at a time when you're using the SRAM.</p>
+<a class="header" href="#tiled-backgrounds" id="tiled-backgrounds"><h1>Tiled Backgrounds</h1></a>
+<p>TODO</p>
+<a class="header" href="#object-basics" id="object-basics"><h1>Object Basics</h1></a>
+<p>TODO</p>
+<a class="header" href="#gba-rng" id="gba-rng"><h1>GBA RNG</h1></a>
+<p>TODO</p>
+<a class="header" href="#memory_game" id="memory_game"><h1>memory_game</h1></a>
+<p>TODO</p>
 
                     </main>
 

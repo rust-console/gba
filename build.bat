@@ -1,6 +1,7 @@
 
 @rem Build the crt0 file before we begin
-arm-none-eabi-as crt0.s -o crt0.o
+@if not exist ".\target" mkdir target
+arm-none-eabi-as crt0.s -o target/crt0.o
 
 @rem Build all examples, both debug and release
 cargo xbuild --examples --target thumbv4-none-agb.json

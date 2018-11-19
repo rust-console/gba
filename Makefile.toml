@@ -1,0 +1,63 @@
+[config]
+skip_core_tasks = true
+
+[tasks.create-target-dir]
+script_runner = "@rust"
+script = [
+'''
+fn main() {
+  std::fs::DirBuilder::new().recursive(true).create("./target/").unwrap();
+}
+'''
+]
+
+[tasks.assemble]
+dependencies = ["create-target-dir"]
+command = "arm-none-eabi-as"
+args = ["crt0.s", "-o", "target/crt0.o"]
+
+[tasks.build-examples-debug]
+dependencies = ["assemble"]
+command = "cargo"
+args = ["xbuild", "--examples", "--target", "thumbv4-none-agb.json"]
+
+[tasks.build-examples-release]
+dependencies = ["assemble"]
+command = "cargo"
+args = ["xbuild", "--examples", "--target", "thumbv4-none-agb.json", "--release"]
+
+[tasks.pack-roms]
+script_runner = "@rust"
+script = [
+'''
+fn main() -> std::io::Result<()> {
+  for entry in std::fs::read_dir("examples/")? {
+    let entry = entry?;
+    let mut path = entry.path();
+    if path.is_dir() {
+      continue;
+    } else {
+      path.set_extension("");
+      let name = path.file_name().unwrap().to_str().unwrap();
+      println!("{:?}", name);
+      std::process::Command::new("arm-none-eabi-objcopy").args(
+        &["-O", "binary",
+        &format!("target/thumbv4-none-agb/release/examples/{}",name),
+        &format!("target/example-{}.gba",name)])
+        .output().expect("failed to objcopy!");
+      std::process::Command::new("gbafix").args(
+        &[&format!("target/example-{}.gba",name)])
+        .output().expect("failed to gbafix!");
+    }
+  }
+  Ok(())
+}
+'''
+]
+
+[tasks.build]
+dependencies = ["build-examples-debug", "build-examples-release", "pack-roms"]
+
+[tasks.test]
+command = "cargo"
+args = ["test", "--lib"]
