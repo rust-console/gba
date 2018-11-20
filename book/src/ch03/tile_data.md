@@ -11,8 +11,8 @@ need to arrange several tiles so that it looks like whatever you're trying to
 draw.
 
 As was already mentioned, the GBA supports two different color modes: 4 bits per
-pixel and 8 bits per pixel. So already we have two types of tile that we need to
-model. The pixel bits always represent an index into the PALRAM.
+pixel and 8 bits per pixel. This means that we have two types of tile that we
+need to model. The pixel bits always represent an index into the PALRAM.
 
 * With 4 bits per pixel, the PALRAM is imagined to be 16 **palbank** sections of
   16 palette entries each. The image data selects the index within the palbank,
@@ -20,7 +20,7 @@ model. The pixel bits always represent an index into the PALRAM.
 * With 8 bits per pixel, the PALRAM is imagined to be a single 256 entry array
   and the index just directly picks which of the 256 colors is used.
 
-So, already we have some Rust types we can define:
+Knowing this, we can write the following definitions:
 
 ```rust
 #[derive(Debug, Clone, Copy, Default)]
