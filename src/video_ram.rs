@@ -69,13 +69,12 @@ pub fn mode3_read_pixel(col: isize, row: isize) -> Option<u16> {
 
 /// Clears the entire screen to the color specified.
 pub unsafe fn mode3_clear_screen(color: u16) {
+  // TODO: use DMA?
   let color = color as u32;
   let bulk_color = color << 16 | color;
   let mut ptr = VolatilePtr(VRAM_BASE_ADDRESS as *mut u32);
-  for _ in 0..SCREEN_HEIGHT {
-    for _ in 0..(SCREEN_WIDTH / 2) {
-      ptr.write(bulk_color);
-      ptr = ptr.offset(1);
-    }
+  for _ in 0..(SCREEN_HEIGHT * SCREEN_WIDTH / 2) {
+    ptr.write(bulk_color);
+    ptr = ptr.offset(1);
   }
 }
