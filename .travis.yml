@@ -23,6 +23,7 @@ script:
   - sudo dkp-pacman -Syu
   - sudo dkp-pacman -S -v --noconfirm gba-tools devkitARM
   - export PATH="$PATH:/opt/devkitpro/devkitARM/bin"
+  - export PATH="$PATH:/opt/devkitpro/tools/bin"
   # Test the lib and then compile all examples with `cargo make`
   - cargo test --lib && cargo test --lib --release
   - cargo make
