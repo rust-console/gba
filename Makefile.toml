@@ -61,3 +61,6 @@ dependencies = ["build-examples-debug", "build-examples-release", "pack-roms"]
 [tasks.test]
 command = "cargo"
 args = ["test", "--lib"]
+
+[tasks.default]
+alias = "build"
