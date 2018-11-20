@@ -21,7 +21,8 @@ script:
   - sudo dkp-pacman -Sy
   - sudo dkp-pacman -Syu
   - sudo dkp-pacman -S gba-dev
-  # Test / compile the stuff
+  - export PATH="$PATH:/opt/devkitpro/devkitARM/bin"
+  # Test and compile the stuff
   - cargo test --lib && cargo test --lib --release
   - cargo make
   # Test build the book so that a failed book build kills this run
