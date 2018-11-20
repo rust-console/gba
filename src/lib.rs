@@ -1,6 +1,7 @@
 #![cfg_attr(not(test), no_std)]
 #![cfg_attr(not(test), feature(asm))]
 #![warn(missing_docs)]
+#![allow(clippy::cast_lossless)]
 
 //! This crate helps you write GBA ROMs.
 //!

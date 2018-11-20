@@ -34,7 +34,7 @@ newtype!(
 impl DisplayControlSetting {
   pub const BG_MODE_MASK: u16 = 0b111;
 
-  pub fn mode(&self) -> DisplayControlMode {
+  pub fn mode(self) -> DisplayControlMode {
     match self.0 & Self::BG_MODE_MASK {
       0 => DisplayControlMode::Tiled0,
       1 => DisplayControlMode::Tiled1,
@@ -73,6 +73,7 @@ impl DisplayControlSetting {
 }
 
 /// The six display modes available on the GBA.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum DisplayControlMode {
   /// This basically allows for the most different things at once (all layers,
   /// 1024 tiles, two palette modes, etc), but you can't do affine
@@ -415,7 +416,7 @@ newtype!(KeyInputSetting, u16, "A newtype over the key input state of the GBA");
 
 #[allow(missing_docs)]
 impl KeyInputSetting {
-  register_bit!(A_BIT, u16, 1 << 0, a_pressed);
+  register_bit!(A_BIT, u16, 1, a_pressed);
   register_bit!(B_BIT, u16, 1 << 1, b_pressed);
   register_bit!(SELECT_BIT, u16, 1 << 2, select_pressed);
   register_bit!(START_BIT, u16, 1 << 3, start_pressed);
@@ -427,13 +428,13 @@ impl KeyInputSetting {
   register_bit!(L_BIT, u16, 1 << 9, l_pressed);
 
   /// Takes the difference between these keys and another set of keys.
-  pub fn difference(&self, other: KeyInputSetting) -> KeyInputSetting {
+  pub fn difference(self, other: KeyInputSetting) -> KeyInputSetting {
     KeyInputSetting(self.0 ^ other.0)
   }
 
   /// Gives the arrow pad value as a tribool, with Plus being increased column
   /// value (right).
-  pub fn column_direction(&self) -> TriBool {
+  pub fn column_direction(self) -> TriBool {
     if self.right_pressed() {
       TriBool::Plus
     } else if self.left_pressed() {
@@ -445,7 +446,7 @@ impl KeyInputSetting {
 
   /// Gives the arrow pad value as a tribool, with Plus being increased row
   /// value (down).
-  pub fn row_direction(&self) -> TriBool {
+  pub fn row_direction(self) -> TriBool {
     if self.down_pressed() {
       TriBool::Plus
     } else if self.up_pressed() {
