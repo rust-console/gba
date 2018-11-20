@@ -39,7 +39,7 @@ fn main() -> std::io::Result<()> {
     } else {
       path.set_extension("");
       let name = path.file_name().unwrap().to_str().unwrap();
-      println!("{:?}", name);
+      println!("{}", name);
       std::process::Command::new("arm-none-eabi-objcopy").args(
         &["-O", "binary",
         &format!("target/thumbv4-none-agb/release/examples/{}",name),
