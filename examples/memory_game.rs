@@ -174,24 +174,26 @@ pub fn wait_until_vdraw() {
   while vcount() >= SCREEN_HEIGHT as u16 {}
 }
 
-#[repr(C)]
-#[align(4)]
-pub struct ObjectAttributes {
-  attr0: u16,
-  attr1: u16,
-  attr2: u16,
-  filler: i16,
+#[derive(Debug, Clone, Copy, Default)]
+#[repr(transparent)]
+pub struct Tile4bpp {
+  data: [u32; 8],
 }
 
-#[repr(C)]
-#[align(4)]
-pub struct ObjectAffine {
-  filler0: [u16; 3],
-  pa: i16,
-  filler1: [u16; 3],
-  pb: i16,
-  filler2: [u16; 3],
-  pc: i16,
-  filler3: [u16; 3],
-  pd: i16,
+#[derive(Debug, Clone, Copy, Default)]
+#[repr(transparent)]
+pub struct Tile8bpp {
+  data: [u32; 16],
+}
+
+#[derive(Clone, Copy)]
+#[repr(transparent)]
+pub struct Charblock4bpp {
+  data: [Tile4bpp; 512],
+}
+
+#[derive(Clone, Copy)]
+#[repr(transparent)]
+pub struct Charblock8bpp {
+  data: [Tile8bpp; 256],
 }

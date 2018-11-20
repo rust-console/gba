@@ -72,7 +72,7 @@
         </script>
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
-            <ol class="chapter"><li><a href="introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><a href="ch00/index.html"><strong aria-hidden="true">2.</strong> Ch 0: Development Setup</a></li><li><a href="ch01/index.html"><strong aria-hidden="true">3.</strong> Ch 1: Hello GBA</a></li><li><ol class="section"><li><a href="ch01/hello1.html"><strong aria-hidden="true">3.1.</strong> hello1</a></li><li><a href="ch01/volatile.html"><strong aria-hidden="true">3.2.</strong> Volatile</a></li><li><a href="ch01/io_registers.html"><strong aria-hidden="true">3.3.</strong> IO Registers</a></li><li><a href="ch01/the_display_control_register.html"><strong aria-hidden="true">3.4.</strong> The Display Control Register</a></li><li><a href="ch01/video_memory_intro.html"><strong aria-hidden="true">3.5.</strong> Video Memory Intro</a></li><li><a href="ch01/hello2.html"><strong aria-hidden="true">3.6.</strong> hello2</a></li></ol></li><li><a href="ch02/index.html"><strong aria-hidden="true">4.</strong> Ch 2: User Input</a></li><li><ol class="section"><li><a href="ch02/the_key_input_register.html"><strong aria-hidden="true">4.1.</strong> The Key Input Register</a></li><li><a href="ch02/the_vcount_register.html"><strong aria-hidden="true">4.2.</strong> The VCount Register</a></li><li><a href="ch02/light_cycle.html"><strong aria-hidden="true">4.3.</strong> light_cycle</a></li></ol></li><li><a href="ch03/index.html"><strong aria-hidden="true">5.</strong> Ch 3: Memory and Objects</a></li><li><ol class="section"><li><a href="ch03/gba_memory.html"><strong aria-hidden="true">5.1.</strong> GBA Memory</a></li><li><a href="ch03/tiled_backgrounds.html"><strong aria-hidden="true">5.2.</strong> Tiled Backgrounds</a></li><li><a href="ch03/object_basics.html"><strong aria-hidden="true">5.3.</strong> Object Basics</a></li><li><a href="ch03/gba_rng.html"><strong aria-hidden="true">5.4.</strong> GBA RNG</a></li><li><a href="ch03/memory_game.html"><strong aria-hidden="true">5.5.</strong> memory_game</a></li></ol></li></ol>
+            <ol class="chapter"><li><a href="introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><a href="ch00/index.html"><strong aria-hidden="true">2.</strong> Ch 0: Development Setup</a></li><li><a href="ch01/index.html"><strong aria-hidden="true">3.</strong> Ch 1: Hello GBA</a></li><li><ol class="section"><li><a href="ch01/hello1.html"><strong aria-hidden="true">3.1.</strong> hello1</a></li><li><a href="ch01/volatile.html"><strong aria-hidden="true">3.2.</strong> Volatile</a></li><li><a href="ch01/io_registers.html"><strong aria-hidden="true">3.3.</strong> IO Registers</a></li><li><a href="ch01/the_display_control_register.html"><strong aria-hidden="true">3.4.</strong> The Display Control Register</a></li><li><a href="ch01/video_memory_intro.html"><strong aria-hidden="true">3.5.</strong> Video Memory Intro</a></li><li><a href="ch01/hello2.html"><strong aria-hidden="true">3.6.</strong> hello2</a></li></ol></li><li><a href="ch02/index.html"><strong aria-hidden="true">4.</strong> Ch 2: User Input</a></li><li><ol class="section"><li><a href="ch02/the_key_input_register.html"><strong aria-hidden="true">4.1.</strong> The Key Input Register</a></li><li><a href="ch02/the_vcount_register.html"><strong aria-hidden="true">4.2.</strong> The VCount Register</a></li><li><a href="ch02/light_cycle.html"><strong aria-hidden="true">4.3.</strong> light_cycle</a></li></ol></li><li><a href="ch03/index.html"><strong aria-hidden="true">5.</strong> Ch 3: Memory and Objects</a></li><li><ol class="section"><li><a href="ch03/gba_memory_mapping.html"><strong aria-hidden="true">5.1.</strong> GBA Memory Mapping</a></li><li><a href="ch03/tile_data.html"><strong aria-hidden="true">5.2.</strong> Tile Data</a></li><li><a href="ch03/regular_backgrounds.html"><strong aria-hidden="true">5.3.</strong> Regular Backgrounds</a></li><li><a href="ch03/object_basics.html"><strong aria-hidden="true">5.4.</strong> Object Basics</a></li><li><a href="ch03/gba_rng.html"><strong aria-hidden="true">5.5.</strong> GBA RNG</a></li><li><a href="ch03/memory_game.html"><strong aria-hidden="true">5.6.</strong> memory_game</a></li></ol></li></ol>
         </nav>
 
         <div id="page-wrapper" class="page-wrapper">
@@ -1283,8 +1283,8 @@ memory for tiled graphics, but also things like all those IO registers, where
 our RAM is for scratch space, all that stuff. Even if we can't put all of them
 to use at once, it's helpful to have an idea of what will be available in the
 long run.</p>
-<p>Tiled modes bring us two big new concepts that each have their own complexity:
-backgrounds and objects. They share some concepts, but fundamentally the
+<p>Tiled modes bring us three big new concepts that each have their own complexity:
+tiles, backgrounds, and objects. Backgrounds and objects both use tiles, but the
 background is for creating a very large static space that you can scroll around
 the view within, and the objects are about having a few moving bits that appear
 over the background. Careful use of backgrounds and objects is key to having the
@@ -1301,7 +1301,7 @@ without trading away too much in terms of quality.</p>
 <p>To top it all off, we'll make a simple &quot;memory game&quot; sort of thing. There's some
 face down cards in a grid, you pick one to check, then you pick the other to
 check, and then if they match the pair disappears.</p>
-<a class="header" href="#gba-memory" id="gba-memory"><h1>GBA Memory</h1></a>
+<a class="header" href="#gba-memory-mapping" id="gba-memory-mapping"><h1>GBA Memory Mapping</h1></a>
 <p>The <a href="http://problemkaputt.de/gbatek.htm#gbamemorymap">GBA Memory Map</a> has
 several memory portions to it, each with their own little differences. Most of
 the memory has pre-determined use according to the hardware, but there is also
@@ -1514,6 +1514,7 @@ settings with an IO register, should you need to).</p>
 (DMA) feature that can be used for bulk memory movements in some cases, but the
 DMA <em>cannot</em> access the SRAM region. You really are stuck reading and writing
 one byte at a time when you're using the SRAM.</p>
+<a class="header" href="#tile-data" id="tile-data"><h1>Tile Data</h1></a>
 <a class="header" href="#tiled-backgrounds" id="tiled-backgrounds"><h1>Tiled Backgrounds</h1></a>
 <p>TODO</p>
 <a class="header" href="#object-basics" id="object-basics"><h1>Object Basics</h1></a>
