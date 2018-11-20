@@ -9,13 +9,22 @@ rust:
 
 before_script:
   - (test -x $HOME/.cargo/bin/cargo-install-update || cargo install cargo-update)
-  - (test -x $HOME/.cargo/bin/mdbook || cargo install --vers "^0.1" mdbook)
+  - (test -x $HOME/.cargo/bin/cargo-xbuild || cargo install cargo-xbuild)
+  - (test -x $HOME/.cargo/bin/cargo-make || cargo install cargo-make)
+  - (test -x $HOME/.cargo/bin/mdbook || cargo install mdbook)
   - cargo install-update -a
 
 script:
-  - cargo check && cargo check --release
-  # Only run a test build for the library itself
+  # Obtain the devkitPro tools
+  - wget https://github.com/devkitPro/pacman/releases/download/devkitpro-pacman-1.0.1/devkitpro-pacman.deb
+  - sudo dpkg -i devkitpro-pacman.deb
+  - sudo dkp-pacman -Sy
+  - sudo dkp-pacman -Syu
+  - sudo dkp-pacman -S gba-dev
+  # Test / compile the stuff
   - cargo test --lib && cargo test --lib --release
+  - cargo make
+  # Test build the book so that a failed book build kills this run
   - cd book && mdbook build
 
 deploy:
