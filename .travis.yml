@@ -16,9 +16,7 @@ before_script:
   - cargo install-update -a
 
 script:
-  # Obtain the devkitPro tools, using target as a temp directory
-  - mkdir -p target
-  - cd target
+  # Obtain the devkitPro tools
   - wget https://github.com/devkitPro/pacman/releases/download/devkitpro-pacman-1.0.1/devkitpro-pacman.deb
   - sudo dpkg -i devkitpro-pacman.deb
   - sudo dkp-pacman -Sy
@@ -26,7 +24,6 @@ script:
   - sudo dkp-pacman -S -v --noconfirm gba-tools devkitARM
   - export PATH="$PATH:/opt/devkitpro/devkitARM/bin"
   - export PATH="$PATH:/opt/devkitpro/tools/bin"
-  - cd ..
   # Test the lib and then compile all examples with `cargo make`
   - cargo test --lib && cargo test --lib --release
   - cargo make
