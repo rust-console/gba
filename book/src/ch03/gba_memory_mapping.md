@@ -99,6 +99,25 @@ The GBA also has two modes for palette access: 8-bits-per-pixel (8bpp) and
   palbank is to be used for that background or object (the screen entry data for
   backgrounds, and the object attributes for objects).
 
+### Transparency
+
+When a pixel within a background or object specifies index 0 as its palette
+entry it is treated as a transparent pixel. This means that in 8bpp mode there's
+only 255 actual color options (0 being transparent), and in 4bpp mode there's
+only 15 actual color options available within each palbank (the 0th entry of
+_each_ palbank is transparent).
+
+Individual backgrounds, and individual objects, each determine if they're 4bpp
+or 8bpp separately, so a given overall palette slot might map to a used color in
+8bpp and an unused/transparent color in 4bpp. If you're a palette wizard.
+
+Palette slot 0 of the overall background palette is used to determine the
+"backdrop" color. That's the color you see if no background or object ends up
+being rendered within a given pixel.
+
+Since display mode 3 and display mode 5 don't use the palette, they cannot
+benefit from transparency.
+
 ## Video RAM / VRAM
 
 * `0x6000000` to `0x6017FFF` (96k)
