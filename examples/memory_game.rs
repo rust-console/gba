@@ -1,6 +1,8 @@
 #![feature(start)]
 #![no_std]
 
+use core::mem::size_of;
+
 #[panic_handler]
 fn panic(_info: &core::panic::PanicInfo) -> ! {
   loop {}
@@ -71,7 +73,7 @@ pub const DISPCNT: VolatilePtr<u16> = VolatilePtr(0x04000000 as *mut u16);
 pub const MODE3: u16 = 3;
 pub const BG2: u16 = 0b100_0000_0000;
 
-pub const VRAM: usize = 0x06000000;
+pub const VRAM: usize = 0x600_0000;
 pub const SCREEN_WIDTH: isize = 240;
 pub const SCREEN_HEIGHT: isize = 160;
 
@@ -196,4 +198,91 @@ pub struct Charblock4bpp {
 #[repr(transparent)]
 pub struct Charblock8bpp {
   data: [Tile8bpp; 256],
+}
+
+pub const PALRAM_BG_BASE: VolatilePtr<u16> = VolatilePtr(0x500_0000 as *mut u16);
+
+pub fn bg_palette(slot: usize) -> u16 {
+  assert!(slot < 256);
+  PALRAM_BG_BASE.offset(slot as isize).read()
+}
+
+pub fn set_bg_palette(slot: usize, color: u16) {
+  assert!(slot < 256);
+  PALRAM_BG_BASE.offset(slot as isize).write(color)
+}
+
+pub fn bg_tile_4pp(base_block: usize, tile_index: usize) -> Tile4bpp {
+  assert!(base_block < 4);
+  assert!(tile_index < 512);
+  let address = VRAM + size_of::<Charblock4bpp>() * base_block + size_of::<Tile4bpp>() * tile_index;
+  VolatilePtr(address as *mut Tile4bpp).read()
+}
+
+pub fn set_bg_tile_4pp(base_block: usize, tile_index: usize, tile: Tile4bpp) {
+  assert!(base_block < 4);
+  assert!(tile_index < 512);
+  let address = VRAM + size_of::<Charblock4bpp>() * base_block + size_of::<Tile4bpp>() * tile_index;
+  VolatilePtr(address as *mut Tile4bpp).write(tile)
+}
+
+pub fn bg_tile_8pp(base_block: usize, tile_index: usize) -> Tile8bpp {
+  assert!(base_block < 4);
+  assert!(tile_index < 256);
+  let address = VRAM + size_of::<Charblock8bpp>() * base_block + size_of::<Tile8bpp>() * tile_index;
+  VolatilePtr(address as *mut Tile8bpp).read()
+}
+
+pub fn set_bg_tile_8pp(base_block: usize, tile_index: usize, tile: Tile8bpp) {
+  assert!(base_block < 4);
+  assert!(tile_index < 256);
+  let address = VRAM + size_of::<Charblock8bpp>() * base_block + size_of::<Tile8bpp>() * tile_index;
+  VolatilePtr(address as *mut Tile8bpp).write(tile)
+}
+
+#[derive(Clone, Copy)]
+#[repr(transparent)]
+pub struct RegularScreenblock {
+  data: [RegularScreenblockEntry; 32 * 32],
+}
+
+#[derive(Debug, Clone, Copy, Default)]
+#[repr(transparent)]
+pub struct RegularScreenblockEntry(u16);
+
+impl RegularScreenblockEntry {
+  pub fn tile_id(self) -> u16 {
+    self.0 & 0b11_1111_1111
+  }
+  pub fn set_tile_id(&mut self, id: u16) {
+    self.0 &= !0b11_1111_1111;
+    self.0 |= id;
+  }
+  pub fn horizontal_flip(self) -> bool {
+    (self.0 & (1 << 0xA)) > 0
+  }
+  pub fn set_horizontal_flip(&mut self, bit: bool) {
+    if bit {
+      self.0 |= 1 << 0xA;
+    } else {
+      self.0 &= !(1 << 0xA);
+    }
+  }
+  pub fn vertical_flip(self) -> bool {
+    (self.0 & (1 << 0xB)) > 0
+  }
+  pub fn set_vertical_flip(&mut self, bit: bool) {
+    if bit {
+      self.0 |= 1 << 0xB;
+    } else {
+      self.0 &= !(1 << 0xB);
+    }
+  }
+  pub fn palbank_index(self) -> u16 {
+    self.0 >> 12
+  }
+  pub fn set_palbank_index(&mut self, palbank_index: u16) {
+    self.0 &= 0b1111_1111_1111;
+    self.0 |= palbank_index;
+  }
 }
