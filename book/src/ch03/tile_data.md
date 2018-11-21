@@ -51,11 +51,11 @@ the screen. Graphics programming is fun like that.
 
 ## Charblocks
 
-Tiles don't just sit on their own, they get grouped into **charblocks**. They're
-called that because tiles represent characters... even though they're also used
-to draw the background? I don't get it exactly, but that's just what they're
-called in other documents and I don't have a significantly better name for the
-concept, so that's what we'll call it.
+Tiles don't just sit on their own, they get grouped into **charblocks**. Long
+ago in the distant past, video games were built with hardware that was also used
+to make text terminals. So tile image data was called "character data". In fact
+some guides will even call the regular mode for the background layers "text
+mode", despite the fact that you obviously don't have to show text at all.
 
 A charblock is 16kb long (`0x4000` bytes), which means that the number of tiles
 that fit into a charblock depends on your color depth. With 4bpp you get 512
@@ -81,8 +81,8 @@ rest is still size 32 or less. We won't generally be making up an entire
 Charblock on the fly though, so it's not a big deal. If we _absolutely_ had to,
 we could call `core::mem::zeroed()`, but we really don't want to be trying to
 build a whole charblock at runtime. We'll usually want to define our tile data
-as `const` charblock values (or even parts of charblock values) that we load out
-of the game pak ROM.
+as `const` charblock values (or even parts of charblock values) that we then
+load out of the game pak ROM at runtime.
 
 Anyway, with 16k per charblock and only 96k total in VRAM, it's easy math to see
 that there's 6 different charblocks in VRAM when in a tiled mode. The first four
@@ -114,5 +114,17 @@ Instead, there are some image conversion tools that devkitpro provides in their
 gba-dev section. They let you take normal images and then repackage them and
 export it in various formats that you can then compile into your project.
 
-TODO: make Ketsuban write some tips on how to use whatever the image converter
-is called.
+Ketsuban uses the [grit](http://www.coranac.com/projects/grit/) tool, with the
+following suggestions:
+
+1) Include an actual resource file and a file describing it somewhere in your
+   project (see [the grit
+   manual](http://www.coranac.com/man/grit/html/index.htm) for all details
+   involved here).
+2) In a `build.rs` you run `grit` on each resource+description pair, such as in
+   this [old gist
+   example](https://gist.github.com/ketsuban/526fa55fbef0a3ccd4c7cd6204f29f94)
+3) Then within your rust code you use the
+   [include_bytes!](https://doc.rust-lang.org/core/macro.include_bytes.html)
+   macro to have the formatted resource be available as a const value you can
+   load at runtime.
