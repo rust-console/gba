@@ -237,7 +237,24 @@ separate groups of related registers.
 Each of these are a read/write `u16` location. This is where we get to all of
 the important details that we've been putting off.
 
-TODO: don't put it off any longer!
+* 2 bits for the priority of each background (0 being highest). If two
+  backgrounds are set to the same priority the the lower numbered background
+  layer takes prescience.
+* 2 bits for "character base block", the charblock that all of the tile indexes
+  for this background are offset from.
+* 1 bit for mosaic effect being enabled (we'll get to that below).
+* 1 bit to enable 8bpp, otherwise 4bpp is used.
+* 5 bits to pick the "screen base block", the screen block that serves as the
+  _base_ value for this background.
+* 1 bit that is _not_ used in regular mode, but in affine mode it can be enabled
+  to cause the affine background to wrap around at the edges.
+* 2 bits for the background size.
+
+The size works a little funny. When size is 0 only the base screen block is
+used. If size is 1 or 2 then the base screenblock and the following screenblock
+are placed next to each other (horizontally for 1, vertically for 2). If the
+size is 3 then the base screenblock and the following three screenblocks are
+arranged into a 2x2 grid of screenblocks.
 
 ### Background Offset
 
@@ -268,5 +285,4 @@ it will loop.
 
 ## Mosaic
 
-TODO: talk about mosaic? It's just one small side step, and you can set it with
-a register we just talked about, so might as well.
+TODO: talk about mosaic.
