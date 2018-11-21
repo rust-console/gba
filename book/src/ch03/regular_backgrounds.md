@@ -285,4 +285,17 @@ it will loop.
 
 ## Mosaic
 
-TODO: talk about mosaic.
+As a special effect, you can apply mosaic to backgrounds and objects. It's just
+a single flag for each background, so all backgrounds will use the same mosaic
+settings when they have it enabled.
+
+The mosaic control is a read/write `u16` IO register at `0x400_004C`.
+
+There's 4 bits each for:
+
+* Horizontal BG stretch
+* Vertical BG stretch
+* Horizontal object stretch
+* Vertical object stretch
+
+The 
