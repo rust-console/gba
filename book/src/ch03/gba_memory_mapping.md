@@ -1,19 +1,19 @@
-# GBA Memory
+# GBA Memory Mapping
 
 The [GBA Memory Map](http://problemkaputt.de/gbatek.htm#gbamemorymap) has
 several memory portions to it, each with their own little differences. Most of
 the memory has pre-determined use according to the hardware, but there is also
 space for games to use as a scratch pad in whatever way the game sees fit.
 
-The memory ranges listed here are _inclusive_, so they end with a lot of `F`s
-and `E`s.
+The memory ranges listed here are _inclusive_, so they end with a lot of F's
+and E's.
 
 We've talked about volatile memory before, but just as a reminder I'll say that
-all of the memory we'll talk about here should be accessed with volatile with
+all of the memory we'll talk about here should be accessed using volatile with
 two exceptions:
 
 1) Work RAM (both internal and external) can be used normally, and if the
-   compiler is able to totally elide any reads and writes that's okay.
+   compiler is able to totally elide some reads and writes that's okay.
 2) However, if you set aside any space in Work RAM where an interrupt will
    communicate with the main program then that specific location will have to
    keep using volatile access, since the compiler never knows when an interrupt
@@ -38,13 +38,11 @@ external work ram has only a 16-bit bus (if you read/write a 32-bit value it
 silently breaks it up into two 16-bit operations) and also 2 wait cycles (extra
 CPU cycles that you have to expend _per 16-bit bus use_).
 
-In other words, we should think of EWRAM as if it was "heap space" in a normal
-application. You can take the time to go store something within EWRAM, or to
-load it out of EWRAM, but you should always avoid doing a critical computation
-on values in EWRAM. It's a bit of a pain, but if you wanna be speedy and you
-have more than just one manipulation that you want to do, you should pull the
-value into a local variable, do all of your manipulations, and then push it back
-out at the end.
+It's most helpful to think of EWRAM as slower, distant memory, similar to the
+"heap" in a normal application. You can take the time to go store something
+within EWRAM, or to load it out of EWRAM, but if you've got several operations
+to do in a row and you're worried about time you should pull that value into
+local memory, work on your local copy, and then push it back out to EWRAM.
 
 ## Internal Work RAM / IWRAM
 
@@ -54,11 +52,9 @@ This is a smaller pile of space, but it has a 32-bit bus and no wait.
 
 By default, `0x3007F00` to `0x3007FFF` is reserved for interrupt and BIOS use.
 The rest of it is totally up to you. The user's stack space starts at
-`0x3007F00` and proceeds _down_ from there. In other words, if you start your
-own customized IWRAM use at `0x3000000` and go up, eventually you might hit your
-stack. However, most reasonable uses won't actually cause a memory collision.
-It's just something you should know about if you're using a ton of stack or
-IWRAM and then get problems.
+`0x3007F00` and proceeds _down_ from there. For best results you should probably
+start at `0x3000000` and then go upwards. Under normal use it's unlikely that
+the two memory regions will crash into each other.
 
 ## IO Registers
 
@@ -95,9 +91,9 @@ and then there's 256 entries for object palette data (starting at `0x5000200`).
 The GBA also has two modes for palette access: 8-bits-per-pixel (8bpp) and
 4-bits-per-pixel (4bpp).
 
-* In 8bpp mode an (8-bit) palette index value within a background or sprite
+* In 8bpp mode an 8-bit palette index value within a background or sprite
   simply indexes directly into the 256 slots for that type of thing.
-* In 4bpp mode a (4-bit) palette index value within a background or sprite
+* In 4bpp mode a 4-bit palette index value within a background or sprite
   specifies an index within a particular "palbank" (16 palette entries each),
   and then a _separate_ setting outside of the graphical data determines which
   palbank is to be used for that background or object (the screen entry data for
@@ -143,14 +139,16 @@ of things, but they're _interlaced_ with each other all the way through.
 
 Now, [GBATEK](http://problemkaputt.de/gbatek.htm#lcdobjoamattributes) and
 [CowByte](https://www.cs.rit.edu/~tjh8300/CowBite/CowBiteSpec.htm#OAM%20(sprites))
-doesn't quite give names to the two data types, though
+doesn't quite give names to the two data types here.
 [TONC](https://www.coranac.com/tonc/text/regobj.htm#sec-oam) calls them
-`OBJ_ATTR` and `OBJ_AFFINE`. We'll give them Rust names of course. In Rust terms
-their layout would look like this:
+`OBJ_ATTR` and `OBJ_AFFINE`, but we'll be giving them names fitting with the
+Rust naming convention. Just know that if you try to talk about it with others
+they might not be using the same names. In Rust terms their layout would look
+like this:
 
 ```rust
 #[repr(C)]
-pub struct ObjectAttribute {
+pub struct ObjectAttributes {
   attr0: u16,
   attr1: u16,
   attr2: u16,
@@ -173,7 +171,7 @@ pub struct AffineMatrix {
 (Note: the `#[repr(C)]` part just means that Rust must lay out the data exactly
 in the order we specify, which otherwise it is not required to do).
 
-So, we've got 1024 bytes in OAM and each `ObjectAttribute` value is 8 bytes, so
+So, we've got 1024 bytes in OAM and each `ObjectAttributes` value is 8 bytes, so
 naturally we can support up to 128 objects.
 
 _At the same time_, we've got 1024 bytes in OAM and each `AffineMatrix` is 32
@@ -181,7 +179,7 @@ bytes, so we can have 32 of them.
 
 But, as I said, these things are all _interlaced_ with each other. See how
 there's "filler" fields in each struct? If we imagine the OAM as being just an
-array of one type or the other, indexes 0/1/2/3 of the `ObjectAttribute` array
+array of one type or the other, indexes 0/1/2/3 of the `ObjectAttributes` array
 would line up with index 0 of the `AffineMatrix` array. It's kinda weird, but
 that's just how it works. When we setup functions to read and write these values
 we'll have to be careful with how we do it. We probably _won't_ want to use
@@ -207,7 +205,8 @@ mirror that you choose to access the game pak through affects which wait state
 setting it uses (configured via IO register of course). Unfortunately, the
 details come down more to the game pak hardware that you load your game onto
 than anything else, so there's not much I can say right here. We'll eventually
-talk about it more later, 
+talk about it more later when I'm forced to do the boring thing and just cover
+all the IO registers that aren't covered anywhere else.
 
 One thing of note is the way that the 16-bit bus affects us: the instructions to
 execute are coming through the same bus as the rest of the game data, so we want
@@ -227,9 +226,10 @@ builds starts with `thumbv4`.
 * `0xE000000` to `0xE00FFFF` (64k)
 
 The game pak SRAM has an 8-bit bus. Why did Pokémon always take so long to save?
-This is why. It also has some amount of wait, but as with the ROM, the details
-depend on your game pak hardware (and also as with ROM, you can adjust the
-settings with an IO register, should you need to).
+Saving the whole game one byte at a time is why. The SRAM also has some amount
+of wait, but as with the ROM, the details depend on your game pak hardware (and
+also as with ROM, you can adjust the settings with an IO register, should you
+need to).
 
 One thing to note about the SRAM is that the GBA has a Direct Memory Access
 (DMA) feature that can be used for bulk memory movements in some cases, but the

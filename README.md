@@ -4,6 +4,7 @@
 [![docs.rs](https://docs.rs/gba/badge.svg)](https://docs.rs/gba/latest/gba/)
 
 * [![Built with cargo-make](https://sagiegurari.github.io/cargo-make/assets/badges/cargo-make.svg)](https://sagiegurari.github.io/cargo-make)
+* ![Stability:None](https://img.shields.io/badge/Stability-None-red.svg)
 
 # gba
 
@@ -16,7 +17,8 @@ detailed for you [in the 0th chapter of the
 book](https://rust-console.github.io/gba/ch00/index.html) that goes with this
 crate.
 
-## For a fast initialization start
+If you've done the global setup once before and just want to get a new project
+started quickly we got you covered:
 
 ```sh
 curl https://raw.githubusercontent.com/rust-console/gba/master/init.sh -sSf | bash -s APP_NAME

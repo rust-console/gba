@@ -12,8 +12,8 @@ our RAM is for scratch space, all that stuff. Even if we can't put all of them
 to use at once, it's helpful to have an idea of what will be available in the
 long run.
 
-Tiled modes bring us two big new concepts that each have their own complexity:
-backgrounds and objects. They share some concepts, but fundamentally the
+Tiled modes bring us three big new concepts that each have their own complexity:
+tiles, backgrounds, and objects. Backgrounds and objects both use tiles, but the
 background is for creating a very large static space that you can scroll around
 the view within, and the objects are about having a few moving bits that appear
 over the background. Careful use of backgrounds and objects is key to having the
