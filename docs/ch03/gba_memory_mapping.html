@@ -141,14 +141,14 @@
 several memory portions to it, each with their own little differences. Most of
 the memory has pre-determined use according to the hardware, but there is also
 space for games to use as a scratch pad in whatever way the game sees fit.</p>
-<p>The memory ranges listed here are <em>inclusive</em>, so they end with a lot of <code>F</code>s
-and <code>E</code>s.</p>
+<p>The memory ranges listed here are <em>inclusive</em>, so they end with a lot of F's
+and E's.</p>
 <p>We've talked about volatile memory before, but just as a reminder I'll say that
-all of the memory we'll talk about here should be accessed with volatile with
+all of the memory we'll talk about here should be accessed using volatile with
 two exceptions:</p>
 <ol>
 <li>Work RAM (both internal and external) can be used normally, and if the
-compiler is able to totally elide any reads and writes that's okay.</li>
+compiler is able to totally elide some reads and writes that's okay.</li>
 <li>However, if you set aside any space in Work RAM where an interrupt will
 communicate with the main program then that specific location will have to
 keep using volatile access, since the compiler never knows when an interrupt
@@ -171,13 +171,11 @@ try to read out of the BIOS.</p>
 external work ram has only a 16-bit bus (if you read/write a 32-bit value it
 silently breaks it up into two 16-bit operations) and also 2 wait cycles (extra
 CPU cycles that you have to expend <em>per 16-bit bus use</em>).</p>
-<p>In other words, we should think of EWRAM as if it was &quot;heap space&quot; in a normal
-application. You can take the time to go store something within EWRAM, or to
-load it out of EWRAM, but you should always avoid doing a critical computation
-on values in EWRAM. It's a bit of a pain, but if you wanna be speedy and you
-have more than just one manipulation that you want to do, you should pull the
-value into a local variable, do all of your manipulations, and then push it back
-out at the end.</p>
+<p>It's most helpful to think of EWRAM as slower, distant memory, similar to the
+&quot;heap&quot; in a normal application. You can take the time to go store something
+within EWRAM, or to load it out of EWRAM, but if you've got several operations
+to do in a row and you're worried about time you should pull that value into
+local memory, work on your local copy, and then push it back out to EWRAM.</p>
 <a class="header" href="#internal-work-ram--iwram" id="internal-work-ram--iwram"><h2>Internal Work RAM / IWRAM</h2></a>
 <ul>
 <li><code>0x3000000</code> to <code>0x3007FFF</code> (32k)</li>
@@ -185,11 +183,9 @@ out at the end.</p>
 <p>This is a smaller pile of space, but it has a 32-bit bus and no wait.</p>
 <p>By default, <code>0x3007F00</code> to <code>0x3007FFF</code> is reserved for interrupt and BIOS use.
 The rest of it is totally up to you. The user's stack space starts at
-<code>0x3007F00</code> and proceeds <em>down</em> from there. In other words, if you start your
-own customized IWRAM use at <code>0x3000000</code> and go up, eventually you might hit your
-stack. However, most reasonable uses won't actually cause a memory collision.
-It's just something you should know about if you're using a ton of stack or
-IWRAM and then get problems.</p>
+<code>0x3007F00</code> and proceeds <em>down</em> from there. For best results you should probably
+start at <code>0x3000000</code> and then go upwards. Under normal use it's unlikely that
+the two memory regions will crash into each other.</p>
 <a class="header" href="#io-registers" id="io-registers"><h2>IO Registers</h2></a>
 <ul>
 <li><code>0x4000000</code> to <code>0x40003FE</code></li>
@@ -221,9 +217,9 @@ and then there's 256 entries for object palette data (starting at <code>0x500020
 <p>The GBA also has two modes for palette access: 8-bits-per-pixel (8bpp) and
 4-bits-per-pixel (4bpp).</p>
 <ul>
-<li>In 8bpp mode an (8-bit) palette index value within a background or sprite
+<li>In 8bpp mode an 8-bit palette index value within a background or sprite
 simply indexes directly into the 256 slots for that type of thing.</li>
-<li>In 4bpp mode a (4-bit) palette index value within a background or sprite
+<li>In 4bpp mode a 4-bit palette index value within a background or sprite
 specifies an index within a particular &quot;palbank&quot; (16 palette entries each),
 and then a <em>separate</em> setting outside of the graphical data determines which
 palbank is to be used for that background or object (the screen entry data for
@@ -265,15 +261,17 @@ problem because all the fields of the data types within OAM are either <code>i16
 of things, but they're <em>interlaced</em> with each other all the way through.</p>
 <p>Now, <a href="http://problemkaputt.de/gbatek.htm#lcdobjoamattributes">GBATEK</a> and
 <a href="https://www.cs.rit.edu/%7Etjh8300/CowBite/CowBiteSpec.htm#OAM%20(sprites)">CowByte</a>
-doesn't quite give names to the two data types, though
+doesn't quite give names to the two data types here.
 <a href="https://www.coranac.com/tonc/text/regobj.htm#sec-oam">TONC</a> calls them
-<code>OBJ_ATTR</code> and <code>OBJ_AFFINE</code>. We'll give them Rust names of course. In Rust terms
-their layout would look like this:</p>
+<code>OBJ_ATTR</code> and <code>OBJ_AFFINE</code>, but we'll be giving them names fitting with the
+Rust naming convention. Just know that if you try to talk about it with others
+they might not be using the same names. In Rust terms their layout would look
+like this:</p>
 <pre><pre class="playpen"><code class="language-rust">
 # #![allow(unused_variables)]
 #fn main() {
 #[repr(C)]
-pub struct ObjectAttribute {
+pub struct ObjectAttributes {
   attr0: u16,
   attr1: u16,
   attr2: u16,
@@ -294,13 +292,13 @@ pub struct AffineMatrix {
 #}</code></pre></pre>
 <p>(Note: the <code>#[repr(C)]</code> part just means that Rust must lay out the data exactly
 in the order we specify, which otherwise it is not required to do).</p>
-<p>So, we've got 1024 bytes in OAM and each <code>ObjectAttribute</code> value is 8 bytes, so
+<p>So, we've got 1024 bytes in OAM and each <code>ObjectAttributes</code> value is 8 bytes, so
 naturally we can support up to 128 objects.</p>
 <p><em>At the same time</em>, we've got 1024 bytes in OAM and each <code>AffineMatrix</code> is 32
 bytes, so we can have 32 of them.</p>
 <p>But, as I said, these things are all <em>interlaced</em> with each other. See how
 there's &quot;filler&quot; fields in each struct? If we imagine the OAM as being just an
-array of one type or the other, indexes 0/1/2/3 of the <code>ObjectAttribute</code> array
+array of one type or the other, indexes 0/1/2/3 of the <code>ObjectAttributes</code> array
 would line up with index 0 of the <code>AffineMatrix</code> array. It's kinda weird, but
 that's just how it works. When we setup functions to read and write these values
 we'll have to be careful with how we do it. We probably <em>won't</em> want to use
@@ -324,7 +322,8 @@ mirror that you choose to access the game pak through affects which wait state
 setting it uses (configured via IO register of course). Unfortunately, the
 details come down more to the game pak hardware that you load your game onto
 than anything else, so there's not much I can say right here. We'll eventually
-talk about it more later,</p>
+talk about it more later when I'm forced to do the boring thing and just cover
+all the IO registers that aren't covered anywhere else.</p>
 <p>One thing of note is the way that the 16-bit bus affects us: the instructions to
 execute are coming through the same bus as the rest of the game data, so we want
 them to be as compact as possible. The ARM chip in the GBA supports two
@@ -342,9 +341,10 @@ builds starts with <code>thumbv4</code>.</p>
 <li><code>0xE000000</code> to <code>0xE00FFFF</code> (64k)</li>
 </ul>
 <p>The game pak SRAM has an 8-bit bus. Why did Pokémon always take so long to save?
-This is why. It also has some amount of wait, but as with the ROM, the details
-depend on your game pak hardware (and also as with ROM, you can adjust the
-settings with an IO register, should you need to).</p>
+Saving the whole game one byte at a time is why. The SRAM also has some amount
+of wait, but as with the ROM, the details depend on your game pak hardware (and
+also as with ROM, you can adjust the settings with an IO register, should you
+need to).</p>
 <p>One thing to note about the SRAM is that the GBA has a Direct Memory Access
 (DMA) feature that can be used for bulk memory movements in some cases, but the
 DMA <em>cannot</em> access the SRAM region. You really are stuck reading and writing

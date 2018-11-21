@@ -165,10 +165,11 @@ reason, you'll still want devkitpro for the <code>gbafix</code> utility.</p>
 <code>C:\devkitpro\tools\bin</code> to be <a href="https://stackoverflow.com/q/44272416/455232">added to your
 PATH</a>, depending on where you
 installed it to and such.</li>
-<li>On Linux you'll also want it to be added to your path, but if you're using
-Linux I'll just assume you know how to do all that. I'm told that the default
-installation path is <code>/opt/devkitpro/devkitARM/bin</code>, so look there first if
-you didn't select some other place.</li>
+<li>On Linux you can use pacman to get it, and the default install puts the stuff
+in <code>/opt/devkitpro/devkitARM/bin</code> and <code>/opt/devkitpro/tools/bin</code>. If you need
+help you can look in our repository's
+<a href="https://github.com/rust-console/gba/blob/master/.travis.yml">.travis.yml</a>
+file to see exactly what our CI does.</li>
 </ul>
 <p>Finally, you'll need <code>cargo-xbuild</code>. Just run <code>cargo install cargo-xbuild</code> and
 cargo will figure it all out for you.</p>
