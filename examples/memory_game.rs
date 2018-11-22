@@ -204,40 +204,40 @@ pub const PALRAM_BG_BASE: VolatilePtr<u16> = VolatilePtr(0x500_0000 as *mut u16)
 
 pub fn bg_palette(slot: usize) -> u16 {
   assert!(slot < 256);
-  PALRAM_BG_BASE.offset(slot as isize).read()
+  unsafe { PALRAM_BG_BASE.offset(slot as isize).read() }
 }
 
 pub fn set_bg_palette(slot: usize, color: u16) {
   assert!(slot < 256);
-  PALRAM_BG_BASE.offset(slot as isize).write(color)
+  unsafe { PALRAM_BG_BASE.offset(slot as isize).write(color) }
 }
 
 pub fn bg_tile_4pp(base_block: usize, tile_index: usize) -> Tile4bpp {
   assert!(base_block < 4);
   assert!(tile_index < 512);
   let address = VRAM + size_of::<Charblock4bpp>() * base_block + size_of::<Tile4bpp>() * tile_index;
-  VolatilePtr(address as *mut Tile4bpp).read()
+  unsafe { VolatilePtr(address as *mut Tile4bpp).read() }
 }
 
 pub fn set_bg_tile_4pp(base_block: usize, tile_index: usize, tile: Tile4bpp) {
   assert!(base_block < 4);
   assert!(tile_index < 512);
   let address = VRAM + size_of::<Charblock4bpp>() * base_block + size_of::<Tile4bpp>() * tile_index;
-  VolatilePtr(address as *mut Tile4bpp).write(tile)
+  unsafe { VolatilePtr(address as *mut Tile4bpp).write(tile) }
 }
 
 pub fn bg_tile_8pp(base_block: usize, tile_index: usize) -> Tile8bpp {
   assert!(base_block < 4);
   assert!(tile_index < 256);
   let address = VRAM + size_of::<Charblock8bpp>() * base_block + size_of::<Tile8bpp>() * tile_index;
-  VolatilePtr(address as *mut Tile8bpp).read()
+  unsafe { VolatilePtr(address as *mut Tile8bpp).read() }
 }
 
 pub fn set_bg_tile_8pp(base_block: usize, tile_index: usize, tile: Tile8bpp) {
   assert!(base_block < 4);
   assert!(tile_index < 256);
   let address = VRAM + size_of::<Charblock8bpp>() * base_block + size_of::<Tile8bpp>() * tile_index;
-  VolatilePtr(address as *mut Tile8bpp).write(tile)
+  unsafe { VolatilePtr(address as *mut Tile8bpp).write(tile) }
 }
 
 #[derive(Clone, Copy)]

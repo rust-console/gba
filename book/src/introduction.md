@@ -27,7 +27,9 @@ if you want to get them that way.
 ## Expected Knowledge
 
 I will try not to ask too much of the reader ahead of time, but you are expected
-to have already read [The Rust Book](https://doc.rust-lang.org/book/).
+to have already read [The Rust Book](https://doc.rust-lang.org/book/). Having
+also read through the [Rustonomicon](https://doc.rust-lang.org/nomicon/) is
+appreciated but not required.
 
 It's very difficult to know when you've said something that someone else won't
 already know about, or if you're presenting ideas out of order. If things aren't
@@ -56,6 +58,3 @@ resources as well:
 * [GBATEK](http://problemkaputt.de/gbatek.htm), a homebrew tech manual for
   GBA/NDS/DSi. We will regularly link to parts of it when talking about various
   bits of the GBA.
-* [CowBite](https://www.cs.rit.edu/~tjh8300/CowBite/CowBiteSpec.htm) is another
-  tech specification that's more GBA specific. It's sometimes got more ASCII
-  art diagrams and example C struct layouts than GBATEK does.

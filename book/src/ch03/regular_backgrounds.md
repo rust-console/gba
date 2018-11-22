@@ -23,6 +23,9 @@ When you want regular tiled display, you must use video mode 0 or 1.
 We will not cover affine backgrounds in this chapter, so we will naturally be
 using video mode 0.
 
+Also, note that you have to enable each background layer that you want to use
+within the display control register.
+
 ## Get Your Palette Ready
 
 Background palette starts at `0x5000000` and is 256 `u16` values long. It'd
@@ -36,12 +39,12 @@ pub const PALRAM_BG_BASE: VolatilePtr<u16> = VolatilePtr(0x500_0000 as *mut u16)
 
 pub fn bg_palette(slot: usize) -> u16 {
   assert!(slot < 256);
-  PALRAM_BG_BASE.offset(slot as isize).read()
+  unsafe { PALRAM_BG_BASE.offset(slot as isize).read() }
 }
 
 pub fn set_bg_palette(slot: usize, color: u16) {
   assert!(slot < 256);
-  PALRAM_BG_BASE.offset(slot as isize).write(color)
+  unsafe { PALRAM_BG_BASE.offset(slot as isize).write(color) }
 }
 ```
 
@@ -77,28 +80,28 @@ pub fn bg_tile_4pp(base_block: usize, tile_index: usize) -> Tile4bpp {
   assert!(base_block < 4);
   assert!(tile_index < 512);
   let address = VRAM + size_of::<Charblock4bpp>() * base_block + size_of::<Tile4bpp>() * tile_index;
-  VolatilePtr(address as *mut Tile4bpp).read()
+  unsafe { VolatilePtr(address as *mut Tile4bpp).read() }
 }
 
 pub fn set_bg_tile_4pp(base_block: usize, tile_index: usize, tile: Tile4bpp) {
   assert!(base_block < 4);
   assert!(tile_index < 512);
   let address = VRAM + size_of::<Charblock4bpp>() * base_block + size_of::<Tile4bpp>() * tile_index;
-  VolatilePtr(address as *mut Tile4bpp).write(tile)
+  unsafe { VolatilePtr(address as *mut Tile4bpp).write(tile) }
 }
 
 pub fn bg_tile_8pp(base_block: usize, tile_index: usize) -> Tile8bpp {
   assert!(base_block < 4);
   assert!(tile_index < 256);
   let address = VRAM + size_of::<Charblock8bpp>() * base_block + size_of::<Tile8bpp>() * tile_index;
-  VolatilePtr(address as *mut Tile8bpp).read()
+  unsafe { VolatilePtr(address as *mut Tile8bpp).read() }
 }
 
 pub fn set_bg_tile_8pp(base_block: usize, tile_index: usize, tile: Tile8bpp) {
   assert!(base_block < 4);
   assert!(tile_index < 256);
   let address = VRAM + size_of::<Charblock8bpp>() * base_block + size_of::<Tile8bpp>() * tile_index;
-  VolatilePtr(address as *mut Tile8bpp).write(tile)
+  unsafe { VolatilePtr(address as *mut Tile8bpp).write(tile) }
 }
 ```
 
@@ -218,9 +221,10 @@ As long as you stay within the background memory region for charblocks (that is,
 rendering to reach outside of the background charblocks you'll get an
 implementation defined result. It's not the dreaded "undefined behavior" we're
 often worried about in programming, but the results _are_ determined by what
-you're running the game on. With real hardware, you get a bizarre result
-(basically another way to put garbage on the screen). If you use an emulator it
-might or might not allow for you to do this, it's up to the emulator writers.
+you're running the game on. With GBA hardware you get a bizarre result
+(basically another way to put garbage on the screen). With a DS it acts as if
+the tiles were all 0s. If you use an emulator it might or might not allow for
+you to do this, it's up to the emulator writers.
 
 ## Set Your IO Registers
 
@@ -287,9 +291,12 @@ it will loop.
 
 As a special effect, you can apply mosaic to backgrounds and objects. It's just
 a single flag for each background, so all backgrounds will use the same mosaic
-settings when they have it enabled.
+settings when they have it enabled. What it actually does is split the normal
+image into "blocks" and then each block gets the color of the top left pixel of
+that block. This is the effect you see when link hits an electric foe with his
+sword and the whole screen "buzzes" at you.
 
-The mosaic control is a read/write `u16` IO register at `0x400_004C`.
+The mosaic control is a _write only_ `u16` IO register at `0x400_004C`.
 
 There's 4 bits each for:
 
@@ -298,4 +305,11 @@ There's 4 bits each for:
 * Horizontal object stretch
 * Vertical object stretch
 
-The 
+The inputs should be 1 _less_ than the desired block size. So if you set a
+stretch value of 5 then pixels 0-5 would be part of the first block (6 pixels),
+then 6-11 is the next block (another 6 pixels) and so on.
+
+If you need to make a pixel other than the top left part of each block the one
+that determines the mosaic color you can carefully offset the background or
+image by a tiny bit, but of course that makes every mosaic block change its
+target pixel. You can't change the target pixel on a block by block basis.
