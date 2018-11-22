@@ -18,6 +18,6 @@
   * [GBA Memory Mapping](ch03/gba_memory_mapping.md)
   * [Tile Data](ch03/tile_data.md)
   * [Regular Backgrounds](ch03/regular_backgrounds.md)
-  * [Object Basics](ch03/object_basics.md)
+  * [Regular Objects](ch03/regular_objects.md)
   * [GBA RNG](ch03/gba_rng.md)
   * [memory_game](ch03/memory_game.md)
