@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Object Basics - Rust GBA Guide</title>
+        <title>Regular Objects - Rust GBA Guide</title>
         <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -72,7 +72,7 @@
         </script>
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
-            <ol class="chapter"><li><a href="../introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><a href="../ch00/index.html"><strong aria-hidden="true">2.</strong> Ch 0: Development Setup</a></li><li><a href="../ch01/index.html"><strong aria-hidden="true">3.</strong> Ch 1: Hello GBA</a></li><li><ol class="section"><li><a href="../ch01/hello1.html"><strong aria-hidden="true">3.1.</strong> hello1</a></li><li><a href="../ch01/volatile.html"><strong aria-hidden="true">3.2.</strong> Volatile</a></li><li><a href="../ch01/io_registers.html"><strong aria-hidden="true">3.3.</strong> IO Registers</a></li><li><a href="../ch01/the_display_control_register.html"><strong aria-hidden="true">3.4.</strong> The Display Control Register</a></li><li><a href="../ch01/video_memory_intro.html"><strong aria-hidden="true">3.5.</strong> Video Memory Intro</a></li><li><a href="../ch01/hello2.html"><strong aria-hidden="true">3.6.</strong> hello2</a></li></ol></li><li><a href="../ch02/index.html"><strong aria-hidden="true">4.</strong> Ch 2: User Input</a></li><li><ol class="section"><li><a href="../ch02/the_key_input_register.html"><strong aria-hidden="true">4.1.</strong> The Key Input Register</a></li><li><a href="../ch02/the_vcount_register.html"><strong aria-hidden="true">4.2.</strong> The VCount Register</a></li><li><a href="../ch02/light_cycle.html"><strong aria-hidden="true">4.3.</strong> light_cycle</a></li></ol></li><li><a href="../ch03/index.html"><strong aria-hidden="true">5.</strong> Ch 3: Memory and Objects</a></li><li><ol class="section"><li><a href="../ch03/gba_memory_mapping.html"><strong aria-hidden="true">5.1.</strong> GBA Memory Mapping</a></li><li><a href="../ch03/tile_data.html"><strong aria-hidden="true">5.2.</strong> Tile Data</a></li><li><a href="../ch03/regular_backgrounds.html"><strong aria-hidden="true">5.3.</strong> Regular Backgrounds</a></li><li><a href="../ch03/object_basics.html" class="active"><strong aria-hidden="true">5.4.</strong> Object Basics</a></li><li><a href="../ch03/gba_rng.html"><strong aria-hidden="true">5.5.</strong> GBA RNG</a></li><li><a href="../ch03/memory_game.html"><strong aria-hidden="true">5.6.</strong> memory_game</a></li></ol></li></ol>
+            <ol class="chapter"><li><a href="../introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><a href="../ch00/index.html"><strong aria-hidden="true">2.</strong> Ch 0: Development Setup</a></li><li><a href="../ch01/index.html"><strong aria-hidden="true">3.</strong> Ch 1: Hello GBA</a></li><li><ol class="section"><li><a href="../ch01/hello1.html"><strong aria-hidden="true">3.1.</strong> hello1</a></li><li><a href="../ch01/volatile.html"><strong aria-hidden="true">3.2.</strong> Volatile</a></li><li><a href="../ch01/io_registers.html"><strong aria-hidden="true">3.3.</strong> IO Registers</a></li><li><a href="../ch01/the_display_control_register.html"><strong aria-hidden="true">3.4.</strong> The Display Control Register</a></li><li><a href="../ch01/video_memory_intro.html"><strong aria-hidden="true">3.5.</strong> Video Memory Intro</a></li><li><a href="../ch01/hello2.html"><strong aria-hidden="true">3.6.</strong> hello2</a></li></ol></li><li><a href="../ch02/index.html"><strong aria-hidden="true">4.</strong> Ch 2: User Input</a></li><li><ol class="section"><li><a href="../ch02/the_key_input_register.html"><strong aria-hidden="true">4.1.</strong> The Key Input Register</a></li><li><a href="../ch02/the_vcount_register.html"><strong aria-hidden="true">4.2.</strong> The VCount Register</a></li><li><a href="../ch02/light_cycle.html"><strong aria-hidden="true">4.3.</strong> light_cycle</a></li></ol></li><li><a href="../ch03/index.html"><strong aria-hidden="true">5.</strong> Ch 3: Memory and Objects</a></li><li><ol class="section"><li><a href="../ch03/gba_memory_mapping.html"><strong aria-hidden="true">5.1.</strong> GBA Memory Mapping</a></li><li><a href="../ch03/tile_data.html"><strong aria-hidden="true">5.2.</strong> Tile Data</a></li><li><a href="../ch03/regular_backgrounds.html"><strong aria-hidden="true">5.3.</strong> Regular Backgrounds</a></li><li><a href="../ch03/regular_objects.html" class="active"><strong aria-hidden="true">5.4.</strong> Regular Objects</a></li><li><a href="../ch03/gba_rng.html"><strong aria-hidden="true">5.5.</strong> GBA RNG</a></li><li><a href="../ch03/memory_game.html"><strong aria-hidden="true">5.6.</strong> memory_game</a></li></ol></li></ol>
         </nav>
 
         <div id="page-wrapper" class="page-wrapper">
@@ -136,8 +136,15 @@
 
                 <div id="content" class="content">
                     <main>
-                        <a class="header" href="#object-basics" id="object-basics"><h1>Object Basics</h1></a>
-<p>TODO</p>
+                        <a class="header" href="#regular-objects" id="regular-objects"><h1>Regular Objects</h1></a>
+<p>As with backgrounds, objects can be used in both an affine and non-affine way.
+For this section we'll focus on the non-affine elements, and then we'll do all
+the affine stuff in a later chapter.</p>
+<p>TODO: tio afero ke mi diris</p>
+<a class="header" href="#objects-vs-sprites" id="objects-vs-sprites"><h2>Objects vs Sprites</h2></a>
+<a class="header" href="#ready-the-palette" id="ready-the-palette"><h2>Ready the Palette</h2></a>
+<a class="header" href="#ready-the-tiles" id="ready-the-tiles"><h2>Ready the Tiles</h2></a>
+<a class="header" href="#set-the-object-attributes" id="set-the-object-attributes"><h2>Set the Object Attributes</h2></a>
 
                     </main>
 
