@@ -1772,23 +1772,10 @@ GBA's CPU <em>can't do any of that</em>. On the GBA, there's a genuine speed dif
 between looping over indexes and then indexing each loop (slow) compared to
 using an iterator that just stores an internal pointer and does +1 offset per
 loop until it reaches the end (fast). The repeated indexing itself can by itself
-<<<<<<< HEAD
-<<<<<<< HEAD
-be an expensive step. If you've got a slice of data to process, be sure to go
-over it with <code>.iter()</code> and <code>.iter_mut()</code> if you can, instead of looping by
-index. This is Rust and all, so probably you were gonna do that anyway, but just
-a heads up.</p>
-=======
-=======
->>>>>>> 6b631474faca0645ad16822187c230b813ab6793
 be an expensive step. If it's like a 3 element array it's no big deal, but if
 you've got a big slice of data to process, be sure to go over it with <code>.iter()</code>
 and <code>.iter_mut()</code> if you can, instead of looping by index. This is Rust and all,
 so probably you were gonna do that anyway, but just a heads up.</p>
-<<<<<<< HEAD
->>>>>>> object attribute stuff
-=======
->>>>>>> 6b631474faca0645ad16822187c230b813ab6793
 <a class="header" href="#get-your-tilemap-ready" id="get-your-tilemap-ready"><h2>Get your Tilemap ready</h2></a>
 <p>I believe that at one point I alluded to a tilemap existing. Well, just as the
 tiles are arranged into charblocks, the data describing what tile to show in
@@ -1896,17 +1883,7 @@ separate groups of related registers.</p>
 <p>Each of these are a read/write <code>u16</code> location. This is where we get to all of
 the important details that we've been putting off.</p>
 <ul>
-<<<<<<< HEAD
-<<<<<<< HEAD
-<li>2 bits for the priority of each background (0 being highest). If two
-backgrounds are set to the same priority the the lower numbered background
-layer takes prescience.</li>
-=======
 <li>2 bits for the priority.</li>
->>>>>>> object attribute stuff
-=======
-<li>2 bits for the priority.</li>
->>>>>>> 6b631474faca0645ad16822187c230b813ab6793
 <li>2 bits for &quot;character base block&quot;, the charblock that all of the tile indexes
 for this background are offset from.</li>
 <li>1 bit for mosaic effect being enabled (we'll get to that below).</li>
@@ -1972,16 +1949,6 @@ target pixel. You can't change the target pixel on a block by block basis.</p>
 <p>As with backgrounds, objects can be used in both an affine and non-affine way.
 For this section we'll focus on the non-affine elements, and then we'll do all
 the affine stuff in a later chapter.</p>
-<<<<<<< HEAD
-<<<<<<< HEAD
-<p>TODO: tio afero ke mi diris</p>
-<a class="header" href="#objects-vs-sprites" id="objects-vs-sprites"><h2>Objects vs Sprites</h2></a>
-<a class="header" href="#ready-the-palette" id="ready-the-palette"><h2>Ready the Palette</h2></a>
-<a class="header" href="#ready-the-tiles" id="ready-the-tiles"><h2>Ready the Tiles</h2></a>
-<a class="header" href="#set-the-object-attributes" id="set-the-object-attributes"><h2>Set the Object Attributes</h2></a>
-=======
-=======
->>>>>>> 6b631474faca0645ad16822187c230b813ab6793
 <a class="header" href="#objects-vs-sprites" id="objects-vs-sprites"><h2>Objects vs Sprites</h2></a>
 <p>As <a href="https://www.coranac.com/tonc/text/regobj.htm">TONC</a> helpfully reminds us
 (and then proceeds to not follow its own advice), we should always try to think
@@ -2347,10 +2314,6 @@ impl ObjectAttributes {
   }
 }
 #}</code></pre></pre>
-<<<<<<< HEAD
->>>>>>> object attribute stuff
-=======
->>>>>>> 6b631474faca0645ad16822187c230b813ab6793
 <a class="header" href="#gba-rng" id="gba-rng"><h1>GBA RNG</h1></a>
 <p>TODO</p>
 <a class="header" href="#memory_game" id="memory_game"><h1>memory_game</h1></a>
