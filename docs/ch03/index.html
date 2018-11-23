@@ -165,6 +165,23 @@ without trading away too much in terms of quality.</p>
 <p>To top it all off, we'll make a simple &quot;memory game&quot; sort of thing. There's some
 face down cards in a grid, you pick one to check, then you pick the other to
 check, and then if they match the pair disappears.</p>
+<a class="header" href="#drawing-priority" id="drawing-priority"><h2>Drawing Priority</h2></a>
+<p>Both backgrounds and objects can have &quot;priority&quot; values associated with them.
+TONC and GBATEK have <em>opposite</em> ideas of what it means to have the &quot;highest&quot;
+priority. TONC goes by highest numerical value, and GBATEK goes by what's on the
+z-layer closest to the user. Let's list out the rules as clearly as we can:</p>
+<ul>
+<li>Priority is always two bits, so 0 through 3.</li>
+<li>Priority conceptually proceeds in drawing passes that count <em>down</em>, so any
+priority 3 things can get covered up by priority 2 things. In truth there's
+probably depth testing and buffering stuff going on so it's all one single
+pass, but conceptually we will imagine it happening as all of the 3 elements,
+then all of 2, and so on.</li>
+<li>Objects always draw over top of backgrounds of equal priority.</li>
+<li>Within things of the same type and priority, the lower numbered element &quot;wins&quot;
+and gets its pixel drawn (bg0 is favored over bg1, obj0 is favored over obj1,
+etc).</li>
+</ul>
 
                     </main>
 

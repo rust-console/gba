@@ -286,3 +286,209 @@ impl RegularScreenblockEntry {
     self.0 |= palbank_index;
   }
 }
+
+pub const PALRAM_OBJECT_BASE: VolatilePtr<u16> = VolatilePtr(0x500_0200 as *mut u16);
+
+pub fn object_palette(slot: usize) -> u16 {
+  assert!(slot < 256);
+  unsafe { PALRAM_OBJECT_BASE.offset(slot as isize).read() }
+}
+
+pub fn set_object_palette(slot: usize, color: u16) {
+  assert!(slot < 256);
+  unsafe { PALRAM_OBJECT_BASE.offset(slot as isize).write(color) }
+}
+
+pub const OAM: usize = 0x700_0000;
+
+pub fn object_attributes(slot: usize) -> ObjectAttributes {
+  assert!(slot < 128);
+  let ptr = VolatilePtr((OAM + slot * (size_of::<u16>() * 4)) as *mut u16);
+  unsafe {
+    ObjectAttributes {
+      attr0: ptr.read(),
+      attr1: ptr.offset(1).read(),
+      attr2: ptr.offset(2).read(),
+    }
+  }
+}
+
+pub fn set_object_attributes(slot: usize, obj: ObjectAttributes) {
+  assert!(slot < 128);
+  let ptr = VolatilePtr((OAM + slot * (size_of::<u16>() * 4)) as *mut u16);
+  unsafe {
+    ptr.write(obj.attr0);
+    ptr.offset(1).write(obj.attr1);
+    ptr.offset(2).write(obj.attr2);
+  }
+}
+
+#[derive(Debug, Clone, Copy, Default)]
+pub struct ObjectAttributes {
+  attr0: u16,
+  attr1: u16,
+  attr2: u16,
+}
+
+#[derive(Debug, Clone, Copy)]
+pub enum ObjectRenderMode {
+  Normal,
+  Affine,
+  Disabled,
+  DoubleAreaAffine,
+}
+
+#[derive(Debug, Clone, Copy)]
+pub enum ObjectMode {
+  Normal,
+  AlphaBlending,
+  ObjectWindow,
+}
+
+#[derive(Debug, Clone, Copy)]
+pub enum ObjectShape {
+  Square,
+  Horizontal,
+  Vertical,
+}
+
+#[derive(Debug, Clone, Copy)]
+pub enum ObjectOrientation {
+  Normal,
+  HFlip,
+  VFlip,
+  BothFlip,
+  Affine(u8),
+}
+
+impl ObjectAttributes {
+  pub fn row(&self) -> u16 {
+    self.attr0 & 0b1111_1111
+  }
+  pub fn column(&self) -> u16 {
+    self.attr1 & 0b1_1111_1111
+  }
+  pub fn rendering(&self) -> ObjectRenderMode {
+    match (self.attr0 >> 8) & 0b11 {
+      0 => ObjectRenderMode::Normal,
+      1 => ObjectRenderMode::Affine,
+      2 => ObjectRenderMode::Disabled,
+      3 => ObjectRenderMode::DoubleAreaAffine,
+      _ => unimplemented!(),
+    }
+  }
+  pub fn mode(&self) -> ObjectMode {
+    match (self.attr0 >> 0xA) & 0b11 {
+      0 => ObjectMode::Normal,
+      1 => ObjectMode::AlphaBlending,
+      2 => ObjectMode::ObjectWindow,
+      _ => unimplemented!(),
+    }
+  }
+  pub fn mosaic(&self) -> bool {
+    ((self.attr0 << 3) as i16) < 0
+  }
+  pub fn two_fifty_six_colors(&self) -> bool {
+    ((self.attr0 << 2) as i16) < 0
+  }
+  pub fn shape(&self) -> ObjectShape {
+    match (self.attr0 >> 0xE) & 0b11 {
+      0 => ObjectShape::Square,
+      1 => ObjectShape::Horizontal,
+      2 => ObjectShape::Vertical,
+      _ => unimplemented!(),
+    }
+  }
+  pub fn orientation(&self) -> ObjectOrientation {
+    if (self.attr0 >> 8) & 1 > 0 {
+      ObjectOrientation::Affine((self.attr1 >> 9) as u8 & 0b1_1111)
+    } else {
+      match (self.attr1 >> 0xC) & 0b11 {
+        0 => ObjectOrientation::Normal,
+        1 => ObjectOrientation::HFlip,
+        2 => ObjectOrientation::VFlip,
+        3 => ObjectOrientation::BothFlip,
+        _ => unimplemented!(),
+      }
+    }
+  }
+  pub fn size(&self) -> u16 {
+    self.attr1 >> 0xE
+  }
+  pub fn tile_index(&self) -> u16 {
+    self.attr2 & 0b11_1111_1111
+  }
+  pub fn priority(&self) -> u16 {
+    self.attr2 >> 0xA
+  }
+  pub fn palbank(&self) -> u16 {
+    self.attr2 >> 0xC
+  }
+  //
+  pub fn set_row(&mut self, row: u16) {
+    self.attr0 &= !0b1111_1111;
+    self.attr0 |= row & 0b1111_1111;
+  }
+  pub fn set_column(&mut self, col: u16) {
+    self.attr1 &= !0b1_1111_1111;
+    self.attr2 |= col & 0b1_1111_1111;
+  }
+  pub fn set_rendering(&mut self, rendering: ObjectRenderMode) {
+    const RENDERING_MASK: u16 = 0b11 << 8;
+    self.attr0 &= !RENDERING_MASK;
+    self.attr0 |= (rendering as u16) << 8;
+  }
+  pub fn set_mode(&mut self, mode: ObjectMode) {
+    const MODE_MASK: u16 = 0b11 << 0xA;
+    self.attr0 &= MODE_MASK;
+    self.attr0 |= (mode as u16) << 0xA;
+  }
+  pub fn set_mosaic(&mut self, bit: bool) {
+    const MOSAIC_BIT: u16 = 1 << 0xC;
+    if bit {
+      self.attr0 |= MOSAIC_BIT
+    } else {
+      self.attr0 &= !MOSAIC_BIT
+    }
+  }
+  pub fn set_two_fifty_six_colors(&mut self, bit: bool) {
+    const COLOR_MODE_BIT: u16 = 1 << 0xD;
+    if bit {
+      self.attr0 |= COLOR_MODE_BIT
+    } else {
+      self.attr0 &= !COLOR_MODE_BIT
+    }
+  }
+  pub fn set_shape(&mut self, shape: ObjectShape) {
+    self.attr0 &= 0b0011_1111_1111_1111;
+    self.attr0 |= (shape as u16) << 0xE;
+  }
+  pub fn set_orientation(&mut self, orientation: ObjectOrientation) {
+    const AFFINE_INDEX_MASK: u16 = 0b1_1111 << 9;
+    self.attr1 &= !AFFINE_INDEX_MASK;
+    let bits = match orientation {
+      ObjectOrientation::Affine(index) => (index as u16) << 9,
+      ObjectOrientation::Normal => 0,
+      ObjectOrientation::HFlip => 1 << 0xC,
+      ObjectOrientation::VFlip => 1 << 0xD,
+      ObjectOrientation::BothFlip => 0b11 << 0xC,
+    };
+    self.attr1 |= bits;
+  }
+  pub fn set_size(&mut self, size: u16) {
+    self.attr1 &= 0b0011_1111_1111_1111;
+    self.attr1 |= size << 14;
+  }
+  pub fn set_tile_index(&mut self, index: u16) {
+    self.attr2 &= !0b11_1111_1111;
+    self.attr2 |= 0b11_1111_1111 & index;
+  }
+  pub fn set_priority(&mut self, priority: u16) {
+    self.attr2 &= !0b0000_1100_0000_0000;
+    self.attr2 |= (priority & 0b11) << 0xA;
+  }
+  pub fn set_palbank(&mut self, palbank: u16) {
+    self.attr2 &= !0b1111_0000_0000_0000;
+    self.attr2 |= (palbank & 0b1111) << 0xC;
+  }
+}

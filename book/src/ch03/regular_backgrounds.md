@@ -122,10 +122,10 @@ GBA's CPU _can't do any of that_. On the GBA, there's a genuine speed difference
 between looping over indexes and then indexing each loop (slow) compared to
 using an iterator that just stores an internal pointer and does +1 offset per
 loop until it reaches the end (fast). The repeated indexing itself can by itself
-be an expensive step. If you've got a slice of data to process, be sure to go
-over it with `.iter()` and `.iter_mut()` if you can, instead of looping by
-index. This is Rust and all, so probably you were gonna do that anyway, but just
-a heads up.
+be an expensive step. If it's like a 3 element array it's no big deal, but if
+you've got a big slice of data to process, be sure to go over it with `.iter()`
+and `.iter_mut()` if you can, instead of looping by index. This is Rust and all,
+so probably you were gonna do that anyway, but just a heads up.
 
 ## Get your Tilemap ready
 
@@ -241,9 +241,7 @@ separate groups of related registers.
 Each of these are a read/write `u16` location. This is where we get to all of
 the important details that we've been putting off.
 
-* 2 bits for the priority of each background (0 being highest). If two
-  backgrounds are set to the same priority the the lower numbered background
-  layer takes prescience.
+* 2 bits for the priority.
 * 2 bits for "character base block", the charblock that all of the tile indexes
   for this background are offset from.
 * 1 bit for mosaic effect being enabled (we'll get to that below).
