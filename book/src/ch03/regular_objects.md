@@ -304,6 +304,7 @@ impl ObjectAttributes {
         1 => ObjectOrientation::HFlip,
         2 => ObjectOrientation::VFlip,
         3 => ObjectOrientation::BothFlip,
+        _ => unimplemented!(),
       }
     }
   }
