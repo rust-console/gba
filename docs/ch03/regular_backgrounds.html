@@ -72,7 +72,7 @@
         </script>
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
-            <ol class="chapter"><li><a href="../introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><a href="../ch00/index.html"><strong aria-hidden="true">2.</strong> Ch 0: Development Setup</a></li><li><a href="../ch01/index.html"><strong aria-hidden="true">3.</strong> Ch 1: Hello GBA</a></li><li><ol class="section"><li><a href="../ch01/hello1.html"><strong aria-hidden="true">3.1.</strong> hello1</a></li><li><a href="../ch01/volatile.html"><strong aria-hidden="true">3.2.</strong> Volatile</a></li><li><a href="../ch01/io_registers.html"><strong aria-hidden="true">3.3.</strong> IO Registers</a></li><li><a href="../ch01/the_display_control_register.html"><strong aria-hidden="true">3.4.</strong> The Display Control Register</a></li><li><a href="../ch01/video_memory_intro.html"><strong aria-hidden="true">3.5.</strong> Video Memory Intro</a></li><li><a href="../ch01/hello2.html"><strong aria-hidden="true">3.6.</strong> hello2</a></li></ol></li><li><a href="../ch02/index.html"><strong aria-hidden="true">4.</strong> Ch 2: User Input</a></li><li><ol class="section"><li><a href="../ch02/the_key_input_register.html"><strong aria-hidden="true">4.1.</strong> The Key Input Register</a></li><li><a href="../ch02/the_vcount_register.html"><strong aria-hidden="true">4.2.</strong> The VCount Register</a></li><li><a href="../ch02/light_cycle.html"><strong aria-hidden="true">4.3.</strong> light_cycle</a></li></ol></li><li><a href="../ch03/index.html"><strong aria-hidden="true">5.</strong> Ch 3: Memory and Objects</a></li><li><ol class="section"><li><a href="../ch03/gba_memory_mapping.html"><strong aria-hidden="true">5.1.</strong> GBA Memory Mapping</a></li><li><a href="../ch03/tile_data.html"><strong aria-hidden="true">5.2.</strong> Tile Data</a></li><li><a href="../ch03/regular_backgrounds.html" class="active"><strong aria-hidden="true">5.3.</strong> Regular Backgrounds</a></li><li><a href="../ch03/object_basics.html"><strong aria-hidden="true">5.4.</strong> Object Basics</a></li><li><a href="../ch03/gba_rng.html"><strong aria-hidden="true">5.5.</strong> GBA RNG</a></li><li><a href="../ch03/memory_game.html"><strong aria-hidden="true">5.6.</strong> memory_game</a></li></ol></li></ol>
+            <ol class="chapter"><li><a href="../introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><a href="../ch00/index.html"><strong aria-hidden="true">2.</strong> Ch 0: Development Setup</a></li><li><a href="../ch01/index.html"><strong aria-hidden="true">3.</strong> Ch 1: Hello GBA</a></li><li><ol class="section"><li><a href="../ch01/hello1.html"><strong aria-hidden="true">3.1.</strong> hello1</a></li><li><a href="../ch01/volatile.html"><strong aria-hidden="true">3.2.</strong> Volatile</a></li><li><a href="../ch01/io_registers.html"><strong aria-hidden="true">3.3.</strong> IO Registers</a></li><li><a href="../ch01/the_display_control_register.html"><strong aria-hidden="true">3.4.</strong> The Display Control Register</a></li><li><a href="../ch01/video_memory_intro.html"><strong aria-hidden="true">3.5.</strong> Video Memory Intro</a></li><li><a href="../ch01/hello2.html"><strong aria-hidden="true">3.6.</strong> hello2</a></li></ol></li><li><a href="../ch02/index.html"><strong aria-hidden="true">4.</strong> Ch 2: User Input</a></li><li><ol class="section"><li><a href="../ch02/the_key_input_register.html"><strong aria-hidden="true">4.1.</strong> The Key Input Register</a></li><li><a href="../ch02/the_vcount_register.html"><strong aria-hidden="true">4.2.</strong> The VCount Register</a></li><li><a href="../ch02/light_cycle.html"><strong aria-hidden="true">4.3.</strong> light_cycle</a></li></ol></li><li><a href="../ch03/index.html"><strong aria-hidden="true">5.</strong> Ch 3: Memory and Objects</a></li><li><ol class="section"><li><a href="../ch03/gba_memory_mapping.html"><strong aria-hidden="true">5.1.</strong> GBA Memory Mapping</a></li><li><a href="../ch03/tile_data.html"><strong aria-hidden="true">5.2.</strong> Tile Data</a></li><li><a href="../ch03/regular_backgrounds.html" class="active"><strong aria-hidden="true">5.3.</strong> Regular Backgrounds</a></li><li><a href="../ch03/regular_objects.html"><strong aria-hidden="true">5.4.</strong> Regular Objects</a></li><li><a href="../ch03/gba_rng.html"><strong aria-hidden="true">5.5.</strong> GBA RNG</a></li><li><a href="../ch03/memory_game.html"><strong aria-hidden="true">5.6.</strong> memory_game</a></li></ol></li></ol>
         </nav>
 
         <div id="page-wrapper" class="page-wrapper">
@@ -136,8 +136,291 @@
 
                 <div id="content" class="content">
                     <main>
-                        <a class="header" href="#tiled-backgrounds" id="tiled-backgrounds"><h1>Tiled Backgrounds</h1></a>
-<p>TODO</p>
+                        <a class="header" href="#regular-backgrounds" id="regular-backgrounds"><h1>Regular Backgrounds</h1></a>
+<p>So, backgrounds, they're cool. Why do we call the ones here &quot;regular&quot;
+backgrounds? Because there's also &quot;affine&quot; backgrounds. However, affine math
+stuff adds a complication, so for now we'll just work with regular backgrounds.
+The non-affine backgrounds are sometimes called &quot;text mode&quot; backgrounds by other
+guides.</p>
+<p>To get your background image working you generally need to perform all of the
+following steps, though I suppose the exact ordering is up to you.</p>
+<a class="header" href="#tiled-video-modes" id="tiled-video-modes"><h2>Tiled Video Modes</h2></a>
+<p>When you want regular tiled display, you must use video mode 0 or 1.</p>
+<ul>
+<li>Mode 0 allows for using all four BG layers (0 through 3) as regular
+backgrounds.</li>
+<li>Mode 1 allows for using BG0 and BG1 as regular backgrounds, BG2 as an affine
+background, and BG3 not at all.</li>
+<li>Mode 2 allows for BG2 and BG3 to be used as affine backgrounds, while BG0 and
+BG1 cannot be used at all.</li>
+</ul>
+<p>We will not cover affine backgrounds in this chapter, so we will naturally be
+using video mode 0.</p>
+<p>Also, note that you have to enable each background layer that you want to use
+within the display control register.</p>
+<a class="header" href="#get-your-palette-ready" id="get-your-palette-ready"><h2>Get Your Palette Ready</h2></a>
+<p>Background palette starts at <code>0x5000000</code> and is 256 <code>u16</code> values long. It'd
+potentially be possible declare a static array starting at a fixed address and
+use a linker script to make sure that it ends up at the right spot in the final
+program, but since we have to use volatile reads and writes with PALRAM anyway,
+we'll just reuse our <code>VolatilePtr</code> type. Something like this:</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+pub const PALRAM_BG_BASE: VolatilePtr&lt;u16&gt; = VolatilePtr(0x500_0000 as *mut u16);
+
+pub fn bg_palette(slot: usize) -&gt; u16 {
+  assert!(slot &lt; 256);
+  unsafe { PALRAM_BG_BASE.offset(slot as isize).read() }
+}
+
+pub fn set_bg_palette(slot: usize, color: u16) {
+  assert!(slot &lt; 256);
+  unsafe { PALRAM_BG_BASE.offset(slot as isize).write(color) }
+}
+#}</code></pre></pre>
+<p>As we discussed with the tile color depths, the palette can be utilized as a
+single block of palette values (<code>[u16; 256]</code>) or as 16 palbanks of 16 palette
+values each (<code>[[u16;16]; 16]</code>). This setting is assigned per background layer
+via IO register.</p>
+<a class="header" href="#get-your-tiles-ready" id="get-your-tiles-ready"><h2>Get Your Tiles Ready</h2></a>
+<p>Tile data is placed into charblocks. A charblock is always 16kb, so depending on
+color depth it will have either 256 or 512 tiles within that charblock.
+Charblocks 0, 1, 2, and 3 are all for background tiles. That's a maximum of 2048
+tiles for backgrounds, but as you'll see in a moment a particular tilemap entry
+can't even index that high. Instead, each background layer is assigned a
+&quot;character base block&quot;, and then tilemap entries index relative to the character
+base block of that background layer.</p>
+<p>Now, if you want to move in a lot of tile data you'll probably want to use a DMA
+routine, or at least write a function like memcopy32 for fast <code>u32</code> copying from
+ROM into VRAM. However, for now, and because we're being very explicit since
+this is our first time doing it, we'll write it as functions for individual tile
+reads and writes.</p>
+<p>The math works like indexing a pointer, except that we have two sizes we need to
+go by. First you take the base address for VRAM (<code>0x600_0000</code>), then add the
+size of a charblock (16kb) times the charblock you want to place the tile
+within, and then you add the index of the tile slot you're placing it into times
+the size of that type of tile. Like this:</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+pub fn bg_tile_4pp(base_block: usize, tile_index: usize) -&gt; Tile4bpp {
+  assert!(base_block &lt; 4);
+  assert!(tile_index &lt; 512);
+  let address = VRAM + size_of::&lt;Charblock4bpp&gt;() * base_block + size_of::&lt;Tile4bpp&gt;() * tile_index;
+  unsafe { VolatilePtr(address as *mut Tile4bpp).read() }
+}
+
+pub fn set_bg_tile_4pp(base_block: usize, tile_index: usize, tile: Tile4bpp) {
+  assert!(base_block &lt; 4);
+  assert!(tile_index &lt; 512);
+  let address = VRAM + size_of::&lt;Charblock4bpp&gt;() * base_block + size_of::&lt;Tile4bpp&gt;() * tile_index;
+  unsafe { VolatilePtr(address as *mut Tile4bpp).write(tile) }
+}
+
+pub fn bg_tile_8pp(base_block: usize, tile_index: usize) -&gt; Tile8bpp {
+  assert!(base_block &lt; 4);
+  assert!(tile_index &lt; 256);
+  let address = VRAM + size_of::&lt;Charblock8bpp&gt;() * base_block + size_of::&lt;Tile8bpp&gt;() * tile_index;
+  unsafe { VolatilePtr(address as *mut Tile8bpp).read() }
+}
+
+pub fn set_bg_tile_8pp(base_block: usize, tile_index: usize, tile: Tile8bpp) {
+  assert!(base_block &lt; 4);
+  assert!(tile_index &lt; 256);
+  let address = VRAM + size_of::&lt;Charblock8bpp&gt;() * base_block + size_of::&lt;Tile8bpp&gt;() * tile_index;
+  unsafe { VolatilePtr(address as *mut Tile8bpp).write(tile) }
+}
+#}</code></pre></pre>
+<p>For bulk operations, you'd do the exact same math to get your base destination
+pointer, and then you'd get the base source pointer for the tile you're copying
+out of ROM, and then you'd do the bulk copy for the correct number of <code>u32</code>
+values that you're trying to move (8 per tile moved for 4bpp, or 16 per tile
+moved for 8bpp).</p>
+<p><strong>GBA Limitation Note:</strong> on a modern PC (eg: <code>x86</code> or <code>x86_64</code>) you're probably
+used to index based loops and iterator based loops being the same speed. The CPU
+has the ability to do a &quot;fused multiply add&quot;, so the base address of the array
+plus desired index * size per element is a single CPU operation to compute. It's
+slightly more complicated if there's arrays within arrays like there are here,
+but with normal arrays it's basically the same speed to index per loop cycle as
+it is to take a base address and then add +1 offset per loop cycle. However, the
+GBA's CPU <em>can't do any of that</em>. On the GBA, there's a genuine speed difference
+between looping over indexes and then indexing each loop (slow) compared to
+using an iterator that just stores an internal pointer and does +1 offset per
+loop until it reaches the end (fast). The repeated indexing itself can by itself
+be an expensive step. If it's like a 3 element array it's no big deal, but if
+you've got a big slice of data to process, be sure to go over it with <code>.iter()</code>
+and <code>.iter_mut()</code> if you can, instead of looping by index. This is Rust and all,
+so probably you were gonna do that anyway, but just a heads up.</p>
+<a class="header" href="#get-your-tilemap-ready" id="get-your-tilemap-ready"><h2>Get your Tilemap ready</h2></a>
+<p>I believe that at one point I alluded to a tilemap existing. Well, just as the
+tiles are arranged into charblocks, the data describing what tile to show in
+what location is arranged into a thing called a <strong>screenblock</strong>.</p>
+<p>A screenblock is placed into VRAM the same as the tile data charblocks. Starting
+at the base of VRAM (<code>0x600_0000</code>) there are 32 slots for the screenblock array.
+Each screenblock is 2048 bytes (<code>0x800</code>). Naturally, if our tiles are using up
+charblock space within VRAM and our tilemaps are using up screenblock space
+within the same VRAM... well it would just be a <em>disaster</em> if they ran in to
+each other. Once again, it's up to you as the programmer to determine how much
+space you want to devote to each thing. Each complete charblock uses up 8
+screenblocks worth of space, but you don't have to fill a complete charblock
+with tiles, so you can be very fiddly with how you split the memory.</p>
+<p>Each screenblock is composed of a series of <em>screenblock entry</em> values, which
+describe what tile index to use and if the tile should be flipped and what
+palbank it should use (if any). Because both regular backgrounds and affine
+backgrounds are composed of screenblocks with entries, and because the affine
+background has a smaller format for screenblock entries, we'll name
+appropriately.</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+#[derive(Clone, Copy)]
+#[repr(transparent)]
+pub struct RegularScreenblock {
+  data: [RegularScreenblockEntry; 32 * 32],
+}
+
+#[derive(Debug, Clone, Copy, Default)]
+#[repr(transparent)]
+pub struct RegularScreenblockEntry(u16);
+#}</code></pre></pre>
+<p>So, with one entry per tile, a single screenblock allows for 32x32 tiles worth of
+background.</p>
+<p>The format of a regular screenblock entry is quite simple compared to some of
+the IO register stuff:</p>
+<ul>
+<li>10 bits for tile index (base off of the character base block of the background)</li>
+<li>1 bit for horizontal flip</li>
+<li>1 bit for vertical flip</li>
+<li>4 bits for picking which palbank to use (if 4bpp, otherwise it's ignored)</li>
+</ul>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+impl RegularScreenblockEntry {
+  pub fn tile_id(self) -&gt; u16 {
+    self.0 &amp; 0b11_1111_1111
+  }
+  pub fn set_tile_id(&amp;mut self, id: u16) {
+    self.0 &amp;= !0b11_1111_1111;
+    self.0 |= id;
+  }
+  pub fn horizontal_flip(self) -&gt; bool {
+    (self.0 &amp; (1 &lt;&lt; 0xA)) &gt; 0
+  }
+  pub fn set_horizontal_flip(&amp;mut self, bit: bool) {
+    if bit {
+      self.0 |= 1 &lt;&lt; 0xA;
+    } else {
+      self.0 &amp;= !(1 &lt;&lt; 0xA);
+    }
+  }
+  pub fn vertical_flip(self) -&gt; bool {
+    (self.0 &amp; (1 &lt;&lt; 0xB)) &gt; 0
+  }
+  pub fn set_vertical_flip(&amp;mut self, bit: bool) {
+    if bit {
+      self.0 |= 1 &lt;&lt; 0xB;
+    } else {
+      self.0 &amp;= !(1 &lt;&lt; 0xB);
+    }
+  }
+  pub fn palbank_index(self) -&gt; u16 {
+    self.0 &gt;&gt; 12
+  }
+  pub fn set_palbank_index(&amp;mut self, palbank_index: u16) {
+    self.0 &amp;= 0b1111_1111_1111;
+    self.0 |= palbank_index;
+  }
+}
+#}</code></pre></pre>
+<p>Now, at either 256 or 512 tiles per charblock, you might be thinking that with a
+10 bit index you can index past the end of one charblock and into the next.
+You'd be right, mostly.</p>
+<p>As long as you stay within the background memory region for charblocks (that is,
+0 through 3), then it all works out. However, if you try to get the background
+rendering to reach outside of the background charblocks you'll get an
+implementation defined result. It's not the dreaded &quot;undefined behavior&quot; we're
+often worried about in programming, but the results <em>are</em> determined by what
+you're running the game on. With GBA hardware you get a bizarre result
+(basically another way to put garbage on the screen). With a DS it acts as if
+the tiles were all 0s. If you use an emulator it might or might not allow for
+you to do this, it's up to the emulator writers.</p>
+<a class="header" href="#set-your-io-registers" id="set-your-io-registers"><h2>Set Your IO Registers</h2></a>
+<p>Instead of being just a single IO register to learn about this time, there's two
+separate groups of related registers.</p>
+<a class="header" href="#background-control" id="background-control"><h3>Background Control</h3></a>
+<ul>
+<li>BG0CNT (<code>0x400_0008</code>): BG0 Control</li>
+<li>BG1CNT (<code>0x400_000A</code>): BG1 Control</li>
+<li>BG2CNT (<code>0x400_000C</code>): BG2 Control</li>
+<li>BG3CNT (<code>0x400_000E</code>): BG3 Control</li>
+</ul>
+<p>Each of these are a read/write <code>u16</code> location. This is where we get to all of
+the important details that we've been putting off.</p>
+<ul>
+<li>2 bits for the priority.</li>
+<li>2 bits for &quot;character base block&quot;, the charblock that all of the tile indexes
+for this background are offset from.</li>
+<li>1 bit for mosaic effect being enabled (we'll get to that below).</li>
+<li>1 bit to enable 8bpp, otherwise 4bpp is used.</li>
+<li>5 bits to pick the &quot;screen base block&quot;, the screen block that serves as the
+<em>base</em> value for this background.</li>
+<li>1 bit that is <em>not</em> used in regular mode, but in affine mode it can be enabled
+to cause the affine background to wrap around at the edges.</li>
+<li>2 bits for the background size.</li>
+</ul>
+<p>The size works a little funny. When size is 0 only the base screen block is
+used. If size is 1 or 2 then the base screenblock and the following screenblock
+are placed next to each other (horizontally for 1, vertically for 2). If the
+size is 3 then the base screenblock and the following three screenblocks are
+arranged into a 2x2 grid of screenblocks.</p>
+<a class="header" href="#background-offset" id="background-offset"><h3>Background Offset</h3></a>
+<ul>
+<li>BG0HOFS (<code>0x400_0010</code>): BG0 X-Offset</li>
+<li>BG0VOFS (<code>0x400_0012</code>): BG0 Y-Offset</li>
+<li>BG1HOFS (<code>0x400_0014</code>): BG1 X-Offset</li>
+<li>BG1VOFS (<code>0x400_0016</code>): BG1 Y-Offset</li>
+<li>BG2HOFS (<code>0x400_0018</code>): BG2 X-Offset</li>
+<li>BG2VOFS (<code>0x400_001A</code>): BG2 Y-Offset</li>
+<li>BG3HOFS (<code>0x400_001C</code>): BG3 X-Offset</li>
+<li>BG3VOFS (<code>0x400_001E</code>): BG3 Y-Offset</li>
+</ul>
+<p>Each of these are a <em>write only</em> <code>u16</code> location. Bits 0 through 8 are used, so
+the offsets can be 0 through 511. They also only apply in regular backgrounds.
+If a background is in an affine state then you'll use different IO registers to
+control it (discussed in a later chapter).</p>
+<p>The offset that you assign determines the pixel offset of the display area
+relative to the start of the background scene, as if the screen was a camera
+looking at the scene. In other words, as a BG X offset value increases, you can
+think of it as the camera moving to the right, or as that background moving to
+the left. Like when mario walks toward the goal. Similarly, when a BG Y offset
+increases the camera is moving down, or the background is moving up, like when
+mario falls down from a high platform.</p>
+<p>Depending on how much the background is scrolled and the size of the background,
+it will loop.</p>
+<a class="header" href="#mosaic" id="mosaic"><h2>Mosaic</h2></a>
+<p>As a special effect, you can apply mosaic to backgrounds and objects. It's just
+a single flag for each background, so all backgrounds will use the same mosaic
+settings when they have it enabled. What it actually does is split the normal
+image into &quot;blocks&quot; and then each block gets the color of the top left pixel of
+that block. This is the effect you see when link hits an electric foe with his
+sword and the whole screen &quot;buzzes&quot; at you.</p>
+<p>The mosaic control is a <em>write only</em> <code>u16</code> IO register at <code>0x400_004C</code>.</p>
+<p>There's 4 bits each for:</p>
+<ul>
+<li>Horizontal BG stretch</li>
+<li>Vertical BG stretch</li>
+<li>Horizontal object stretch</li>
+<li>Vertical object stretch</li>
+</ul>
+<p>The inputs should be 1 <em>less</em> than the desired block size. So if you set a
+stretch value of 5 then pixels 0-5 would be part of the first block (6 pixels),
+then 6-11 is the next block (another 6 pixels) and so on.</p>
+<p>If you need to make a pixel other than the top left part of each block the one
+that determines the mosaic color you can carefully offset the background or
+image by a tiny bit, but of course that makes every mosaic block change its
+target pixel. You can't change the target pixel on a block by block basis.</p>
 
                     </main>
 
@@ -150,7 +433,7 @@
                         
 
                         
-                            <a rel="next" href="../ch03/object_basics.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next" href="../ch03/regular_objects.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
                         
@@ -168,7 +451,7 @@
                 
 
                 
-                    <a href="../ch03/object_basics.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a href="../ch03/regular_objects.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
                 
