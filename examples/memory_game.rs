@@ -1,4 +1,5 @@
 #![feature(start)]
+#![feature(asm)]
 #![no_std]
 
 use core::mem::size_of;
@@ -176,13 +177,13 @@ pub fn wait_until_vdraw() {
   while vcount() >= SCREEN_HEIGHT as u16 {}
 }
 
-#[derive(Debug, Clone, Copy, Default)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 #[repr(transparent)]
 pub struct Tile4bpp {
   data: [u32; 8],
 }
 
-#[derive(Debug, Clone, Copy, Default)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 #[repr(transparent)]
 pub struct Tile8bpp {
   data: [u32; 16],
@@ -246,7 +247,7 @@ pub struct RegularScreenblock {
   data: [RegularScreenblockEntry; 32 * 32],
 }
 
-#[derive(Debug, Clone, Copy, Default)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 #[repr(transparent)]
 pub struct RegularScreenblockEntry(u16);
 
@@ -323,14 +324,14 @@ pub fn set_object_attributes(slot: usize, obj: ObjectAttributes) {
   }
 }
 
-#[derive(Debug, Clone, Copy, Default)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 pub struct ObjectAttributes {
   attr0: u16,
   attr1: u16,
   attr2: u16,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ObjectRenderMode {
   Normal,
   Affine,
@@ -338,21 +339,21 @@ pub enum ObjectRenderMode {
   DoubleAreaAffine,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ObjectMode {
   Normal,
   AlphaBlending,
   ObjectWindow,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ObjectShape {
   Square,
   Horizontal,
   Vertical,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ObjectOrientation {
   Normal,
   HFlip,
@@ -491,4 +492,72 @@ impl ObjectAttributes {
     self.attr2 &= !0b1111_0000_0000_0000;
     self.attr2 |= (palbank & 0b1111) << 0xC;
   }
+}
+
+pub fn div_modulus(numerator: i32, denominator: i32) -> (i32, i32) {
+  assert!(denominator != 0);
+  {
+    let div_out: i32;
+    let mod_out: i32;
+    unsafe {
+      asm!(/* assembly template */ "swi 0x06"
+          :/* output operands */ "={r0}"(div_out), "={r1}"(mod_out)
+          :/* input operands */ "{r0}"(numerator), "{r1}"(denominator)
+          :/* clobbers */ "r3"
+          :/* options */
+    );
+    }
+    (div_out, mod_out)
+  }
+}
+pub fn div(numerator: i32, denominator: i32) -> i32 {
+  div_modulus(numerator, denominator).0
+}
+
+pub fn modulus(numerator: i32, denominator: i32) -> i32 {
+  div_modulus(numerator, denominator).1
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct RandRangeU16 {
+  range: u16,
+  threshold: u16,
+}
+
+impl RandRangeU16 {
+  pub fn new(mut range: u16) -> Self {
+    let mut threshold = range.wrapping_neg();
+    if threshold >= range {
+      threshold -= range;
+      if threshold >= range {
+        threshold = modulus(threshold as i32, range as i32) as u16;
+      }
+    }
+    RandRangeU16 { range, threshold }
+  }
+
+  pub fn roll_random(&self, rng: &mut FnMut() -> u16) -> u16 {
+    let mut x: u16 = rng();
+    let mut m: u32 = x as u32 * self.range as u32;
+    let mut l: u16 = m as u16;
+    if l < self.range {
+      while l < self.threshold {
+        x = rng();
+        m = x as u32 * self.range as u32;
+        l = m as u16;
+      }
+    }
+    (m >> 16) as u16
+  }
+}
+
+pub fn bounded_rand32(rng: &mut FnMut() -> u32, mut range: u32) -> u32 {
+  let mut mask: u32 = !0;
+  range -= 1;
+  mask >>= (range | 1).leading_zeros();
+  let mut x = rng() & mask;
+  while x > range {
+    x = rng() & mask;
+  }
+  x
 }
