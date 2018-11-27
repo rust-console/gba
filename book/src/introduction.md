@@ -58,3 +58,7 @@ resources as well:
 * [GBATEK](http://problemkaputt.de/gbatek.htm), a homebrew tech manual for
   GBA/NDS/DSi. We will regularly link to parts of it when talking about various
   bits of the GBA.
+* [Getting Something for Nothing](https://www.youtube.com/watch?v=t99L3JHhLc0)
+  by James Munns. RustConf 2018. It specifically talks about zero cost
+  abstraction within an embedded rust context, which is exactly what we're all
+  about.
