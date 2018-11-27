@@ -536,7 +536,7 @@ impl RandRangeU16 {
     RandRangeU16 { range, threshold }
   }
 
-  pub fn roll_random(&self, rng: &mut FnMut() -> u16) -> u16 {
+  pub fn roll_random(&self, rng: &mut impl FnMut() -> u16) -> u16 {
     let mut x: u16 = rng();
     let mut m: u32 = x as u32 * self.range as u32;
     let mut l: u16 = m as u16;
@@ -551,7 +551,7 @@ impl RandRangeU16 {
   }
 }
 
-pub fn bounded_rand32(rng: &mut FnMut() -> u32, mut range: u32) -> u32 {
+pub fn bounded_rand32(rng: &mut impl FnMut() -> u32, mut range: u32) -> u32 {
   let mut mask: u32 = !0;
   range -= 1;
   mask >>= (range | 1).leading_zeros();

@@ -37,27 +37,21 @@ We measure the quality of a PRNG based upon:
    Still, every once in a while you might find some page old page intended for
    compatibility with the `rand()` function in the C standard library that'll
    talk about something _crazy_ like having 15-bit PRNG outputs. Stupid as it
-   sounds, that's real. Avoid those. We almost always want generators that give
-   us uniformly distributed `u8`, `u16`, `u32`, or whatever size value we're
-   producing. From there we can mold our random bits into whatever else we need
-   (eg: turning a `u8` into a "1d6" roll).
+   sounds, that's real. Avoid those. Whenever possible we want generators that
+   give us uniformly distributed `u8`, `u16`, `u32`, or whatever size value
+   we're producing. From there we can mold our random bits into whatever else we
+   need (eg: turning a `u8` into a "1d6" roll).
 2) **How long does each generation cycle take?** This can be tricky for us. A
    lot of the top quality PRNGs you'll find these days are oriented towards
    64-bit machines so they do a bunch of 64-bit operations. You _can_ do that on
    a 32-bit machine if you have to, and the compiler will automatically "lower"
    the 64-bit operation into a series of 32-bit operations. What we'd really
    like to pick is something that sticks to just 32-bit operations though, since
-   those will be our best candidates for fast results. As with other
-   benchmarking related things, we can use [Compiler
-   Explorer](https://rust.godbolt.org/z/JyX7z-) set for the `thumbv6m-none-eabi`
-   target as a basic approximation, which we'll do in this section. Of course,
-   not every instruction is the same time to execute, but basically less ASM is
-   better for us. If you wanted to be even more precise you could also try to
-   coax rustc to spit out the ASM directly (though `xbuild` makes that a hair
-   tricky) and then pick through that and use the [execution
-   times](http://problemkaputt.de/gbatek.htm#armcpuoverview) listed in GBATEK to
-   figure out a total cycle cost, or you could even try to make some sort of
-   benchmarking harness for the GBA itself if you were really dedicated.
+   those will be our best candidates for fast results. We can use [Compiler
+   Explorer](https://rust.godbolt.org/z/JyX7z-) and tell it to build for the
+   `thumbv6m-none-eabi` target to get a basic idea of what the ASM for a
+   generator looks like. That's not our exact target, but it's the closest
+   target that's shipped with the standard rust distribution.
 3) **What is the statistical quality of the output?** This involves heavy
    amounts of math. Since computers are quite good a large amounts of repeated
    math you might wonder if there's programs for this already, and there are.
@@ -73,48 +67,43 @@ We measure the quality of a PRNG based upon:
    * [NIST Statistical Test
      Suite](https://csrc.nist.gov/projects/random-bit-generation/documentation-and-software)
 
-Note that generators with a small state size will _always_ fail the statistical
-test suites simply because the suites ask them to produce too much output
-relative to their state size. The same _would_ also happen to larger generators
-too if you ran them long enough, it's just that the amount of required output to
-make the generators fail can quickly range up into "100s of years" and beyond as
-your generator gets bigger. With a modern "actual" computer (desktop, server,
-cloud VM, etc) a good PRNG can produce an output in about 1 nanosecond (depends
-on your exact CPU of course). If we wanted to see how long it'd take to run
-through a PRNG's whole state, well [2^32
-nanoseconds](https://www.wolframalpha.com/input/?i=2%5E32+nanoseconds+in+years)
-is 4.295 seconds, but [2^64
-nanoseconds](https://www.wolframalpha.com/input/?i=2%5E64+nanoseconds+in+years)
-is 584.9 _years_. Of course, the GBA can't actually run a PRNG that fast (with
-our poor little 16.78MHz), but the difference in scale is still there. A small
-amount of extra state can make a big difference in generator quality if your
-algorithm is putting it to good use.
+Note that if a generator is called upon to produce enough output relative to its
+state size it will basically always end up failing statistical tests. This means
+that any generator with 32-bit state will always fail in any of those test sets.
+The theoretical _minimum_ state size for any generator at all to pass the
+standard suites is 36 bits, but most generators need many more than that.
 
 ### Generator Size
 
-Of course, generator quality has to be held in comparison to generator size and
-features. We don't always need the highest possible quality generators. "But
-Lokathor!", I can already hear you shouting. "I want the highest quality
-randomness at all times! The game depends on it!", you cry out. Well... does it?
-Like, really? The [GBA
+I've mostly chosen to discuss generators that are towards the smaller end of the
+state size scale. In fact we'll be going over many generators that are below the
+36-bit theoretical minimum to pass all those fancy statistical tests. Why so?
+Well, we don't always need the highest possible quality generators.
+
+"But Lokathor!", I can already hear you shouting. "I want the highest quality
+randomness at all times! The game depends on it!", you cry out.
+
+Well... does it? Like, _really_?
+
+The [GBA
 Pokemon](https://bulbapedia.bulbagarden.net/wiki/Pseudorandom_number_generation_in_Pok%C3%A9mon)
-games use a _dead simple_ PRNG technique called LCG, which fails statistical
-tests when it's only 32 bits big like the GBA games had. Then starting with the
-DS they moved to also using Mersenne Twister, which fails several statistical
-tests and is one of the most predictable PRNGs around. [Metroid
+games use a _dead simple_ 32-bit LCG (we'll see it below). Then starting with
+the DS they moved to also using Mersenne Twister, which also fails several
+statistical tests and is one of the most predictable PRNGs around. [Metroid
 Fusion](http://wiki.metroidconstruction.com/doku.php?id=fusion:technical:rng)
 has a 100% goofy PRNG system for enemies that would definitely never pass any
 sort of statistics tests at all. But like, those games were still awesome. Since
-we're never going to be keeping secrets safe with our generator, it's okay if we
+we're never going to be keeping secrets safe with our PRNG, it's okay if we
 trade in some quality for something else in return (we obviously don't want to
 trade quality for nothing).
 
-So let's talk about size: Where's the space used for the Metroid Fusion PRNG? No
-where at all! They were already using everything involved for other things too,
-so they're paying no extra cost to have the randomization they do. How much does
-it cost Pokemon to throw in a 32-bit LCG? Just 4 bytes, might as well. How much
-does it cost to add in a Mersenne Twister? ~2,500 bytes ya say? I'm sorry _what
-on Earth_? Yeah, that's crazy, we're probably not doing that.
+And you have to ask yourself: Where's the space used for the Metroid Fusion
+PRNG? No where at all. They were already using everything involved for other
+things too, so they're paying no extra cost to have the randomization they do.
+How much does it cost Pokemon to throw in a 32-bit LCG? Just 4 bytes, might as
+well. How much does it cost to add in a Mersenne Twister? ~2,500 bytes ya say?
+I'm sorry _what on Earth_? Yeah, that sounds crazy, we're probably not doing
+that one.
 
 ### k-Dimensional Equidistribution
 
@@ -153,6 +142,9 @@ Absolutely not. Do you need it for pokemon? No, not even then, but a lot of the
 hot new PRNGs have come out just within the past 10 years, so we can't fault
 them too much for it.
 
+Note that generators that aren't uniform to begin with naturally don't have any
+amount of k-Dimensional Equidistribution.
+
 ### Other Tricks
 
 Finally, some generators have other features that aren't strictly quantifiable.
@@ -188,6 +180,9 @@ TODO
 Our first PRNG to mention isn't one that's at all good, but it sure might be
 cute to use. It's the PRNG that Super Mario 64 had ([video explanation,
 long](https://www.youtube.com/watch?v=MiuLeTE2MeQ)).
+
+With a PRNG this simple the output of one call is _also_ the seed to the next
+call.
 
 ```rust
 pub fn sm64(mut input: u16) -> u16 {
@@ -246,12 +241,12 @@ You should _not_ use this as your default generator if you care about quality.
 It is _very_ fast though... if you want to set everything else on fire for
 speed. If you do, please _at least_ remember that the highest bits are the best
 ones, so if you're after less than 32 bits you should shift the high ones down
-and keep those. If you want to turn it into a `bool` cast to `i32` and then
-check if it's negative.
+and keep those, or if you want to turn it into a `bool` cast to `i32` and then
+check if it's negative, etc.
 
 ```rust
-pub fn pkmn_lcg(seed: u32) -> u32 {
-  seed.wrapping_mul(0x41C6_4E6D).wrapping_add(0x0000_6073)
+pub fn lcg32(seed: u32) -> u32 {
+  seed.wrapping_mul(0x41C6_4E6D).wrapping_add(0x6073)
 }
 ```
 
@@ -263,6 +258,46 @@ you want things to always wrap without problems you can either use a compiler
 flag to change how debug mode works, or (for more "portable" code) you can just
 make the call to `wrapping_mul`. All the same goes for add and subtract and so
 on.
+
+#### Multi-stream Generators
+
+Note that you don't have to add a compile time constant, you could add a runtime
+value instead. Doing so allows the generator to be "multi-stream", with each
+different additive value being its own unique output stream. This true of LCGs
+as well as all the PCGs below (since they're LCG based). The examples here just
+use a fixed stream for simplicity and to save space, but if you want streams you
+can add that in for only a small amount of extra space used:
+
+```rust
+pub fn lcg_streaming(seed: u32, stream: u32) -> u32 {
+  seed.wrapping_mul(0x41C6_4E6D).wrapping_add(stream)
+}
+```
+
+With a streaming LCG you should _probably_ pass the same stream value every
+single time. If you don't, then your generator will jump between streams in some
+crazy way and you lose your nice uniformity properties.
+
+However, there is also the possibility of changing the stream value exactly when
+the seed lands on a pre-determined value after transformation. We need to keep
+odd stream values, and we would like to ensure our stream performs a full cycle
+itself, so we'll just add 2 for simplicity:
+
+```rust
+let next_seed = lcg_streaming(seed, stream);
+// It's cheapest to test for 0, so we pick 0
+if seed == 0 {
+  stream = stream.wrapping_add(2)
+}
+```
+
+If you adjust streams at a fixed time like that then you end up going cleanly
+through one stream cycle, and then the next stream cycle, and so on. This lets
+you have a vastly increased generator period for minimal additional overhead.
+The bit size of your generator's increment value type (minus 1, since the 1s bit
+must always be odd) gets directly multiplied into your base generator's period
+(2^state_size, for LCGs and PCGs). So an LCG32 with a 32-bit stream selection
+would have a period of 2^32 * 2^31 = 2^63.
 
 ### PCG16 XSH-RR (32-bit state, 16-bit output, uniform)
 
@@ -291,27 +326,29 @@ Obviously we'll have 32 bits of state, and so 16 bits of output.
 
 Of course, since PCG is based on a LCG, we have to start with a good LCG base.
 As I said above, a better or worse set of LCG constants can make your generator
-better or worse. I'm not an expert, so I [asked an
-expert](http://www.ams.org/journals/mcom/1999-68-225/S0025-5718-99-00996-5/S0025-5718-99-00996-5.pdf).
-I'm definitely not the best at reading math papers, but it seems that the
-general idea is that we want `m % 8 == 5` and `is_even(a)` to both hold for the
-values we pick. There are three suggested LCG multipliers. In a chart. A chart
-that's hard to understand. Truth be told I asked some folks that are good at
-math papers and even they couldn't make sense of the chart. They concluded the
-same as I did that we probably want to pick the `32310901` option. For an
-additive value, we can pick any odd value, so we might as well pick something
-small so that we can do an immediate add.
+better or worse. The Wikipedia example for PCG has a good 64-bit constant, but
+not a 32-bit constant. So we gotta [ask an
+expert](http://www.ams.org/journals/mcom/1999-68-225/S0025-5718-99-00996-5/S0025-5718-99-00996-5.pdf)
+about what a good 32-bit constant would be. I'm definitely not the best at
+reading math papers, but it seems that the general idea is that we want `m % 8
+== 5` and `is_even(a)` to both hold for the values we pick. There are three
+suggested LCG multipliers in a chart on page 10. A chart that's quite hard to
+understand. Truth be told I asked several folks that are good at math papers and
+even they couldn't make sense of the chart. Eventually `timutable` read the
+whole paper in depth and concluded the same as I did: that we probably want to
+pick the `32310901` option.
 
-_Immediate_ add? That sounds new. An immediate instruction is where the op code
-bits of an instruction (add, mul, etc) don't take up much space within the full
-instruction, so the rest of the bits can encode one side of the operation
-instead of having to specify two separate registers. It usually means one less
-load you have to do, if you're working with small enough numbers. To see what I
-mean compare [loading the add value](https://rust.godbolt.org/z/LKCFUS) to
-[immediate add value](https://rust.godbolt.org/z/SnZW9a). It's something you
-might have seen frequently in `x86` or `x86_64` ASM output, but because a thumb
-instruction is only 16 bits total, we can only get immediate instructions if the
-target value is 8 bits or less, so we haven't used them too much ourselves yet.
+For an additive value, we can pick any odd value, so we might as well pick
+something small so that we can do an immediate add. _Immediate_ add? That sounds
+new. An immediate instruction is when one side of an operation is small enough
+that you can encode the value directly into the space that'd normally be for the
+register you want to use. It basically means one less load you have to do, if
+you're working with small enough numbers. To see what I mean compare [loading
+the add value](https://rust.godbolt.org/z/LKCFUS) and [immediate add
+value](https://rust.godbolt.org/z/SnZW9a). It's something you might have seen
+frequently in `x86` or `x86_64` ASM output, but because a thumb instruction is
+only 16 bits total, we can only get immediate instructions if the target value
+is 8 bits or less, so we haven't used them too much ourselves yet.
 
 I guess we'll pick 5, because I happen to personally like the number.
 
@@ -399,21 +436,22 @@ pub fn pcg32_rxs_m_xs(seed: &mut u32) -> u32 {
 
 ### Xoshiro128** (128-bit state, 32-bit output, non-uniform)
 
-It was suggested that I not show complete favoritism to just the PCG, and so we
-will also look at the
-[Xoshiro128**](http://xoshiro.di.unimi.it/xoshiro128starstar.c) generator. Take
-care not to confuse it with the
-[Xoroshiro128**](http://xoshiro.di.unimi.it/xoroshiro128starstar.c) generator
+The [Xoshiro128**](http://xoshiro.di.unimi.it/xoshiro128starstar.c) generator is
+an advancement of the [Xorshift family](https://en.wikipedia.org/wiki/Xorshift).
+It was specifically requested, and I'm not aware of Xorshift specifically being
+used in any of my favorite games, so instead of going over Xorshift and then
+leading up to this, we'll just jump straight to this. Take care not to confuse
+this generator with the very similarly named
+[Xoroshiro128**](http://xoshiro.di.unimi.it/xoroshiro128starstar.c) generator,
 which is the 64 bit variant. Note the extra "ro" hiding in the 64-bit version's
-name.
+name near the start.
 
-Anyway, weird names aside, you can look at the C version that I linked to, or
-this Rust translation below. It's zippy and all, though 0 will be produced one
-less time than all other outputs, making it non-uniform by just a little bit. It
-also has a fixed jump function.
-
-**Important:** With this generator you _must_ initialize the seed array to not
-be all 0s before you start using the generator.
+Anyway, weird names aside, it's fairly zippy. The biggest downside is that you
+can't have a seed state that's all 0s, and as a result 0 will be produced one
+less time than all other outputs within a full cycle, making it non-uniform by
+just a little bit. You also can't do a simple stream selection like with the LCG
+based generators, instead it has a fixed jump function that advances a seed as
+if you'd done 2^64 normal generator advancements.
 
 ```rust
 pub fn xoshiro128_starstar(seed: &mut [u32; 4]) -> u32 {
@@ -458,26 +496,32 @@ pub fn xoshiro128_starstar_jump(seed: &mut [u32; 4]) {
 
 [Compiler Explorer](https://rust.godbolt.org/z/PGvwZw)
 
-### More Generators?
+### jsf
 
-For completeness I'll even list some generators that I looked at as potential
-options and then _didn't_ include, along with why I chose to skip them.
+TODO https://gist.github.com/imneme/85cff47d4bad8de6bdeb671f9c76c814
 
-* [Xorshift family](https://en.wikipedia.org/wiki/Xorshift): the base form gives
-  N->N with a period of 2^N-1 (aka, non-uniform output). We already have the
-  LCG32 example for fast 32->32 with uniform output. There's other Xorshift
-  variants but none of them stood out to me since we also have `Xoshiro128**`,
-  which is basically the even more refined version of this general group.
+### gjrand
+
+TODO https://gist.github.com/imneme/7a783e20f71259cc13e219829bcea4ac
+
+### sfc
+
+TODO https://gist.github.com/imneme/f1f7821f07cf76504a97f6537c818083
+
+### v3b
+
+TODO http://cipherdev.org/v3b.c
+
+### Other Generators?
+
 * [Mersenne Twister](https://en.wikipedia.org/wiki/Mersenne_Twister): Gosh, 2.5k
   is just way too many for me to ever want to use this thing. If you'd really
-  like to use it, there is a
-  [crate](https://docs.rs/mersenne_twister/1.1.1/mersenne_twister/) for it that
+  like to use it, there is [a
+  crate](https://docs.rs/mersenne_twister/1.1.1/mersenne_twister/) for it that
   already has it. Small catch, they use a ton of stuff from `std` that they
   could be importing from `core`, so you'll have to fork it and patch it
   yourself to get it working on the GBA. They also stupidly depend on an old
   version of `rand`, so you'll have to cut out that nonsense.
-
-TODO
 
 ## Placing a Value In Range
 
@@ -641,12 +685,10 @@ mutability the same as we do (barbaric, I know).
 Finally, what's `rng_t` actually defined as? Well, I sure don't know, but in our
 context it's taking nothing and then spitting out a `u32`. We'll also presume
 that it's a different `u32` each time (not a huge leap in this context). To us
-rust programmers that means we'd want something like `FnMut() -> u32`.
-
-TODO: use `impl FnMut` to avoid the trait object nonsense
+rust programmers that means we'd want something like `impl FnMut() -> u32`.
 
 ```rust
-pub fn bounded_rand(rng: &mut FnMut() -> u32, range: u32) -> u32 {
+pub fn bounded_rand(rng: &mut impl FnMut() -> u32, range: u32) -> u32 {
   let mut x: u32 = rng();
   let mut m: u64 = x as u64 * range as u64;
   let mut l: u32 = m as u32;
@@ -681,7 +723,7 @@ really wanna be doing those 64-bit multiplies. Let's try again with everything
 scaled down one stage:
 
 ```rust
-pub fn bounded_rand16(rng: &mut FnMut() -> u16, range: u16) -> u16 {
+pub fn bounded_rand16(rng: &mut impl FnMut() -> u16, range: u16) -> u16 {
   let mut x: u16 = rng();
   let mut m: u32 = x as u32 * range as u32;
   let mut l: u16 = m as u16;
@@ -789,7 +831,7 @@ impl RandRangeU16 {
     RandRangeU16 { range, threshold }
   }
 
-  pub fn roll_random(&self, rng: &mut FnMut() -> u16) -> u16 {
+  pub fn roll_random(&self, rng: &mut impl FnMut() -> u16) -> u16 {
     let mut x: u16 = rng();
     let mut m: u32 = x as u32 * self.range as u32;
     let mut l: u16 = m as u16;
@@ -826,7 +868,7 @@ uint32_t bounded_rand(rng_t& rng, uint32_t range) {
 And in Rust
 
 ```rust
-pub fn bounded_rand32(rng: &mut FnMut() -> u32, mut range: u32) -> u32 {
+pub fn bounded_rand32(rng: &mut impl FnMut() -> u32, mut range: u32) -> u32 {
   let mut mask: u32 = !0;
   range -= 1;
   mask >>= (range | 1).leading_zeros();
@@ -853,5 +895,16 @@ complicated.
 Life just be that way, I guess.
 
 ## Summary
+
+That was a whole lot. Let's put them in a table:
+
+| Generator      | Bytes | Output | Period | k-Dimensionality |
+|:---------------|:-----:|:------:|:------:|:----------------:|
+| sm64           | 2     | u16    | 65,114 | 0                |
+| lcg32          | 4     | u16    | 2^32   | 1                |
+| pcg16_xsh_rr   | 4     | u16    | 2^32   | 16               |
+| pcg16_xsh_rs   | 4     | u16    | 2^32   | 16               |
+| pcg32_rxs_m_xs | 4     | u32    | 2^32   | 1                |
+| xoshiro128**   | 16    | u32    | 2^128-1| 0                |
 
 TODO
