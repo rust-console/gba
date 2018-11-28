@@ -453,6 +453,9 @@ just a little bit. You also can't do a simple stream selection like with the LCG
 based generators, instead it has a fixed jump function that advances a seed as
 if you'd done 2^64 normal generator advancements.
 
+Note that `Xoshiro256**` is known to fail statistical tests, so the 128 version
+is unlikely to pass them, though I admit that I didn't check myself.
+
 ```rust
 pub fn xoshiro128_starstar(seed: &mut [u32; 4]) -> u32 {
   let output = seed[0].wrapping_mul(5).rotate_left(7).wrapping_mul(9);
@@ -496,21 +499,63 @@ pub fn xoshiro128_starstar_jump(seed: &mut [u32; 4]) {
 
 [Compiler Explorer](https://rust.godbolt.org/z/PGvwZw)
 
-### jsf
+### jsf32 (128-bit state, 32-bit output, non-uniform)
 
-TODO https://gist.github.com/imneme/85cff47d4bad8de6bdeb671f9c76c814
+This is Bob Jenkins's [Small/Fast PRNG](small noncryptographic PRNG). It's a
+little faster than `Xoshiro128**` (no multiplication involved), and can pass any
+statistical test that's been thrown at it.
 
-### gjrand
+Interestingly the generator's period is _not_ fixed based on the generator
+overall. It's actually set by the exact internal generator state. There's even
+six possible internal generator states where the generator becomes a fixed
+point. Because of this, we should use the verified seeding method provided.
+Using the provided seeding, the minimum period is expected to be 2^94, the
+average is about 2^126, and no seed given to the generator is likely to overlap
+with another seed's output for at least 2^64 uses.
 
-TODO https://gist.github.com/imneme/7a783e20f71259cc13e219829bcea4ac
+```rust
+pub struct JSF32 {
+  a: u32,
+  b: u32,
+  c: u32,
+  d: u32,
+}
 
-### sfc
+impl JSF32 {
+  pub fn new(seed: u32) -> Self {
+    let mut output = JSF32 {
+      a: 0xf1ea5eed,
+      b: seed,
+      c: seed,
+      d: seed
+    };
+    for _ in 0 .. 20 {
+      output.next();
+    }
+    output
+  }
 
-TODO https://gist.github.com/imneme/f1f7821f07cf76504a97f6537c818083
+  pub fn next(&mut self) -> u32 {
+    let e = self.a - self.b.rotate_left(27);
+    self.a = self.b ^ self.c.rotate_left(17);
+    self.b = self.c + self.d;
+    self.c = self.d + e;
+    self.d = e + self.a;
+    self.d
+  }
+}
+```
 
-### v3b
+[Compiler Explorer](https://rust.godbolt.org/z/qO3obQ)
 
-TODO http://cipherdev.org/v3b.c
+Here it's presented with (27,17), but you can also use any of the following if
+you want alternative generator flavors that use this same core technique:
+
+* (9,16), (9,24), (10,16), (10,24), (11,16), (11,24), (25,8), (25,16), (26,8),
+  (26,16), (26,17), or (27,16).
+
+Note that these alternate flavors haven't had as much testing as the (27,17)
+version, though they are likely to be just as good.
 
 ### Other Generators?
 
@@ -898,13 +943,16 @@ Life just be that way, I guess.
 
 That was a whole lot. Let's put them in a table:
 
-| Generator      | Bytes | Output | Period | k-Dimensionality |
-|:---------------|:-----:|:------:|:------:|:----------------:|
-| sm64           | 2     | u16    | 65,114 | 0                |
-| lcg32          | 4     | u16    | 2^32   | 1                |
-| pcg16_xsh_rr   | 4     | u16    | 2^32   | 16               |
-| pcg16_xsh_rs   | 4     | u16    | 2^32   | 16               |
-| pcg32_rxs_m_xs | 4     | u32    | 2^32   | 1                |
-| xoshiro128**   | 16    | u32    | 2^128-1| 0                |
+| Generator      | Bytes | Output | Period | k-Dim |
+|:---------------|:-----:|:------:|:------:|:-----:|
+| sm64           | 2     | u16    | 65,114 | 0     |
+| lcg32          | 4     | u16    | 2^32   | 1     |
+| pcg16_xsh_rr   | 4     | u16    | 2^32   | 16    |
+| pcg16_xsh_rs   | 4     | u16    | 2^32   | 16    |
+| pcg32_rxs_m_xs | 4     | u32    | 2^32   | 1     |
+| xoshiro128**   | 16    | u32    | 2^128-1| 0     |
+| jsf32          | 16    | u32    | ~2^126 | 0     |
 
-TODO
+TODO recap streams/jumps
+
+TODO extension arrays?
