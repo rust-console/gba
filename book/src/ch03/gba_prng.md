@@ -171,7 +171,7 @@ all. This is the basis for how old games with limited memory like
 
 ## How To Seed
 
-TODO
+TODO timers yo!
 
 ## Various Generators
 
