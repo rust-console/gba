@@ -561,3 +561,15 @@ pub fn bounded_rand32(rng: &mut impl FnMut() -> u32, mut range: u32) -> u32 {
   }
   x
 }
+
+pub const TM0D: VolatilePtr<u16> = VolatilePtr(0x400_0100 as *mut u16);
+pub const TM0CNT: VolatilePtr<u16> = VolatilePtr(0x400_0102 as *mut u16);
+
+pub const TM1D: VolatilePtr<u16> = VolatilePtr(0x400_0104 as *mut u16);
+pub const TM1CNT: VolatilePtr<u16> = VolatilePtr(0x400_0106 as *mut u16);
+
+pub const TM2D: VolatilePtr<u16> = VolatilePtr(0x400_0108 as *mut u16);
+pub const TM2CNT: VolatilePtr<u16> = VolatilePtr(0x400_010A as *mut u16);
+
+pub const TM3D: VolatilePtr<u16> = VolatilePtr(0x400_010C as *mut u16);
+pub const TM3CNT: VolatilePtr<u16> = VolatilePtr(0x400_010E as *mut u16);

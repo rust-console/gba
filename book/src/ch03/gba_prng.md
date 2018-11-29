@@ -142,8 +142,10 @@ Absolutely not. Do you need it for pokemon? No, not even then, but a lot of the
 hot new PRNGs have come out just within the past 10 years, so we can't fault
 them too much for it.
 
-Note that generators that aren't uniform to begin with naturally don't have any
-amount of k-Dimensional Equidistribution.
+TLDR: 1-dimensional equidistribution just means "a normal uniform generator",
+and higher k values mean "you can actually combine up to k output chains and
+maintain uniformity". Generators that aren't uniform to begin with effectively
+have a k value of 0.
 
 ### Other Tricks
 
@@ -171,7 +173,62 @@ all. This is the basis for how old games with limited memory like
 
 ## How To Seed
 
-TODO timers yo!
+Oh I bet you thought we could somehow get through a section without learning
+about yet another IO register. Ha, wishful thinking.
+
+There's actually not much involved. Starting at `0x400_0100` there's an array of
+registers that go "data", "control", "data", "control", etc. TONC and GBATEK use
+different names here, and we'll go by the TONC names because they're much
+clearer:
+
+```rust
+pub const TM0D: VolatilePtr<u16> = VolatilePtr(0x400_0100 as *mut u16);
+pub const TM0CNT: VolatilePtr<u16> = VolatilePtr(0x400_0102 as *mut u16);
+
+pub const TM1D: VolatilePtr<u16> = VolatilePtr(0x400_0104 as *mut u16);
+pub const TM1CNT: VolatilePtr<u16> = VolatilePtr(0x400_0106 as *mut u16);
+
+pub const TM2D: VolatilePtr<u16> = VolatilePtr(0x400_0108 as *mut u16);
+pub const TM2CNT: VolatilePtr<u16> = VolatilePtr(0x400_010A as *mut u16);
+
+pub const TM3D: VolatilePtr<u16> = VolatilePtr(0x400_010C as *mut u16);
+pub const TM3CNT: VolatilePtr<u16> = VolatilePtr(0x400_010E as *mut u16);
+```
+
+Basically there's 4 timers, numbered 0 to 3. Each one has a Data register and a
+Control register. They're all `u16` and you can definitely _read_ from all of
+them normally, but then it gets a little weird. You can also _write_ to the
+Control portions normally, when you write to the Data portion of a timer that
+writes the value that the timer resets to, _without changing_ its current Data
+value. So if `TM0D` is paused on some value other than `5` and you write `5` to
+it, when you read it back you won't get a `5`. When the next timer run starts
+it'll begin counting at `5` instead of whatever value it currently reads as.
+
+The Data registers are just a `u16` number, no special bits to know about.
+
+The Control registers are also pretty simple compared to most IO registers:
+
+* 2 bits for the **Frequency:** 1, 64, 256, 1024. While active, the timer's
+  value will tick up once every `frequency` CPU cycles. On the GBA, 1 CPU cycle
+  is about 59.59ns (2^(-24) seconds). One display controller cycle is 280,896
+  CPU cycles.
+* 1 bit for **Cascade Mode:** If this is on the timer doesn't count on its own,
+  instead it ticks up whenever the _preceding_ timer overflows its counter (eg:
+  if t0 overflows, t1 will tick up if it's in cascade mode). You still have to
+  also enable this timer for it to do that (below). This naturally doesn't have
+  an effect when used with timer 0.
+* 3 bits that do nothing
+* 1 bit for **Interrupt:** Whenever this timer overflows it will signal an
+  interrupt.
+* 1 bit to **Enable** the timer. When you disable a timer it retains the current
+  value, but when you enable it again the value jumps to whatever its currently
+  assigned default value is.
+
+TODO timer control struct / methods
+
+### A Timer Based Seed
+
+TODO turn on 2+ timers with cascading when the game turns on and wait for a key press
 
 ## Various Generators
 
@@ -182,7 +239,10 @@ cute to use. It's the PRNG that Super Mario 64 had ([video explanation,
 long](https://www.youtube.com/watch?v=MiuLeTE2MeQ)).
 
 With a PRNG this simple the output of one call is _also_ the seed to the next
-call.
+call, so we don't need to make a struct for it or anything. You're also assumed
+to just seed with a plain 0 value at startup. The generator has a painfully
+small period, and you're assumed to be looping through the state space
+constantly while the RNG goes.
 
 ```rust
 pub fn sm64(mut input: u16) -> u16 {
@@ -209,11 +269,13 @@ pub fn sm64(mut input: u16) -> u16 {
 
 [Compiler Explorer](https://rust.godbolt.org/z/1F6P8L)
 
-If you watch the video you'll note that the first `if` checking for `0x560A` is
-only potentially important to avoid being locked in a 2-step cycle, though if
-you can guarantee that you'll never pass a bad input value I suppose you could
-eliminate it. The second `if` that checks for `0xAA55` doesn't seem to be
-important at all from a mathematical perspective. It's left in there only for
+If you watch the video explanation about this generator you'll note that the
+first `if` checking for `0x560A` prevents you from being locked into a 2-step
+cycle, but it's only important if you want to feed bad seeds to the generator. A
+bad seed is unhelpfully defined defined as "any value that the generator can't
+output". The second `if` that checks for `0xAA55` doesn't seem to be important
+at all from a mathematical perspective. It cuts the generator's period shorter
+by an arbitrary amount for no known reason. It's left in there only for
 authenticity.
 
 ### LCG32 (32-bit state, 32-bit output, uniform)
@@ -274,14 +336,16 @@ pub fn lcg_streaming(seed: u32, stream: u32) -> u32 {
 }
 ```
 
-With a streaming LCG you should _probably_ pass the same stream value every
-single time. If you don't, then your generator will jump between streams in some
-crazy way and you lose your nice uniformity properties.
+With a streaming LCG you should pass the same stream value every single time. If
+you don't, then your generator will jump between streams in some crazy way and
+you lose your nice uniformity properties.
 
-However, there is also the possibility of changing the stream value exactly when
-the seed lands on a pre-determined value after transformation. We need to keep
-odd stream values, and we would like to ensure our stream performs a full cycle
-itself, so we'll just add 2 for simplicity:
+There is the possibility of intentionally changing the stream value exactly when
+the seed lands on a pre-determined value (after the multiply and add). This
+_basically_ makes the stream selection value's bit size (minus one bit, because
+it must be odd) count into the LCG's state bit size for calculating the overall
+period of the generator. So an LCG32 with a 32-bit stream selection would have a
+period of 2^32 * 2^31 = 2^63.
 
 ```rust
 let next_seed = lcg_streaming(seed, stream);
@@ -291,38 +355,22 @@ if seed == 0 {
 }
 ```
 
-If you adjust streams at a fixed time like that then you end up going cleanly
-through one stream cycle, and then the next stream cycle, and so on. This lets
-you have a vastly increased generator period for minimal additional overhead.
-The bit size of your generator's increment value type (minus 1, since the 1s bit
-must always be odd) gets directly multiplied into your base generator's period
-(2^state_size, for LCGs and PCGs). So an LCG32 with a 32-bit stream selection
-would have a period of 2^32 * 2^31 = 2^63.
+However, this isn't a particularly effective way to extend the generator's
+period, and we'll see a much better extension technique below.
 
-### PCG16 XSH-RR (32-bit state, 16-bit output, uniform)
+### PCG16 XSH-RS (32-bit state, 16-bit output, uniform)
 
 The [Permuted Congruential
 Generator](https://en.wikipedia.org/wiki/Permuted_congruential_generator) family
 is the next step in LCG technology. We start with LCG output, which is good but
 not great, and then we apply one of several possible permutations to bump up the
 quality. There's basically a bunch of permutation components that are each
-defined in terms of the bit width that you're working with. The "default"
-variant of PCG, PCG32, has 64 bits of state and 32 bits of output, and it uses
-the "XSH-RR" permutation.
+defined in terms of the bit width that you're working with.
 
-Obviously we'll have 32 bits of state, and so 16 bits of output.
-
-* **XSH:** we do an xor shift, `x ^= x >> constant`, with the constant being half
-  the bits _not_ discarded by the next operation (the RR).
-* **RR:** we do a randomized rotation, with output half the size of the input.
-  This part gets a little tricky so we'll break it down into more bullet points.
-  * Given a 2^b-bit input word, we have 32-bit input, `b = 5`
-  * the top b−1 bits are used for the rotate amount, `rotate 4`
-  * the next-most-significant 2^b−1 bits are rotated right and used as the
-    output, `rotate the 16 bits after the top 4 bits`
-  * and the low 2^b−1+1−b bits are discarded, `discard the rest`
-  * This also means that the "bits not discarded" is 16+4, so the XSH constant
-    will be 20/2=10.
+The "default" variant of PCG, PCG32, has 64 bits of state and 32 bits of output,
+and it uses the "XSH-RR" permutation. Here we'll put together a 32 bit version
+with 16-bit output, and using the "XSH-RS" permutation (but we'll show the other
+one too for comparison).
 
 Of course, since PCG is based on a LCG, we have to start with a good LCG base.
 As I said above, a better or worse set of LCG constants can make your generator
@@ -353,6 +401,7 @@ is 8 bits or less, so we haven't used them too much ourselves yet.
 I guess we'll pick 5, because I happen to personally like the number.
 
 ```rust
+// Demo only. The "default" PCG permutation, for use when rotate is cheaper
 pub fn pcg16_xsh_rr(seed: &mut u32) -> u16 {
   *seed = seed.wrapping_mul(32310901).wrapping_add(5);
   const INPUT_SIZE: u32 = 32;
@@ -363,26 +412,8 @@ pub fn pcg16_xsh_rr(seed: &mut u32) -> u16 {
   out32 ^= out32 >> ((OUTPUT_SIZE + ROTATE_BITS) / 2);
   ((out32 >> (OUTPUT_SIZE - ROTATE_BITS)) as u16).rotate_right(rot)
 }
-```
 
-[Compiler Explorer](https://rust.godbolt.org/z/rGTj7D)
-
-### PCG16 XSH-RS (32-bit state, 16-bit output, uniform)
-
-Instead of doing a random rotate, we can also do a random shift.
-
-* **RS:** A random (input-dependent) shift, for cases where rotates are more
-  expensive. Again, the output is half the size of the input.
-  * Beginning with a 2^b-bit input word, `b = 5`
-  * the top b−3 bits are used for a shift amount, `shift = 2`
-  * which is applied to the next-most-significant 2^b−1+2^b−3−1 bits, `the next
-    19 bits`
-  * and the least significant 2b−1 bits of the result are output. `output = 16`
-  * The low 2b−1−2b−3−b+4 bits are discarded. `discard the rest`
-  * the "bits not discarded" for the XSH step 16+2, so the XSH constant will be
-    18/2=9.
-
-```rust
+// This has slightly worse statistics but runs much better on the GBA
 pub fn pcg16_xsh_rs(seed: &mut u32) -> u16 {
   *seed = seed.wrapping_mul(32310901).wrapping_add(5);
   const INPUT_SIZE: u32 = 32;
@@ -396,12 +427,7 @@ pub fn pcg16_xsh_rs(seed: &mut u32) -> u16 {
 }
 ```
 
-[Compiler Explorer](https://rust.godbolt.org/z/EvzCAG)
-
-Turns out this a fairly significant savings on instructions. We're theoretically
-trading in a bit of statistical quality for these speed gains, but a 32-bit
-generator was never going to pass muster anyway, so we might as well go with
-this for our 32->16 generator.
+[Compiler Explorer](https://rust.godbolt.org/z/NtJAwS)
 
 ### PCG32 RXS-M-XS (32-bit state, 32-bit output, uniform)
 
@@ -411,17 +437,6 @@ of dimensional equidistribution for each bit you discard as the size goes down
 (so 32->16 gives 16). However, if your output size _has_ to the the same as your
 input size, the PCG family is still up to the task.
 
-* **RXS:** An xorshift by a random (input-dependent) amount.
-* **M:** A multiply by a fixed constant.
-* **XS:** An xorshift by a fixed amount. This improves the bits in the lowest
-  third of bits using the upper third.
-
-For this part, wikipedia doesn't explain as much of the backing math, and
-honestly even [the paper
-itself](http://www.pcg-random.org/pdf/hmc-cs-2014-0905.pdf) also doesn't quite
-do a good job of it. However, rejoice, the wikipedia article lists what we
-should do for 32->32, so we can just cargo cult it.
-
 ```rust
 pub fn pcg32_rxs_m_xs(seed: &mut u32) -> u32 {
   *seed = seed.wrapping_mul(32310901).wrapping_add(5);
@@ -430,9 +445,77 @@ pub fn pcg32_rxs_m_xs(seed: &mut u32) -> u32 {
   out32 ^= out32 >> (4 + rxs);
   const PURE_MAGIC: u32 = 277803737;
   out32 *= PURE_MAGIC;
-  x ^ (x >> 22)
+  out32^ (out32 >> 22)
 }
 ```
+
+[Compiler Explorer](https://rust.godbolt.org/z/j3KPId)
+
+This permutation is the slowest but gives the strongest statistical benefits. If
+you're going to be keeping 100% of the output bits you want the added strength
+obviously. However, the period isn't actually any longer, so each output will be
+given only once within the full period (1-dimensional equidistribution).
+
+### PCG Extension Array
+
+As a general improvement to any PCG you can hook on an "extension array" to give
+yourself a longer period. It's all described in the [PCG
+Paper](http://www.pcg-random.org/paper.html), but here's the bullet points:
+
+* In addition to your generator's state (and possible stream) you keep an array
+  of "extension" values. The array _type_ is the same as your output type, and
+  the array _count_ must be a power of two value that's less than the maximum
+  value of your state size.
+* When you run the generator, use the _lowest_ bits to select from your
+  extension array according to the array's power of two. Eg: if the size is 2
+  then use the single lowest bit, if it's 4 then use the lowest 2 bits, etc.
+* Every time you run the generator, XOR the output with the selected value from
+  the array.
+* Every time the generator state lands on 0, cycle every element of the array.
+
+Here's an example using an 8 slot array and `pcg16_xsh_rs`:
+
+```rust
+// uses pcg16_xsh_rs from above
+
+// I asked ubsan and they said this is the best way to absolutely ensure that
+// our extension array is aligned so that we can pretend it's a `u32` array
+// later. When it comes to memory safety, you always do what ubsan says.
+#[repr(align(4))]
+struct AlignedU16Array([u16; 8]);
+
+pub struct PCG16_EXT8 {
+  state: u32,
+  ext: AlignedU16Array,
+}
+
+impl PCG16_EXT8 {
+  pub fn next_u16(&mut self) -> u16 {
+    // PCG as normal.
+    let mut out = pcg16_xsh_rs(&mut self.state);
+    // XOR with a selected extension array value
+    out ^= unsafe { self.ext.0.get_unchecked((self.state & !0b111) as usize) };
+    // if state == 0 we cycle the array by sending each u16 pair though the
+    // normal LCG process.
+    if self.state == 0 {
+      unsafe {
+        let mut ptr = self.ext.0.as_mut_ptr() as *mut u16 as *mut u32;
+        for _ in 0..4 {
+          *ptr = (*ptr).wrapping_mul(32310901).wrapping_add(5);
+          ptr = ptr.offset(1);
+        }
+      }
+    }
+    out
+  }
+}
+```
+
+[Compiler Explorer](https://rust.godbolt.org/z/HTxoHY)
+
+The period gained from using an extension array is quite impressive. For a b-bit
+generator giving r-bit outputs, and k array slots, the period goes from 2^b to
+2^(k*r+b). So our 2^32 period generator has been extended to 2^160.
 
 ### Xoshiro128** (128-bit state, 32-bit output, non-uniform)
 
@@ -939,7 +1022,7 @@ complicated.
 
 Life just be that way, I guess.
 
-## Summary
+## Summary Table
 
 That was a whole lot. Let's put them in a table:
 
@@ -947,12 +1030,8 @@ That was a whole lot. Let's put them in a table:
 |:---------------|:-----:|:------:|:------:|:-----:|
 | sm64           | 2     | u16    | 65,114 | 0     |
 | lcg32          | 4     | u16    | 2^32   | 1     |
-| pcg16_xsh_rr   | 4     | u16    | 2^32   | 16    |
-| pcg16_xsh_rs   | 4     | u16    | 2^32   | 16    |
+| pcg16_xsh_rs   | 4     | u16    | 2^32   | 1     |
 | pcg32_rxs_m_xs | 4     | u32    | 2^32   | 1     |
+| PCG16_EXT8     | 20    | u16    | 2^160  | 8     |
 | xoshiro128**   | 16    | u32    | 2^128-1| 0     |
 | jsf32          | 16    | u32    | ~2^126 | 0     |
-
-TODO recap streams/jumps
-
-TODO extension arrays?
