@@ -219,16 +219,100 @@ The Control registers are also pretty simple compared to most IO registers:
   an effect when used with timer 0.
 * 3 bits that do nothing
 * 1 bit for **Interrupt:** Whenever this timer overflows it will signal an
-  interrupt.
+  interrupt. We still haven't gotten into interrupts yet (since you have to hand
+  write some ASM for that, it's annoying), but when we cover them this is how
+  you do them with timers.
 * 1 bit to **Enable** the timer. When you disable a timer it retains the current
   value, but when you enable it again the value jumps to whatever its currently
   assigned default value is.
 
-TODO timer control struct / methods
+```rust
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+#[repr(transparent)]
+pub struct TimerControl(u16);
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum TimerFrequency {
+  One = 0,
+  SixFour = 1,
+  TwoFiveSix = 2,
+  OneZeroTwoFour = 3,
+}
+
+impl TimerControl {
+  pub fn frequency(self) -> TimerFrequency {
+    match self.0 & 0b11 {
+      0 => TimerFrequency::One,
+      1 => TimerFrequency::SixFour,
+      2 => TimerFrequency::TwoFiveSix,
+      3 => TimerFrequency::OneZeroTwoFour,
+      _ => unreachable!(),
+    }
+  }
+  pub fn cascade_mode(self) -> bool {
+    self.0 & 0b100 > 0
+  }
+  pub fn interrupt(self) -> bool {
+    self.0 & 0b100_0000 > 0
+  }
+  pub fn enabled(self) -> bool {
+    self.0 & 0b1000_0000 > 0
+  }
+  //
+  pub fn set_frequency(&mut self, frequency: TimerFrequency) {
+    self.0 &= !0b11;
+    self.0 |= frequency as u16;
+  }
+  pub fn set_cascade_mode(&mut self, bit: bool) {
+    if bit {
+      self.0 |= 0b100;
+    } else {
+      self.0 &= !0b100;
+    }
+  }
+  pub fn set_interrupt(&mut self, bit: bool) {
+    if bit {
+      self.0 |= 0b100_0000;
+    } else {
+      self.0 &= !0b100_0000;
+    }
+  }
+  pub fn set_enabled(&mut self, bit: bool) {
+    if bit {
+      self.0 |= 0b1000_0000;
+    } else {
+      self.0 &= !0b1000_0000;
+    }
+  }
+}
+```
 
 ### A Timer Based Seed
 
-TODO turn on 2+ timers with cascading when the game turns on and wait for a key press
+Okay so how do we turns some timers into a PRNG seed? Well, usually our seed is
+a `u32`. So we'll take two timers, string them together with that cascade deal,
+and then set them off. Then we wait until the user presses any key. We probably
+do this as our first thing at startup, but we might show the title and like a
+"press any key to continue" message, or something.
+
+```rust
+/// Mucks with the settings of Timers 0 and 1.
+fn u32_from_user_wait() -> u32 {
+  let mut t = TimerControl::default();
+  t.set_enabled(true);
+  t.set_cascading(true);
+  TM1CNT.write(t.0);
+  t.set_cascading(false);
+  TM0CNT.write(t.0);
+  while key_input().0 == 0 {}
+  t.set_enabled(false);
+  TM0CNT.write(t.0);
+  TM1CNT.write(t.0);
+  let low = TM0D.read() as u32;
+  let high = TM1D.read() as u32;
+  (high << 32) | low
+}
+```
 
 ## Various Generators
 
@@ -313,13 +397,6 @@ pub fn lcg32(seed: u32) -> u32 {
 ```
 
 [Compiler Explorer](https://rust.godbolt.org/z/k5n_jJ)
-
-What's this `wrapping_mul` stuff? Well, in Rust's debug builds a numeric
-overflow will panic, and then overflows are unchecked in `--release` mode. If
-you want things to always wrap without problems you can either use a compiler
-flag to change how debug mode works, or (for more "portable" code) you can just
-make the call to `wrapping_mul`. All the same goes for add and subtract and so
-on.
 
 #### Multi-stream Generators
 
@@ -471,39 +548,37 @@ Paper](http://www.pcg-random.org/paper.html), but here's the bullet points:
   then use the single lowest bit, if it's 4 then use the lowest 2 bits, etc.
 * Every time you run the generator, XOR the output with the selected value from
   the array.
-* Every time the generator state lands on 0, cycle every element of the array.
+* Every time the generator state lands on 0, cycle the array. We want to be
+  careful with what we mean here by "cycle". We want the _entire_ pattern of
+  possible array bits to occur eventually. However, we obviously can't do
+  arbitrary adds for as many bits as we like, so we'll have to "carry the 1"
+  between the portions of the array by hand.
 
 Here's an example using an 8 slot array and `pcg16_xsh_rs`:
 
 ```rust
 // uses pcg16_xsh_rs from above
 
-// I asked ubsan and they said this is the best way to absolutely ensure that
-// our extension array is aligned so that we can pretend it's a `u32` array
-// later. When it comes to memory safety, you always do what ubsan says.
-#[repr(align(4))]
-struct AlignedU16Array([u16; 8]);
-
-pub struct PCG16_EXT8 {
+pub struct PCG16Ext8 {
   state: u32,
-  ext: AlignedU16Array,
+  ext: [u16; 8],
 }
 
-impl PCG16_EXT8 {
+impl PCG16Ext8 {
   pub fn next_u16(&mut self) -> u16 {
     // PCG as normal.
     let mut out = pcg16_xsh_rs(&mut self.state);
     // XOR with a selected extension array value
-    out ^= unsafe { self.ext.0.get_unchecked((self.state & !0b111) as usize) };
-    // if state == 0 we cycle the array by sending each u16 pair though the
-    // normal LCG process.
+    out ^= unsafe { self.ext.get_unchecked((self.state & !0b111) as usize) };
+    // if state == 0 we cycle the array with a series of overflowing adds
     if self.state == 0 {
-      unsafe {
-        let mut ptr = self.ext.0.as_mut_ptr() as *mut u16 as *mut u32;
-        for _ in 0..4 {
-          *ptr = (*ptr).wrapping_mul(32310901).wrapping_add(5);
-          ptr = ptr.offset(1);
-        }
+      let mut carry = true;
+      let mut index = 0;
+      while carry && index < self.ext.len() {
+        let (add_output, next_carry) = self.ext[index].overflowing_add(1);
+        self.ext[index] = add_output;
+        carry = next_carry;
+        index += 1;
       }
     }
     out
@@ -516,6 +591,10 @@ impl PCG16_EXT8 {
 The period gained from using an extension array is quite impressive. For a b-bit
 generator giving r-bit outputs, and k array slots, the period goes from 2^b to
 2^(k*r+b). So our 2^32 period generator has been extended to 2^160.
+
+Of course, we might care to seed the array itself so that it's not all 0 bits
+all the way though, but that's not strictly necessary. All 0s is a legitimate
+part of the extension cycle, so we have to pass through it at some point.
 
 ### Xoshiro128** (128-bit state, 32-bit output, non-uniform)
 
@@ -1032,6 +1111,6 @@ That was a whole lot. Let's put them in a table:
 | lcg32          | 4     | u16    | 2^32   | 1     |
 | pcg16_xsh_rs   | 4     | u16    | 2^32   | 1     |
 | pcg32_rxs_m_xs | 4     | u32    | 2^32   | 1     |
-| PCG16_EXT8     | 20    | u16    | 2^160  | 8     |
+| PCG16Ext8      | 20    | u16    | 2^160  | 8     |
 | xoshiro128**   | 16    | u32    | 2^128-1| 0     |
 | jsf32          | 16    | u32    | ~2^126 | 0     |

@@ -573,3 +573,79 @@ pub const TM2CNT: VolatilePtr<u16> = VolatilePtr(0x400_010A as *mut u16);
 
 pub const TM3D: VolatilePtr<u16> = VolatilePtr(0x400_010C as *mut u16);
 pub const TM3CNT: VolatilePtr<u16> = VolatilePtr(0x400_010E as *mut u16);
+
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+#[repr(transparent)]
+pub struct TimerControl(u16);
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum TimerFrequency {
+  One = 0,
+  SixFour = 1,
+  TwoFiveSix = 2,
+  OneZeroTwoFour = 3,
+}
+
+impl TimerControl {
+  pub fn frequency(self) -> TimerFrequency {
+    match self.0 & 0b11 {
+      0 => TimerFrequency::One,
+      1 => TimerFrequency::SixFour,
+      2 => TimerFrequency::TwoFiveSix,
+      3 => TimerFrequency::OneZeroTwoFour,
+      _ => unreachable!(),
+    }
+  }
+  pub fn cascading(self) -> bool {
+    self.0 & 0b100 > 0
+  }
+  pub fn interrupt(self) -> bool {
+    self.0 & 0b100_0000 > 0
+  }
+  pub fn enabled(self) -> bool {
+    self.0 & 0b1000_0000 > 0
+  }
+  //
+  pub fn set_frequency(&mut self, frequency: TimerFrequency) {
+    self.0 &= !0b11;
+    self.0 |= frequency as u16;
+  }
+  pub fn set_cascading(&mut self, bit: bool) {
+    if bit {
+      self.0 |= 0b100;
+    } else {
+      self.0 &= !0b100;
+    }
+  }
+  pub fn set_interrupt(&mut self, bit: bool) {
+    if bit {
+      self.0 |= 0b100_0000;
+    } else {
+      self.0 &= !0b100_0000;
+    }
+  }
+  pub fn set_enabled(&mut self, bit: bool) {
+    if bit {
+      self.0 |= 0b1000_0000;
+    } else {
+      self.0 &= !0b1000_0000;
+    }
+  }
+}
+
+/// Mucks with the settings of Timers 0 and 1.
+fn u32_from_user_wait() -> u32 {
+  let mut t = TimerControl::default();
+  t.set_enabled(true);
+  t.set_cascading(true);
+  TM1CNT.write(t.0);
+  t.set_cascading(false);
+  TM0CNT.write(t.0);
+  while key_input().0 == 0 {}
+  t.set_enabled(false);
+  TM0CNT.write(t.0);
+  TM1CNT.write(t.0);
+  let low = TM0D.read() as u32;
+  let high = TM1D.read() as u32;
+  (high << 32) | low
+}
