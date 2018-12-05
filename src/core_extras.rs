@@ -5,9 +5,6 @@
 /// Read and Write are made to be volatile. Offset is made to be
 /// wrapping_offset. This makes it much easier to correctly work with IO
 /// Registers and all display related memory on the GBA.
-///
-/// As a bonus, use of this type is mostly `cargo test` safe. Reads will return
-/// a `zeroed()` value instead, and writes will do nothing.
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, PartialOrd, Ord)]
 #[repr(transparent)]
 pub struct VolatilePtr<T>(pub *mut T);
@@ -20,47 +17,23 @@ impl<T> core::fmt::Pointer for VolatilePtr<T> {
 }
 
 impl<T> VolatilePtr<T> {
-  /// Performs a volatile read.
-  ///
-  /// # Safety
-  ///
-  /// This method adds absolutely no additional safety, so all safety concerns
-  /// for a normal raw pointer volatile read apply.
+  /// Performs a `read_volatile`.
   pub unsafe fn read(&self) -> T {
-    #[cfg(not(test))]
-    {
-      core::ptr::read_volatile(self.0)
-    }
-    #[cfg(test)]
-    {
-      core::mem::zeroed::<T>()
-    }
+    self.0.read_volatile()
   }
 
-  /// Performs a volatile write.
-  ///
-  /// # Safety
-  ///
-  /// This method adds absolutely no additional safety, so all safety concerns
-  /// for a normal raw pointer volatile write apply.
+  /// Performs a `write_volatile`.
   pub unsafe fn write(&self, data: T) {
-    #[cfg(not(test))]
-    {
-      core::ptr::write_volatile(self.0, data);
-    }
-    #[cfg(test)]
-    {
-      drop(data)
-    }
+    self.0.write_volatile(data);
   }
 
-  /// Performs a wrapping_offset by the number of slots given to a new position.
-  ///
-  /// # Safety
-  ///
-  /// This is a wrapping_offset, so all safety concerns of a normal raw pointer
-  /// wrapping_offset apply.
-  pub unsafe fn offset(self, count: isize) -> Self {
+  /// Performs a `wrapping_offset`.
+  pub fn offset(self, count: isize) -> Self {
     VolatilePtr(self.0.wrapping_offset(count))
+  }
+
+  /// Performs a cast into some new pointer type.
+  pub fn cast<Z>(self) -> VolatilePtr<Z> {
+    VolatilePtr(self.0 as *mut Z)
   }
 }

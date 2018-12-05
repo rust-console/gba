@@ -67,6 +67,32 @@ two object charblocks. However, in video modes 3, 4, and 5 the space for the
 background cuts into the lower charblock, so you can only safely use the upper
 charblock.
 
+```rust
+pub fn obj_tile_4bpp(tile_index: usize) -> Tile4bpp {
+  assert!(tile_index < 512);
+  let address = VRAM + size_of::<Charblock4bpp>() * 4 + 32 * tile_index;
+  unsafe { VolatilePtr(address as *mut Tile4bpp).read() }
+}
+
+pub fn set_obj_tile_4bpp(tile_index: usize, tile: Tile4bpp) {
+  assert!(tile_index < 512);
+  let address = VRAM + size_of::<Charblock4bpp>() * 4 + 32 * tile_index;
+  unsafe { VolatilePtr(address as *mut Tile4bpp).write(tile) }
+}
+
+pub fn obj_tile_8bpp(tile_index: usize) -> Tile8bpp {
+  assert!(tile_index < 512);
+  let address = VRAM + size_of::<Charblock8bpp>() * 4 + 32 * tile_index;
+  unsafe { VolatilePtr(address as *mut Tile8bpp).read() }
+}
+
+pub fn set_obj_tile_8bpp(tile_index: usize, tile: Tile8bpp) {
+  assert!(tile_index < 512);
+  let address = VRAM + size_of::<Charblock8bpp>() * 4 + 32 * tile_index;
+  unsafe { VolatilePtr(address as *mut Tile8bpp).write(tile) }
+}
+```
+
 With backgrounds you picked every single tile individually with a bunch of
 screen entry values. Objects don't do that at all. Instead you pick a base tile,
 size, and shape, then it figures out the rest from there. However, you may

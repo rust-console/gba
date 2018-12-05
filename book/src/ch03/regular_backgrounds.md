@@ -76,28 +76,28 @@ within, and then you add the index of the tile slot you're placing it into times
 the size of that type of tile. Like this:
 
 ```rust
-pub fn bg_tile_4pp(base_block: usize, tile_index: usize) -> Tile4bpp {
+pub fn bg_tile_4bpp(base_block: usize, tile_index: usize) -> Tile4bpp {
   assert!(base_block < 4);
   assert!(tile_index < 512);
   let address = VRAM + size_of::<Charblock4bpp>() * base_block + size_of::<Tile4bpp>() * tile_index;
   unsafe { VolatilePtr(address as *mut Tile4bpp).read() }
 }
 
-pub fn set_bg_tile_4pp(base_block: usize, tile_index: usize, tile: Tile4bpp) {
+pub fn set_bg_tile_4bpp(base_block: usize, tile_index: usize, tile: Tile4bpp) {
   assert!(base_block < 4);
   assert!(tile_index < 512);
   let address = VRAM + size_of::<Charblock4bpp>() * base_block + size_of::<Tile4bpp>() * tile_index;
   unsafe { VolatilePtr(address as *mut Tile4bpp).write(tile) }
 }
 
-pub fn bg_tile_8pp(base_block: usize, tile_index: usize) -> Tile8bpp {
+pub fn bg_tile_8bpp(base_block: usize, tile_index: usize) -> Tile8bpp {
   assert!(base_block < 4);
   assert!(tile_index < 256);
   let address = VRAM + size_of::<Charblock8bpp>() * base_block + size_of::<Tile8bpp>() * tile_index;
   unsafe { VolatilePtr(address as *mut Tile8bpp).read() }
 }
 
-pub fn set_bg_tile_8pp(base_block: usize, tile_index: usize, tile: Tile8bpp) {
+pub fn set_bg_tile_8bpp(base_block: usize, tile_index: usize, tile: Tile8bpp) {
   assert!(base_block < 4);
   assert!(tile_index < 256);
   let address = VRAM + size_of::<Charblock8bpp>() * base_block + size_of::<Tile8bpp>() * tile_index;
@@ -154,7 +154,7 @@ appropriately.
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct RegularScreenblock {
-  data: [RegularScreenblockEntry; 32 * 32],
+  pub data: [RegularScreenblockEntry; 32 * 32],
 }
 
 #[derive(Debug, Clone, Copy, Default)]
@@ -207,7 +207,7 @@ impl RegularScreenblockEntry {
   }
   pub fn set_palbank_index(&mut self, palbank_index: u16) {
     self.0 &= 0b1111_1111_1111;
-    self.0 |= palbank_index;
+    self.0 |= palbank_index << 12;
   }
 }
 ```

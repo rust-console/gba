@@ -297,7 +297,7 @@ do this as our first thing at startup, but we might show the title and like a
 
 ```rust
 /// Mucks with the settings of Timers 0 and 1.
-fn u32_from_user_wait() -> u32 {
+unsafe fn u32_from_user_wait() -> u32 {
   let mut t = TimerControl::default();
   t.set_enabled(true);
   t.set_cascading(true);

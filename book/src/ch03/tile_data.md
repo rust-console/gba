@@ -26,13 +26,13 @@ Knowing this, we can write the following definitions:
 #[derive(Debug, Clone, Copy, Default)]
 #[repr(transparent)]
 pub struct Tile4bpp {
-  data: [u32; 8]
+  pub data: [u32; 8]
 }
 
 #[derive(Debug, Clone, Copy, Default)]
 #[repr(transparent)]
 pub struct Tile8bpp {
-  data: [u32; 16]
+  pub data: [u32; 16]
 }
 ```
 
@@ -65,13 +65,13 @@ tiles, and with 8bpp there's 256 tiles. So they'd be something like this:
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct Charblock4bpp {
-  data: [Tile4bpp; 512],
+  pub data: [Tile4bpp; 512],
 }
 
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct Charblock8bpp {
-  data: [Tile8bpp; 256],
+  pub data: [Tile8bpp; 256],
 }
 ```
 

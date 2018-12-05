@@ -12,46 +12,14 @@ fn panic(_info: &core::panic::PanicInfo) -> ! {
 #[start]
 fn main(_argc: isize, _argv: *const *const u8) -> isize {
   unsafe {
-    DISPCNT.write(MODE3 | BG2);
-  }
-
-  let mut px = SCREEN_WIDTH / 2;
-  let mut py = SCREEN_HEIGHT / 2;
-  let mut color = rgb16(31, 0, 0);
-
-  loop {
-    // read the input for this frame
-    let this_frame_keys = key_input();
-
-    // adjust game state and wait for vblank
-    px += 2 * this_frame_keys.column_direction() as isize;
-    py += 2 * this_frame_keys.row_direction() as isize;
-    wait_until_vblank();
-
-    // draw the new game and wait until the next frame starts.
-    unsafe {
-      if px < 0 || py < 0 || px == SCREEN_WIDTH || py == SCREEN_HEIGHT {
-        // out of bounds, reset the screen and position.
-        mode3_clear_screen(0);
-        color = color.rotate_left(5);
-        px = SCREEN_WIDTH / 2;
-        py = SCREEN_HEIGHT / 2;
-      } else {
-        let color_here = mode3_read_pixel(px, py);
-        if color_here != 0 {
-          // crashed into our own line, reset the screen
-          mode3_clear_screen(0);
-          color = color.rotate_left(5);
-        } else {
-          // draw the new part of the line
-          mode3_draw_pixel(px, py, color);
-          mode3_draw_pixel(px, py + 1, color);
-          mode3_draw_pixel(px + 1, py, color);
-          mode3_draw_pixel(px + 1, py + 1, color);
-        }
-      }
+    init_palette();
+    init_background();
+    clear_objects_starting_with(13);
+    arrange_cards();
+    init_selector();
+    loop {
+      // TODO the game
     }
-    wait_until_vdraw();
   }
 }
 
@@ -180,25 +148,25 @@ pub fn wait_until_vdraw() {
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 #[repr(transparent)]
 pub struct Tile4bpp {
-  data: [u32; 8],
+  pub data: [u32; 8],
 }
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 #[repr(transparent)]
 pub struct Tile8bpp {
-  data: [u32; 16],
+  pub data: [u32; 16],
 }
 
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct Charblock4bpp {
-  data: [Tile4bpp; 512],
+  pub data: [Tile4bpp; 512],
 }
 
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct Charblock8bpp {
-  data: [Tile8bpp; 256],
+  pub data: [Tile8bpp; 256],
 }
 
 pub const PALRAM_BG_BASE: VolatilePtr<u16> = VolatilePtr(0x500_0000 as *mut u16);
@@ -213,31 +181,84 @@ pub fn set_bg_palette(slot: usize, color: u16) {
   unsafe { PALRAM_BG_BASE.offset(slot as isize).write(color) }
 }
 
-pub fn bg_tile_4pp(base_block: usize, tile_index: usize) -> Tile4bpp {
+pub unsafe fn init_palette() {
+  // palbank 0: black/white/gray
+  set_bg_palette(2, rgb16(31, 31, 31));
+  set_bg_palette(3, rgb16(15, 15, 15));
+  // palbank 1 is reds
+  set_bg_palette(1 * 16 + 1, rgb16(31, 0, 0));
+  set_bg_palette(1 * 16 + 2, rgb16(22, 0, 0));
+  set_bg_palette(1 * 16 + 3, rgb16(10, 0, 0));
+  // palbank 2 is greens
+  set_bg_palette(2 * 16 + 1, rgb16(0, 31, 0));
+  set_bg_palette(2 * 16 + 2, rgb16(0, 22, 0));
+  set_bg_palette(2 * 16 + 3, rgb16(0, 10, 0));
+  // palbank 2 is blues
+  set_bg_palette(3 * 16 + 1, rgb16(0, 0, 31));
+  set_bg_palette(3 * 16 + 2, rgb16(0, 0, 22));
+  set_bg_palette(3 * 16 + 3, rgb16(0, 0, 10));
+
+  // Direct copy all BG selections into OBJ palette too
+  let mut bgp = PALRAM_BG_BASE;
+  let mut objp = PALRAM_OBJECT_BASE;
+  for _ in 0..(4 * 16) {
+    objp.write(bgp.read());
+    bgp = bgp.offset(1);
+    objp = objp.offset(1);
+  }
+}
+
+pub fn bg_tile_4bpp(base_block: usize, tile_index: usize) -> Tile4bpp {
   assert!(base_block < 4);
   assert!(tile_index < 512);
   let address = VRAM + size_of::<Charblock4bpp>() * base_block + size_of::<Tile4bpp>() * tile_index;
   unsafe { VolatilePtr(address as *mut Tile4bpp).read() }
 }
 
-pub fn set_bg_tile_4pp(base_block: usize, tile_index: usize, tile: Tile4bpp) {
+pub fn set_bg_tile_4bpp(base_block: usize, tile_index: usize, tile: Tile4bpp) {
   assert!(base_block < 4);
   assert!(tile_index < 512);
   let address = VRAM + size_of::<Charblock4bpp>() * base_block + size_of::<Tile4bpp>() * tile_index;
   unsafe { VolatilePtr(address as *mut Tile4bpp).write(tile) }
 }
 
-pub fn bg_tile_8pp(base_block: usize, tile_index: usize) -> Tile8bpp {
+pub fn bg_tile_8bpp(base_block: usize, tile_index: usize) -> Tile8bpp {
   assert!(base_block < 4);
   assert!(tile_index < 256);
   let address = VRAM + size_of::<Charblock8bpp>() * base_block + size_of::<Tile8bpp>() * tile_index;
   unsafe { VolatilePtr(address as *mut Tile8bpp).read() }
 }
 
-pub fn set_bg_tile_8pp(base_block: usize, tile_index: usize, tile: Tile8bpp) {
+pub fn set_bg_tile_8bpp(base_block: usize, tile_index: usize, tile: Tile8bpp) {
   assert!(base_block < 4);
   assert!(tile_index < 256);
   let address = VRAM + size_of::<Charblock8bpp>() * base_block + size_of::<Tile8bpp>() * tile_index;
+  unsafe { VolatilePtr(address as *mut Tile8bpp).write(tile) }
+}
+
+//
+
+pub fn obj_tile_4bpp(tile_index: usize) -> Tile4bpp {
+  assert!(tile_index < 512);
+  let address = VRAM + size_of::<Charblock4bpp>() * 4 + 32 * tile_index;
+  unsafe { VolatilePtr(address as *mut Tile4bpp).read() }
+}
+
+pub fn set_obj_tile_4bpp(tile_index: usize, tile: Tile4bpp) {
+  assert!(tile_index < 512);
+  let address = VRAM + size_of::<Charblock4bpp>() * 4 + 32 * tile_index;
+  unsafe { VolatilePtr(address as *mut Tile4bpp).write(tile) }
+}
+
+pub fn obj_tile_8bpp(tile_index: usize) -> Tile8bpp {
+  assert!(tile_index < 512);
+  let address = VRAM + size_of::<Charblock8bpp>() * 4 + 32 * tile_index;
+  unsafe { VolatilePtr(address as *mut Tile8bpp).read() }
+}
+
+pub fn set_obj_tile_8bpp(tile_index: usize, tile: Tile8bpp) {
+  assert!(tile_index < 512);
+  let address = VRAM + size_of::<Charblock8bpp>() * 4 + 32 * tile_index;
   unsafe { VolatilePtr(address as *mut Tile8bpp).write(tile) }
 }
 
@@ -284,7 +305,7 @@ impl RegularScreenblockEntry {
   }
   pub fn set_palbank_index(&mut self, palbank_index: u16) {
     self.0 &= 0b1111_1111_1111;
-    self.0 |= palbank_index;
+    self.0 |= palbank_index << 12;
   }
 }
 
@@ -322,6 +343,69 @@ pub fn set_object_attributes(slot: usize, obj: ObjectAttributes) {
     ptr.offset(1).write(obj.attr1);
     ptr.offset(2).write(obj.attr2);
   }
+}
+
+pub fn clear_objects_starting_with(base_slot: usize) {
+  let mut obj = ObjectAttributes::default();
+  obj.set_rendering(ObjectRenderMode::Disabled);
+  for s in base_slot..128 {
+    set_object_attributes(s, obj);
+  }
+}
+
+pub fn position_of_card(card_col: usize, card_row: usize) -> (u16, u16) {
+  (10 + card_col as u16 * 17, 5 + card_row as u16 * 15)
+}
+
+pub fn arrange_cards() {
+  set_obj_tile_4bpp(1, FULL_ONE);
+  set_obj_tile_4bpp(2, FULL_TWO);
+  set_obj_tile_4bpp(3, FULL_THREE);
+  let mut obj = ObjectAttributes::default();
+  obj.set_tile_index(2); // along with palbank0, this is a white card
+  for card_row in 0..3 {
+    for card_col in 0..4 {
+      let (col, row) = position_of_card(card_col, card_row);
+      obj.set_column(col);
+      obj.set_row(row);
+      set_object_attributes(1 + card_col as usize + (card_row as usize * 3), obj);
+    }
+  }
+}
+
+pub fn init_selector() {
+  set_obj_tile_4bpp(0, CARD_SELECTOR);
+  let mut obj = ObjectAttributes::default();
+  let (col, row) = position_of_card(0, 0);
+  obj.set_column(col);
+  obj.set_row(row);
+  set_object_attributes(0, obj);
+}
+
+/// BG2 Control
+pub const BG2CNT: VolatilePtr<u16> = VolatilePtr(0x400_000C as *mut u16);
+
+pub unsafe fn init_background() {
+  // put the bg tiles in charblock 0
+  set_bg_tile_4bpp(0, 0, FULL_ONE);
+  set_bg_tile_4bpp(0, 1, FULL_THREE);
+  // make a checker pattern, place at screenblock 8 (aka the start of charblock 1)
+  let entry_black = RegularScreenblockEntry::default();
+  let mut entry_gray = RegularScreenblockEntry::default();
+  entry_gray.set_tile_id(1);
+  let mut using_black = true;
+  let mut screenblock: RegularScreenblock = core::mem::zeroed();
+  for entry_mut in screenblock.data.iter_mut() {
+    *entry_mut = if using_black { entry_black } else { entry_gray };
+    using_black = !using_black;
+  }
+  let p: VolatilePtr<RegularScreenblock> = VolatilePtr((VRAM + size_of::<Charblock8bpp>()) as *mut RegularScreenblock);
+  p.write(screenblock);
+  // turn on bg2 and configure it
+  let display_control_value = DISPCNT.read();
+  DISPCNT.write(display_control_value | BG2);
+  const SCREEN_BASE_BLOCK_FIRST_BIT: u32 = 8;
+  BG2CNT.write(8 << SCREEN_BASE_BLOCK_FIRST_BIT);
 }
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
@@ -501,11 +585,11 @@ pub fn div_modulus(numerator: i32, denominator: i32) -> (i32, i32) {
     let mod_out: i32;
     unsafe {
       asm!(/* assembly template */ "swi 0x06"
-          :/* output operands */ "={r0}"(div_out), "={r1}"(mod_out)
-          :/* input operands */ "{r0}"(numerator), "{r1}"(denominator)
-          :/* clobbers */ "r3"
-          :/* options */
-    );
+            :/* output operands */ "={r0}"(div_out), "={r1}"(mod_out)
+            :/* input operands */ "{r0}"(numerator), "{r1}"(denominator)
+            :/* clobbers */ "r3"
+            :/* options */
+      );
     }
     (div_out, mod_out)
   }
@@ -634,7 +718,7 @@ impl TimerControl {
 }
 
 /// Mucks with the settings of Timers 0 and 1.
-fn u32_from_user_wait() -> u32 {
+unsafe fn u32_from_user_wait() -> u32 {
   let mut t = TimerControl::default();
   t.set_enabled(true);
   t.set_cascading(true);
@@ -649,3 +733,60 @@ fn u32_from_user_wait() -> u32 {
   let high = TM1D.read() as u32;
   (high << 32) | low
 }
+
+/// For the user's "cursor" to select a card
+#[rustfmt::skip]
+pub const CARD_SELECTOR: Tile4bpp = Tile4bpp {
+  data : [
+    0x11100111,
+    0x11000011,
+    0x10000001,
+    0x00000000,
+    0x00000000,
+    0x10000001,
+    0x11000011,
+    0x11100111
+  ]
+};
+
+#[rustfmt::skip]
+pub const FULL_ONE: Tile4bpp = Tile4bpp {
+  data : [
+    0x11111111,
+    0x11111111,
+    0x11111111,
+    0x11111111,
+    0x11111111,
+    0x11111111,
+    0x11111111,
+    0x11111111,
+  ]
+};
+
+#[rustfmt::skip]
+pub const FULL_TWO: Tile4bpp = Tile4bpp {
+  data : [
+    0x22222222,
+    0x22222222,
+    0x22222222,
+    0x22222222,
+    0x22222222,
+    0x22222222,
+    0x22222222,
+    0x22222222
+  ]
+};
+
+#[rustfmt::skip]
+pub const FULL_THREE: Tile4bpp = Tile4bpp {
+  data : [
+    0x33333333,
+    0x33333333,
+    0x33333333,
+    0x33333333,
+    0x33333333,
+    0x33333333,
+    0x33333333,
+    0x33333333
+  ]
+};
