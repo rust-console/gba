@@ -72,7 +72,7 @@
         </script>
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
-            <ol class="chapter"><li><a href="../introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><a href="../ch00/index.html"><strong aria-hidden="true">2.</strong> Ch 0: Development Setup</a></li><li><a href="../ch01/index.html"><strong aria-hidden="true">3.</strong> Ch 1: Hello GBA</a></li><li><ol class="section"><li><a href="../ch01/hello1.html"><strong aria-hidden="true">3.1.</strong> hello1</a></li><li><a href="../ch01/volatile.html"><strong aria-hidden="true">3.2.</strong> Volatile</a></li><li><a href="../ch01/io_registers.html"><strong aria-hidden="true">3.3.</strong> IO Registers</a></li><li><a href="../ch01/the_display_control_register.html"><strong aria-hidden="true">3.4.</strong> The Display Control Register</a></li><li><a href="../ch01/video_memory_intro.html"><strong aria-hidden="true">3.5.</strong> Video Memory Intro</a></li><li><a href="../ch01/hello2.html"><strong aria-hidden="true">3.6.</strong> hello2</a></li></ol></li><li><a href="../ch02/index.html"><strong aria-hidden="true">4.</strong> Ch 2: User Input</a></li><li><ol class="section"><li><a href="../ch02/the_key_input_register.html"><strong aria-hidden="true">4.1.</strong> The Key Input Register</a></li><li><a href="../ch02/the_vcount_register.html"><strong aria-hidden="true">4.2.</strong> The VCount Register</a></li><li><a href="../ch02/light_cycle.html"><strong aria-hidden="true">4.3.</strong> light_cycle</a></li></ol></li><li><a href="../ch03/index.html"><strong aria-hidden="true">5.</strong> Ch 3: Memory and Objects</a></li><li><ol class="section"><li><a href="../ch03/gba_memory_mapping.html"><strong aria-hidden="true">5.1.</strong> GBA Memory Mapping</a></li><li><a href="../ch03/tile_data.html"><strong aria-hidden="true">5.2.</strong> Tile Data</a></li><li><a href="../ch03/regular_backgrounds.html"><strong aria-hidden="true">5.3.</strong> Regular Backgrounds</a></li><li><a href="../ch03/regular_objects.html" class="active"><strong aria-hidden="true">5.4.</strong> Regular Objects</a></li><li><a href="../ch03/gba_rng.html"><strong aria-hidden="true">5.5.</strong> GBA RNG</a></li><li><a href="../ch03/memory_game.html"><strong aria-hidden="true">5.6.</strong> memory_game</a></li></ol></li></ol>
+            <ol class="chapter"><li><a href="../introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><a href="../ch00/index.html"><strong aria-hidden="true">2.</strong> Ch 0: Development Setup</a></li><li><a href="../ch01/index.html"><strong aria-hidden="true">3.</strong> Ch 1: Hello GBA</a></li><li><ol class="section"><li><a href="../ch01/hello1.html"><strong aria-hidden="true">3.1.</strong> hello1</a></li><li><a href="../ch01/volatile.html"><strong aria-hidden="true">3.2.</strong> Volatile</a></li><li><a href="../ch01/io_registers.html"><strong aria-hidden="true">3.3.</strong> IO Registers</a></li><li><a href="../ch01/the_display_control_register.html"><strong aria-hidden="true">3.4.</strong> The Display Control Register</a></li><li><a href="../ch01/video_memory_intro.html"><strong aria-hidden="true">3.5.</strong> Video Memory Intro</a></li><li><a href="../ch01/hello2.html"><strong aria-hidden="true">3.6.</strong> hello2</a></li></ol></li><li><a href="../ch02/index.html"><strong aria-hidden="true">4.</strong> Ch 2: User Input</a></li><li><ol class="section"><li><a href="../ch02/the_key_input_register.html"><strong aria-hidden="true">4.1.</strong> The Key Input Register</a></li><li><a href="../ch02/the_vcount_register.html"><strong aria-hidden="true">4.2.</strong> The VCount Register</a></li><li><a href="../ch02/light_cycle.html"><strong aria-hidden="true">4.3.</strong> light_cycle</a></li></ol></li><li><a href="../ch03/index.html"><strong aria-hidden="true">5.</strong> Ch 3: Memory and Objects</a></li><li><ol class="section"><li><a href="../ch03/gba_memory_mapping.html"><strong aria-hidden="true">5.1.</strong> GBA Memory Mapping</a></li><li><a href="../ch03/tile_data.html"><strong aria-hidden="true">5.2.</strong> Tile Data</a></li><li><a href="../ch03/regular_backgrounds.html"><strong aria-hidden="true">5.3.</strong> Regular Backgrounds</a></li><li><a href="../ch03/regular_objects.html" class="active"><strong aria-hidden="true">5.4.</strong> Regular Objects</a></li><li><a href="../ch03/gba_prng.html"><strong aria-hidden="true">5.5.</strong> GBA PRNG</a></li><li><a href="../ch03/memory_game.html"><strong aria-hidden="true">5.6.</strong> memory_game</a></li></ol></li></ol>
         </nav>
 
         <div id="page-wrapper" class="page-wrapper">
@@ -193,6 +193,33 @@ or 8bpp. From this we can determine that there's 512 tile slots in each of the
 two object charblocks. However, in video modes 3, 4, and 5 the space for the
 background cuts into the lower charblock, so you can only safely use the upper
 charblock.</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+pub fn obj_tile_4bpp(tile_index: usize) -&gt; Tile4bpp {
+  assert!(tile_index &lt; 512);
+  let address = VRAM + size_of::&lt;Charblock4bpp&gt;() * 4 + 32 * tile_index;
+  unsafe { VolatilePtr(address as *mut Tile4bpp).read() }
+}
+
+pub fn set_obj_tile_4bpp(tile_index: usize, tile: Tile4bpp) {
+  assert!(tile_index &lt; 512);
+  let address = VRAM + size_of::&lt;Charblock4bpp&gt;() * 4 + 32 * tile_index;
+  unsafe { VolatilePtr(address as *mut Tile4bpp).write(tile) }
+}
+
+pub fn obj_tile_8bpp(tile_index: usize) -&gt; Tile8bpp {
+  assert!(tile_index &lt; 512);
+  let address = VRAM + size_of::&lt;Charblock8bpp&gt;() * 4 + 32 * tile_index;
+  unsafe { VolatilePtr(address as *mut Tile8bpp).read() }
+}
+
+pub fn set_obj_tile_8bpp(tile_index: usize, tile: Tile8bpp) {
+  assert!(tile_index &lt; 512);
+  let address = VRAM + size_of::&lt;Charblock8bpp&gt;() * 4 + 32 * tile_index;
+  unsafe { VolatilePtr(address as *mut Tile8bpp).write(tile) }
+}
+#}</code></pre></pre>
 <p>With backgrounds you picked every single tile individually with a bunch of
 screen entry values. Objects don't do that at all. Instead you pick a base tile,
 size, and shape, then it figures out the rest from there. However, you may
@@ -217,14 +244,14 @@ everything all lined up and into place anyway.</p>
 <a class="header" href="#set-the-object-attributes" id="set-the-object-attributes"><h2>Set the Object Attributes</h2></a>
 <p>The final step is to assign the correct attributes to an object. Each object has
 three <code>u16</code> values that make up its overall attributes.</p>
-<p>Before we go into the details, I want to remind you that the hardware will
-attempt to process every single object every single frame, and also that all of
-the GBA's memory is cleared to 0 at startup. Why do these two things matter
-right now? As you'll see in a second an &quot;all zero&quot; set of object attributes
-causes an 8x8 object to appear at 0,0 using object tile index 0. This is usually
-<em>not</em> what you want your unused objects to do. When your game first starts you
-should take a moment to mark any objects you won't be using as objects to not
-render.</p>
+<p>Before we go into the details, I want to bring up that the hardware will attempt
+to process every single object every single frame if the object layer is
+enabled, and also that all of the GBA's object memory is cleared to 0 at
+startup. Why do these two things matter right now? As you'll see in a second an
+&quot;all zero&quot; set of object attributes causes an 8x8 object to appear at 0,0 using
+object tile index 0. This is usually <em>not</em> what you want your unused objects to
+do. When your game first starts you should take a moment to mark any objects you
+won't be using as objects to not render.</p>
 <a class="header" href="#objectattributesattr0" id="objectattributesattr0"><h3>ObjectAttributes.attr0</h3></a>
 <ul>
 <li>8 bits for row coordinate (marks the top of the sprite)</li>
@@ -518,7 +545,7 @@ impl ObjectAttributes {
                         
 
                         
-                            <a rel="next" href="../ch03/gba_rng.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next" href="../ch03/gba_prng.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
                         
@@ -536,7 +563,7 @@ impl ObjectAttributes {
                 
 
                 
-                    <a href="../ch03/gba_rng.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a href="../ch03/gba_prng.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
                 

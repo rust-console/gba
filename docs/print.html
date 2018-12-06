@@ -72,7 +72,7 @@
         </script>
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
-            <ol class="chapter"><li><a href="introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><a href="ch00/index.html"><strong aria-hidden="true">2.</strong> Ch 0: Development Setup</a></li><li><a href="ch01/index.html"><strong aria-hidden="true">3.</strong> Ch 1: Hello GBA</a></li><li><ol class="section"><li><a href="ch01/hello1.html"><strong aria-hidden="true">3.1.</strong> hello1</a></li><li><a href="ch01/volatile.html"><strong aria-hidden="true">3.2.</strong> Volatile</a></li><li><a href="ch01/io_registers.html"><strong aria-hidden="true">3.3.</strong> IO Registers</a></li><li><a href="ch01/the_display_control_register.html"><strong aria-hidden="true">3.4.</strong> The Display Control Register</a></li><li><a href="ch01/video_memory_intro.html"><strong aria-hidden="true">3.5.</strong> Video Memory Intro</a></li><li><a href="ch01/hello2.html"><strong aria-hidden="true">3.6.</strong> hello2</a></li></ol></li><li><a href="ch02/index.html"><strong aria-hidden="true">4.</strong> Ch 2: User Input</a></li><li><ol class="section"><li><a href="ch02/the_key_input_register.html"><strong aria-hidden="true">4.1.</strong> The Key Input Register</a></li><li><a href="ch02/the_vcount_register.html"><strong aria-hidden="true">4.2.</strong> The VCount Register</a></li><li><a href="ch02/light_cycle.html"><strong aria-hidden="true">4.3.</strong> light_cycle</a></li></ol></li><li><a href="ch03/index.html"><strong aria-hidden="true">5.</strong> Ch 3: Memory and Objects</a></li><li><ol class="section"><li><a href="ch03/gba_memory_mapping.html"><strong aria-hidden="true">5.1.</strong> GBA Memory Mapping</a></li><li><a href="ch03/tile_data.html"><strong aria-hidden="true">5.2.</strong> Tile Data</a></li><li><a href="ch03/regular_backgrounds.html"><strong aria-hidden="true">5.3.</strong> Regular Backgrounds</a></li><li><a href="ch03/regular_objects.html"><strong aria-hidden="true">5.4.</strong> Regular Objects</a></li><li><a href="ch03/gba_rng.html"><strong aria-hidden="true">5.5.</strong> GBA RNG</a></li><li><a href="ch03/memory_game.html"><strong aria-hidden="true">5.6.</strong> memory_game</a></li></ol></li></ol>
+            <ol class="chapter"><li><a href="introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><a href="ch00/index.html"><strong aria-hidden="true">2.</strong> Ch 0: Development Setup</a></li><li><a href="ch01/index.html"><strong aria-hidden="true">3.</strong> Ch 1: Hello GBA</a></li><li><ol class="section"><li><a href="ch01/hello1.html"><strong aria-hidden="true">3.1.</strong> hello1</a></li><li><a href="ch01/volatile.html"><strong aria-hidden="true">3.2.</strong> Volatile</a></li><li><a href="ch01/io_registers.html"><strong aria-hidden="true">3.3.</strong> IO Registers</a></li><li><a href="ch01/the_display_control_register.html"><strong aria-hidden="true">3.4.</strong> The Display Control Register</a></li><li><a href="ch01/video_memory_intro.html"><strong aria-hidden="true">3.5.</strong> Video Memory Intro</a></li><li><a href="ch01/hello2.html"><strong aria-hidden="true">3.6.</strong> hello2</a></li></ol></li><li><a href="ch02/index.html"><strong aria-hidden="true">4.</strong> Ch 2: User Input</a></li><li><ol class="section"><li><a href="ch02/the_key_input_register.html"><strong aria-hidden="true">4.1.</strong> The Key Input Register</a></li><li><a href="ch02/the_vcount_register.html"><strong aria-hidden="true">4.2.</strong> The VCount Register</a></li><li><a href="ch02/light_cycle.html"><strong aria-hidden="true">4.3.</strong> light_cycle</a></li></ol></li><li><a href="ch03/index.html"><strong aria-hidden="true">5.</strong> Ch 3: Memory and Objects</a></li><li><ol class="section"><li><a href="ch03/gba_memory_mapping.html"><strong aria-hidden="true">5.1.</strong> GBA Memory Mapping</a></li><li><a href="ch03/tile_data.html"><strong aria-hidden="true">5.2.</strong> Tile Data</a></li><li><a href="ch03/regular_backgrounds.html"><strong aria-hidden="true">5.3.</strong> Regular Backgrounds</a></li><li><a href="ch03/regular_objects.html"><strong aria-hidden="true">5.4.</strong> Regular Objects</a></li><li><a href="ch03/gba_prng.html"><strong aria-hidden="true">5.5.</strong> GBA PRNG</a></li><li><a href="ch03/memory_game.html"><strong aria-hidden="true">5.6.</strong> memory_game</a></li></ol></li></ol>
         </nav>
 
         <div id="page-wrapper" class="page-wrapper">
@@ -183,6 +183,10 @@ for C, but it's what I based the ordering of this book's sections on.</li>
 <li><a href="http://problemkaputt.de/gbatek.htm">GBATEK</a>, a homebrew tech manual for
 GBA/NDS/DSi. We will regularly link to parts of it when talking about various
 bits of the GBA.</li>
+<li><a href="https://www.youtube.com/watch?v=t99L3JHhLc0">Getting Something for Nothing</a>
+by James Munns. RustConf 2018. It specifically talks about zero cost
+abstraction within an embedded rust context, which is exactly what we're all
+about.</li>
 </ul>
 <a class="header" href="#chapter-0-development-setup" id="chapter-0-development-setup"><h1>Chapter 0: Development Setup</h1></a>
 <p>Before you can build a GBA game you'll have to follow some special steps to
@@ -1570,13 +1574,13 @@ and the index just directly picks which of the 256 colors is used.</li>
 #[derive(Debug, Clone, Copy, Default)]
 #[repr(transparent)]
 pub struct Tile4bpp {
-  data: [u32; 8]
+  pub data: [u32; 8]
 }
 
 #[derive(Debug, Clone, Copy, Default)]
 #[repr(transparent)]
 pub struct Tile8bpp {
-  data: [u32; 16]
+  pub data: [u32; 16]
 }
 #}</code></pre></pre>
 <p>I hope this makes sense so far. At 4bpp, we have 4 bits per pixel, times 8
@@ -1605,13 +1609,13 @@ tiles, and with 8bpp there's 256 tiles. So they'd be something like this:</p>
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct Charblock4bpp {
-  data: [Tile4bpp; 512],
+  pub data: [Tile4bpp; 512],
 }
 
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct Charblock8bpp {
-  data: [Tile8bpp; 256],
+  pub data: [Tile8bpp; 256],
 }
 #}</code></pre></pre>
 <p>You'll note that we can't even derive <code>Debug</code> or <code>Default</code> any more because the
@@ -1728,28 +1732,28 @@ the size of that type of tile. Like this:</p>
 <pre><pre class="playpen"><code class="language-rust">
 # #![allow(unused_variables)]
 #fn main() {
-pub fn bg_tile_4pp(base_block: usize, tile_index: usize) -&gt; Tile4bpp {
+pub fn bg_tile_4bpp(base_block: usize, tile_index: usize) -&gt; Tile4bpp {
   assert!(base_block &lt; 4);
   assert!(tile_index &lt; 512);
   let address = VRAM + size_of::&lt;Charblock4bpp&gt;() * base_block + size_of::&lt;Tile4bpp&gt;() * tile_index;
   unsafe { VolatilePtr(address as *mut Tile4bpp).read() }
 }
 
-pub fn set_bg_tile_4pp(base_block: usize, tile_index: usize, tile: Tile4bpp) {
+pub fn set_bg_tile_4bpp(base_block: usize, tile_index: usize, tile: Tile4bpp) {
   assert!(base_block &lt; 4);
   assert!(tile_index &lt; 512);
   let address = VRAM + size_of::&lt;Charblock4bpp&gt;() * base_block + size_of::&lt;Tile4bpp&gt;() * tile_index;
   unsafe { VolatilePtr(address as *mut Tile4bpp).write(tile) }
 }
 
-pub fn bg_tile_8pp(base_block: usize, tile_index: usize) -&gt; Tile8bpp {
+pub fn bg_tile_8bpp(base_block: usize, tile_index: usize) -&gt; Tile8bpp {
   assert!(base_block &lt; 4);
   assert!(tile_index &lt; 256);
   let address = VRAM + size_of::&lt;Charblock8bpp&gt;() * base_block + size_of::&lt;Tile8bpp&gt;() * tile_index;
   unsafe { VolatilePtr(address as *mut Tile8bpp).read() }
 }
 
-pub fn set_bg_tile_8pp(base_block: usize, tile_index: usize, tile: Tile8bpp) {
+pub fn set_bg_tile_8bpp(base_block: usize, tile_index: usize, tile: Tile8bpp) {
   assert!(base_block &lt; 4);
   assert!(tile_index &lt; 256);
   let address = VRAM + size_of::&lt;Charblock8bpp&gt;() * base_block + size_of::&lt;Tile8bpp&gt;() * tile_index;
@@ -1801,7 +1805,7 @@ appropriately.</p>
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct RegularScreenblock {
-  data: [RegularScreenblockEntry; 32 * 32],
+  pub data: [RegularScreenblockEntry; 32 * 32],
 }
 
 #[derive(Debug, Clone, Copy, Default)]
@@ -1854,7 +1858,7 @@ impl RegularScreenblockEntry {
   }
   pub fn set_palbank_index(&amp;mut self, palbank_index: u16) {
     self.0 &amp;= 0b1111_1111_1111;
-    self.0 |= palbank_index;
+    self.0 |= palbank_index &lt;&lt; 12;
   }
 }
 #}</code></pre></pre>
@@ -2002,6 +2006,33 @@ or 8bpp. From this we can determine that there's 512 tile slots in each of the
 two object charblocks. However, in video modes 3, 4, and 5 the space for the
 background cuts into the lower charblock, so you can only safely use the upper
 charblock.</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+pub fn obj_tile_4bpp(tile_index: usize) -&gt; Tile4bpp {
+  assert!(tile_index &lt; 512);
+  let address = VRAM + size_of::&lt;Charblock4bpp&gt;() * 4 + 32 * tile_index;
+  unsafe { VolatilePtr(address as *mut Tile4bpp).read() }
+}
+
+pub fn set_obj_tile_4bpp(tile_index: usize, tile: Tile4bpp) {
+  assert!(tile_index &lt; 512);
+  let address = VRAM + size_of::&lt;Charblock4bpp&gt;() * 4 + 32 * tile_index;
+  unsafe { VolatilePtr(address as *mut Tile4bpp).write(tile) }
+}
+
+pub fn obj_tile_8bpp(tile_index: usize) -&gt; Tile8bpp {
+  assert!(tile_index &lt; 512);
+  let address = VRAM + size_of::&lt;Charblock8bpp&gt;() * 4 + 32 * tile_index;
+  unsafe { VolatilePtr(address as *mut Tile8bpp).read() }
+}
+
+pub fn set_obj_tile_8bpp(tile_index: usize, tile: Tile8bpp) {
+  assert!(tile_index &lt; 512);
+  let address = VRAM + size_of::&lt;Charblock8bpp&gt;() * 4 + 32 * tile_index;
+  unsafe { VolatilePtr(address as *mut Tile8bpp).write(tile) }
+}
+#}</code></pre></pre>
 <p>With backgrounds you picked every single tile individually with a bunch of
 screen entry values. Objects don't do that at all. Instead you pick a base tile,
 size, and shape, then it figures out the rest from there. However, you may
@@ -2026,14 +2057,14 @@ everything all lined up and into place anyway.</p>
 <a class="header" href="#set-the-object-attributes" id="set-the-object-attributes"><h2>Set the Object Attributes</h2></a>
 <p>The final step is to assign the correct attributes to an object. Each object has
 three <code>u16</code> values that make up its overall attributes.</p>
-<p>Before we go into the details, I want to remind you that the hardware will
-attempt to process every single object every single frame, and also that all of
-the GBA's memory is cleared to 0 at startup. Why do these two things matter
-right now? As you'll see in a second an &quot;all zero&quot; set of object attributes
-causes an 8x8 object to appear at 0,0 using object tile index 0. This is usually
-<em>not</em> what you want your unused objects to do. When your game first starts you
-should take a moment to mark any objects you won't be using as objects to not
-render.</p>
+<p>Before we go into the details, I want to bring up that the hardware will attempt
+to process every single object every single frame if the object layer is
+enabled, and also that all of the GBA's object memory is cleared to 0 at
+startup. Why do these two things matter right now? As you'll see in a second an
+&quot;all zero&quot; set of object attributes causes an 8x8 object to appear at 0,0 using
+object tile index 0. This is usually <em>not</em> what you want your unused objects to
+do. When your game first starts you should take a moment to mark any objects you
+won't be using as objects to not render.</p>
 <a class="header" href="#objectattributesattr0" id="objectattributesattr0"><h3>ObjectAttributes.attr0</h3></a>
 <ul>
 <li>8 bits for row coordinate (marks the top of the sprite)</li>
@@ -2315,10 +2346,1326 @@ impl ObjectAttributes {
   }
 }
 #}</code></pre></pre>
-<a class="header" href="#gba-rng" id="gba-rng"><h1>GBA RNG</h1></a>
-<p>TODO</p>
-<a class="header" href="#memory_game" id="memory_game"><h1>memory_game</h1></a>
-<p>TODO</p>
+<a class="header" href="#gba-prng" id="gba-prng"><h1>GBA PRNG</h1></a>
+<p>You often hear of the &quot;Random Number Generator&quot; in video games. First of all,
+usually a game doesn't have access to any source of &quot;true randomness&quot;. On a PC
+you can send out a web request to <a href="https://www.random.org/">random.org</a> which
+uses atmospheric data, or even just <a href="https://blog.cloudflare.com/randomness-101-lavarand-in-production/">point a camera at some lava
+lamps</a>. Even
+then, the rate at which you'll want random numbers far exceeds the rate at which
+those services can offer them up. So instead you'll get a pseudo-random number
+generator and &quot;seed&quot; it with the true random data and then use that.</p>
+<p>However, we don't even have that! On the GBA, we can't ask any external anything
+what we should do for our initial seed. So we will not only need to come up with
+a few PRNG options, but we'll also need to come up with some seed source
+options. More than with other options within the book, I think this is an area
+where you can tailor what you do to your specific game.</p>
+<a class="header" href="#what-is-a-pseudo-random-number-generator" id="what-is-a-pseudo-random-number-generator"><h2>What is a Pseudo-random Number Generator?</h2></a>
+<p>For those of you who somehow read The Rust Book, plus possibly The Rustonomicon,
+and then found this book, but somehow <em>still</em> don't know what a PRNG is... Well,
+I don't think there are many such people. Still, we'll define it anyway I
+suppose.</p>
+<blockquote>
+<p>A PRNG is any mathematical process that takes an initial input (of some fixed
+size) and then produces a series of outputs (of a possibly different size).</p>
+</blockquote>
+<p>So, if you seed your PRNG with a 32-bit value you might get 32-bit values out or
+you might get 16-bit values out, or something like that.</p>
+<p>We measure the quality of a PRNG based upon:</p>
+<ol>
+<li><strong>Is the output range easy to work with?</strong> Most PRNG techniques that you'll
+find these days are already hip to the idea that we'll have the fastest
+operations with numbers that match our register width and all that, so
+they're usually designed around power of two inputs and power of two outputs.
+Still, every once in a while you might find some page old page intended for
+compatibility with the <code>rand()</code> function in the C standard library that'll
+talk about something <em>crazy</em> like having 15-bit PRNG outputs. Stupid as it
+sounds, that's real. Avoid those. Whenever possible we want generators that
+give us uniformly distributed <code>u8</code>, <code>u16</code>, <code>u32</code>, or whatever size value
+we're producing. From there we can mold our random bits into whatever else we
+need (eg: turning a <code>u8</code> into a &quot;1d6&quot; roll).</li>
+<li><strong>How long does each generation cycle take?</strong> This can be tricky for us. A
+lot of the top quality PRNGs you'll find these days are oriented towards
+64-bit machines so they do a bunch of 64-bit operations. You <em>can</em> do that on
+a 32-bit machine if you have to, and the compiler will automatically &quot;lower&quot;
+the 64-bit operation into a series of 32-bit operations. What we'd really
+like to pick is something that sticks to just 32-bit operations though, since
+those will be our best candidates for fast results. We can use <a href="https://rust.godbolt.org/z/JyX7z-">Compiler
+Explorer</a> and tell it to build for the
+<code>thumbv6m-none-eabi</code> target to get a basic idea of what the ASM for a
+generator looks like. That's not our exact target, but it's the closest
+target that's shipped with the standard rust distribution.</li>
+<li><strong>What is the statistical quality of the output?</strong> This involves heavy
+amounts of math. Since computers are quite good a large amounts of repeated
+math you might wonder if there's programs for this already, and there are.
+Many in fact. They take a generator and then run it over and over and perform
+the necessary tests and report the results. I won't be explaining how to hook
+our generators up to those tools, they each have their own user manuals.
+However, if someone says that a generator &quot;passes BigCrush&quot; (the biggest
+suite in TestU01) or &quot;fails PractRand&quot; or anything similar it's useful to
+know what they're referring to. Example test suites include:
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/TestU01">TestU01</a></li>
+<li><a href="http://pracrand.sourceforge.net/">PractRand</a></li>
+<li><a href="https://webhome.phy.duke.edu/%7Ergb/General/dieharder.php">Dieharder</a></li>
+<li><a href="https://csrc.nist.gov/projects/random-bit-generation/documentation-and-software">NIST Statistical Test
+Suite</a></li>
+</ul>
+</li>
+</ol>
+<p>Note that if a generator is called upon to produce enough output relative to its
+state size it will basically always end up failing statistical tests. This means
+that any generator with 32-bit state will always fail in any of those test sets.
+The theoretical <em>minimum</em> state size for any generator at all to pass the
+standard suites is 36 bits, but most generators need many more than that.</p>
+<a class="header" href="#generator-size" id="generator-size"><h3>Generator Size</h3></a>
+<p>I've mostly chosen to discuss generators that are towards the smaller end of the
+state size scale. In fact we'll be going over many generators that are below the
+36-bit theoretical minimum to pass all those fancy statistical tests. Why so?
+Well, we don't always need the highest possible quality generators.</p>
+<p>&quot;But Lokathor!&quot;, I can already hear you shouting. &quot;I want the highest quality
+randomness at all times! The game depends on it!&quot;, you cry out.</p>
+<p>Well... does it? Like, <em>really</em>?</p>
+<p>The <a href="https://bulbapedia.bulbagarden.net/wiki/Pseudorandom_number_generation_in_Pok%C3%A9mon">GBA
+Pokemon</a>
+games use a <em>dead simple</em> 32-bit LCG (we'll see it below). Then starting with
+the DS they moved to also using Mersenne Twister, which also fails several
+statistical tests and is one of the most predictable PRNGs around. <a href="http://wiki.metroidconstruction.com/doku.php?id=fusion:technical:rng">Metroid
+Fusion</a>
+has a 100% goofy PRNG system for enemies that would definitely never pass any
+sort of statistics tests at all. But like, those games were still awesome. Since
+we're never going to be keeping secrets safe with our PRNG, it's okay if we
+trade in some quality for something else in return (we obviously don't want to
+trade quality for nothing).</p>
+<p>And you have to ask yourself: Where's the space used for the Metroid Fusion
+PRNG? No where at all. They were already using everything involved for other
+things too, so they're paying no extra cost to have the randomization they do.
+How much does it cost Pokemon to throw in a 32-bit LCG? Just 4 bytes, might as
+well. How much does it cost to add in a Mersenne Twister? ~2,500 bytes ya say?
+I'm sorry <em>what on Earth</em>? Yeah, that sounds crazy, we're probably not doing
+that one.</p>
+<a class="header" href="#k-dimensional-equidistribution" id="k-dimensional-equidistribution"><h3>k-Dimensional Equidistribution</h3></a>
+<p>So, wait, why did the Pokemon developers add in the Mersenne Twister generator?
+They're smart people, surely they had a reason. Obviously we can't know for
+sure, but Mersenne Twister is terrible in a lot of ways, so what's its single
+best feature? Well, that gets us to a funky thing called <strong>k-dimensional
+equidistribution</strong>. Basically, if you take a generator's output and chop it down
+to get some value you want, with uniform generator output you can always get a
+smaller ranged uniform result (though sometimes you will have to reject a result
+and run the generator again). Imagine you have a <code>u32</code> output from your
+generator. If you want a <code>u16</code> value from that you can just pick either half. If
+you want a <code>[bool; 4]</code> from that you can just pick four bits. However you wanna
+do it, as long as the final form of random thing we're getting needs a number of
+bits <em>equal to or less than</em> the number of bits that come out of a single
+generator use, we're totally fine.</p>
+<p>What happens if the thing you want to make requires <em>more</em> bits than a single
+generator's output? You obviously have to run the generator more than once and
+then stick two or more outputs together, duh. Except, that doesn't always work.
+What I mean is that obviously you can always put two <code>u8</code> side by side to get a
+<code>u16</code>, but if you start with a uniform <code>u8</code> generator and then you run it twice
+and stick the results together you <em>don't</em> always get a uniform <code>u16</code> generator.
+Imagine a byte generator that just does <code>state+=1</code> and then outputs the state.
+It's not good by almost any standard, but it <em>does give uniform output</em>. Then we
+run it twice in a row, put the two bytes together, and suddenly a whole ton of
+potential <code>u16</code> values can never be generated. That's what k-dimensional
+equidistribution is all about. Every uniform output generator is 1-dimensional
+equidistributed, but if you need to combine outputs and still have uniform
+results then you need a higher <code>k</code> value. So why does Pokemon have Mersenne
+Twister in it? Because it's got 623-dimensional equidistribution. That means
+when you're combining PRNG calls for all those little IVs and Pokemon Abilities
+and other things you're sure to have every potential pokemon actually be a
+pokemon that the game can generate. Do you need that for most situations?
+Absolutely not. Do you need it for pokemon? No, not even then, but a lot of the
+hot new PRNGs have come out just within the past 10 years, so we can't fault
+them too much for it.</p>
+<p>TLDR: 1-dimensional equidistribution just means &quot;a normal uniform generator&quot;,
+and higher k values mean &quot;you can actually combine up to k output chains and
+maintain uniformity&quot;. Generators that aren't uniform to begin with effectively
+have a k value of 0.</p>
+<a class="header" href="#other-tricks" id="other-tricks"><h3>Other Tricks</h3></a>
+<p>Finally, some generators have other features that aren't strictly quantifiable.
+Two tricks of note are &quot;jump ahead&quot; or &quot;multiple streams&quot;:</p>
+<ul>
+<li>Jump ahead lets you advance the generator's state by some enormous number of
+outputs in a relatively small number of operations.</li>
+<li>Multi-stream generators have more than one output sequence, and then some part
+of their total state space picks a &quot;stream&quot; rather than being part of the
+actual seed, with each possible stream causing the potential output sequence
+to be in a different order.</li>
+</ul>
+<p>They're normally used as a way to do multi-threaded stuff (we don't care about
+that on GBA), but another interesting potential is to take one world seed and
+then split off a generator for each &quot;type&quot; of thing you'd use PRNG for (combat,
+world events, etc). This can become quite useful, where you can do things like
+procedurally generate a world region, and then when they leave the region you
+only need to store a single generator seed and a small amount of &quot;delta&quot;
+information for what the player changed there that you want to save, and then
+when they come back you can regenerate the region without having stored much at
+all. This is the basis for how old games with limited memory like
+<a href="https://en.wikipedia.org/wiki/Starflight">Starflight</a> did their whole thing
+(800 planets to explore on just to 5.25&quot; floppy disks!).</p>
+<a class="header" href="#how-to-seed" id="how-to-seed"><h2>How To Seed</h2></a>
+<p>Oh I bet you thought we could somehow get through a section without learning
+about yet another IO register. Ha, wishful thinking.</p>
+<p>There's actually not much involved. Starting at <code>0x400_0100</code> there's an array of
+registers that go &quot;data&quot;, &quot;control&quot;, &quot;data&quot;, &quot;control&quot;, etc. TONC and GBATEK use
+different names here, and we'll go by the TONC names because they're much
+clearer:</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+pub const TM0D: VolatilePtr&lt;u16&gt; = VolatilePtr(0x400_0100 as *mut u16);
+pub const TM0CNT: VolatilePtr&lt;u16&gt; = VolatilePtr(0x400_0102 as *mut u16);
+
+pub const TM1D: VolatilePtr&lt;u16&gt; = VolatilePtr(0x400_0104 as *mut u16);
+pub const TM1CNT: VolatilePtr&lt;u16&gt; = VolatilePtr(0x400_0106 as *mut u16);
+
+pub const TM2D: VolatilePtr&lt;u16&gt; = VolatilePtr(0x400_0108 as *mut u16);
+pub const TM2CNT: VolatilePtr&lt;u16&gt; = VolatilePtr(0x400_010A as *mut u16);
+
+pub const TM3D: VolatilePtr&lt;u16&gt; = VolatilePtr(0x400_010C as *mut u16);
+pub const TM3CNT: VolatilePtr&lt;u16&gt; = VolatilePtr(0x400_010E as *mut u16);
+#}</code></pre></pre>
+<p>Basically there's 4 timers, numbered 0 to 3. Each one has a Data register and a
+Control register. They're all <code>u16</code> and you can definitely <em>read</em> from all of
+them normally, but then it gets a little weird. You can also <em>write</em> to the
+Control portions normally, when you write to the Data portion of a timer that
+writes the value that the timer resets to, <em>without changing</em> its current Data
+value. So if <code>TM0D</code> is paused on some value other than <code>5</code> and you write <code>5</code> to
+it, when you read it back you won't get a <code>5</code>. When the next timer run starts
+it'll begin counting at <code>5</code> instead of whatever value it currently reads as.</p>
+<p>The Data registers are just a <code>u16</code> number, no special bits to know about.</p>
+<p>The Control registers are also pretty simple compared to most IO registers:</p>
+<ul>
+<li>2 bits for the <strong>Frequency:</strong> 1, 64, 256, 1024. While active, the timer's
+value will tick up once every <code>frequency</code> CPU cycles. On the GBA, 1 CPU cycle
+is about 59.59ns (2^(-24) seconds). One display controller cycle is 280,896
+CPU cycles.</li>
+<li>1 bit for <strong>Cascade Mode:</strong> If this is on the timer doesn't count on its own,
+instead it ticks up whenever the <em>preceding</em> timer overflows its counter (eg:
+if t0 overflows, t1 will tick up if it's in cascade mode). You still have to
+also enable this timer for it to do that (below). This naturally doesn't have
+an effect when used with timer 0.</li>
+<li>3 bits that do nothing</li>
+<li>1 bit for <strong>Interrupt:</strong> Whenever this timer overflows it will signal an
+interrupt. We still haven't gotten into interrupts yet (since you have to hand
+write some ASM for that, it's annoying), but when we cover them this is how
+you do them with timers.</li>
+<li>1 bit to <strong>Enable</strong> the timer. When you disable a timer it retains the current
+value, but when you enable it again the value jumps to whatever its currently
+assigned default value is.</li>
+</ul>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+#[repr(transparent)]
+pub struct TimerControl(u16);
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum TimerFrequency {
+  One = 0,
+  SixFour = 1,
+  TwoFiveSix = 2,
+  OneZeroTwoFour = 3,
+}
+
+impl TimerControl {
+  pub fn frequency(self) -&gt; TimerFrequency {
+    match self.0 &amp; 0b11 {
+      0 =&gt; TimerFrequency::One,
+      1 =&gt; TimerFrequency::SixFour,
+      2 =&gt; TimerFrequency::TwoFiveSix,
+      3 =&gt; TimerFrequency::OneZeroTwoFour,
+      _ =&gt; unreachable!(),
+    }
+  }
+  pub fn cascade_mode(self) -&gt; bool {
+    self.0 &amp; 0b100 &gt; 0
+  }
+  pub fn interrupt(self) -&gt; bool {
+    self.0 &amp; 0b100_0000 &gt; 0
+  }
+  pub fn enabled(self) -&gt; bool {
+    self.0 &amp; 0b1000_0000 &gt; 0
+  }
+  //
+  pub fn set_frequency(&amp;mut self, frequency: TimerFrequency) {
+    self.0 &amp;= !0b11;
+    self.0 |= frequency as u16;
+  }
+  pub fn set_cascade_mode(&amp;mut self, bit: bool) {
+    if bit {
+      self.0 |= 0b100;
+    } else {
+      self.0 &amp;= !0b100;
+    }
+  }
+  pub fn set_interrupt(&amp;mut self, bit: bool) {
+    if bit {
+      self.0 |= 0b100_0000;
+    } else {
+      self.0 &amp;= !0b100_0000;
+    }
+  }
+  pub fn set_enabled(&amp;mut self, bit: bool) {
+    if bit {
+      self.0 |= 0b1000_0000;
+    } else {
+      self.0 &amp;= !0b1000_0000;
+    }
+  }
+}
+#}</code></pre></pre>
+<a class="header" href="#a-timer-based-seed" id="a-timer-based-seed"><h3>A Timer Based Seed</h3></a>
+<p>Okay so how do we turns some timers into a PRNG seed? Well, usually our seed is
+a <code>u32</code>. So we'll take two timers, string them together with that cascade deal,
+and then set them off. Then we wait until the user presses any key. We probably
+do this as our first thing at startup, but we might show the title and like a
+&quot;press any key to continue&quot; message, or something.</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+/// Mucks with the settings of Timers 0 and 1.
+unsafe fn u32_from_user_wait() -&gt; u32 {
+  let mut t = TimerControl::default();
+  t.set_enabled(true);
+  t.set_cascading(true);
+  TM1CNT.write(t.0);
+  t.set_cascading(false);
+  TM0CNT.write(t.0);
+  while key_input().0 == 0 {}
+  t.set_enabled(false);
+  TM0CNT.write(t.0);
+  TM1CNT.write(t.0);
+  let low = TM0D.read() as u32;
+  let high = TM1D.read() as u32;
+  (high &lt;&lt; 32) | low
+}
+#}</code></pre></pre>
+<a class="header" href="#various-generators" id="various-generators"><h2>Various Generators</h2></a>
+<a class="header" href="#sm64-16-bit-state-16-bit-output-non-uniform-bonkers" id="sm64-16-bit-state-16-bit-output-non-uniform-bonkers"><h3>SM64 (16-bit state, 16-bit output, non-uniform, bonkers)</h3></a>
+<p>Our first PRNG to mention isn't one that's at all good, but it sure might be
+cute to use. It's the PRNG that Super Mario 64 had (<a href="https://www.youtube.com/watch?v=MiuLeTE2MeQ">video explanation,
+long</a>).</p>
+<p>With a PRNG this simple the output of one call is <em>also</em> the seed to the next
+call, so we don't need to make a struct for it or anything. You're also assumed
+to just seed with a plain 0 value at startup. The generator has a painfully
+small period, and you're assumed to be looping through the state space
+constantly while the RNG goes.</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+pub fn sm64(mut input: u16) -&gt; u16 {
+  if input == 0x560A {
+    input = 0;
+  }
+  let mut s0 = input &lt;&lt; 8;
+  s0 ^= input;
+  input = s0.rotate_left(8);
+  s0 = ((s0 as u8) &lt;&lt; 1) as u16 ^ input;
+  let s1 = (s0 &gt;&gt; 1) ^ 0xFF80;
+  if (s0 &amp; 1) == 0 {
+    if s1 == 0xAA55 {
+        input = 0;
+    } else {
+        input = s1 ^ 0x1FF4;
+    }
+  } else {
+    input = s1 ^ 0x8180;
+  }
+  input
+}
+#}</code></pre></pre>
+<p><a href="https://rust.godbolt.org/z/1F6P8L">Compiler Explorer</a></p>
+<p>If you watch the video explanation about this generator you'll note that the
+first <code>if</code> checking for <code>0x560A</code> prevents you from being locked into a 2-step
+cycle, but it's only important if you want to feed bad seeds to the generator. A
+bad seed is unhelpfully defined defined as &quot;any value that the generator can't
+output&quot;. The second <code>if</code> that checks for <code>0xAA55</code> doesn't seem to be important
+at all from a mathematical perspective. It cuts the generator's period shorter
+by an arbitrary amount for no known reason. It's left in there only for
+authenticity.</p>
+<a class="header" href="#lcg32-32-bit-state-32-bit-output-uniform" id="lcg32-32-bit-state-32-bit-output-uniform"><h3>LCG32 (32-bit state, 32-bit output, uniform)</h3></a>
+<p>The <a href="https://en.wikipedia.org/wiki/Linear_congruential_generator">Linear Congruential
+Generator</a> is a
+well known PRNG family. You pick a multiplier and an additive and you're done.
+Right? Well, not exactly, because (as the wikipedia article explains) the values
+that you pick can easily make your LCG better or worse all on its own. You want
+a good multiplier, and you want your additive to be odd. In our example here
+we've got the values that
+<a href="https://bulbapedia.bulbagarden.net/wiki/Pseudorandom_number_generation_in_Pok%C3%A9mon">Bulbapedia</a>
+says were used in the actual GBA Pokemon games, though Bulbapedia also lists
+values for a few other other games as well.</p>
+<p>I don't actually know if <em>any</em> of the constants used in the official games are
+particularly good from a statistical viewpoint, though with only 32 bits an LCG
+isn't gonna be passing any of the major statistical tests anyway (you need way
+more bits in your LCG for that to happen). In my mind the main reason to use a
+plain LCG like this is just for the fun of using the same PRNG that an official
+Pokemon game did.</p>
+<p>You should <em>not</em> use this as your default generator if you care about quality.</p>
+<p>It is <em>very</em> fast though... if you want to set everything else on fire for
+speed. If you do, please <em>at least</em> remember that the highest bits are the best
+ones, so if you're after less than 32 bits you should shift the high ones down
+and keep those, or if you want to turn it into a <code>bool</code> cast to <code>i32</code> and then
+check if it's negative, etc.</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+pub fn lcg32(seed: u32) -&gt; u32 {
+  seed.wrapping_mul(0x41C6_4E6D).wrapping_add(0x6073)
+}
+#}</code></pre></pre>
+<p><a href="https://rust.godbolt.org/z/k5n_jJ">Compiler Explorer</a></p>
+<a class="header" href="#multi-stream-generators" id="multi-stream-generators"><h4>Multi-stream Generators</h4></a>
+<p>Note that you don't have to add a compile time constant, you could add a runtime
+value instead. Doing so allows the generator to be &quot;multi-stream&quot;, with each
+different additive value being its own unique output stream. This true of LCGs
+as well as all the PCGs below (since they're LCG based). The examples here just
+use a fixed stream for simplicity and to save space, but if you want streams you
+can add that in for only a small amount of extra space used:</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+pub fn lcg_streaming(seed: u32, stream: u32) -&gt; u32 {
+  seed.wrapping_mul(0x41C6_4E6D).wrapping_add(stream)
+}
+#}</code></pre></pre>
+<p>With a streaming LCG you should pass the same stream value every single time. If
+you don't, then your generator will jump between streams in some crazy way and
+you lose your nice uniformity properties.</p>
+<p>There is the possibility of intentionally changing the stream value exactly when
+the seed lands on a pre-determined value (after the multiply and add). This
+<em>basically</em> makes the stream selection value's bit size (minus one bit, because
+it must be odd) count into the LCG's state bit size for calculating the overall
+period of the generator. So an LCG32 with a 32-bit stream selection would have a
+period of 2^32 * 2^31 = 2^63.</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+let next_seed = lcg_streaming(seed, stream);
+// It's cheapest to test for 0, so we pick 0
+if seed == 0 {
+  stream = stream.wrapping_add(2)
+}
+#}</code></pre></pre>
+<p>However, this isn't a particularly effective way to extend the generator's
+period, and we'll see a much better extension technique below.</p>
+<a class="header" href="#pcg16-xsh-rs-32-bit-state-16-bit-output-uniform" id="pcg16-xsh-rs-32-bit-state-16-bit-output-uniform"><h3>PCG16 XSH-RS (32-bit state, 16-bit output, uniform)</h3></a>
+<p>The <a href="https://en.wikipedia.org/wiki/Permuted_congruential_generator">Permuted Congruential
+Generator</a> family
+is the next step in LCG technology. We start with LCG output, which is good but
+not great, and then we apply one of several possible permutations to bump up the
+quality. There's basically a bunch of permutation components that are each
+defined in terms of the bit width that you're working with.</p>
+<p>The &quot;default&quot; variant of PCG, PCG32, has 64 bits of state and 32 bits of output,
+and it uses the &quot;XSH-RR&quot; permutation. Here we'll put together a 32 bit version
+with 16-bit output, and using the &quot;XSH-RS&quot; permutation (but we'll show the other
+one too for comparison).</p>
+<p>Of course, since PCG is based on a LCG, we have to start with a good LCG base.
+As I said above, a better or worse set of LCG constants can make your generator
+better or worse. The Wikipedia example for PCG has a good 64-bit constant, but
+not a 32-bit constant. So we gotta <a href="http://www.ams.org/journals/mcom/1999-68-225/S0025-5718-99-00996-5/S0025-5718-99-00996-5.pdf">ask an
+expert</a>
+about what a good 32-bit constant would be. I'm definitely not the best at
+reading math papers, but it seems that the general idea is that we want <code>m % 8 == 5</code> and <code>is_even(a)</code> to both hold for the values we pick. There are three
+suggested LCG multipliers in a chart on page 10. A chart that's quite hard to
+understand. Truth be told I asked several folks that are good at math papers and
+even they couldn't make sense of the chart. Eventually <code>timutable</code> read the
+whole paper in depth and concluded the same as I did: that we probably want to
+pick the <code>32310901</code> option.</p>
+<p>For an additive value, we can pick any odd value, so we might as well pick
+something small so that we can do an immediate add. <em>Immediate</em> add? That sounds
+new. An immediate instruction is when one side of an operation is small enough
+that you can encode the value directly into the space that'd normally be for the
+register you want to use. It basically means one less load you have to do, if
+you're working with small enough numbers. To see what I mean compare <a href="https://rust.godbolt.org/z/LKCFUS">loading
+the add value</a> and <a href="https://rust.godbolt.org/z/SnZW9a">immediate add
+value</a>. It's something you might have seen
+frequently in <code>x86</code> or <code>x86_64</code> ASM output, but because a thumb instruction is
+only 16 bits total, we can only get immediate instructions if the target value
+is 8 bits or less, so we haven't used them too much ourselves yet.</p>
+<p>I guess we'll pick 5, because I happen to personally like the number.</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+// Demo only. The &quot;default&quot; PCG permutation, for use when rotate is cheaper
+pub fn pcg16_xsh_rr(seed: &amp;mut u32) -&gt; u16 {
+  *seed = seed.wrapping_mul(32310901).wrapping_add(5);
+  const INPUT_SIZE: u32 = 32;
+  const OUTPUT_SIZE: u32 = 16;
+  const ROTATE_BITS: u32 = 4;
+  let mut out32 = *seed;
+  let rot = out32 &gt;&gt; (INPUT_SIZE - ROTATE_BITS);
+  out32 ^= out32 &gt;&gt; ((OUTPUT_SIZE + ROTATE_BITS) / 2);
+  ((out32 &gt;&gt; (OUTPUT_SIZE - ROTATE_BITS)) as u16).rotate_right(rot)
+}
+
+// This has slightly worse statistics but runs much better on the GBA
+pub fn pcg16_xsh_rs(seed: &amp;mut u32) -&gt; u16 {
+  *seed = seed.wrapping_mul(32310901).wrapping_add(5);
+  const INPUT_SIZE: u32 = 32;
+  const OUTPUT_SIZE: u32 = 16;
+  const SHIFT_BITS: u32 = 2;
+  const NEXT_MOST_BITS: u32 = 19;
+  let mut out32 = *seed;
+  let shift = out32 &gt;&gt; (INPUT_SIZE - SHIFT_BITS);
+  out32 ^= out32 &gt;&gt; ((OUTPUT_SIZE + SHIFT_BITS) / 2);
+  (out32 &gt;&gt; (NEXT_MOST_BITS + shift)) as u16
+}
+#}</code></pre></pre>
+<p><a href="https://rust.godbolt.org/z/NtJAwS">Compiler Explorer</a></p>
+<a class="header" href="#pcg32-rxs-m-xs-32-bit-state-32-bit-output-uniform" id="pcg32-rxs-m-xs-32-bit-state-32-bit-output-uniform"><h3>PCG32 RXS-M-XS (32-bit state, 32-bit output, uniform)</h3></a>
+<p>Having the output be smaller than the input is great because you can keep just
+the best quality bits that the LCG stage puts out, and you basically get 1 point
+of dimensional equidistribution for each bit you discard as the size goes down
+(so 32-&gt;16 gives 16). However, if your output size <em>has</em> to the the same as your
+input size, the PCG family is still up to the task.</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+pub fn pcg32_rxs_m_xs(seed: &amp;mut u32) -&gt; u32 {
+  *seed = seed.wrapping_mul(32310901).wrapping_add(5);
+  let mut out32 = *seed;
+  let rxs = out32 &gt;&gt; 28;
+  out32 ^= out32 &gt;&gt; (4 + rxs);
+  const PURE_MAGIC: u32 = 277803737;
+  out32 *= PURE_MAGIC;
+  out32^ (out32 &gt;&gt; 22)
+}
+#}</code></pre></pre>
+<p><a href="https://rust.godbolt.org/z/j3KPId">Compiler Explorer</a></p>
+<p>This permutation is the slowest but gives the strongest statistical benefits. If
+you're going to be keeping 100% of the output bits you want the added strength
+obviously. However, the period isn't actually any longer, so each output will be
+given only once within the full period (1-dimensional equidistribution).</p>
+<a class="header" href="#pcg-extension-array" id="pcg-extension-array"><h3>PCG Extension Array</h3></a>
+<p>As a general improvement to any PCG you can hook on an &quot;extension array&quot; to give
+yourself a longer period. It's all described in the <a href="http://www.pcg-random.org/paper.html">PCG
+Paper</a>, but here's the bullet points:</p>
+<ul>
+<li>In addition to your generator's state (and possible stream) you keep an array
+of &quot;extension&quot; values. The array <em>type</em> is the same as your output type, and
+the array <em>count</em> must be a power of two value that's less than the maximum
+value of your state size.</li>
+<li>When you run the generator, use the <em>lowest</em> bits to select from your
+extension array according to the array's power of two. Eg: if the size is 2
+then use the single lowest bit, if it's 4 then use the lowest 2 bits, etc.</li>
+<li>Every time you run the generator, XOR the output with the selected value from
+the array.</li>
+<li>Every time the generator state lands on 0, cycle the array. We want to be
+careful with what we mean here by &quot;cycle&quot;. We want the <em>entire</em> pattern of
+possible array bits to occur eventually. However, we obviously can't do
+arbitrary adds for as many bits as we like, so we'll have to &quot;carry the 1&quot;
+between the portions of the array by hand.</li>
+</ul>
+<p>Here's an example using an 8 slot array and <code>pcg16_xsh_rs</code>:</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+// uses pcg16_xsh_rs from above
+
+pub struct PCG16Ext8 {
+  state: u32,
+  ext: [u16; 8],
+}
+
+impl PCG16Ext8 {
+  pub fn next_u16(&amp;mut self) -&gt; u16 {
+    // PCG as normal.
+    let mut out = pcg16_xsh_rs(&amp;mut self.state);
+    // XOR with a selected extension array value
+    out ^= unsafe { self.ext.get_unchecked((self.state &amp; !0b111) as usize) };
+    // if state == 0 we cycle the array with a series of overflowing adds
+    if self.state == 0 {
+      let mut carry = true;
+      let mut index = 0;
+      while carry &amp;&amp; index &lt; self.ext.len() {
+        let (add_output, next_carry) = self.ext[index].overflowing_add(1);
+        self.ext[index] = add_output;
+        carry = next_carry;
+        index += 1;
+      }
+    }
+    out
+  }
+}
+#}</code></pre></pre>
+<p><a href="https://rust.godbolt.org/z/HTxoHY">Compiler Explorer</a></p>
+<p>The period gained from using an extension array is quite impressive. For a b-bit
+generator giving r-bit outputs, and k array slots, the period goes from 2^b to
+2^(k*r+b). So our 2^32 period generator has been extended to 2^160.</p>
+<p>Of course, we might care to seed the array itself so that it's not all 0 bits
+all the way though, but that's not strictly necessary. All 0s is a legitimate
+part of the extension cycle, so we have to pass through it at some point.</p>
+<a class="header" href="#xoshiro128-128-bit-state-32-bit-output-non-uniform" id="xoshiro128-128-bit-state-32-bit-output-non-uniform"><h3>Xoshiro128** (128-bit state, 32-bit output, non-uniform)</h3></a>
+<p>The <a href="http://xoshiro.di.unimi.it/xoshiro128starstar.c">Xoshiro128**</a> generator is
+an advancement of the <a href="https://en.wikipedia.org/wiki/Xorshift">Xorshift family</a>.
+It was specifically requested, and I'm not aware of Xorshift specifically being
+used in any of my favorite games, so instead of going over Xorshift and then
+leading up to this, we'll just jump straight to this. Take care not to confuse
+this generator with the very similarly named
+<a href="http://xoshiro.di.unimi.it/xoroshiro128starstar.c">Xoroshiro128**</a> generator,
+which is the 64 bit variant. Note the extra &quot;ro&quot; hiding in the 64-bit version's
+name near the start.</p>
+<p>Anyway, weird names aside, it's fairly zippy. The biggest downside is that you
+can't have a seed state that's all 0s, and as a result 0 will be produced one
+less time than all other outputs within a full cycle, making it non-uniform by
+just a little bit. You also can't do a simple stream selection like with the LCG
+based generators, instead it has a fixed jump function that advances a seed as
+if you'd done 2^64 normal generator advancements.</p>
+<p>Note that <code>Xoshiro256**</code> is known to fail statistical tests, so the 128 version
+is unlikely to pass them, though I admit that I didn't check myself.</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+pub fn xoshiro128_starstar(seed: &amp;mut [u32; 4]) -&gt; u32 {
+  let output = seed[0].wrapping_mul(5).rotate_left(7).wrapping_mul(9);
+  let t = seed[1] &lt;&lt; 9;
+
+  seed[2] ^= seed[0];
+  seed[3] ^= seed[1];
+  seed[1] ^= seed[2];
+  seed[0] ^= seed[3];
+
+  seed[2] ^= t;
+
+  seed[3] = seed[3].rotate_left(11);
+
+  output
+}
+
+pub fn xoshiro128_starstar_jump(seed: &amp;mut [u32; 4]) {
+  const JUMP: [u32; 4] = [0x8764000b, 0xf542d2d3, 0x6fa035c3, 0x77f2db5b];
+  let mut s0 = 0;
+  let mut s1 = 0;
+  let mut s2 = 0;
+  let mut s3 = 0;
+  for j in JUMP.iter() {
+    for b in 0 .. 32 {
+        if *j &amp; (1 &lt;&lt; b) &gt; 0 {
+            s0 ^= seed[0];
+            s1 ^= seed[1];
+            s2 ^= seed[2];
+            s3 ^= seed[3];
+        }
+        xoshiro128_starstar(seed);
+    }
+  }
+  seed[0] = s0;
+  seed[1] = s1;
+  seed[2] = s2;
+  seed[3] = s3;
+}
+#}</code></pre></pre>
+<p><a href="https://rust.godbolt.org/z/PGvwZw">Compiler Explorer</a></p>
+<a class="header" href="#jsf32-128-bit-state-32-bit-output-non-uniform" id="jsf32-128-bit-state-32-bit-output-non-uniform"><h3>jsf32 (128-bit state, 32-bit output, non-uniform)</h3></a>
+<p>This is Bob Jenkins's [Small/Fast PRNG](small noncryptographic PRNG). It's a
+little faster than <code>Xoshiro128**</code> (no multiplication involved), and can pass any
+statistical test that's been thrown at it.</p>
+<p>Interestingly the generator's period is <em>not</em> fixed based on the generator
+overall. It's actually set by the exact internal generator state. There's even
+six possible internal generator states where the generator becomes a fixed
+point. Because of this, we should use the verified seeding method provided.
+Using the provided seeding, the minimum period is expected to be 2^94, the
+average is about 2^126, and no seed given to the generator is likely to overlap
+with another seed's output for at least 2^64 uses.</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+pub struct JSF32 {
+  a: u32,
+  b: u32,
+  c: u32,
+  d: u32,
+}
+
+impl JSF32 {
+  pub fn new(seed: u32) -&gt; Self {
+    let mut output = JSF32 {
+      a: 0xf1ea5eed,
+      b: seed,
+      c: seed,
+      d: seed
+    };
+    for _ in 0 .. 20 {
+      output.next();
+    }
+    output
+  }
+
+  pub fn next(&amp;mut self) -&gt; u32 {
+    let e = self.a - self.b.rotate_left(27);
+    self.a = self.b ^ self.c.rotate_left(17);
+    self.b = self.c + self.d;
+    self.c = self.d + e;
+    self.d = e + self.a;
+    self.d
+  }
+}
+#}</code></pre></pre>
+<p><a href="https://rust.godbolt.org/z/qO3obQ">Compiler Explorer</a></p>
+<p>Here it's presented with (27,17), but you can also use any of the following if
+you want alternative generator flavors that use this same core technique:</p>
+<ul>
+<li>(9,16), (9,24), (10,16), (10,24), (11,16), (11,24), (25,8), (25,16), (26,8),
+(26,16), (26,17), or (27,16).</li>
+</ul>
+<p>Note that these alternate flavors haven't had as much testing as the (27,17)
+version, though they are likely to be just as good.</p>
+<a class="header" href="#other-generators" id="other-generators"><h3>Other Generators?</h3></a>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Mersenne_Twister">Mersenne Twister</a>: Gosh, 2.5k
+is just way too many for me to ever want to use this thing. If you'd really
+like to use it, there is <a href="https://docs.rs/mersenne_twister/1.1.1/mersenne_twister/">a
+crate</a> for it that
+already has it. Small catch, they use a ton of stuff from <code>std</code> that they
+could be importing from <code>core</code>, so you'll have to fork it and patch it
+yourself to get it working on the GBA. They also stupidly depend on an old
+version of <code>rand</code>, so you'll have to cut out that nonsense.</li>
+</ul>
+<a class="header" href="#placing-a-value-in-range" id="placing-a-value-in-range"><h2>Placing a Value In Range</h2></a>
+<p>I said earlier that you can always take a uniform output and then throw out some
+bits, and possibly the whole result, to reduce it down into a smaller range. How
+exactly does one do that? Well it turns out that it's <a href="http://www.pcg-random.org/posts/bounded-rands.html">very
+tricky</a> to get right, and we
+could be losing as much as 60% of our execution time if we don't do it carefully.</p>
+<p>The <em>best</em> possible case is if you can cleanly take a specific number of bits
+out of your result without even doing any branching. The rest can be discarded
+or kept for another step as you choose. I know that I keep referencing Pokemon,
+but it's a very good example for the use of randomization. Each pokemon has,
+among many values, a thing called an &quot;IV&quot; for each of 6 stats. The IVs range
+from 0 to 31, which is total nonsense to anyone not familiar with decimal/binary
+conversions, but to us programmers that's clearly a 5 bit range. Rather than
+making math that's better for people using decimal (such as a 1-20 range or
+something like that) they went with what's easiest for the computer.</p>
+<p>The <em>next</em> best case is if you can have a designated range that you want to
+generate within that's known at compile time. This at least gives us a chance to
+write some bit of extremely specialized code that can take random bits and get
+them into range. Hopefully your range can be &quot;close enough&quot; to a binary range
+that you can get things into place. Example: if you want a &quot;1d6&quot; result then you
+can generate a <code>u16</code>, look at just 3 bits (<code>0..8</code>), and if they're in the range
+you're after you're good. If not you can discard those and look at the next 3
+bits. We started with 16 of them, so you get five chances before you have to run
+the generator again entirely.</p>
+<p>The goal here is to avoid having to do one of the worst things possible in
+computing: <em>divmod</em>. It's terribly expensive, even on a modern computer it's
+about 10x as expensive as any other arithmetic, and on a GBA it's even worse for
+us. We have to call into the BIOS to have it do a software division. Calling
+into the BIOS at all is about a 60 cycle overhead (for comparison, a normal
+function call is more like 30 cycles of overhead), <em>plus</em> the time it takes to
+do the math itself. Remember earlier how we were happy to have a savings of 5
+instructions here or there? Compared to this, all our previous efforts are
+basically useless if we can't evade having to do a divmod. You can do quite a
+bit of <code>if</code> checking and potential additional generator calls before it exceeds
+the cost of having to do even a single divmod.</p>
+<a class="header" href="#calling-the-bios" id="calling-the-bios"><h3>Calling The BIOS</h3></a>
+<p>How do we do the actual divmod when we're forced to? Easy: <a href="https://doc.rust-lang.org/unstable-book/language-features/asm.html">inline
+assembly</a> of
+course (There's also an <a href="http://embed.rs/articles/2016/arm-inline-assembly-rust/">ARM
+oriented</a> blog post
+about it that I found most helpful). The GBA has many <a href="http://problemkaputt.de/gbatek.htm#biosfunctions">BIOS
+Functions</a>, each of which has
+a designated number. We use the
+<a href="http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.dui0068b/BABFCEEG.html">swi</a>
+op (short for &quot;SoftWare Interrupt&quot;) combined with the BIOS function number that
+we want performed. Our code halts, some setup happens (hence that 60 cycles of
+overhead I mentioned), the BIOS does its thing, and then eventually control
+returns to us.</p>
+<p>The precise details of what the BIOS call does depends on the function number
+that we call. We'd even have to potentially mark it as volatile asm if there's
+no clear outputs, otherwise the compiler would &quot;helpfully&quot; eliminate it for us
+during optimization. In our case there <em>are</em> clear outputs. The numerator goes
+into register 0, and the denominator goes into register 1, the divmod happens,
+and then the division output is left in register 0 and the modulus output is
+left in register 1. I keep calling it &quot;divmod&quot; because div and modulus are two
+sides of the same coin. There's no way to do one of them faster by not doing the
+other or anything like that, so we'll first define it as a unified function that
+returns a tuple:</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#![feature(asm)]
+#fn main() {
+// put the above at the top of any program and/or library that uses inline asm
+
+pub fn div_modulus(numerator: i32, denominator: i32) -&gt; (i32, i32) {
+  assert!(denominator != 0);
+  {
+    let div_out: i32;
+    let mod_out: i32;
+    unsafe {
+      asm!(/* assembly template */ &quot;swi 0x06&quot;
+          :/* output operands */ &quot;={r0}&quot;(div_out), &quot;={r1}&quot;(mod_out)
+          :/* input operands */ &quot;{r0}&quot;(numerator), &quot;{r1}&quot;(denominator)
+          :/* clobbers */ &quot;r3&quot;
+          :/* options */
+    );
+    }
+    (div_out, mod_out)
+  }
+}
+#}</code></pre></pre>
+<p>And next, since most of the time we really do want just the <code>div</code> or <code>modulus</code>
+without having to explicitly throw out the other half, we also define
+intermediary functions to unpack the correct values.</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+pub fn div(numerator: i32, denominator: i32) -&gt; i32 {
+  div_modulus(numerator, denominator).0
+}
+
+pub fn modulus(numerator: i32, denominator: i32) -&gt; i32 {
+  div_modulus(numerator, denominator).1
+}
+#}</code></pre></pre>
+<p>We can generally trust the compiler to inline single line functions correctly
+even without an <code>#[inline]</code> directive when it's not going cross-crate or when
+LTO is on. I'd point you to some exact output from the Compiler Explorer, but at
+the time of writing their nightly compiler is broken, and you can only use
+inline asm with a nightly compiler. Unfortunate. Hopefully they'll fix it soon
+and I can come back to this section with some links.</p>
+<a class="header" href="#finally-those-random-ranges-we-mentioned" id="finally-those-random-ranges-we-mentioned"><h3>Finally Those Random Ranges We Mentioned</h3></a>
+<p>Of course, now that we can do divmod if we need to, let's get back to random
+numbers in ranges that aren't exact powers of two.</p>
+<p>yada yada yada, if you just use <code>x % n</code> to place <code>x</code> into the range <code>0..n</code> then
+you'll turn an unbiased value into a biased value (or you'll turn a biased value
+into an arbitrarily <em>more</em> biased value). You should never do this, etc etc.</p>
+<p>So what's a good way to get unbiased outputs? We're going to be adapting some
+CPP code from that  that I first hinted at way up above. It's specifically all
+about the various ways you can go about getting unbiased random results for
+various bounds. There's actually many different methods offered, and for
+specific situations there's sometimes different winners for speed. The best
+overall performer looks like this:</p>
+<pre><code class="language-cpp">uint32_t bounded_rand(rng_t&amp; rng, uint32_t range) {
+    uint32_t x = rng();
+    uint64_t m = uint64_t(x) * uint64_t(range);
+    uint32_t l = uint32_t(m);
+    if (l &lt; range) {
+        uint32_t t = -range;
+        if (t &gt;= range) {
+            t -= range;
+            if (t &gt;= range) 
+                t %= range;
+        }
+        while (l &lt; t) {
+            x = rng();
+            m = uint64_t(x) * uint64_t(range);
+            l = uint32_t(m);
+        }
+    }
+    return m &gt;&gt; 32;
+}
+</code></pre>
+<p>And, wow, I sure don't know what a lot of that means (well, I do, but let's
+pretend I don't for dramatic effect, don't tell anyone). Let's try to pick it
+apart some.</p>
+<p>First, all the <code>uint32_t</code> and <code>uint64_t</code> are C nonsense names for what we just
+call <code>u32</code> and <code>u64</code>. You probably guessed that on your own.</p>
+<p>Next, <code>rng_t&amp; rng</code> is more properly written as <code>rng: &amp;rng_t</code>. Though, here
+there's a catch: as you can see we're calling <code>rng</code> within the function, so in
+rust we'd need to declare it as <code>rng: &amp;mut rng_t</code>, because C++ doesn't track
+mutability the same as we do (barbaric, I know).</p>
+<p>Finally, what's <code>rng_t</code> actually defined as? Well, I sure don't know, but in our
+context it's taking nothing and then spitting out a <code>u32</code>. We'll also presume
+that it's a different <code>u32</code> each time (not a huge leap in this context). To us
+rust programmers that means we'd want something like <code>impl FnMut() -&gt; u32</code>.</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+pub fn bounded_rand(rng: &amp;mut impl FnMut() -&gt; u32, range: u32) -&gt; u32 {
+  let mut x: u32 = rng();
+  let mut m: u64 = x as u64 * range as u64;
+  let mut l: u32 = m as u32;
+  if l &lt; range {
+    let mut t: u32 = range.wrapping_neg();
+    if t &gt;= range {
+      t -= range;
+      if t &gt;= range {
+        t = modulus(t, range);
+      }
+    }
+    while l &lt; t {
+      x = rng();
+      m = x as u64 * range as u64;
+      l = m as u32;
+    }
+  }
+  (m &gt;&gt; 32) as u32
+}
+#}</code></pre></pre>
+<p>So, now we can read it. Can we compile it? No, actually. Turns out we can't.
+Remember how our <code>modulus</code> function is <code>(i32, i32) -&gt; i32</code>? Here we're doing
+<code>(u32, u32) -&gt; u32</code>. You can't just cast, modulus, and cast back. You'll get
+totally wrong results most of the time because of sign-bit stuff. Since it's
+fairly probable that <code>range</code> fits in a positive <code>i32</code>, its negation must
+necessarily be a negative value, which triggers exactly the bad situation where
+casting around gives us the wrong results.</p>
+<p>Well, that's not the worst thing in the world either, since we also didn't
+really wanna be doing those 64-bit multiplies. Let's try again with everything
+scaled down one stage:</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+pub fn bounded_rand16(rng: &amp;mut impl FnMut() -&gt; u16, range: u16) -&gt; u16 {
+  let mut x: u16 = rng();
+  let mut m: u32 = x as u32 * range as u32;
+  let mut l: u16 = m as u16;
+  if l &lt; range {
+    let mut t: u16 = range.wrapping_neg();
+    if t &gt;= range {
+      t -= range;
+      if t &gt;= range {
+        t = modulus(t as i32, range as i32) as u16;
+      }
+    }
+    while l &lt; t {
+      x = rng();
+      m = x as u32 * range as u32;
+      l = m as u16;
+    }
+  }
+  (m &gt;&gt; 16) as u16
+}
+#}</code></pre></pre>
+<p>Okay, so the code compiles, <em>and</em> it plays nicely what the known limits of the
+various number types involved. We know that if we cast a <code>u16</code> up into <code>i32</code>
+it's assured to fit properly and also be positive, and the output is assured to
+be smaller than the input so it'll fit when we cast it back down to <code>u16</code>.
+What's even happening though? Well, this is a variation on <a href="https://arxiv.org/abs/1805.10941">Lemire's
+method</a>. One of the biggest attempts at a
+speedup here is that when you have</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+a %= b;
+#}</code></pre></pre>
+<p>You can translate that into</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+if a &gt;= b {
+  a -= b;
+  if a &gt;= b {
+    a %= b;
+  }
+}
+#}</code></pre></pre>
+<p>Now... if we're being real with ourselves, let's just think about this for a
+moment. How often will this help us? I genuinely don't know. But I do know how
+to find out: we write a program to just <a href="https://play.rust-lang.org/?version=stable&amp;mode=release&amp;edition=2015&amp;gist=48b36f8c9f6a3284c0bc65366a4fab47">enumerate all possible
+cases</a>
+and run the code. You can't always do this, but there's not many possible <code>u16</code>
+values. The output is this:</p>
+<pre><code>skip_all:32767
+sub_worked:10923
+had_to_modulus:21846
+Some skips:
+32769
+32770
+32771
+32772
+32773
+Some subs:
+21846
+21847
+21848
+21849
+21850
+Some mods:
+0
+1
+2
+3
+4
+</code></pre>
+<p>So, about half the time, we're able to skip all our work, and about a sixth of
+the time we're able to solve it with just the subtract, with the other third of
+the time we have to do the mod. However, what I personally care about the most
+is smaller ranges, and we can see that we'll have to do the mod if our target
+range size is in <code>0..21846</code>, and just the subtract if our target range size is
+in <code>21846..32769</code>, and we can only skip all work if our range size is <code>32769</code>
+and above. So that's not cool.</p>
+<p>But what <em>is</em> cool is that we're doing the modulus only once, and the rest of
+the time we've just got the cheap operations. Sounds like we can maybe try to
+cache that work and reuse a range of some particular size. We can also get that
+going pretty easily.</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct RandRangeU16 {
+  range: u16,
+  threshold: u16,
+}
+
+impl RandRangeU16 {
+  pub fn new(mut range: u16) -&gt; Self {
+    let mut threshold = range.wrapping_neg();
+    if threshold &gt;= range {
+      threshold -= range;
+      if threshold &gt;= range {
+        threshold = modulus(threshold as i32, range as i32) as u16;
+      }
+    }
+    RandRangeU16 { range, threshold }
+  }
+
+  pub fn roll_random(&amp;self, rng: &amp;mut impl FnMut() -&gt; u16) -&gt; u16 {
+    let mut x: u16 = rng();
+    let mut m: u32 = x as u32 * self.range as u32;
+    let mut l: u16 = m as u16;
+    if l &lt; self.range {
+      while l &lt; self.threshold {
+        x = rng();
+        m = x as u32 * self.range as u32;
+        l = m as u16;
+      }
+    }
+    (m &gt;&gt; 16) as u16
+  }
+}
+#}</code></pre></pre>
+<p>What if you really want to use ranges bigger than <code>u16</code>? Well, that's possible,
+but we'd want a whole new technique. Preferably one that didn't do divmod at
+all, to avoid any nastiness with sign bit nonsense. Thankfully there is one such
+method listed in the blog post, &quot;Bitmask with Rejection (Unbiased)&quot;</p>
+<pre><code class="language-cpp">uint32_t bounded_rand(rng_t&amp; rng, uint32_t range) {
+    uint32_t mask = ~uint32_t(0);
+    --range;
+    mask &gt;&gt;= __builtin_clz(range|1);
+    uint32_t x;
+    do {
+        x = rng() &amp; mask;
+    } while (x &gt; range);
+    return x;
+}
+</code></pre>
+<p>And in Rust</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+pub fn bounded_rand32(rng: &amp;mut impl FnMut() -&gt; u32, mut range: u32) -&gt; u32 {
+  let mut mask: u32 = !0;
+  range -= 1;
+  mask &gt;&gt;= (range | 1).leading_zeros();
+  let mut x = rng() &amp; mask;
+  while x &gt; range {
+    x = rng() &amp; mask;
+  }
+  x
+}
+#}</code></pre></pre>
+<p>Wow, that's so much less code. What the heck? Less code is <em>supposed</em> to be the
+faster version, why is this rated slower? Basically, because of how the math
+works out on how often you have to run the PRNG again and stuff, Lemire's method
+<em>usually</em> better with smaller ranges and the masking method <em>usually</em> works
+better with larger ranges. If your target range fits in a <code>u8</code>, probably use
+Lemire's. If it's bigger than <code>u8</code>, or if you need to do it just once and can't
+benefit from the cached modulus, you might want to start moving toward the
+masking version at some point in there. Obviously if your target range is more
+than a <code>u16</code> then you have to use the masking method. The fact that they're each
+oriented towards different size generator outputs only makes things more
+complicated.</p>
+<p>Life just be that way, I guess.</p>
+<a class="header" href="#summary-table" id="summary-table"><h2>Summary Table</h2></a>
+<p>That was a whole lot. Let's put them in a table:</p>
+<table><thead><tr><th align="left"> Generator      </th><th align="center"> Bytes </th><th align="center"> Output </th><th align="center"> Period </th><th align="center"> k-Dim </th></tr></thead><tbody>
+<tr><td align="left"> sm64           </td><td align="center"> 2     </td><td align="center"> u16    </td><td align="center"> 65,114 </td><td align="center"> 0     </td></tr>
+<tr><td align="left"> lcg32          </td><td align="center"> 4     </td><td align="center"> u16    </td><td align="center"> 2^32   </td><td align="center"> 1     </td></tr>
+<tr><td align="left"> pcg16_xsh_rs   </td><td align="center"> 4     </td><td align="center"> u16    </td><td align="center"> 2^32   </td><td align="center"> 1     </td></tr>
+<tr><td align="left"> pcg32_rxs_m_xs </td><td align="center"> 4     </td><td align="center"> u32    </td><td align="center"> 2^32   </td><td align="center"> 1     </td></tr>
+<tr><td align="left"> PCG16Ext8      </td><td align="center"> 20    </td><td align="center"> u16    </td><td align="center"> 2^160  </td><td align="center"> 8     </td></tr>
+<tr><td align="left"> xoshiro128**   </td><td align="center"> 16    </td><td align="center"> u32    </td><td align="center"> 2^128-1</td><td align="center"> 0     </td></tr>
+<tr><td align="left"> jsf32          </td><td align="center"> 16    </td><td align="center"> u32    </td><td align="center"> ~2^126 </td><td align="center"> 0     </td></tr>
+</tbody></table>
+<a class="header" href="#making-a-memory-game" id="making-a-memory-game"><h1>Making A Memory Game</h1></a>
+<p>For this example to show off our new skills we'll make a &quot;memory&quot; game. The idea
+is that there's some face down cards and you pick one, it flips, you pick a
+second, if they match they both go away, if they don't match they both turn back
+face down. The player keeps going until all the cards are gone, then we'll deal
+the cards again.</p>
+<p>There are many steps to do to get such a simple seeming game going. In fact I
+stumbled a bit myself when trying to get things set up and going despite having
+written and explained all the parts so far. Accordingly, we'll take each part
+very slowly, and review things as we build up our game.</p>
+<p>We'll start back with a nearly blank file, calling it <code>memory_game.rs</code>:</p>
+<pre><pre class="playpen"><code class="language-rust">#![feature(start)]
+#![no_std]
+
+#[panic_handler]
+fn panic(_info: &amp;core::panic::PanicInfo) -&gt; ! {
+  loop {}
+}
+
+#[start]
+fn main(_argc: isize, _argv: *const *const u8) -&gt; isize {
+  loop {
+    // TODO the whole thing
+  }
+}
+</code></pre></pre>
+<a class="header" href="#displaying-a-background" id="displaying-a-background"><h2>Displaying A Background</h2></a>
+<p>First let's try to get a background going. We'll display a simple checker
+pattern just so that we know that we did something.</p>
+<p>Remember, backgrounds have the following essential components:</p>
+<ul>
+<li>Background Palette</li>
+<li>Background Tiles</li>
+<li>Screenblock</li>
+<li>IO Registers</li>
+</ul>
+<a class="header" href="#background-palette" id="background-palette"><h3>Background Palette</h3></a>
+<p>To write to the background palette memory we'll want to name a <code>VolatilePtr</code> for
+it. We'll probably also want to be able to cast between different types either
+right away or later in this program, so we'll add a method for that.</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[repr(transparent)]
+pub struct VolatilePtr&lt;T&gt;(pub *mut T);
+impl&lt;T&gt; VolatilePtr&lt;T&gt; {
+  pub unsafe fn read(&amp;self) -&gt; T {
+    core::ptr::read_volatile(self.0)
+  }
+  pub unsafe fn write(&amp;self, data: T) {
+    core::ptr::write_volatile(self.0, data);
+  }
+  pub fn offset(self, count: isize) -&gt; Self {
+    VolatilePtr(self.0.wrapping_offset(count))
+  }
+  pub fn cast&lt;Z&gt;(self) -&gt; VolatilePtr&lt;Z&gt; {
+    VolatilePtr(self.0 as *mut Z)
+  }
+}
+#}</code></pre></pre>
+<p>Now we give ourselves an easy way to write a color into a palbank slot.</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+pub const BACKGROUND_PALETTE: VolatilePtr&lt;u16&gt; = VolatilePtr(0x500_0000 as *mut u16);
+
+pub fn set_bg_palette_4bpp(palbank: usize, slot: usize, color: u16) {
+  assert!(palbank &lt; 16);
+  assert!(slot &gt; 0 &amp;&amp; slot &lt; 16);
+  unsafe {
+    BACKGROUND_PALETTE
+      .cast::&lt;[u16; 16]&gt;()
+      .offset(palbank as isize)
+      .cast::&lt;u16&gt;()
+      .offset(slot as isize)
+      .write(color);
+  }
+}
+#}</code></pre></pre>
+<p>And of course we need to bring back in our ability to build color values, as
+well as a few named colors to start us off:</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+pub const fn rgb16(red: u16, green: u16, blue: u16) -&gt; u16 {
+  blue &lt;&lt; 10 | green &lt;&lt; 5 | red
+}
+
+pub const WHITE: u16 = rgb16(31, 31, 31);
+pub const LIGHT_GRAY: u16 = rgb16(25, 25, 25);
+pub const DARK_GRAY: u16 = rgb16(15, 15, 15);
+#}</code></pre></pre>
+<p>Which <em>finally</em> allows us to set our palette colors in <code>main</code>:</p>
+<pre><pre class="playpen"><code class="language-rust">fn main(_argc: isize, _argv: *const *const u8) -&gt; isize {
+  set_bg_palette_4bpp(0, 1, WHITE);
+  set_bg_palette_4bpp(0, 2, LIGHT_GRAY);
+  set_bg_palette_4bpp(0, 3, DARK_GRAY);
+</code></pre></pre>
+<a class="header" href="#background-tiles" id="background-tiles"><h3>Background Tiles</h3></a>
+<p>So we'll want some light gray tiles and some dark gray tiles. We could use a
+single tile and then swap it between palbanks to do the color selection, but for
+now we'll just use two different tiles, since we've got tons of tile space to
+spare.</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+#[derive(Debug, Clone, Copy, Default)]
+#[repr(transparent)]
+pub struct Tile4bpp {
+  pub data: [u32; 8],
+}
+
+pub const ALL_TWOS: Tile4bpp = Tile4bpp {
+  data: [
+    0x22222222, 0x22222222, 0x22222222, 0x22222222, 0x22222222, 0x22222222, 0x22222222, 0x22222222,
+  ],
+};
+
+pub const ALL_THREES: Tile4bpp = Tile4bpp {
+  data: [
+    0x33333333, 0x33333333, 0x33333333, 0x33333333, 0x33333333, 0x33333333, 0x33333333, 0x33333333,
+  ],
+};
+#}</code></pre></pre>
+<p>And then we have to have a way to put the tiles into video memory:</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+#[derive(Clone, Copy)]
+#[repr(transparent)]
+pub struct Charblock4bpp {
+  pub data: [Tile4bpp; 512],
+}
+
+pub const VRAM: VolatilePtr&lt;Charblock4bpp&gt; = VolatilePtr(0x0600_0000 as *mut Charblock4bpp);
+
+pub fn set_bg_tile_4bpp(charblock: usize, index: usize, tile: Tile4bpp) {
+  assert!(charblock &lt; 4);
+  assert!(index &lt; 512);
+  unsafe { VRAM.offset(charblock as isize).cast::&lt;Tile4bpp&gt;().offset(index as isize).write(tile) }
+}
+#}</code></pre></pre>
+<p>And finally, we can call that within <code>main</code>:</p>
+<pre><pre class="playpen"><code class="language-rust">fn main(_argc: isize, _argv: *const *const u8) -&gt; isize {
+  // bg palette
+  set_bg_palette_4bpp(0, 1, WHITE);
+  set_bg_palette_4bpp(0, 2, LIGHT_GRAY);
+  set_bg_palette_4bpp(0, 3, DARK_GRAY);
+  // bg tiles
+  set_bg_tile_4bpp(0, 0, ALL_TWOS);
+  set_bg_tile_4bpp(0, 1, ALL_THREES);
+</code></pre></pre>
+<a class="header" href="#setup-a-screenblock" id="setup-a-screenblock"><h3>Setup A Screenblock</h3></a>
+<p>Screenblocks are a little weird because they take the same space as the
+charblocks (8 screenblocks per charblock). The GBA will let you mix and match
+and it's up to you to keep it all straight. We're using tiles at the base of
+charblock 0, so we'll place our screenblock at the base of charblock 1.</p>
+<p>First, we have to be able to make one single screenblock entry at a time:</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+#[derive(Debug, Clone, Copy, Default)]
+#[repr(transparent)]
+pub struct RegularScreenblockEntry(u16);
+
+impl RegularScreenblockEntry {
+  pub const SCREENBLOCK_ENTRY_TILE_ID_MASK: u16 = 0b11_1111_1111;
+  pub fn from_tile_id(id: u16) -&gt; Self {
+    RegularScreenblockEntry(id &amp; Self::SCREENBLOCK_ENTRY_TILE_ID_MASK)
+  }
+}
+#}</code></pre></pre>
+<p>And then with 32x32 of these things we'll have a whole screenblock. Now, we
+probably won't actually make values of the screenblock type itself, but we at
+least need it to have the type declared with the correct size so that we can
+move our pointers around by the right amount.</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+#[derive(Clone, Copy)]
+#[repr(transparent)]
+pub struct RegularScreenblock {
+  pub data: [RegularScreenblockEntry; 32 * 32],
+}
+#}</code></pre></pre>
+<p>Alright, so, as I said those things are kinda big, we don't really want to be
+building them up on the stack if we can avoid it, so we'll write one straight
+into memory at the correct location.</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+pub fn checker_screenblock(slot: usize, a_entry: RegularScreenblockEntry, b_entry: RegularScreenblockEntry) {
+  let mut p = VRAM.cast::&lt;RegularScreenblock&gt;().offset(slot as isize).cast::&lt;RegularScreenblockEntry&gt;();
+  let mut checker = true;
+  for _row in 0..32 {
+    for _col in 0..32 {
+      unsafe { p.write(if checker { a_entry } else { b_entry }) };
+      p = p.offset(1);
+      checker = !checker;
+    }
+    checker = !checker;
+  }
+}
+#}</code></pre></pre>
+<p>And then we add this into <code>main</code></p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+  // screenblock
+  let light_entry = RegularScreenblockEntry::from_tile_id(0);
+  let dark_entry = RegularScreenblockEntry::from_tile_id(1);
+  checker_screenblock(8, light_entry, dark_entry);
+#}</code></pre></pre>
+<a class="header" href="#background-io-registers" id="background-io-registers"><h3>Background IO Registers</h3></a>
+<p>Our most important step is of course the IO register step. There's four
+different background layers, but each of them has the same format for their
+control register. For the moment, all that we care about is being able to set
+the &quot;screen base block&quot; value.</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+#[derive(Clone, Copy, Default, PartialEq, Eq)]
+#[repr(transparent)]
+pub struct BackgroundControlSetting(u16);
+
+impl BackgroundControlSetting {
+  pub fn from_base_block(sbb: u16) -&gt; Self {
+    BackgroundControlSetting(sbb &lt;&lt; 8)
+  }
+}
+
+pub const BG0CNT: VolatilePtr&lt;BackgroundControlSetting&gt; = VolatilePtr(0x400_0008 as *mut BackgroundControlSetting);
+#}</code></pre></pre>
+<p>And... that's all it takes for us to be able to add a line into <code>main</code></p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+  // bg0 control
+  unsafe { BG0CNT.write(BackgroundControlSetting::from_base_block(8)) };
+#}</code></pre></pre>
+<a class="header" href="#set-the-display-control-register" id="set-the-display-control-register"><h3>Set The Display Control Register</h3></a>
+<p>We're finally ready to set the display control register and get things going.</p>
+<p>We've slightly glossed over it so far, but when the GBA is first booted most
+everything within the address space will be all zeroed. However, the display
+control register has the &quot;Force VBlank&quot; bit enabled by the BIOS, giving you a
+moment to put the memory in place that you'll need for the first frame.</p>
+<p>So, now that have got all of our memory set, we'll overwrite the initial
+display control register value with what we'll call &quot;just enable bg0&quot;.</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+#[derive(Clone, Copy, Default, PartialEq, Eq)]
+#[repr(transparent)]
+pub struct DisplayControlSetting(u16);
+
+impl DisplayControlSetting {
+  pub const JUST_ENABLE_BG0: DisplayControlSetting = DisplayControlSetting(1 &lt;&lt; 8);
+}
+
+pub const DISPCNT: VolatilePtr&lt;DisplayControlSetting&gt; = VolatilePtr(0x0400_0000 as *mut DisplayControlSetting);
+#}</code></pre></pre>
+<p>And so finally we have a complete <code>main</code></p>
+<pre><pre class="playpen"><code class="language-rust">#[start]
+fn main(_argc: isize, _argv: *const *const u8) -&gt; isize {
+  // bg palette
+  set_bg_palette_4bpp(0, 1, WHITE);
+  set_bg_palette_4bpp(0, 2, LIGHT_GRAY);
+  set_bg_palette_4bpp(0, 3, DARK_GRAY);
+  // bg tiles
+  set_bg_tile_4bpp(0, 0, ALL_TWOS);
+  set_bg_tile_4bpp(0, 1, ALL_THREES);
+  // screenblock
+  let light_entry = RegularScreenblockEntry::from_tile_id(0);
+  let dark_entry = RegularScreenblockEntry::from_tile_id(1);
+  checker_screenblock(8, light_entry, dark_entry);
+  // bg0 control
+  unsafe { BG0CNT.write(BackgroundControlSetting::from_base_block(8)) };
+  // Display Control
+  unsafe { DISPCNT.write(DisplayControlSetting::JUST_ENABLE_BG0) };
+  loop {
+    // TODO the whole thing
+  }
+}
+</code></pre></pre>
+<p>And <em>It works, Marty! It works!</em></p>
+<p><img src="screenshot_checkers.png" alt="screenshot_checkers" /></p>
 
                     </main>
 

@@ -1,4 +1,4 @@
-# memory_game
+# Making A Memory Game
 
 For this example to show off our new skills we'll make a "memory" game. The idea
 is that there's some face down cards and you pick one, it flips, you pick a
@@ -6,207 +6,310 @@ second, if they match they both go away, if they don't match they both turn back
 face down. The player keeps going until all the cards are gone, then we'll deal
 the cards again.
 
-For this example, I started with the `light_cycle.rs` example and then just
-copied it into a new file, `memory_game.rs`. Then I added most all the code from
-the previous sections right into that file, so we'll assume that all those
-definitions are in scope.
+There are many steps to do to get such a simple seeming game going. In fact I
+stumbled a bit myself when trying to get things set up and going despite having
+written and explained all the parts so far. Accordingly, we'll take each part
+very slowly, and review things as we build up our game.
 
-## Getting Some Images
-
-First we need some images to show! Let's have one for our little selector thingy
-that we'll move around to pick cards with. How about some little triangles at
-the corner of a square like on a picture frame.
+We'll start back with a nearly blank file, calling it `memory_game.rs`:
 
 ```rust
-#[rustfmt::skip]
-pub const CARD_SELECTOR: Tile4bpp = Tile4bpp {
-  data : [
-    0x44400444,
-    0x44000044,
-    0x40000004,
-    0x00000000,
-    0x00000000,
-    0x40000004,
-    0x44000044,
-    0x44400444
-  ]
-};
-```
+#![feature(start)]
+#![no_std]
 
-That weird looking attribute keeps rustfmt from spreading out the values, so
-that we can see it as an ASCII art. Now that we understand what an individual
-tile looks like, let's add some mono-color squares.
-
-```rust
-#[rustfmt::skip]
-pub const FULL_ONE: Tile4bpp = Tile4bpp {
-  data : [
-    0x11111111,
-    0x11111111,
-    0x11111111,
-    0x11111111,
-    0x11111111,
-    0x11111111,
-    0x11111111,
-    0x11111111,
-  ]
-};
-
-#[rustfmt::skip]
-pub const FULL_TWO: Tile4bpp = Tile4bpp {
-  data : [
-    0x22222222,
-    0x22222222,
-    0x22222222,
-    0x22222222,
-    0x22222222,
-    0x22222222,
-    0x22222222,
-    0x22222222
-  ]
-};
-
-#[rustfmt::skip]
-pub const FULL_THREE: Tile4bpp = Tile4bpp {
-  data : [
-    0x33333333,
-    0x33333333,
-    0x33333333,
-    0x33333333,
-    0x33333333,
-    0x33333333,
-    0x33333333,
-    0x33333333
-  ]
-};
-```
-
-We can control the rest with palbank selection. Since there's 16 palbanks,
-that's 48 little colored squares we can make, and 16 different selector colors,
-which should be plenty in both cases.
-
-## Setup The Images
-
-### Arrange the PALRAM
-
-Alright, so, as we went over, the first step is to make sure that we've got our
-palette data in order. We'll be using this to set our palette values.
-
-```rust
-pub fn set_bg_palette(slot: usize, color: u16) {
-  assert!(slot < 256);
-  unsafe { PALRAM_BG_BASE.offset(slot as isize).write(color) }
+#[panic_handler]
+fn panic(_info: &core::panic::PanicInfo) -> ! {
+  loop {}
 }
-```
 
-Should the type of `slot` be changed to `u8` instead of `usize`? Well, maybe.
-Let's not worry about it at the moment.
-
-Of course, we don't need to set the color black, all the values start as black.
-We just need to set the other colors we'll be wanting. For this demo, we'll just
-use the same basic colors for both the BG and Object stuff.
-
-```rust
-pub fn init_palette() {
-  // palbank 0: black/white/gray
-  set_bg_palette(2, rgb16(31, 31, 31));
-  set_bg_palette(3, rgb16(15, 15, 15));
-  // palbank 1 is reds
-  set_bg_palette(1 * 16 + 1, rgb16(31, 0, 0));
-  set_bg_palette(1 * 16 + 2, rgb16(22, 0, 0));
-  set_bg_palette(1 * 16 + 3, rgb16(10, 0, 0));
-  // palbank 2 is greens
-  set_bg_palette(2 * 16 + 1, rgb16(0, 31, 0));
-  set_bg_palette(2 * 16 + 2, rgb16(0, 22, 0));
-  set_bg_palette(2 * 16 + 3, rgb16(0, 10, 0));
-  // palbank 2 is blues
-  set_bg_palette(3 * 16 + 1, rgb16(0, 0, 31));
-  set_bg_palette(3 * 16 + 2, rgb16(0, 0, 22));
-  set_bg_palette(3 * 16 + 3, rgb16(0, 0, 10));
-
-  // Direct copy all BG selections into OBJ palette too
-  let mut bgp = PALRAM_BG_BASE;
-  let mut objp = PALRAM_OBJECT_BASE;
-  for _ in 0..(4 * 16) {
-    objp.write(bgp.read());
-    bgp = bgp.offset(1);
-    objp = objp.offset(1);
+#[start]
+fn main(_argc: isize, _argv: *const *const u8) -> isize {
+  loop {
+    // TODO the whole thing
   }
 }
 ```
 
-### Arrange the Objects
+## Displaying A Background
 
-So, time to think about objects. I'm thinking we'll have 13 objects in use. One
-for the selector, and then 12 for the cards (a simple grid that's 4 wide and 3
-tall).
+First let's try to get a background going. We'll display a simple checker
+pattern just so that we know that we did something.
 
-We want a way to easily clear away all the objects that we're not using, which
-is all the slots starting at some index and then going to the end.
+Remember, backgrounds have the following essential components:
+
+* Background Palette
+* Background Tiles
+* Screenblock
+* IO Registers
+
+### Background Palette
+
+To write to the background palette memory we'll want to name a `VolatilePtr` for
+it. We'll probably also want to be able to cast between different types either
+right away or later in this program, so we'll add a method for that.
 
 ```rust
-pub fn clear_objects_starting_with(base_slot: usize) {
-  let mut obj = ObjectAttributes::default();
-  obj.set_rendering(ObjectRenderMode::Disabled);
-  for s in base_slot..128 {
-    set_object_attributes(s, obj);
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[repr(transparent)]
+pub struct VolatilePtr<T>(pub *mut T);
+impl<T> VolatilePtr<T> {
+  pub unsafe fn read(&self) -> T {
+    core::ptr::read_volatile(self.0)
+  }
+  pub unsafe fn write(&self, data: T) {
+    core::ptr::write_volatile(self.0, data);
+  }
+  pub fn offset(self, count: isize) -> Self {
+    VolatilePtr(self.0.wrapping_offset(count))
+  }
+  pub fn cast<Z>(self) -> VolatilePtr<Z> {
+    VolatilePtr(self.0 as *mut Z)
   }
 }
 ```
 
-Next we set out the positions of our cards. We set the tile data we need, and
-then assign the object attributes to go with it. For this, we'll make the
-position finder function be its own thing since we'll also need it for the card
-selector to move around. Finally, we set our selector as being at position 0,0
-of the card grid.
+Now we give ourselves an easy way to write a color into a palbank slot.
 
 ```rust
-pub fn position_of_card(card_col: usize, card_row: usize) -> (u16, u16) {
-  (10 + card_col as u16 * 17, 5 + card_row as u16 * 15)
+pub const BACKGROUND_PALETTE: VolatilePtr<u16> = VolatilePtr(0x500_0000 as *mut u16);
+
+pub fn set_bg_palette_4bpp(palbank: usize, slot: usize, color: u16) {
+  assert!(palbank < 16);
+  assert!(slot > 0 && slot < 16);
+  unsafe {
+    BACKGROUND_PALETTE
+      .cast::<[u16; 16]>()
+      .offset(palbank as isize)
+      .cast::<u16>()
+      .offset(slot as isize)
+      .write(color);
+  }
+}
+```
+
+And of course we need to bring back in our ability to build color values, as
+well as a few named colors to start us off:
+
+```rust
+pub const fn rgb16(red: u16, green: u16, blue: u16) -> u16 {
+  blue << 10 | green << 5 | red
 }
 
-pub fn arrange_cards() {
-  set_obj_tile_4bpp(1, FULL_ONE);
-  set_obj_tile_4bpp(2, FULL_TWO);
-  set_obj_tile_4bpp(3, FULL_THREE);
-  let mut obj = ObjectAttributes::default();
-  obj.set_tile_index(2); // along with palbank0, this is a white card
-  for card_row in 0..3 {
-    for card_col in 0..4 {
-      let (col, row) = position_of_card(card_col, card_row);
-      obj.set_column(col);
-      obj.set_row(row);
-      set_object_attributes(1 + card_col as usize + (card_row as usize * 3), obj);
+pub const WHITE: u16 = rgb16(31, 31, 31);
+pub const LIGHT_GRAY: u16 = rgb16(25, 25, 25);
+pub const DARK_GRAY: u16 = rgb16(15, 15, 15);
+```
+
+Which _finally_ allows us to set our palette colors in `main`:
+
+```rust
+fn main(_argc: isize, _argv: *const *const u8) -> isize {
+  set_bg_palette_4bpp(0, 1, WHITE);
+  set_bg_palette_4bpp(0, 2, LIGHT_GRAY);
+  set_bg_palette_4bpp(0, 3, DARK_GRAY);
+```
+
+### Background Tiles
+
+So we'll want some light gray tiles and some dark gray tiles. We could use a
+single tile and then swap it between palbanks to do the color selection, but for
+now we'll just use two different tiles, since we've got tons of tile space to
+spare.
+
+```rust
+#[derive(Debug, Clone, Copy, Default)]
+#[repr(transparent)]
+pub struct Tile4bpp {
+  pub data: [u32; 8],
+}
+
+pub const ALL_TWOS: Tile4bpp = Tile4bpp {
+  data: [
+    0x22222222, 0x22222222, 0x22222222, 0x22222222, 0x22222222, 0x22222222, 0x22222222, 0x22222222,
+  ],
+};
+
+pub const ALL_THREES: Tile4bpp = Tile4bpp {
+  data: [
+    0x33333333, 0x33333333, 0x33333333, 0x33333333, 0x33333333, 0x33333333, 0x33333333, 0x33333333,
+  ],
+};
+```
+
+And then we have to have a way to put the tiles into video memory:
+
+```rust
+#[derive(Clone, Copy)]
+#[repr(transparent)]
+pub struct Charblock4bpp {
+  pub data: [Tile4bpp; 512],
+}
+
+pub const VRAM: VolatilePtr<Charblock4bpp> = VolatilePtr(0x0600_0000 as *mut Charblock4bpp);
+
+pub fn set_bg_tile_4bpp(charblock: usize, index: usize, tile: Tile4bpp) {
+  assert!(charblock < 4);
+  assert!(index < 512);
+  unsafe { VRAM.offset(charblock as isize).cast::<Tile4bpp>().offset(index as isize).write(tile) }
+}
+```
+
+And finally, we can call that within `main`:
+
+```rust
+fn main(_argc: isize, _argv: *const *const u8) -> isize {
+  // bg palette
+  set_bg_palette_4bpp(0, 1, WHITE);
+  set_bg_palette_4bpp(0, 2, LIGHT_GRAY);
+  set_bg_palette_4bpp(0, 3, DARK_GRAY);
+  // bg tiles
+  set_bg_tile_4bpp(0, 0, ALL_TWOS);
+  set_bg_tile_4bpp(0, 1, ALL_THREES);
+```
+
+### Setup A Screenblock
+
+Screenblocks are a little weird because they take the same space as the
+charblocks (8 screenblocks per charblock). The GBA will let you mix and match
+and it's up to you to keep it all straight. We're using tiles at the base of
+charblock 0, so we'll place our screenblock at the base of charblock 1.
+
+First, we have to be able to make one single screenblock entry at a time:
+
+```rust
+#[derive(Debug, Clone, Copy, Default)]
+#[repr(transparent)]
+pub struct RegularScreenblockEntry(u16);
+
+impl RegularScreenblockEntry {
+  pub const SCREENBLOCK_ENTRY_TILE_ID_MASK: u16 = 0b11_1111_1111;
+  pub fn from_tile_id(id: u16) -> Self {
+    RegularScreenblockEntry(id & Self::SCREENBLOCK_ENTRY_TILE_ID_MASK)
+  }
+}
+```
+
+And then with 32x32 of these things we'll have a whole screenblock. Now, we
+probably won't actually make values of the screenblock type itself, but we at
+least need it to have the type declared with the correct size so that we can
+move our pointers around by the right amount.
+
+```rust
+#[derive(Clone, Copy)]
+#[repr(transparent)]
+pub struct RegularScreenblock {
+  pub data: [RegularScreenblockEntry; 32 * 32],
+}
+```
+
+Alright, so, as I said those things are kinda big, we don't really want to be
+building them up on the stack if we can avoid it, so we'll write one straight
+into memory at the correct location.
+
+```rust
+pub fn checker_screenblock(slot: usize, a_entry: RegularScreenblockEntry, b_entry: RegularScreenblockEntry) {
+  let mut p = VRAM.cast::<RegularScreenblock>().offset(slot as isize).cast::<RegularScreenblockEntry>();
+  let mut checker = true;
+  for _row in 0..32 {
+    for _col in 0..32 {
+      unsafe { p.write(if checker { a_entry } else { b_entry }) };
+      p = p.offset(1);
+      checker = !checker;
     }
+    checker = !checker;
   }
-}
-
-pub fn init_selector() {
-  set_obj_tile_4bpp(0, CARD_SELECTOR);
-  let mut obj = ObjectAttributes::default();
-  let (col, row) = position_of_card(0, 0);
-  obj.set_column(col);
-  obj.set_row(row);
-  set_object_attributes(0, obj);
 }
 ```
 
-### Arrange the Background
+And then we add this into `main`
 
-TODO
+```rust
+  // screenblock
+  let light_entry = RegularScreenblockEntry::from_tile_id(0);
+  let dark_entry = RegularScreenblockEntry::from_tile_id(1);
+  checker_screenblock(8, light_entry, dark_entry);
+```
 
-## Shuffling The Cards
+### Background IO Registers
 
-TODO
+Our most important step is of course the IO register step. There's four
+different background layers, but each of them has the same format for their
+control register. For the moment, all that we care about is being able to set
+the "screen base block" value.
 
-## Picking One Card
+```rust
+#[derive(Clone, Copy, Default, PartialEq, Eq)]
+#[repr(transparent)]
+pub struct BackgroundControlSetting(u16);
 
-TODO
+impl BackgroundControlSetting {
+  pub fn from_base_block(sbb: u16) -> Self {
+    BackgroundControlSetting(sbb << 8)
+  }
+}
 
-## Picking The Second Card
+pub const BG0CNT: VolatilePtr<BackgroundControlSetting> = VolatilePtr(0x400_0008 as *mut BackgroundControlSetting);
+```
 
-TODO
+And... that's all it takes for us to be able to add a line into `main`
 
-## Resetting The Game
+```rust
+  // bg0 control
+  unsafe { BG0CNT.write(BackgroundControlSetting::from_base_block(8)) };
+```
 
-TODO
+### Set The Display Control Register
+
+We're finally ready to set the display control register and get things going.
+
+We've slightly glossed over it so far, but when the GBA is first booted most
+everything within the address space will be all zeroed. However, the display
+control register has the "Force VBlank" bit enabled by the BIOS, giving you a
+moment to put the memory in place that you'll need for the first frame.
+
+So, now that have got all of our memory set, we'll overwrite the initial
+display control register value with what we'll call "just enable bg0".
+
+```rust
+#[derive(Clone, Copy, Default, PartialEq, Eq)]
+#[repr(transparent)]
+pub struct DisplayControlSetting(u16);
+
+impl DisplayControlSetting {
+  pub const JUST_ENABLE_BG0: DisplayControlSetting = DisplayControlSetting(1 << 8);
+}
+
+pub const DISPCNT: VolatilePtr<DisplayControlSetting> = VolatilePtr(0x0400_0000 as *mut DisplayControlSetting);
+```
+
+And so finally we have a complete `main`
+
+```rust
+#[start]
+fn main(_argc: isize, _argv: *const *const u8) -> isize {
+  // bg palette
+  set_bg_palette_4bpp(0, 1, WHITE);
+  set_bg_palette_4bpp(0, 2, LIGHT_GRAY);
+  set_bg_palette_4bpp(0, 3, DARK_GRAY);
+  // bg tiles
+  set_bg_tile_4bpp(0, 0, ALL_TWOS);
+  set_bg_tile_4bpp(0, 1, ALL_THREES);
+  // screenblock
+  let light_entry = RegularScreenblockEntry::from_tile_id(0);
+  let dark_entry = RegularScreenblockEntry::from_tile_id(1);
+  checker_screenblock(8, light_entry, dark_entry);
+  // bg0 control
+  unsafe { BG0CNT.write(BackgroundControlSetting::from_base_block(8)) };
+  // Display Control
+  unsafe { DISPCNT.write(DisplayControlSetting::JUST_ENABLE_BG0) };
+  loop {
+    // TODO the whole thing
+  }
+}
+```
+
+And _It works, Marty! It works!_
+
+![screenshot_checkers](screenshot_checkers.png)
+
+We've got more to go, but we're well on our way.

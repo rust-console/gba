@@ -123,14 +123,14 @@ everything all lined up and into place anyway.
 The final step is to assign the correct attributes to an object. Each object has
 three `u16` values that make up its overall attributes.
 
-Before we go into the details, I want to remind you that the hardware will
-attempt to process every single object every single frame, and also that all of
-the GBA's memory is cleared to 0 at startup. Why do these two things matter
-right now? As you'll see in a second an "all zero" set of object attributes
-causes an 8x8 object to appear at 0,0 using object tile index 0. This is usually
-_not_ what you want your unused objects to do. When your game first starts you
-should take a moment to mark any objects you won't be using as objects to not
-render.
+Before we go into the details, I want to bring up that the hardware will attempt
+to process every single object every single frame if the object layer is
+enabled, and also that all of the GBA's object memory is cleared to 0 at
+startup. Why do these two things matter right now? As you'll see in a second an
+"all zero" set of object attributes causes an 8x8 object to appear at 0,0 using
+object tile index 0. This is usually _not_ what you want your unused objects to
+do. When your game first starts you should take a moment to mark any objects you
+won't be using as objects to not render.
 
 ### ObjectAttributes.attr0
 
