@@ -1,12 +1,16 @@
 
+# Rust GBA Guide
+
 * Introduction
-  * Goals Of This Book
-  * Prerequisites
+  * Reader Requirements
+  * Book Goals and Style
   * Getting Outside Help
   * Development Setup
   * Hello Magic
-  * Volatile
+* GBA Limitations
+  * No Floats
   * Core Only
+  * Volatile Destination
 * Broad Concepts
   * BIOS
   * Working RAM
@@ -16,13 +20,13 @@
   * Object Attribute Memory
   * Game Pak ROM / Flash ROM
   * Save RAM
-* Video Modes
+* Video
   * RBG15 Color
   * Bitmap Modes
   * Tiled Modes
   * Affine Math
   * Special Effects
-* Non-Video Hardware
+* Non-Video
   * Buttons
   * Timers
   * Direct Memory Access
@@ -31,4 +35,7 @@
   * Network
   * Game Pak
 * Examples
-  * for example in example_list
+  * hello_magic
+  * hello_world
+  * light_cycle
+  * bg_demo

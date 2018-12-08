@@ -2,6 +2,7 @@
 #![cfg_attr(not(test), feature(asm))]
 #![warn(missing_docs)]
 #![allow(clippy::cast_lossless)]
+#![deny(clippy::float_arithmetic)]
 
 //! This crate helps you write GBA ROMs.
 //!
@@ -77,11 +78,11 @@ pub fn div_modulus(numerator: i32, denominator: i32) -> (i32, i32) {
     let mod_out: i32;
     unsafe {
       asm!(/* assembly template */ "swi 0x06"
-        :/* output operands */ "={r0}"(div_out), "={r1}"(mod_out)
-        :/* input operands */ "{r0}"(numerator), "{r1}"(denominator)
-        :/* clobbers */ "r3"
-        :/* options */
-    );
+          :/* output operands */ "={r0}"(div_out), "={r1}"(mod_out)
+          :/* input operands */ "{r0}"(numerator), "{r1}"(denominator)
+          :/* clobbers */ "r3"
+          :/* options */
+      );
     }
     (div_out, mod_out)
   }
