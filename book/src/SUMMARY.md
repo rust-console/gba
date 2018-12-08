@@ -12,6 +12,7 @@
   * Core Only
   * Volatile Destination
 * Broad Concepts
+  * CPU
   * BIOS
   * Working RAM
   * IO Registers
