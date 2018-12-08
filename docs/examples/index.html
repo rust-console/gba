@@ -3,27 +3,27 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Introduction - Rust GBA Guide</title>
+        <title>Examples - Rust GBA Guide</title>
         <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="theme-color" content="#ffffff" />
 
-        <link rel="shortcut icon" href="favicon.png">
-        <link rel="stylesheet" href="css/variables.css">
-        <link rel="stylesheet" href="css/general.css">
-        <link rel="stylesheet" href="css/chrome.css">
-        <link rel="stylesheet" href="css/print.css" media="print">
+        <link rel="shortcut icon" href="../favicon.png">
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        <link rel="stylesheet" href="../css/print.css" media="print">
 
         <!-- Fonts -->
-        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
         <link href="https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800" rel="stylesheet" type="text/css">
         <link href="https://fonts.googleapis.com/css?family=Source+Code+Pro:500" rel="stylesheet" type="text/css">
 
         <!-- Highlight.js Stylesheets -->
-        <link rel="stylesheet" href="highlight.css">
-        <link rel="stylesheet" href="tomorrow-night.css">
-        <link rel="stylesheet" href="ayu-highlight.css">
+        <link rel="stylesheet" href="../highlight.css">
+        <link rel="stylesheet" href="../tomorrow-night.css">
+        <link rel="stylesheet" href="../ayu-highlight.css">
 
         <!-- Custom theme stylesheets -->
         
@@ -32,7 +32,7 @@
     </head>
     <body class="light">
         <!-- Provide site root to javascript -->
-        <script type="text/javascript">var path_to_root = "";</script>
+        <script type="text/javascript">var path_to_root = "../";</script>
 
         <!-- Work around some values being stored in localStorage wrapped in quotes -->
         <script type="text/javascript">
@@ -72,7 +72,7 @@
         </script>
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
-            <ol class="chapter"><li><a href="introduction/index.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><ol class="section"><li><a href="introduction/requirements.html"><strong aria-hidden="true">1.1.</strong> Reader Requirements</a></li><li><a href="introduction/goals_and_style.html"><strong aria-hidden="true">1.2.</strong> Book Goals and Style</a></li><li><a href="introduction/outside_help.html"><strong aria-hidden="true">1.3.</strong> Getting Outside Help</a></li><li><a href="introduction/setup.html"><strong aria-hidden="true">1.4.</strong> Development Setup</a></li><li><a href="introduction/magic.html"><strong aria-hidden="true">1.5.</strong> Hello Magic</a></li></ol></li><li><a href="limitations/index.html"><strong aria-hidden="true">2.</strong> GBA Limitations</a></li><li><ol class="section"><li><a href="limitations/no_floats.html"><strong aria-hidden="true">2.1.</strong> No Floats</a></li><li><a href="limitations/core_only.html"><strong aria-hidden="true">2.2.</strong> Core Only</a></li><li><a href="limitations/volatile_destination.html"><strong aria-hidden="true">2.3.</strong> Volatile Destination</a></li></ol></li><li><a href="concepts/index.html"><strong aria-hidden="true">3.</strong> Broad Concepts</a></li><li><ol class="section"><li><a href="concepts/cpu.html"><strong aria-hidden="true">3.1.</strong> CPU</a></li><li><a href="concepts/bios.html"><strong aria-hidden="true">3.2.</strong> BIOS</a></li><li><a href="concepts/wram.html"><strong aria-hidden="true">3.3.</strong> Working RAM</a></li><li><a href="concepts/io-registers.html"><strong aria-hidden="true">3.4.</strong> IO Registers</a></li><li><a href="concepts/palram.html"><strong aria-hidden="true">3.5.</strong> Palette RAM</a></li><li><a href="concepts/vram.html"><strong aria-hidden="true">3.6.</strong> Video RAM</a></li><li><a href="concepts/oam.html"><strong aria-hidden="true">3.7.</strong> Object Attribute Memory</a></li><li><a href="concepts/rom.html"><strong aria-hidden="true">3.8.</strong> Game Pak ROM / Flash ROM</a></li><li><a href="concepts/sram.html"><strong aria-hidden="true">3.9.</strong> Save RAM</a></li></ol></li><li><a href="video/index.html"><strong aria-hidden="true">4.</strong> Video</a></li><li><ol class="section"><li><a href="video/rgb15.html"><strong aria-hidden="true">4.1.</strong> RBG15 Color</a></li><li><a href="video/bitmap.html"><strong aria-hidden="true">4.2.</strong> Bitmap Modes</a></li><li><a href="video/tiled_modes.html"><strong aria-hidden="true">4.3.</strong> Tiled Modes</a></li><li><a href="video/affine_math.html"><strong aria-hidden="true">4.4.</strong> Affine Math</a></li><li><a href="video/specials.html"><strong aria-hidden="true">4.5.</strong> Special Effects</a></li></ol></li><li><a href="non-video/index.html"><strong aria-hidden="true">5.</strong> Non-Video</a></li><li><ol class="section"><li><a href="non-video/buttons.html"><strong aria-hidden="true">5.1.</strong> Buttons</a></li><li><a href="non-video/timers.html"><strong aria-hidden="true">5.2.</strong> Timers</a></li><li><a href="non-video/dma.html"><strong aria-hidden="true">5.3.</strong> Direct Memory Access</a></li><li><a href="non-video/sound.html"><strong aria-hidden="true">5.4.</strong> Sound</a></li><li><a href="non-video/interrupts.html"><strong aria-hidden="true">5.5.</strong> Interrupts</a></li><li><a href="non-video/network.html"><strong aria-hidden="true">5.6.</strong> Network</a></li><li><a href="non-video/game_pak.html"><strong aria-hidden="true">5.7.</strong> Game Pak</a></li></ol></li><li><a href="examples/index.html"><strong aria-hidden="true">6.</strong> Examples</a></li><li><ol class="section"><li><a href="examples/hello_magic.html"><strong aria-hidden="true">6.1.</strong> hello_magic</a></li><li><a href="examples/hello_world.html"><strong aria-hidden="true">6.2.</strong> hello_world</a></li><li><a href="examples/light_cycle.html"><strong aria-hidden="true">6.3.</strong> light_cycle</a></li><li><a href="examples/bg_demo.html"><strong aria-hidden="true">6.4.</strong> bg_demo</a></li></ol></li></ol>
+            <ol class="chapter"><li><a href="../introduction/index.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><ol class="section"><li><a href="../introduction/requirements.html"><strong aria-hidden="true">1.1.</strong> Reader Requirements</a></li><li><a href="../introduction/goals_and_style.html"><strong aria-hidden="true">1.2.</strong> Book Goals and Style</a></li><li><a href="../introduction/outside_help.html"><strong aria-hidden="true">1.3.</strong> Getting Outside Help</a></li><li><a href="../introduction/setup.html"><strong aria-hidden="true">1.4.</strong> Development Setup</a></li><li><a href="../introduction/magic.html"><strong aria-hidden="true">1.5.</strong> Hello Magic</a></li></ol></li><li><a href="../limitations/index.html"><strong aria-hidden="true">2.</strong> GBA Limitations</a></li><li><ol class="section"><li><a href="../limitations/no_floats.html"><strong aria-hidden="true">2.1.</strong> No Floats</a></li><li><a href="../limitations/core_only.html"><strong aria-hidden="true">2.2.</strong> Core Only</a></li><li><a href="../limitations/volatile_destination.html"><strong aria-hidden="true">2.3.</strong> Volatile Destination</a></li></ol></li><li><a href="../concepts/index.html"><strong aria-hidden="true">3.</strong> Broad Concepts</a></li><li><ol class="section"><li><a href="../concepts/cpu.html"><strong aria-hidden="true">3.1.</strong> CPU</a></li><li><a href="../concepts/bios.html"><strong aria-hidden="true">3.2.</strong> BIOS</a></li><li><a href="../concepts/wram.html"><strong aria-hidden="true">3.3.</strong> Working RAM</a></li><li><a href="../concepts/io-registers.html"><strong aria-hidden="true">3.4.</strong> IO Registers</a></li><li><a href="../concepts/palram.html"><strong aria-hidden="true">3.5.</strong> Palette RAM</a></li><li><a href="../concepts/vram.html"><strong aria-hidden="true">3.6.</strong> Video RAM</a></li><li><a href="../concepts/oam.html"><strong aria-hidden="true">3.7.</strong> Object Attribute Memory</a></li><li><a href="../concepts/rom.html"><strong aria-hidden="true">3.8.</strong> Game Pak ROM / Flash ROM</a></li><li><a href="../concepts/sram.html"><strong aria-hidden="true">3.9.</strong> Save RAM</a></li></ol></li><li><a href="../video/index.html"><strong aria-hidden="true">4.</strong> Video</a></li><li><ol class="section"><li><a href="../video/rgb15.html"><strong aria-hidden="true">4.1.</strong> RBG15 Color</a></li><li><a href="../video/bitmap.html"><strong aria-hidden="true">4.2.</strong> Bitmap Modes</a></li><li><a href="../video/tiled_modes.html"><strong aria-hidden="true">4.3.</strong> Tiled Modes</a></li><li><a href="../video/affine_math.html"><strong aria-hidden="true">4.4.</strong> Affine Math</a></li><li><a href="../video/specials.html"><strong aria-hidden="true">4.5.</strong> Special Effects</a></li></ol></li><li><a href="../non-video/index.html"><strong aria-hidden="true">5.</strong> Non-Video</a></li><li><ol class="section"><li><a href="../non-video/buttons.html"><strong aria-hidden="true">5.1.</strong> Buttons</a></li><li><a href="../non-video/timers.html"><strong aria-hidden="true">5.2.</strong> Timers</a></li><li><a href="../non-video/dma.html"><strong aria-hidden="true">5.3.</strong> Direct Memory Access</a></li><li><a href="../non-video/sound.html"><strong aria-hidden="true">5.4.</strong> Sound</a></li><li><a href="../non-video/interrupts.html"><strong aria-hidden="true">5.5.</strong> Interrupts</a></li><li><a href="../non-video/network.html"><strong aria-hidden="true">5.6.</strong> Network</a></li><li><a href="../non-video/game_pak.html"><strong aria-hidden="true">5.7.</strong> Game Pak</a></li></ol></li><li><a href="../examples/index.html" class="active"><strong aria-hidden="true">6.</strong> Examples</a></li><li><ol class="section"><li><a href="../examples/hello_magic.html"><strong aria-hidden="true">6.1.</strong> hello_magic</a></li><li><a href="../examples/hello_world.html"><strong aria-hidden="true">6.2.</strong> hello_world</a></li><li><a href="../examples/light_cycle.html"><strong aria-hidden="true">6.3.</strong> light_cycle</a></li><li><a href="../examples/bg_demo.html"><strong aria-hidden="true">6.4.</strong> bg_demo</a></li></ol></li></ol>
         </nav>
 
         <div id="page-wrapper" class="page-wrapper">
@@ -105,7 +105,7 @@
                         <h1 class="menu-title">Rust GBA Guide</h1> 
 
                         <div class="right-buttons">
-                            <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <a href="../print.html" title="Print this book" aria-label="Print this book">
                                 <i id="print-button" class="fa fa-print"></i>
                             </a>
                         </div>
@@ -136,14 +136,22 @@
 
                 <div id="content" class="content">
                     <main>
-                        <a class="header" href="#introduction" id="introduction"><h1>Introduction</h1></a>
+                        <a class="header" href="#examples" id="examples"><h1>Examples</h1></a>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
                         
+                            <a rel="prev" href="../non-video/game_pak.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+                        
 
+                        
+                            <a rel="next" href="../examples/hello_magic.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
                         
 
                         <div style="clear: both"></div>
@@ -153,7 +161,15 @@
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
                 
+                    <a href="../non-video/game_pak.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                
 
+                
+                    <a href="../examples/hello_magic.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
                 
             </nav>
 
@@ -166,14 +182,14 @@
         
 
         
-        <script src="elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
-        <script src="mark.min.js" type="text/javascript" charset="utf-8"></script>
-        <script src="searcher.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../searcher.js" type="text/javascript" charset="utf-8"></script>
         
 
-        <script src="clipboard.min.js" type="text/javascript" charset="utf-8"></script>
-        <script src="highlight.js" type="text/javascript" charset="utf-8"></script>
-        <script src="book.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../book.js" type="text/javascript" charset="utf-8"></script>
 
         <!-- Custom JS scripts -->
         

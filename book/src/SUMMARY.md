@@ -1,42 +1,42 @@
 
 # Rust GBA Guide
 
-* Introduction
-  * Reader Requirements
-  * Book Goals and Style
-  * Getting Outside Help
-  * Development Setup
-  * Hello Magic
-* GBA Limitations
-  * No Floats
-  * Core Only
-  * Volatile Destination
-* Broad Concepts
-  * CPU
-  * BIOS
-  * Working RAM
-  * IO Registers
-  * Palette RAM
-  * Video RAM
-  * Object Attribute Memory
-  * Game Pak ROM / Flash ROM
-  * Save RAM
-* Video
-  * RBG15 Color
-  * Bitmap Modes
-  * Tiled Modes
-  * Affine Math
-  * Special Effects
-* Non-Video
-  * Buttons
-  * Timers
-  * Direct Memory Access
-  * Sound
-  * Interrupts
-  * Network
-  * Game Pak
-* Examples
-  * hello_magic
-  * hello_world
-  * light_cycle
-  * bg_demo
+* [Introduction](introduction/index.md)
+  * [Reader Requirements](introduction/requirements.md)
+  * [Book Goals and Style](introduction/goals_and_style.md)
+  * [Getting Outside Help](introduction/outside_help.md)
+  * [Development Setup](introduction/setup.md)
+  * [Hello Magic](introduction/magic.md)
+* [GBA Limitations](limitations/index.md)
+  * [No Floats](limitations/no_floats.md)
+  * [Core Only](limitations/core_only.md)
+  * [Volatile Destination](limitations/volatile_destination.md)
+* [Broad Concepts](concepts/index.md)
+  * [CPU](concepts/cpu.md)
+  * [BIOS](concepts/bios.md)
+  * [Working RAM](concepts/wram.md)
+  * [IO Registers](concepts/io-registers.md)
+  * [Palette RAM](concepts/palram.md)
+  * [Video RAM](concepts/vram.md)
+  * [Object Attribute Memory](concepts/oam.md)
+  * [Game Pak ROM / Flash ROM](concepts/rom.md)
+  * [Save RAM](concepts/sram.md)
+* [Video](video/index.md)
+  * [RBG15 Color](video/rgb15.md)
+  * [Bitmap Modes](video/bitmap.md)
+  * [Tiled Modes](video/tiled_modes.md)
+  * [Affine Math](video/affine_math.md)
+  * [Special Effects](video/specials.md)
+* [Non-Video](non-video/index.md)
+  * [Buttons](non-video/buttons.md)
+  * [Timers](non-video/timers.md)
+  * [Direct Memory Access](non-video/dma.md)
+  * [Sound](non-video/sound.md)
+  * [Interrupts](non-video/interrupts.md)
+  * [Network](non-video/network.md)
+  * [Game Pak](non-video/game_pak.md)
+* [Examples](examples/index.md)
+  * [hello_magic](examples/hello_magic.md)
+  * [hello_world](examples/hello_world.md)
+  * [light_cycle](examples/light_cycle.md)
+  * [bg_demo](examples/bg_demo.md)
