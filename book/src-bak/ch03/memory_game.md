@@ -183,7 +183,7 @@ pub struct RegularScreenblockEntry(u16);
 
 impl RegularScreenblockEntry {
   pub const SCREENBLOCK_ENTRY_TILE_ID_MASK: u16 = 0b11_1111_1111;
-  pub fn from_tile_id(id: u16) -> Self {
+  pub const fn from_tile_id(id: u16) -> Self {
     RegularScreenblockEntry(id & Self::SCREENBLOCK_ENTRY_TILE_ID_MASK)
   }
 }
@@ -243,8 +243,9 @@ the "screen base block" value.
 pub struct BackgroundControlSetting(u16);
 
 impl BackgroundControlSetting {
-  pub fn from_base_block(sbb: u16) -> Self {
-    BackgroundControlSetting(sbb << 8)
+  pub const SCREEN_BASE_BLOCK_MASK: u16 = 0b1_1111;
+  pub const fn from_base_block(sbb: u16) -> Self {
+    BackgroundControlSetting((sbb & Self::SCREEN_BASE_BLOCK_MASK) << 8)
   }
 }
 
