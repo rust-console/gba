@@ -45,7 +45,9 @@ We have personally used some or all of the following:
 * [TONC](https://www.coranac.com/tonc/text/): While GBATEK is basically just a
   huge tech specification, TONC is an actual _guide_ on how to make sense of the
   GBA's abilities and organize it into a game. It's written for C of course, but
-  it's a large
+  as a Rust programmer you should always be practicing your ability to read C
+  code anyway. It's the programming equivalent of learning Latin because all the
+  old academic books are written in Latin.
 * [CowBite](https://www.cs.rit.edu/~tjh8300/CowBite/CowBiteSpec.htm): This is
   more like GBATEK, and it's less complete, but it mixes in a little more
   friendly explanation of things in between the hardware spec parts.
