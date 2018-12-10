@@ -92,7 +92,7 @@ steps here.
   * The file extension is important! It will work if you forget it, but `cargo
     xbuild` takes the inclusion of the extension as a flag to also compile
     dependencies with the same sysroot, so you can include other crates in your
-    build. Well, creates that work in the GBA's limited environment, but you get
+    build. Well, crates that work in the GBA's limited environment, but you get
     the idea.
 
 At this point you have an ELF binary that some emulators can execute directly
