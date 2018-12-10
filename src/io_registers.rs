@@ -352,28 +352,28 @@ pub const DMA3CNT_L: VolatilePtr<u16> = VolatilePtr(0x400_00DC as *mut u16);
 pub const DMA3CNT_H: VolatilePtr<u16> = VolatilePtr(0x400_00DE as *mut u16);
 
 /// Timer 0 Counter/Reload
-pub const TM0CNT_L: VolatilePtr<u16> = VolatilePtr(0x400_0100 as *mut u16);
+pub const TM0D: VolatilePtr<u16> = VolatilePtr(0x400_0100 as *mut u16);
 
 /// Timer 0 Control
-pub const TM0CNT_H: VolatilePtr<u16> = VolatilePtr(0x400_0102 as *mut u16);
+pub const TM0CNT: VolatilePtr<u16> = VolatilePtr(0x400_0102 as *mut u16);
 
 /// Timer 1 Counter/Reload
-pub const TM1CNT_L: VolatilePtr<u16> = VolatilePtr(0x400_0104 as *mut u16);
+pub const TM1D: VolatilePtr<u16> = VolatilePtr(0x400_0104 as *mut u16);
 
 /// Timer 1 Control
-pub const TM1CNT_H: VolatilePtr<u16> = VolatilePtr(0x400_0106 as *mut u16);
+pub const TM1CNT: VolatilePtr<u16> = VolatilePtr(0x400_0106 as *mut u16);
 
 /// Timer 2 Counter/Reload
-pub const TM2CNT_L: VolatilePtr<u16> = VolatilePtr(0x400_0108 as *mut u16);
+pub const TM2D: VolatilePtr<u16> = VolatilePtr(0x400_0108 as *mut u16);
 
 /// Timer 2 Control
-pub const TM2CNT_H: VolatilePtr<u16> = VolatilePtr(0x400_010A as *mut u16);
+pub const TM2CNT: VolatilePtr<u16> = VolatilePtr(0x400_010A as *mut u16);
 
 /// Timer 3 Counter/Reload
-pub const TM3CNT_L: VolatilePtr<u16> = VolatilePtr(0x400_010C as *mut u16);
+pub const TM3D: VolatilePtr<u16> = VolatilePtr(0x400_010C as *mut u16);
 
 /// Timer 3 Control
-pub const TM3CNT_H: VolatilePtr<u16> = VolatilePtr(0x400_010E as *mut u16);
+pub const TM3CNT: VolatilePtr<u16> = VolatilePtr(0x400_010E as *mut u16);
 
 /// SIO Data (Normal-32bit Mode; shared with below)
 pub const SIODATA32: VolatilePtr<u32> = VolatilePtr(0x400_0120 as *mut u32);

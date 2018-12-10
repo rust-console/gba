@@ -30,5 +30,5 @@
   "target-c-int-width": "32",
   "target-endian": "little",
   "target-pointer-width": "32",
-  "vendor": ""
+  "vendor": "nintendo"
 }

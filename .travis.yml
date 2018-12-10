@@ -16,7 +16,7 @@ before_script:
   - cargo install-update -a
 
 script:
-  # Obtain the devkitPro tools, using target as a temp directory
+  # Obtain the devkitPro tools, using `target/` as a temp directory
   - mkdir -p target
   - cd target
   - wget https://github.com/devkitPro/pacman/releases/download/devkitpro-pacman-1.0.1/devkitpro-pacman.deb

@@ -1,2 +1,0 @@
-# GBA RNG
-TODO
