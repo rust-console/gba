@@ -1,1 +1,0 @@
-# Book Goals and Style

@@ -1,1 +1,0 @@
-# Tiled Modes
