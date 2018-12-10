@@ -111,12 +111,22 @@ macro_rules! newtype {
 ```
 
 That seems like enough for all of our examples, so we'll stop there. We could
-add more things, such as making the `From` impl optional (because what if you
-shouldn't unwrap it for some weird reason?), allowing for more precise
-visibility controls (on both the newtype overall and the inner field), and maybe
-even other things I can't think of right now. We won't really need those in our
-example code for this book, so it's probably nicer to just keep the macro
-simpler and quit while we're ahead.
+add more things:
+
+* Making the `From` impl being optional. We'd have to make the newtype
+  invocation be more complicated somehow, the user puts ", no-unwrap" after the
+  inner type declaration or something, or something like that.
+* Allowing for more precise visibility controls on the wrapping type and on the
+  inner field. This would add a lot of line noise, so we'll just always have our
+  newtypes be `pub`.
+* Allowing for generic newtypes, which might sound silly but that we'll actually
+  see an example of soon enough. To do this you might think that we can change
+  the `:ident` declarations to `:ty`, but then you can't use that captured type
+  when you declare the new wrapping type. The way you get around this is with a
+  proc-macro, which is a lot more powerful but which also requires that the
+  proc-macro be written in an entirely other crate. We don't need that much
+  power, so for our examples we'll go with the macro_rules version and just do
+  it by hand in the few cases where we need a generic newtype.
 
 **As a reminder:** remember that macros have to appear _before_ they're invoked in
 your source, so the `newtype` macro will always have to be at the very top of
