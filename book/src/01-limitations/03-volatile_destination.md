@@ -1,8 +1,8 @@
 # Volatile Destination
 
 There's a reasonable chance that you've never heard of `volatile` before, so
-what's that? Well, it's a slightly overloaded term, but basically it means "get
-your grubby mitts off my stuff you over-eager compiler".
+what's that? Well, it's a term that can be used in more than one context, but
+basically it means "get your grubby mitts off my stuff you over-eager compiler".
 
 ## Volatile Memory
 
@@ -17,7 +17,7 @@ hardware and does _something_. The details of that something depend on the
 hardware, but what's important is that we need to actually, definitely execute
 that read or write instruction.
 
-This is like the opposite of how normal memory works. Normally when the compiler
+This is not how normal memory works. Normally when the compiler
 sees us write values into variables and read values from variables, it's free to
 optimize those expressions and eliminate some of the reads and writes if it can,
 and generally try to save us time. Maybe it even knows some stuff about the data
@@ -26,11 +26,11 @@ of order from what the source says, because the compiler knows that it won't
 actually make a difference to the operation of the program. A good and helpful
 friend, that compiler.
 
-Volatile memory works almost the exact opposite way. With volatile memory we
+Volatile memory works almost the opposite way. With volatile memory we
 need the compiler to _definitely_ emit an instruction to do a read or write and
 they need to happen _exactly_ in the order that we say to do it. Each volatile
-read or write might have any sort of unknown side effect that the compiler
-doesn't know about and it shouldn't try to be clever about it. Just do what we
+read or write might have any sort of side effect that the compiler
+doesn't know about, and it shouldn't try to be clever about the optimization. Just do what we
 say, please.
 
 In Rust, we don't mark volatile things as being a separate type of thing,
@@ -80,12 +80,12 @@ and writing of course:
 ```rust
 impl<T> VolatilePtr<T> {
   /// Performs a `read_volatile`.
-  pub unsafe fn read(&self) -> T {
+  pub unsafe fn read(self) -> T {
     self.0.read_volatile()
   }
 
   /// Performs a `write_volatile`.
-  pub unsafe fn write(&self, data: T) {
+  pub unsafe fn write(self, data: T) {
     self.0.write_volatile(data);
   }
 ```
@@ -107,10 +107,46 @@ Undefined Behavior _simply to calculate the out of bounds result_, and with
 result.
 
 ```rust
-  /// Performs a `wrapping_offset`.
+  /// Performs a normal `offset`.
   pub unsafe fn offset(self, count: isize) -> Self {
     VolatilePtr(self.0.offset(count))
   }
+```
+
+Now, one thing of note is that doing the `offset` isn't `const`. If we wanted to have a `const` function for
+finding the correct spot within a volatile block of memory we'd have to do all the math using `usize` values
+and then cast that value into being a pointer once we were done. In the future Rust might be
+able to do it without a goofy work around, but `const` is quite limited at the moment.
+It'd look something like this:
+
+```rust
+const fn address_index<T>(address: usize, index: usize) -> usize {
+    address + (index * std::mem::size_of::<T>())
+}
+```
+
+We will sometimes want to be able to cast a `VolatilePtr` between pointer types. Since we
+won't be able to do that with `as`, we'll have to write a method for that:
+
+```rust
+  /// Performs a cast into some new pointer type.
+  pub fn cast<Z>(self) -> VolatilePtr<Z> {
+    VolatilePtr(self.0 as *mut Z)
+  }
+```
+
+TODO: iterator stuff
+
+Also, just as a little bonus that we probably won't use, we could enable our new pointer type
+to be formatted as a pointer value.
+
+```rust
+impl<T> core::fmt::Pointer for VolatilePtr<T> {
+  /// Formats exactly like the inner `*mut T`.
+  fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+    write!(f, "{:p}", self.0)
+  }
+}
 ```
 
 ## Volatile ASM
