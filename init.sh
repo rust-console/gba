@@ -30,8 +30,8 @@ mv linker.ld $APP_NAME/linker.ld
 
 # substitute cargo main file with a new basic one
 rm -rf $APP_NAME/src/main.rs
-wget https://raw.githubusercontent.com/rust-console/gba/master/examples/hello1.rs
-mv hello1.rs $APP_NAME/src/main.rs
+wget https://raw.githubusercontent.com/rust-console/gba/master/examples/hello_world.rs
+mv hello_world.rs $APP_NAME/src/main.rs
 
 # setup make file
 echo -e "CRT_FILE=$(echo $CRT_LOCAL)
