@@ -30,12 +30,15 @@ mv linker.ld $APP_NAME/linker.ld
 
 # substitute cargo main file with a new basic one
 rm -rf $APP_NAME/src/main.rs
-wget https://raw.githubusercontent.com/rust-console/gba/master/examples/hello1.rs
-mv hello1.rs $APP_NAME/src/main.rs
+wget https://raw.githubusercontent.com/rust-console/gba/master/examples/hello_world.rs
+mv hello_world.rs $APP_NAME/src/main.rs
+
+# precreate target directory for crt0.o file
+mkdir $APP_NAME/target
 
 # setup make file
 echo -e "CRT_FILE=$(echo $CRT_LOCAL)
-CRT_OUTPUT=crt0.o
+CRT_OUTPUT=target/crt0.o
 PROJECT_NAME=$(echo $APP_NAME)
 TARGET=$(echo $TARGET)
 THUMB_TARGET=$(echo $TARGET).json

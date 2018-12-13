@@ -14,7 +14,7 @@ A crate that helps you make GBA games
 
 This crate requires a fair amount of special setup. All of the steps are
 detailed for you [in the 0th chapter of the
-book](https://rust-console.github.io/gba/ch00/index.html) that goes with this
+book](https://rust-console.github.io/gba/00-introduction/03-development-setup.html) that goes with this
 crate.
 
 If you've done the global setup once before and just want to get a new project
