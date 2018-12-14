@@ -8,7 +8,7 @@
 
 # gba
 
-A crate that helps you make GBA games
+A crate that helps you make GameBoy Advance (GBA) games
 
 # First Time Setup
 
