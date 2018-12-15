@@ -1,5 +1,7 @@
 # Volatile Destination
 
+TODO: replace all this one "the rant" is finalized
+
 There's a reasonable chance that you've never heard of `volatile` before, so
 what's that? Well, it's a term that can be used in more than one context, but
 basically it means "get your grubby mitts off my stuff you over-eager compiler".

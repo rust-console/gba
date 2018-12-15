@@ -21,8 +21,8 @@ goes:
 `hello_magic.rs`:
 
 ```rust
-#![feature(start)]
 #![no_std]
+#![feature(start)]
 
 #[panic_handler]
 fn panic(_info: &core::panic::PanicInfo) -> ! {

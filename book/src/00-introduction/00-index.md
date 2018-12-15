@@ -1,6 +1,6 @@
 # Introduction
 
-This is the book for learning how to write GBA games in Rust.
+This is the book for learning how to write GameBoy Advance (GBA) games in Rust.
 
 I'm **Lokathor**, the main author of the book. There's also **Ketsuban** who
 provides the technical advisement, reviews the PRs, and keeps my crazy in check.
