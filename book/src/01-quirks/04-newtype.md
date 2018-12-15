@@ -1,9 +1,7 @@
 # Newtype
 
-There's one thing I want to get out of the way near the start of the book and it
-didn't really have a good fit anywhere else in the book so it goes right here.
-
-We're talking about the "Newtype Pattern"!
+There's a great Zero Cost abstraction that we'll be using a lot that you might
+not already be familiar with: we're talking about the "Newtype Pattern"!
 
 Now, I told you to read the Rust Book before you read this book, and I'm sure
 you're all good students who wouldn't sneak into this book without doing the
