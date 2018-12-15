@@ -19,7 +19,7 @@ The GBA falls under what the Embedded Book calls "Bare Metal Environments".
 Basically, the machine powers on and immediately begins executing some ASM code.
 Our ASM startup was provided by `Ketsuban` (check the `crt0.s` file). We'll go
 over _how_ it works much later on, for now it's enough to know that it does
-work, and eventually controls passes into Rust code.
+work, and eventually control passes into Rust code.
 
 On the rust code side of things, we determine our starting point with the
 `#[start]` attribute on our `main` function. The `main` function also has a
