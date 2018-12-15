@@ -89,6 +89,10 @@ the standard library types to be used "for free" once it was set up, or just a
 custom allocator that's GBA specific if Rust's global allocator style isn't a
 good fit for the GBA (I honestly haven't looked into it).
 
+## LLVM Intrinsics
+
+TODO: explain that we'll occasionally have to provide some intrinsics.
+
 ## Bare Metal Panic
 
 TODO: expand this
