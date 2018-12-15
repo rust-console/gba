@@ -196,7 +196,7 @@ impl<T> Iterator for VolatilePtrIter<T> {
 
 Except we _can't_ write that code. What? The problem is that we used
 `derive(Clone, Copy` on `VolatilePtr`. Because of a quirk in how `derive` works,
-this makes `VolatilePtr<T>` will only be `Copy` if the `T` is `Copy`, _even
+this means `VolatilePtr<T>` will only be `Copy` if the `T` is `Copy`, _even
 though the pointer itself is always `Copy` regardless of what it points to_.
 Ugh, terrible. We've got three basic ways to handle this:
 
