@@ -64,7 +64,11 @@ do you really need all that? Eh... probably not?
 * We don't need a file system, because all of our data is just sitting there in
   the ROM for us to use. When programming we can organize our `const` data into
   modules and such to keep it organized, but once the game is compiled it's just
-  one huge flat address space.
+  one huge flat address space. TODO: Parasyte says that a FS can be handy even
+  if it's all just ReadOnly, so we'll eventually talk about how you might set up
+  such a thing I guess, since we'll already be talking about replacements for
+  three of the other four things we "lost". Maybe we'll make Parasyte write that
+  section.
 * Networking, well, the GBA has a Link Cable you can use to communicate with
   another GBA, but it's not really like a unix socket with TCP, so the standard
   Rust networking isn't a very good match.
