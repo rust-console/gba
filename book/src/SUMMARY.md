@@ -12,6 +12,7 @@
   * [Fixed Only](01-quirks/02-fixed_only.md)
   * [Volatile Destination](01-quirks/03-volatile_destination.md)
   * [Newtype](01-quirks/04-newtype.md)
+  * [Static Asserts](01-quirks/05-static_asserts.md)
 * [Concepts](02-concepts/00-index.md)
   * [CPU](02-concepts/01-cpu.md)
   * [BIOS](02-concepts/02-bios.md)
