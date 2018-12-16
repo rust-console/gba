@@ -52,11 +52,11 @@ name.
 const _: usize = 0 - 1;
 ```
 
-Now we wrap this in a macro where we give an expression for a bool. We negate
-the bool then cast it to a `usize`, meaning that `true` negates into `false`,
-which becomes `0usize`, and then there's no underflow error. Or if the input was
-`false`, it negates into `true`, then becomes `1usize`, and then the underflow
-error fires.
+Now we wrap this in a macro where we give a `bool` expression as input. We
+negate the bool then cast it to a `usize`, meaning that `true` negates into
+`false`, which becomes `0usize`, and then there's no underflow error. Or if the
+input was `false`, it negates into `true`, then becomes `1usize`, and then the
+underflow error fires.
 
 ```rust
 macro_rules! const_assert {
@@ -68,8 +68,14 @@ macro_rules! const_assert {
 }
 ```
 
-This allows anything which supports `core::ops::Not` and can then can cast into
-`usize`, which technically isn't just `bool` values, but close enough.
+Technically, written like this, the expression can be anything with a
+`core::ops::Not` implementation that can also be `as` cast into `usize`. That's
+`bool`, but also basically all the other number types.
+
+It doesn't really hurt if you want to `const_assert!` a number I guess. I mean,
+any number other than the `MAX` value of an unsigned type or the `-1` value of
+an unsigned type will fail such an assertion, but I bet you'll notice that you
+did something wrong pretty quick.
 
 ## Asserting Something
 
