@@ -1,10 +1,11 @@
-# Static Asserts
+# Constant Assertions
 
 Have you ever wanted to assert things _even before runtime_? We all have, of
 course. Particularly when the runtime machine is a poor little GBA, we'd like to
 have the machine doing the compile handle as much checking as possible.
 
-Enter [static assertions](https://docs.rs/static_assertions/).
+Enter the [static assertions](https://docs.rs/static_assertions/) crate, which
+provides a way to let you assert on a `const` expression.
 
 This is an amazing crate that you should definitely use when you can.
 
