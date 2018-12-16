@@ -25,15 +25,30 @@ I'd like to take a moment to thank [Marc Brinkmann](https://github.com/mbr)
 [Philipp Oppermann](https://github.com/phil-opp)) for writing [this blog
 post](http://embed.rs/articles/2016/arm-inline-assembly-rust/). It's at least
 ten times the tutorial quality as the `asm` entry in the Unstable Book has. In
-their defense, the actual spec of how inline ASM works in rust is "basically
-what clang does", and that's specified as "basically what GCC does", and that's
-basically not specified at all despite GCC being like 30 years old.
+fairness to the Unstable Book, the actual spec of how inline ASM works in rust
+is "basically what clang does", and that's specified as "basically what GCC
+does", and that's basically/shockingly not specified much at all despite GCC
+being like 30 years old.
 
-So we're in for a very slow, careful, and pedantic ride on this one.
+So let's be slow and pedantic about this process.
 
 ## Inline ASM
 
-The inline asm docs describe an asm call as looking like this:
+**Fair Warning:** Inline asm is one of the least stable parts of Rust overall,
+and if you write bad things you can trigger internal compiler errors and panics
+and crashes and make LLVM choke and die without explanation. If you write some
+inline asm and then suddenly your program suddenly stops compiling without
+explanation, try commenting out that whole inline asm use and see if it's
+causing the problem. Double check that you've written every single part of the
+asm call absolutely correctly, etc, etc.
+
+**Bonus Warning:** The following formatting information is specific to the ARM
+flavor of assembly. If you're using `x86` / `x86_64` or `MIPS` or whatever else
+then you're unfortunately on your own, I have know knowledge of how to correctly
+call the `asm!` macro on those platforms.
+
+Now then, with those out of the way, the inline asm docs describe an asm call as
+looking like this:
 
 ```rust
 asm!(assembly template
@@ -46,7 +61,7 @@ asm!(assembly template
 
 And once you stick a lot of stuff in there it can _absolutely_ be hard to
 remember the ordering of the elements. So we'll start with a code block that
-has some commends throw in on each line:
+has some comments thrown in on each line:
 
 ```rust
 asm!(/* ASM */ TODO
@@ -57,58 +72,103 @@ asm!(/* ASM */ TODO
 );
 ```
 
-Note: it's possible to use an inline ASM style where you allow LLVM to determine
-the exact register placement. We will _not_ do that in this section because each
-BIOS call has specific input and output slots that we must follow. However, if
-you want to use inline asm for other purposes elsewhere in your code you can use
-it then.
+Now we have to decide what we're gonna write. Obviously we're going to do some
+instructions, but those instructions use registers, and how are we gonna talk
+about them? We've got two choices.
 
-* **ASM:** The actual asm instructions to use.
-  * When writing inline asm, remember that we're writing for 16-bit THUMB mode
-    because that's what all of our Rust code is compiled to. You can switch to
-    32-bit ARM mode on the fly, but be sure to switch back before the inline ASM
-    block ends or things will go _bad_.
-  * You can write code for specific registers (`r0` through `r7` are available
-    in THUMB mode) or you can write code for _register slots_ and let LLVM pick
-    what actual registers to assign to what slots. In this case, you'd instead
-    write `$0`, `$1` and so on (however many you need). Outputs take up one slot
-    each, followed by inputs taking up one slot each.
-* **OUT:** The output variables, if any. Comma separated list.
-  * Output is specified as `"constraint" (binding)`
-  * A constraint is either `=` (write), `+` (read and write), or `&` (early
-    clobber) followed by either the name of a specific register in curly braces,
-    such as `{r0}`, or simply `r` if you want to let LLVM assign it.
-  * If you're writing to `r0` you'd use `={r0}`, if you're read writing from
-    `r3` you'd use `+{r3}` and so on.
-  * Bindings named in the outputs must be mutable bindings or bindings that
-    are declared but not yet assigned to.
-  * GBA registers are 32-bit, and you must always use an appropriately sized
-    type for the binding.
-  * LLVM assumes when selecting registers for you that no output is written to
-    until all inputs are read. If this is not the case you need to use the `&`
-    designation on your output to give LLVM the heads up so that LLVM doesn't
-    assign it as an input register.
-* **INP:** The inputs, if any. Comma separated list.
-  * Similar to outputs, the input format is `"constraint" (binding)`
-  * Inputs don't have a symbol prefix, you simply name the specific register in
-    curly braces or use `r` to let LLVM pick.
-  * Inputs should always be 32-bit types. (TODO: can you use smaller types and
-    have it 'just work'?)
-* **CLO:** This is possibly _the most important part to get right_. The
-  "clobbers" part describes what registers are affected by this use of asm. The
-  compiler will use this to make sure that you don't accidentally destroy any of
-  your data.
-  * The clobbers list is a comma separated series of string literals that each
-    name one of the registers clobbered.
-  * Example: "r0", "r1", "r3"
-* **OPT:** This lets us specify any options. At the moment the only option we
-  care about is that some asm calls will need to be "volatile". As with reads
-  and writes, the compiler will attempt to eliminate asm that it thinks isn't
-  necessary, so if there's no output from an asm block we'll need to mark it
-  volatile to make sure that it gets done.
+1) We can pick each and every register used by specifying exact register names.
+   In THUMB mode we have 8 registers available, named `r0` through `r7`. If you
+   switch into 32-bit mode there's additional registers that are also available.
 
-That seems like a whole lot, but since we're only handling BIOS calls in this
-section we can tone it down quite a bit:
+2) We can specify slots for registers we need and let LLVM decide. In this style
+   you name your slots `$0`, `$1` and so on. Slot numbers are assigned first to
+   all specified outputs, then to all specified inputs, in the order that you
+   list them.
+
+In the case of the GBA BIOS, each BIOS function has pre-designated input and
+output registers, so we will use the first style. If you use inline ASM in other
+parts of your code you're free to use the second style.
+
+### Assembly
+
+This is just one big string literal. You write out one instruction per line, and
+excess whitespace is ignored. You can also do comments within your assembly
+using `;` to start a comment that goes until the end of the line.
+
+Assembly convention doesn't consider it unreasonable to comment potentially as
+much as _every single line_ of asm that you write when you're getting used to
+things. Or even if you are used to things. This is cryptic stuff, there's a
+reason we avoid writing in it as much as possible.
+
+Remember that our Rust code is in 16-bit mode. You _can_ switch to 32-bit mode
+within your asm as long as you switch back by the time the block ends. Otherwise
+you'll have a bad time.
+
+### Outputs
+
+A comma separated list. Each entry looks like
+
+* `"constraint" (binding)`
+
+An output constraint starts with a symbol:
+
+* `=` for write only
+* `+` for reads and writes
+* `&` for for "early clobber", meaning that you'll write to this at some point
+  before all input values have been read. It prevents this register from being
+  assigned to an input register.
+
+Followed by _either_ the letter `r` (if you want LLVM to pick the register to
+use) or curly braces around a specific register (if you want to pick).
+
+* The binding can be any 32-bit sized binding in scope (`i32`, `u32`, `isize`,
+  `usize`, etc).
+* If your binding has bit pattern requirements ("must be non-zero", etc) you are
+  responsible for upholding that.
+* If your binding type will try to `Drop` later then you are responsible for it
+  being in a fit state to do that.
+* The binding must be either a mutable binding or a binding that was
+  pre-declared but not yet assigned.
+
+Anything else is UB.
+
+### Inputs
+
+This is a similar comma separated list.
+
+* `"constraint" (binding)`
+
+An input constraint doesn't have the symbol prefix, you just pick either `r` or
+a named register with curly braces around it.
+
+* An input binding must be 32-bit sized.
+* An input binding _should_ be a type that is `Copy` but this is not an absolute
+  requirement. Having the input be read is semantically similar to using
+  `core::ptr::read(&binding)` and forgetting the value when you're done.
+
+### Clobbers
+
+Sometimes your asm will touch registers other than the ones declared for input
+and output. 
+
+Clobbers are declared as a comma separated list of string literals naming
+specific registers. You don't use curly braces with clobbers.
+
+LLVM _needs_ to know this information. It can move things around to keep your
+data safe, but only if you tell it what's about to happen.
+
+Failure to define all of your clobbers can cause UB.
+
+### Options
+
+There's only one option we'd care to specify, and we don't even always need it.
+That option is "volatile".
+
+Just like with a function call, LLVM will skip a block of asm if it doesn't see
+that any outputs from the asm were used later on. A lot of our BIOS calls will
+need to be declared "volatile" because to LLVM they don't seem to do anything.
+
+### BIOS ASM
 
 * Inputs are always `r0`, `r1`, `r2`, and/or `r3`, depending on function.
 * Outputs are always zero or more of `r0`, `r1`, and `r3`.
