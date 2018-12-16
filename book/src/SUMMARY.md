@@ -32,7 +32,7 @@
   * [Direct Memory Access](04-non-video/03-dma.md)
   * [Sound](04-non-video/04-sound.md)
   * [Interrupts](04-non-video/05-interrupts.md)
-  * [Network](04-non-video/06-network.md)
+  * [Link Cable](04-non-video/06-link_cable.md)
   * [Game Pak](04-non-video/07-game_pak.md)
 * [Examples](05-examples/00-index.md)
   * [hello_magic](05-examples/01-hello_magic.md)
