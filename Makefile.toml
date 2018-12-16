@@ -43,10 +43,10 @@ fn main() -> std::io::Result<()> {
       std::process::Command::new("arm-none-eabi-objcopy").args(
         &["-O", "binary",
         &format!("target/thumbv4-none-agb/release/examples/{}",name),
-        &format!("target/example-{}.gba",name)])
+        &format!("target/{}.gba",name)])
         .output().expect("failed to objcopy!");
       std::process::Command::new("gbafix").args(
-        &[&format!("target/example-{}.gba",name)])
+        &[&format!("target/{}.gba",name)])
         .output().expect("failed to gbafix!");
     }
   }

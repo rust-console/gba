@@ -1,9 +1,7 @@
 # Newtype
 
-There's one thing I want to get out of the way near the start of the book and it
-didn't really have a good fit anywhere else in the book so it goes right here.
-
-We're talking about the "Newtype Pattern"!
+There's a great Zero Cost abstraction that we'll be using a lot that you might
+not already be familiar with: we're talking about the "Newtype Pattern"!
 
 Now, I told you to read the Rust Book before you read this book, and I'm sure
 you're all good students who wouldn't sneak into this book without doing the
@@ -111,13 +109,31 @@ macro_rules! newtype {
 ```
 
 That seems like enough for all of our examples, so we'll stop there. We could
-add more things, such as making the `From` impl optional (because what if you
-shouldn't unwrap it for some weird reason?), allowing for more precise
-visibility controls (on both the newtype overall and the inner field), and maybe
-even other things I can't think of right now. We won't really need those in our
-example code for this book, so it's probably nicer to just keep the macro
-simpler and quit while we're ahead.
+add more things:
 
-**As a reminder:** remember that macros have to appear _before_ they're invoked in
-your source, so the `newtype` macro will always have to be at the very top of
-your file, or in a module that's declared before other modules and code.
+* Making the `From` impl being optional. We'd have to make the newtype
+  invocation be more complicated somehow, the user puts ", no-unwrap" after the
+  inner type declaration or something, or something like that.
+* Allowing for more precise visibility controls on the wrapping type and on the
+  inner field. This would add a lot of line noise, so we'll just always have our
+  newtypes be `pub`.
+* Allowing for generic newtypes, which might sound silly but that we'll actually
+  see an example of soon enough. To do this you might _think_ that we can change
+  the `:ident` declarations to `:ty`, but since we're declaring a fresh type not
+  using an existing type we have to accept it as an `:ident`. The way you get
+  around this is with a proc-macro, which is a lot more powerful but which also
+  requires that you write the proc-macro in an entirely other crate that gets
+  compiled first. We don't need that much power, so for our examples we'll go
+  with the macro_rules version and just do it by hand in the few cases where we
+  need a generic newtype.
+* Allowing for `Deref` and `DerefMut`, which usually defeats the point of doing
+  the newtype, but maybe sometimes it's the right thing, so if you were going
+  for the full industrial strength version with a proc-macro and all you might
+  want to make that part of your optional add-ons as well the same way you might
+  want optional `From`. You'd probably want `From` to be "on by default" and
+  `Deref`/`DerefMut` to be "off by default", but whatever.
+
+**As a reminder:** remember that `macro_rules` macros have to appear _before_
+they're invoked in your source, so the `newtype` macro will always have to be at
+the very top of your file, or if you put it in a module within your project
+you'll need to declare the module before anything that uses it.
