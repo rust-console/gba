@@ -47,7 +47,7 @@ pub const fn rgb16(red: u16, green: u16, blue: u16) -> u16 {
 /// If `denominator` is 0.
 #[inline]
 pub fn div(numerator: i32, denominator: i32) -> i32 {
-  div_modulus(numerator, denominator).0
+  div_rem(numerator, denominator).0
 }
 
 /// BIOS Call: Div (GBA SWI 0x06).
@@ -58,19 +58,19 @@ pub fn div(numerator: i32, denominator: i32) -> i32 {
 ///
 /// If `denominator` is 0.
 #[inline]
-pub fn modulus(numerator: i32, denominator: i32) -> i32 {
-  div_modulus(numerator, denominator).1
+pub fn rem(numerator: i32, denominator: i32) -> i32 {
+  div_rem(numerator, denominator).1
 }
 
 /// BIOS Call: Div (GBA SWI 0x06).
 ///
-/// Gives both the DIV and MOD output of `numerator / denominator`.
+/// Gives both the DIV and REM output of `numerator / denominator`.
 ///
 /// # Panics
 ///
 /// If `denominator` is 0.
 #[inline]
-pub fn div_modulus(numerator: i32, denominator: i32) -> (i32, i32) {
+pub fn div_rem(numerator: i32, denominator: i32) -> (i32, i32) {
   assert!(denominator != 0);
   #[cfg(not(test))]
   {
