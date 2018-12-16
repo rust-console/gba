@@ -62,16 +62,16 @@ pub unsafe fn soft_reset() -> ! {
 ///   0) Clears the 256k of EWRAM (don't use if this is where your function call
 ///      will return to!)
 ///   1) Clears the 32k of IWRAM _excluding_ the last `0x200` bytes (see also:
-///      the `soft_reset` function).
-///   2) Clears all Palette data.
-///   3) Clears all VRAM.
+///      the `soft_reset` function)
+///   2) Clears all Palette data
+///   3) Clears all VRAM
 ///   4) Clears all OAM (reminder: a zeroed object isn't disabled!)
 ///   5) Reset SIO registers (resets them to general purpose mode)
 ///   6) Reset Sound registers
 ///   7) Reset all IO registers _other than_ SIO and Sound
 ///
-/// **Bug:** The least significant byte of `SIODATA32` is always zeroed, even if
-/// bit 5 was not enabled. This is sadly a bug in the design of the GBA itself.
+/// **Bug:** The LSB of `SIODATA32` is always zeroed, even if bit 5 was not
+/// enabled. This is sadly a bug in the design of the GBA itself.
 ///
 /// ## Safety
 ///
