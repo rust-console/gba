@@ -42,8 +42,9 @@ warning to a hard error:
 const ASSERT: usize = 0 - 1;
 ```
 
-And to make our construction reusable we can enable the `underscore_const_names`
-feature in our program or library and give each such const an underscore for a
+And to make our construction reusable we can enable the
+[underscore_const_names](https://github.com/rust-lang/rust/issues/54912) feature
+in our program (or library) and then give each such const an underscore for a
 name.
 
 ```rust
@@ -76,7 +77,10 @@ Technically, written like this, the expression can be anything with a
 It doesn't really hurt if you want to `const_assert!` a number I guess. I mean,
 any number other than the `MAX` value of an unsigned type or the `-1` value of
 an unsigned type will fail such an assertion, but I bet you'll notice that you
-did something wrong pretty quick.
+did something wrong pretty quick. We could use the
+[type_ascription](https://github.com/rust-lang/rust/issues/23416) feature to
+really force a `bool`, but it's not that critical, so we'll avoid using a
+feature that we don't need until it's stable.
 
 ## Asserting Something
 
