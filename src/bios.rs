@@ -65,7 +65,7 @@ pub unsafe fn soft_reset() -> ! {
 ///      the `soft_reset` function).
 ///   2) Clears all Palette data.
 ///   3) Clears all VRAM.
-///   4) Clears all OAM (reminder: a zeroed obj isn't disabled!)
+///   4) Clears all OAM (reminder: a zeroed object isn't disabled!)
 ///   5) Reset SIO registers (resets them to general purpose mode)
 ///   6) Reset Sound registers
 ///   7) Reset all IO registers _other than_ SIO and Sound
@@ -76,8 +76,8 @@ pub unsafe fn soft_reset() -> ! {
 /// ## Safety
 ///
 /// It is generally a safe operation to suddenly clear any part of the GBA's
-/// memory, except in the case that you were executing out of IWRAM and clear
-/// that. If you do that you return to nothing and have a bad time.
+/// memory, except in the case that you were executing out of EWRAM and clear
+/// that. If you do then you return to nothing and have a bad time.
 #[inline(always)]
 pub unsafe fn register_ram_reset(flags: u8) {
   asm!(/* ASM */ "swi 0x01"
