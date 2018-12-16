@@ -72,15 +72,20 @@ macro_rules! const_assert {
 
 Technically, written like this, the expression can be anything with a
 `core::ops::Not` implementation that can also be `as` cast into `usize`. That's
-`bool`, but also basically all the other number types.
+`bool`, but also basically all the other number types. Since we want to ensure
+that we get proper looking type errors when things go wrong, we can use
+`($condition && true)` to enforce that we get a `bool` (thanks to `Talchas` for
+that particular suggestion).
 
-It doesn't really hurt if you want to `const_assert!` a number I guess. I mean,
-any number other than the `MAX` value of an unsigned type or the `-1` value of
-an unsigned type will fail such an assertion, but I bet you'll notice that you
-did something wrong pretty quick. We could use the
-[type_ascription](https://github.com/rust-lang/rust/issues/23416) feature to
-really force a `bool`, but it's not that critical, so we'll avoid using a
-feature that we don't need until it's stable.
+```rust
+macro_rules! const_assert {
+  ($condition:expr) => {
+    #[deny(const_err)]
+    #[allow(dead_code)]
+    const _: usize = 0 - !($condition && true) as usize;
+  }
+}
+```
 
 ## Asserting Something
 
