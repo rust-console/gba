@@ -9,8 +9,8 @@ provides a way to let you assert on a `const` expression.
 
 This is an amazing crate that you should definitely use when you can.
 
-It's written by [nvzqz](https://github.com/nvzqz), and they kindly wrote up a
-[blog
+It's written by [Nikolai Vazquez](https://github.com/nvzqz), and they kindly
+wrote up a [blog
 post](https://nikolaivazquez.com/posts/programming/rust-static-assertions/) that
 explains the thinking behind it.
 
