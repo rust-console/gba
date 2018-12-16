@@ -191,13 +191,13 @@ to invoke. If you're in 16-bit code you use the value directly, and if you're in
 
 The GBA doesn't have hardware division. You have to do it in software.
 
-You can implement that yourself (we might get around to trying that, i was even
-sent [a link to a
+We could potentially implement this in Rust (we might get around to trying that,
+I was even sent [a link to a
 paper](https://www.microsoft.com/en-us/research/wp-content/uploads/2008/08/tr-2008-141.pdf)
-that I promptly did not read), or you can call the BIOS to do it for you and
-trust that it's being as efficient as possible.
+that I promptly did not actually read right away), or you can call the BIOS to
+do it for you and trust that big N did a good enough job.
 
-GBATEK gives a very clear explanation of it:
+GBATEK gives a fairly clear explanation of our inputs and outputs:
 
 ```txt
 Signed Division, r0/r1.
@@ -211,11 +211,11 @@ For example, incoming -1234, 10 should return -123, -4, +123.
 The function usually gets caught in an endless loop upon division by zero.
 ```
 
-Of course, the math folks tell me that the `r1` value should be properly called
-the "remainder" not the "modulus". We'll go with that for our function, doesn't
-hurt to use the correct names. The function itself is a single assert, then we
-name some bindings without giving them a value, make the asm call, and then
-return what we got.
+The math folks tell me that the `r1` value should be properly called the
+"remainder" not the "modulus". We'll go with that for our function, doesn't hurt
+to use the correct names. The function itself is an assert against dividing by
+`0`, then we name some bindings _without_ giving them a value, we make the asm
+call, and then return what we got.
 
 ```rust
 pub fn div_rem(numerator: i32, denominator: i32) -> (i32, i32) {
