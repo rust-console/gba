@@ -47,10 +47,11 @@ explanation, try commenting out that whole inline asm use and see if it's
 causing the problem. Double check that you've written every single part of the
 asm call absolutely correctly, etc, etc.
 
-**Bonus Warning:** The following formatting information is specific to the ARM
-flavor of assembly. If you're using `x86` / `x86_64` or `MIPS` or whatever else
-then you're unfortunately on your own, I have no first hand knowledge of how to
-correctly call the `asm!` macro on those platforms.
+**Bonus Warning:** The general information that follows regarding the asm macro
+is consistent from system to system, but specific information about register
+names, register quantities, asm instruction argument ordering, and so on is
+specific to ARM on the GBA. If you're programming for any other device you'll
+need to carefully investigate that before you begin.
 
 Now then, with those out of the way, the inline asm docs describe an asm call as
 looking like this:
