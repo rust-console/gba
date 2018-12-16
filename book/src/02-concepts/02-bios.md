@@ -49,8 +49,8 @@ asm call absolutely correctly, etc, etc.
 
 **Bonus Warning:** The following formatting information is specific to the ARM
 flavor of assembly. If you're using `x86` / `x86_64` or `MIPS` or whatever else
-then you're unfortunately on your own, I have know knowledge of how to correctly
-call the `asm!` macro on those platforms.
+then you're unfortunately on your own, I have no first hand knowledge of how to
+correctly call the `asm!` macro on those platforms.
 
 Now then, with those out of the way, the inline asm docs describe an asm call as
 looking like this:
