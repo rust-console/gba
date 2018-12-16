@@ -18,7 +18,12 @@ it to call the [GBA BIOS
 Functions](https://problemkaputt.de/gbatek.htm#biosfunctions).
 
 Note that BIOS calls have _more overhead than normal function calls_, so don't
-go using them all over the place if you don't have to.
+go using them all over the place if you don't have to. They're also usually
+written more to be compact in terms of code than for raw speed, so you actually
+can out speed them in some cases. Between the increased overhead and not being
+as speed optimized, you can sometimes do a faster job without calling the BIOS
+at all. (TODO: investigate more about  what parts of the BIOS we could
+potentially offer faster alternatives for.)
 
 I'd like to take a moment to thank [Marc Brinkmann](https://github.com/mbr)
 (with contributions from [Oliver Schneider](https://github.com/oli-obk) and
