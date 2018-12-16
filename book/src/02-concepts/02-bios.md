@@ -127,8 +127,7 @@ An output constraint starts with a symbol:
 Followed by _either_ the letter `r` (if you want LLVM to pick the register to
 use) or curly braces around a specific register (if you want to pick).
 
-* The binding can be any 32-bit sized binding in scope (`i32`, `u32`, `isize`,
-  `usize`, etc).
+* The binding can be any single 32-bit or smaller value.
 * If your binding has bit pattern requirements ("must be non-zero", etc) you are
   responsible for upholding that.
 * If your binding type will try to `Drop` later then you are responsible for it
@@ -147,7 +146,7 @@ This is a similar comma separated list.
 An input constraint doesn't have the symbol prefix, you just pick either `r` or
 a named register with curly braces around it.
 
-* An input binding must be 32-bit sized.
+* An input binding must be a single 32-bit or smaller value.
 * An input binding _should_ be a type that is `Copy` but this is not an absolute
   requirement. Having the input be read is semantically similar to using
   `core::ptr::read(&binding)` and forgetting the value when you're done.
@@ -167,12 +166,11 @@ Failure to define all of your clobbers can cause UB.
 
 ### Options
 
-There's only one option we'd care to specify, and we don't even always need it.
-That option is "volatile".
+There's only one option we'd care to specify. That option is "volatile".
 
 Just like with a function call, LLVM will skip a block of asm if it doesn't see
-that any outputs from the asm were used later on. A lot of our BIOS calls will
-need to be declared "volatile" because to LLVM they don't seem to do anything.
+that any outputs from the asm were used later on. Nearly every single BIOS call
+(other than the math operations) will need to be marked as "volatile".
 
 ### BIOS ASM
 
@@ -190,15 +188,8 @@ to invoke. If you're in 16-bit code you use the value directly, and if you're in
 
 ### Example BIOS Function: Division
 
-The GBA doesn't have hardware division. You have to do it in software.
-
-We could potentially implement this in Rust (we might get around to trying that,
-I was even sent [a link to a
-paper](https://www.microsoft.com/en-us/research/wp-content/uploads/2008/08/tr-2008-141.pdf)
-that I promptly did not actually read right away), or you can call the BIOS to
-do it for you and trust that big N did a good enough job.
-
-GBATEK gives a fairly clear explanation of our inputs and outputs:
+For our example we'll use the division function, because GBATEK gives very clear
+instructions on how each register is used with that one:
 
 ```txt
 Signed Division, r0/r1.
@@ -214,7 +205,7 @@ The function usually gets caught in an endless loop upon division by zero.
 
 The math folks tell me that the `r1` value should be properly called the
 "remainder" not the "modulus". We'll go with that for our function, doesn't hurt
-to use the correct names. The function itself is an assert against dividing by
+to use the correct names. Our Rust function has an assert against dividing by
 `0`, then we name some bindings _without_ giving them a value, we make the asm
 call, and then return what we got.
 
@@ -235,4 +226,282 @@ pub fn div_rem(numerator: i32, denominator: i32) -> (i32, i32) {
 }
 ```
 
-I _hope_ this makes sense by now.
+I _hope_ this all makes sense by now.
+
+# BIOS Function Definitions
+
+What follows is one entry for every BIOS call function, sorted by `swi` value
+(which also _kinda_ sorts them into themed groups too).
+
+All functions here are marked with `#[inline(always)]`, which I wouldn't
+normally bother with, but the compiler can't see that the ASM we use is
+immediately a second function call, so we want to be very sure that it gets
+inlined as much as possible. You should probably be using Link Time Optimization
+in your release mode GBA games just to get that extra boost, but
+`#[inline(always)]` will help keep debug builds going at a good speed too.
+
+The entries here in the book are basically just copy pasting the source for each
+function from the `gba::bios` module of the crate. The actual asm invocation
+itself is uninteresting, but I've attempted to make the documentation for each
+function clear and complete.
+
+## CPU Control / Reset
+
+### Soft Reset (0x00)
+
+```rust
+/// (`swi 0x00`) SoftReset the device.
+///
+/// This function does not ever return.
+///
+/// Instead, it clears the top `0x200` bytes of IWRAM (containing stacks, and
+/// BIOS IRQ vector/flags), re-initializes the system, supervisor, and irq stack
+/// pointers (new values listed below), sets `r0` through `r12`, `LR_svc`,
+/// `SPSR_svc`, `LR_irq`, and `SPSR_irq` to zero, and enters system mode. The
+/// return address is loaded into `r14` and then the function jumps there with
+/// `bx r14`.
+///
+/// * sp_svc: `0x300_7FE0`
+/// * sp_irq: `0x300_7FA0`
+/// * sp_sys: `0x300_7F00`
+/// * Zero-filled Area: `0x300_7E00` to `0x300_7FFF`
+/// * Return Address: Depends on the 8-bit flag value at `0x300_7FFA`. In either
+///   case execution proceeds in ARM mode.
+///   * zero flag: `0x800_0000` (ROM), which for our builds means that the
+///     `crt0` program to execute (just like with a fresh boot), and then
+///     control passes into `main` and so on.
+///   * non-zero flag: `0x200_0000` (RAM), This is where a multiboot image would
+///     go if you were doing a multiboot thing. However, this project doesn't
+///     support multiboot at the moment. You'd need an entirely different build
+///     pipeline because there's differences in header format and things like
+///     that. Perhaps someday, but probably not even then. Submit the PR for it
+///     if you like!
+///
+/// ## Safety
+///
+/// This functions isn't ever unsafe to the current iteration of the program.
+/// However, because not all memory is fully cleared you theoretically could
+/// threaten the _next_ iteration of the program that runs. I'm _fairly_
+/// convinced that you can't actually use this to force purely safe code to
+/// perform UB, but such a scenario might exist.
+#[inline(always)]
+pub unsafe fn soft_reset() -> ! {
+  asm!(/* ASM */ "swi 0x00"
+      :/* OUT */ // none
+      :/* INP */ // none
+      :/* CLO */ // none
+      :/* OPT */ "volatile"
+  );
+  core::hint::unreachable_unchecked()
+}
+```
+
+### Register / RAM Reset (0x01)
+
+```rust
+/// (`swi 0x01`) RegisterRamReset.
+///
+/// Clears the portions of memory given by the `flags` value, sets the Display
+/// Control Register to `0x80` (forced blank and nothing else), then returns.
+///
+/// * Flag bits:
+///   0) Clears the 256k of EWRAM (don't use if this is where your function call
+///      will return to!)
+///   1) Clears the 32k of IWRAM _excluding_ the last `0x200` bytes (see also:
+///      the `soft_reset` function).
+///   2) Clears all Palette data.
+///   3) Clears all VRAM.
+///   4) Clears all OAM (reminder: a zeroed obj isn't disabled!)
+///   5) Reset SIO registers (resets them to general purpose mode)
+///   6) Reset Sound registers
+///   7) Reset all IO registers _other than_ SIO and Sound
+///
+/// **Bug:** The least significant byte of `SIODATA32` is always zeroed, even if
+/// bit 5 was not enabled. This is sadly a bug in the design of the GBA itself.
+///
+/// ## Safety
+///
+/// It is generally a safe operation to suddenly clear any part of the GBA's
+/// memory, except in the case that you were executing out of IWRAM and clear
+/// that. If you do that you return to nothing and have a bad time.
+#[inline(always)]
+pub unsafe fn register_ram_reset(flags: u8) {
+  asm!(/* ASM */ "swi 0x01"
+      :/* OUT */ // none
+      :/* INP */ "{r0}"(flags)
+      :/* CLO */ // none
+      :/* OPT */ "volatile"
+  );
+}
+//TODO(lokathor): newtype this flag business.
+```
+
+### Halt (0x02)
+### Stop / Sleep (0x03)
+### Interrupt Wait (0x04)
+### VBlank Interrupt Wait (0x05)
+
+## Math
+
+For the math functions to make sense you'll want to be familiar with the fixed
+point math concepts from the [Fixed Only](../01-quirks/02-fixed_only.md) section
+of the Quirks chapter.
+
+### Div (0x06)
+
+```rust
+/// (`swi 0x06`) Software Division and Remainder.
+///
+/// ## Panics
+///
+/// If the denominator is 0.
+#[inline(always)]
+pub fn div_rem(numerator: i32, denominator: i32) -> (i32, i32) {
+  assert!(denominator != 0);
+  let div_out: i32;
+  let rem_out: i32;
+  unsafe {
+    asm!(/* ASM */ "swi 0x06"
+        :/* OUT */ "={r0}"(div_out), "={r1}"(rem_out)
+        :/* INP */ "{r0}"(numerator), "{r1}"(denominator)
+        :/* CLO */ "r3"
+        :/* OPT */
+    );
+  }
+  (div_out, rem_out)
+}
+
+/// As `div_rem`, but keeping only the `div` part.
+#[inline(always)]
+pub fn div(numerator: i32, denominator: i32) -> i32 {
+  div_rem(numerator, denominator).0
+}
+
+/// As `div_rem`, but keeping only the `rem` part.
+#[inline(always)]
+pub fn rem(numerator: i32, denominator: i32) -> i32 {
+  div_rem(numerator, denominator).1
+}
+```
+
+### DivArm (0x07)
+
+This is exactly like Div, but with the input arguments swapped. It ends up being
+exactly 3 cycles slower than normal Div because it swaps the input arguments to
+the positions that Div is expecting ("move r0 -> r3, mov r1 -> r0, mov r3 ->
+r1") and then goes to the normal Div function.
+
+You can basically forget about this function. It's for compatibility with other
+ARM software conventions, which we don't need. Just use normal Div.
+
+### Sqrt (0x08)
+
+```rust
+/// (`swi 0x08`) Integer square root.
+///
+/// If you want more fractional precision, you can shift your input to the left
+/// by `2n` bits to get `n` more bits of fractional precision in your output.
+#[inline(always)]
+pub fn sqrt(val: u32) -> u16 {
+  let out: u16;
+  unsafe {
+    asm!(/* ASM */ "swi 0x08"
+        :/* OUT */ "={r0}"(out)
+        :/* INP */ "{r0}"(val)
+        :/* CLO */ "r1", "r3"
+        :/* OPT */
+    );
+  }
+  out
+}
+```
+
+### ArcTan (0x09)
+
+```rust
+/// (`swi 0x09`) Gives the arctangent of `theta`.
+///
+/// The input format is 1 bit for sign, 1 bit for integral part, 14 bits for
+/// fractional part.
+///
+/// Accuracy suffers if `theta` is less than `-pi/4` or greater than `pi/4`.
+#[inline(always)]
+pub fn atan(theta: i16) -> i16 {
+  let out: i16;
+  unsafe {
+    asm!(/* ASM */ "swi 0x09"
+        :/* OUT */ "={r0}"(out)
+        :/* INP */ "{r0}"(theta)
+        :/* CLO */ "r1", "r3"
+        :/* OPT */
+    );
+  }
+  out
+}
+```
+
+### ArcTan2 (0x0A)
+
+```rust
+/// (`swi 0x0A`) Gives the atan2 of `y` over `x`.
+///
+/// The output `theta` value maps into the range `[0, 2pi)`, or `0 .. 2pi` if
+/// you prefer Rust's range notation.
+///
+/// `y` and `x` use the same format as with `atan`: 1 bit for sign, 1 bit for
+/// integral, 14 bits for fractional.
+#[inline(always)]
+pub fn atan2(y: i16, x: i16) -> u16 {
+  let out: u16;
+  unsafe {
+    asm!(/* ASM */ "swi 0x0A"
+        :/* OUT */ "={r0}"(out)
+        :/* INP */ "{r0}"(x), "{r1}"(y)
+        :/* CLO */ "r3"
+        :/* OPT */
+    );
+  }
+  out
+}
+```
+
+## Memory Modification
+
+### CPU Set (0x08)
+### CPU Fast Set (0x0C)
+### Get BIOS Checksum (0x0D)
+### BG Affine Set (0x0E)
+### Obj Affine Set (0x0F)
+
+## Decompression
+
+### BitUnPack (0x10)
+### LZ77UnCompReadNormalWrite8bit (0x11)
+### LZ77UnCompReadNormalWrite16bit (0x12)
+### HuffUnCompReadNormal (0x13)
+### RLUnCompReadNormalWrite8bit (0x14)
+### RLUnCompReadNormalWrite16bit (0x15)
+### Diff8bitUnFilterWrite8bit (0x16)
+### Diff8bitUnFilterWrite16bit (0x17)
+### Diff16bitUnFilter (0x18)
+
+## Sound
+
+### SoundBias (0x19)
+### SoundDriverInit (0x1A)
+### SoundDriverMode (0x1B)
+### SoundDriverMain (0x1C)
+### SoundDriverVSync (0x1D)
+### SoundChannelClear (0x1E)
+### MidiKey2Freq (0x1F)
+### SoundWhatever0 (0x20)
+### SoundWhatever1 (0x21)
+### SoundWhatever2 (0x22)
+### SoundWhatever3 (0x23)
+### SoundWhatever4 (0x24)
+### MultiBoot (0x25)
+### HardReset (0x26)
+### CustomHalt (0x27)
+### SoundDriverVSyncOff (0x28)
+### SoundDriverVSyncOn (0x29)
+### SoundGetJumpList (0x2A)
