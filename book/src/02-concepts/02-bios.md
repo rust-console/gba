@@ -228,12 +228,12 @@ pub fn div_rem(numerator: i32, denominator: i32) -> (i32, i32) {
 
 I _hope_ this all makes sense by now.
 
-## All The BIOS Functions
+## Specific BIOS Functions
 
-As for a full list of all the specific BIOS functions and their use, you should
+For a full list of all the specific BIOS functions and their use you should
 check the `gba::bios` module within the `gba` crate. There's just so many of
 them that enumerating them all here wouldn't serve much purpose.
 
 Which is not to say that we'll never cover any BIOS functions in this book!
 Instead, we'll simply mention them when whenever they're relevent to the task at
-hand (such as sound or waiting for vblank).
+hand (such as controlling sound or waiting for vblank).

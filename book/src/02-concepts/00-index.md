@@ -24,3 +24,15 @@ everything is obviously too much for just one section of the book. Instead you
 get an overview of general IO register rules and advice. Each particular
 register is described in the appropriate sections of either the Video or
 Non-Video chapters.
+
+## Bus Size
+
+TODO: describe this
+
+## Minimum Write Size
+
+TODO: talk about parts where you can't write one byte at a time
+
+## Volatile or Not?
+
+TODO: discuss what memory should be used volatile style and what can be used normal style.
