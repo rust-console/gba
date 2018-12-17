@@ -89,6 +89,84 @@ pub unsafe fn register_ram_reset(flags: u8) {
 }
 //TODO(lokathor): newtype this flag business.
 
+/// (`swi 0x02`) Halts the CPU until an interrupt occurs.
+///
+/// Components _other than_ the CPU continue to function. Halt mode ends when
+/// any enabled interrupt triggers.
+#[inline(always)]
+pub fn halt() {
+  unsafe {
+    asm!(/* ASM */ "swi 0x02"
+        :/* OUT */ // none
+        :/* INP */ // none
+        :/* CLO */ // none
+        :/* OPT */ "volatile"
+    );
+  }
+}
+
+/// (`swi 0x03`) Stops the CPU as well as most other components.
+///
+/// Stop mode must be stopped by an interrupt, but can _only_ be stopped by a
+/// Keypad, Game Pak, or General-Purpose-SIO interrupt.
+///
+/// Before going into stop mode you should manually disable video and sound (or
+/// they will continue to consume power), and you should also disable any other
+/// optional externals such as rumble and infra-red.
+#[inline(always)]
+pub fn stop() {
+  unsafe {
+    asm!(/* ASM */ "swi 0x03"
+        :/* OUT */ // none
+        :/* INP */ // none
+        :/* CLO */ // none
+        :/* OPT */ "volatile"
+    );
+  }
+}
+
+/// (`swi 0x04`) "IntrWait", similar to halt but with more options.
+///
+/// * The first argument controls if you want to ignore all current flags and
+///   wait until a new flag is set.
+/// * The second argument is what flags you're waiting on (same format as the
+///   IE/IF registers).
+///
+/// If you're trying to handle more than one interrupt at once this has less
+/// overhead than calling `halt` over and over.
+///
+/// When using this routing your interrupt handler MUST update the BIOS
+/// Interrupt Flags `0x300_7FF8` in addition to the usual interrupt
+/// acknowledgement.
+#[inline(always)]
+pub fn interrupt_wait(ignore_current_flags: bool, target_flags: u16) {
+  unsafe {
+    asm!(/* ASM */ "swi 0x04"
+        :/* OUT */ // none
+        :/* INP */ "{r0}"(ignore_current_flags), "{r1}"(target_flags)
+        :/* CLO */ // none
+        :/* OPT */ "volatile"
+    );
+  }
+}
+//TODO(lokathor): newtype this flag business.
+
+/// (`swi 0x05`) "VBlankIntrWait", VBlank Interrupt Wait.
+///
+/// This is as per `interrupt_wait(true, 1)` (aka "wait for a new vblank"). You
+/// must follow the same guidelines that `interrupt_wait` outlines.
+#[inline(always)]
+pub fn vblank_interrupt_wait() {
+  unsafe {
+    asm!(/* ASM */ "swi 0x04"
+        :/* OUT */ // none
+        :/* INP */ // none
+        :/* CLO */ "r0", "r1" // both set to 1 by the routine
+        :/* OPT */ "volatile"
+    );
+  }
+}
+
 /// (`swi 0x06`) Software Division and Remainder.
 ///
 /// ## Panics
@@ -110,17 +188,21 @@ pub fn div_rem(numerator: i32, denominator: i32) -> (i32, i32) {
   (div_out, rem_out)
 }
 
-/// As `div_rem`, but keeping only the `div` part.
+/// As `div_rem`, keeping only the `div` output.
 #[inline(always)]
 pub fn div(numerator: i32, denominator: i32) -> i32 {
   div_rem(numerator, denominator).0
 }
 
-/// As `div_rem`, but keeping only the `rem` part.
+/// As `div_rem`, keeping only the `rem` output.
 #[inline(always)]
 pub fn rem(numerator: i32, denominator: i32) -> i32 {
   div_rem(numerator, denominator).1
 }
+
+// (`swi 0x07`): We deliberately don't implement this one. It's the same as DIV
+// but with reversed arguments, so it just runs 3 cycles slower as it does the
+// swap.
 
 /// (`swi 0x08`) Integer square root.
 ///
@@ -179,4 +261,248 @@ pub fn atan2(y: i16, x: i16) -> u16 {
     );
   }
   out
+}
+
+/// (`swi 0x0B`) "CpuSet", `u16` memory copy.
+///
+/// * `count` is the number of `u16` values to copy (20 bits or less)
+/// * `fixed_source` argument, if true, turns this copying routine into a
+///   filling routine.
+///
+/// ## Safety
+///
+/// * Both pointers must be aligned
+#[inline(always)]
+pub unsafe fn cpu_set16(src: *const u16, dest: *mut u16, count: u32, fixed_source: bool) {
+  let control = count + ((fixed_source as u32) << 24);
+  asm!(/* ASM */ "swi 0x0B"
+      :/* OUT */ // none
+      :/* INP */ "{r0}"(src), "{r1}"(dest), "{r2}"(control)
+      :/* CLO */ // none
+      :/* OPT */ "volatile"
+  );
+}
+
+/// (`swi 0x0B`) "CpuSet", `u32`  memory copy/fill.
+///
+/// * `count` is the number of `u32` values to copy (20 bits or less)
+/// * `fixed_source` argument, if true, turns this copying routine into a
+///   filling routine.
+///
+/// ## Safety
+///
+/// * Both pointers must be aligned
+#[inline(always)]
+pub unsafe fn cpu_set32(src: *const u32, dest: *mut u32, count: u32, fixed_source: bool) {
+  let control = count + ((fixed_source as u32) << 24) + (1 << 26);
+  asm!(/* ASM */ "swi 0x0B"
+      :/* OUT */ // none
+      :/* INP */ "{r0}"(src), "{r1}"(dest), "{r2}"(control)
+      :/* CLO */ // none
+      :/* OPT */ "volatile"
+  );
+}
+
+/// (`swi 0x0C`) "CpuFastSet", copies memory in 32 byte chunks.
+///
+/// * The `count` value is the number of `u32` values to transfer (20 bits or
+///   less), and it's rounded up to the nearest multiple of 8 words.
+/// * The `fixed_source` argument, if true, turns this copying routine into a
+///   filling routine.
+///
+/// ## Safety
+///
+/// * Both pointers must be aligned
+#[inline(always)]
+pub unsafe fn cpu_fast_set(src: *const u32, dest: *mut u32, count: u32, fixed_source: bool) {
+  let control = count + ((fixed_source as u32) << 24);
+  asm!(/* ASM */ "swi 0x0C"
+      :/* OUT */ // none
+      :/* INP */ "{r0}"(src), "{r1}"(dest), "{r2}"(control)
+      :/* CLO */ // none
+      :/* OPT */ "volatile"
+  );
+}
+
+/// (`swi 0x0C`) "GetBiosChecksum" (Undocumented)
+///
+/// Though we usually don't cover undocumented functionality, this one can make
+/// it into the crate.
+///
+/// The function computes the checksum of the BIOS data. You should get either
+/// `0xBAAE_187F` (GBA / GBA SP) or `0xBAAE_1880` (DS in GBA mode). If you get
+/// some other value I guess you're probably running on an emulator that just
+/// broke the fourth wall.
+pub fn get_bios_checksum() -> u32 {
+  let out: u32;
+  unsafe {
+    asm!(/* ASM */ "swi 0x0D"
+        :/* OUT */ "={r0}"(out)
+        :/* INP */ // none
+        :/* CLO */ // none
+        :/* OPT */ // none
+    );
+  }
+  out
+}
+
+// TODO: these things will require that we build special structs
+
+//BgAffineSet
+//ObjAffineSet
+//BitUnPack
+//LZ77UnCompReadNormalWrite8bit
+//LZ77UnCompReadNormalWrite16bit
+//HuffUnCompReadNormal
+//RLUnCompReadNormalWrite8bit
+//Diff8bitUnFilterWrite8bit
+//Diff8bitUnFilterWrite16bit
+//Diff16bitUnFilter
+
+/// (`swi 0x19`) "SoundBias", adjusts the volume level to a new level.
+///
+/// This increases or decreases the current level of the `SOUNDBIAS` register
+/// (with short delays) until at the new target level. The upper bits of the
+/// register are unaffected.
+///
+/// The final sound level setting will be `level` * `0x200`.
+pub fn sound_bias(level: u32) {
+  unsafe {
+    asm!(/* ASM */ "swi 0x19"
+        :/* OUT */ // none
+        :/* INP */ "{r0}"(level)
+        :/* CLO */ // none
+        :/* OPT */ "volatile"
+    );
+  }
+}
+
+//SoundDriverInit
+
+/// (`swi 0x1B`) "SoundDriverMode", sets the sound driver operation mode.
+///
+/// The `mode` input uses the following flags and bits:
+///
+/// * Bits 0-6: Reverb value
+/// * Bit 7: Reverb Enable
+/// * Bits 8-11: Simultaneously-produced channel count (default=8)
+/// * Bits 12-15: Master Volume (1-15, default=15)
+/// * Bits 16-19: Playback Frequency Index (see below, default=4)
+/// * Bits 20-23: "Final number of D/A converter bits (8-11 = 9-6bits, def. 9=8bits)" TODO: what the hek?
+/// * Bits 24 and up: Not used
+///
+/// The frequency index selects a frequency from the following array:
+/// * 0: 5734
+/// * 1: 7884
+/// * 2: 10512
+/// * 3: 13379
+/// * 4: 15768
+/// * 5: 18157
+/// * 6: 21024
+/// * 7: 26758
+/// * 8: 31536
+/// * 9: 36314
+/// * 10: 40137
+/// * 11: 42048
+pub fn sound_driver_mode(mode: u32) {
+  unsafe {
+    asm!(/* ASM */ "swi 0x1B"
+        :/* OUT */ // none
+        :/* INP */ "{r0}"(mode)
+        :/* CLO */ // none
+        :/* OPT */ "volatile"
+    );
+  }
+}
+//TODO(lokathor): newtype this mode business.
+
+/// (`swi 0x1C`) "SoundDriverMain", main of the sound driver
+///
+/// You should call `SoundDriverVSync` immediately after the vblank interrupt
+/// fires.
+///
+/// "After that, this routine is called after BG and OBJ processing is
+/// executed." --what?
+#[inline(always)]
+pub fn sound_driver_main() {
+  unsafe {
+    asm!(/* ASM */ "swi 0x1C"
+        :/* OUT */ // none
+        :/* INP */ // none
+        :/* CLO */ // none
+        :/* OPT */ "volatile"
+    );
+  }
+}
+
+/// (`swi 0x1D`) "SoundDriverVSync", resets the sound DMA.
+///
+/// The timing is critical, so you should call this _immediately_ after the
+/// vblank interrupt (every 1/60th of a second).
+#[inline(always)]
+pub fn sound_driver_vsync() {
+  unsafe {
+    asm!(/* ASM */ "swi 0x1D"
+        :/* OUT */ // none
+        :/* INP */ // none
+        :/* CLO */ // none
+        :/* OPT */ "volatile"
+    );
+  }
+}
+
+/// (`swi 0x1E`) "SoundChannelClear", clears the direct sound channels and stops
+/// the sound.
+///
+/// "This function may not operate properly when the library which expands the
+/// sound driver feature is combined afterwards. In this case, do not use it."
+/// --what?
+#[inline(always)]
+pub fn sound_channel_clear() {
+  unsafe {
+    asm!(/* ASM */ "swi 0x1E"
+        :/* OUT */ // none
+        :/* INP */ // none
+        :/* CLO */ // none
+        :/* OPT */ "volatile"
+    );
+  }
+}
+
+//MidiKey2Freq
+//MultiBoot
+
+/// (`swi 0x28`) "SoundDriverVSyncOff", disables sound
+///
+/// If you can't use vblank interrupts to ensure that `sound_driver_vsync` is
+/// called every 1/60th of a second for any reason you must use this function to
+/// stop sound DMA. Otherwise the DMA will overrun its buffer and cause random
+/// noise.
+#[inline(always)]
+pub fn sound_driver_vsync_off() {
+  unsafe {
+    asm!(/* ASM */ "swi 0x28"
+        :/* OUT */ // none
+        :/* INP */ // none
+        :/* CLO */ // none
+        :/* OPT */ "volatile"
+    );
+  }
+}
+
+/// (`swi 0x29`) "SoundDriverVSyncOn", enables sound that was stopped by
+/// `sound_driver_vsync_off`.
+///
+/// Restarts sound DMA system. After restarting the sound you must have a vblank
+/// interrupt followed by a `sound_driver_vsync` within 2/60th of a second.
+#[inline(always)]
+pub fn sound_driver_vsync_on() {
+  unsafe {
+    asm!(/* ASM */ "swi 0x29"
+        :/* OUT */ // none
+        :/* INP */ // none
+        :/* CLO */ // none
+        :/* OPT */ "volatile"
+    );
+  }
 }
