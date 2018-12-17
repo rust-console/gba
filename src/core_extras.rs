@@ -37,3 +37,6 @@ impl<T> VolatilePtr<T> {
     VolatilePtr(self.0 as *mut Z)
   }
 }
+
+// TODO: kill all this with fire
+

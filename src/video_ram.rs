@@ -15,6 +15,8 @@
 
 pub use super::*;
 
+// TODO: kill all this too
+
 /// The physical width in pixels of the GBA screen.
 pub const SCREEN_WIDTH: isize = 240;
 
