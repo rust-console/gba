@@ -224,3 +224,68 @@ fixed_point_unsigned_division! {u32}
 
 /// Alias for an `i16` fixed point value with 8 fractional bits.
 pub type fx8_8 = Fx<i16, U8>;
+
+#[cfg(test)]
+mod fixed_tests {
+  use super::*;
+
+  #[test]
+  fn test_add() {
+    use typenum::U4;
+    let one = Fx::<u16, U4>::from_int_part(1);
+    let two = Fx::<u16, U4>::from_int_part(2);
+    assert!(one + one == two)
+  }
+
+  #[test]
+  fn test_sub() {
+    use typenum::U4;
+    let one = Fx::<u16, U4>::from_int_part(1);
+    let two = Fx::<u16, U4>::from_int_part(2);
+    assert!(two - one == one)
+  }
+
+  #[test]
+  fn test_shl() {
+    use typenum::U4;
+    let one = Fx::<u16, U4>::from_int_part(1);
+    let two = Fx::<u16, U4>::from_int_part(2);
+    assert!(one << 1 == two)
+  }
+
+  #[test]
+  fn test_shr() {
+    use typenum::U4;
+    let one = Fx::<u16, U4>::from_int_part(1);
+    let two = Fx::<u16, U4>::from_int_part(2);
+    assert!(two >> 1 == one)
+  }
+
+  #[test]
+  fn test_neg() {
+    use typenum::U4;
+    let one = Fx::<i16, U4>::from_int_part(1);
+    let neg_one = Fx::<i16, U4>::from_int_part(-1);
+    assert!(-one == neg_one);
+    assert!(-(-one) == one);
+  }
+
+  #[test]
+  fn test_mul() {
+    use typenum::U4;
+    let half = Fx::<u16, U4>::from_int_part(1) >> 1;
+    let two = Fx::<u16, U4>::from_int_part(2);
+    let three = Fx::<u16, U4>::from_int_part(3);
+    let twelve = Fx::<u16, U4>::from_int_part(12);
+    assert!(two * three == twelve * half);
+  }
+
+  #[test]
+  fn test_div() {
+    use typenum::U4;
+    let two = Fx::<u16, U4>::from_int_part(2);
+    let six = Fx::<u16, U4>::from_int_part(6);
+    let twelve = Fx::<u16, U4>::from_int_part(12);
+    assert!(twelve / two == six);
+  }
+}
