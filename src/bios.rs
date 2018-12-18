@@ -8,6 +8,11 @@
 //! whatever value is necessary for that function). Some functions also perform
 //! necessary checks to save you from yourself, such as not dividing by zero.
 
+//TODO: ALL functions in this module should have `if cfg!(test)` blocks. The
+//functions that never return must panic, the functions that return nothing
+//should just do so, and the math functions should just return the correct math
+//I guess.
+
 /// (`swi 0x00`) SoftReset the device.
 ///
 /// This function does not ever return.
@@ -175,17 +180,21 @@ pub fn vblank_interrupt_wait() {
 #[inline(always)]
 pub fn div_rem(numerator: i32, denominator: i32) -> (i32, i32) {
   assert!(denominator != 0);
-  let div_out: i32;
-  let rem_out: i32;
-  unsafe {
-    asm!(/* ASM */ "swi 0x06"
-        :/* OUT */ "={r0}"(div_out), "={r1}"(rem_out)
-        :/* INP */ "{r0}"(numerator), "{r1}"(denominator)
-        :/* CLO */ "r3"
-        :/* OPT */
-    );
+  if cfg!(test) {
+    (numerator / denominator, numerator % denominator)
+  } else {
+    let div_out: i32;
+    let rem_out: i32;
+    unsafe {
+      asm!(/* ASM */ "swi 0x06"
+          :/* OUT */ "={r0}"(div_out), "={r1}"(rem_out)
+          :/* INP */ "{r0}"(numerator), "{r1}"(denominator)
+          :/* CLO */ "r3"
+          :/* OPT */
+      );
+    }
+    (div_out, rem_out)
   }
-  (div_out, rem_out)
 }
 
 /// As `div_rem`, keeping only the `div` output.

@@ -1,5 +1,5 @@
-#![cfg_attr(not(test), no_std)]
-#![cfg_attr(not(test), feature(asm))]
+#![no_std]
+#![feature(asm)]
 #![warn(missing_docs)]
 #![allow(clippy::cast_lossless)]
 #![deny(clippy::float_arithmetic)]
@@ -59,7 +59,6 @@ pub mod builtins;
 
 pub mod fixed;
 
-#[cfg(not(test))]
 pub mod bios;
 
 pub mod core_extras;
