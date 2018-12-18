@@ -20,12 +20,13 @@ macro_rules! const_assert {
   };
 }
 
+/// Constructs an RGB value with a `const_assert!` that the input is in range.
 #[macro_export]
 macro_rules! const_rgb {
   ($r:expr, $g:expr, $b:expr) => {{
-    const_assert!($r);
-    const_assert!($g);
-    const_assert!($b);
+    const_assert!($r <= 31);
+    const_assert!($g <= 31);
+    const_assert!($b <= 31);
     Color::new($r, $g, $b)
   }};
 }

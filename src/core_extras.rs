@@ -39,4 +39,3 @@ impl<T> VolatilePtr<T> {
 }
 
 // TODO: kill all this with fire
-

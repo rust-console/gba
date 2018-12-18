@@ -15,7 +15,7 @@
 
 // TODO(lokathor): IO Register newtypes.
 
-use gba_proc_macro::{newtype, register_bit};
+use gba_proc_macro::register_bit;
 
 use super::*;
 
@@ -25,9 +25,10 @@ use super::*;
 pub const DISPCNT: VolatilePtr<u16> = VolatilePtr(0x400_0000 as *mut u16);
 
 newtype!(
+  /// A newtype over the various display control options that you have on a GBA.
+  #[derive(Debug, Copy, Clone, Default, PartialEq, Eq)]
   DisplayControlSetting,
-  u16,
-  "A newtype over the various display control options that you have on a GBA."
+  u16
 );
 
 #[allow(missing_docs)]
@@ -412,10 +413,14 @@ pub enum TriBool {
   Plus = 1,
 }
 
-newtype!(KeyInputSetting, u16, "A newtype over the key input state of the GBA");
+newtype! {
+  /// Records a particular key press combination.
+  #[derive(Debug, Copy, Clone, Default, PartialEq, Eq)]
+  KeyInput, u16
+}
 
 #[allow(missing_docs)]
-impl KeyInputSetting {
+impl KeyInput {
   register_bit!(A_BIT, u16, 1, a_pressed);
   register_bit!(B_BIT, u16, 1 << 1, b_pressed);
   register_bit!(SELECT_BIT, u16, 1 << 2, select_pressed);
@@ -428,8 +433,8 @@ impl KeyInputSetting {
   register_bit!(L_BIT, u16, 1 << 9, l_pressed);
 
   /// Takes the difference between these keys and another set of keys.
-  pub fn difference(self, other: KeyInputSetting) -> KeyInputSetting {
-    KeyInputSetting(self.0 ^ other.0)
+  pub fn difference(self, other: Self) -> Self {
+    KeyInput(self.0 ^ other.0)
   }
 
   /// Gives the arrow pad value as a tribool, with Plus being increased column
@@ -458,11 +463,11 @@ impl KeyInputSetting {
 }
 
 /// Gets the current state of the keys
-pub fn key_input() -> KeyInputSetting {
+pub fn key_input() -> KeyInput {
   // Note(Lokathor): The 10 used bits are "low when pressed" style, but the 6
   // unused bits are always low, so we XOR with this mask to get a result where
   // the only active bits are currently pressed keys.
-  unsafe { KeyInputSetting(KEYINPUT.read() ^ 0b0000_0011_1111_1111) }
+  unsafe { KeyInput(KEYINPUT.read() ^ 0b0000_0011_1111_1111) }
 }
 
 /// Key Interrupt Control

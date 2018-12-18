@@ -1,5 +1,8 @@
 # Newtype
 
+TODO: we've already used newtype twice by now (fixed point values and volatile
+addresses), so we need to adjust how we start this section.
+
 There's a great Zero Cost abstraction that we'll be using a lot that you might
 not already be familiar with: we're talking about the "Newtype Pattern"!
 
@@ -27,13 +30,13 @@ cost at compile time.
 pub struct PixelColor(u16);
 ```
 
+TODO: we've already talked about repr(transparent) by now
+
 Ah, except that, as I'm sure you remember from [The
 Rustonomicon](https://doc.rust-lang.org/nomicon/other-reprs.html#reprtransparent)
-(and from [the
-RFC](https://github.com/rust-lang/rfcs/blob/master/text/1758-repr-transparent.md)
-too, of course), if we have a single field struct that's sometimes different
-from having just the bare value, so we should be using `#[repr(transparent)]`
-with our newtypes.
+(and from the RFC too, of course), if we have a single field struct that's
+sometimes different from having just the bare value, so we should be using
+`#[repr(transparent)]` with our newtypes.
 
 ```rust
 #[repr(transparent)]
