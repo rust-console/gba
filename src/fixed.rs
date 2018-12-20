@@ -135,6 +135,7 @@ macro_rules! fixed_point_signed_multiply {
   ($t:ident) => {
     impl<F: Unsigned> Mul for Fx<$t, F> {
       type Output = Self;
+      #[allow(clippy::suspicious_arithmetic_impl)]
       fn mul(self, rhs: Fx<$t, F>) -> Self::Output {
         let pre_shift = (self.num as i32).wrapping_mul(rhs.num as i32);
         if pre_shift < 0 {
@@ -168,6 +169,7 @@ macro_rules! fixed_point_unsigned_multiply {
   ($t:ident) => {
     impl<F: Unsigned> Mul for Fx<$t, F> {
       type Output = Self;
+      #[allow(clippy::suspicious_arithmetic_impl)]
       fn mul(self, rhs: Fx<$t, F>) -> Self::Output {
         Fx {
           num: ((self.num as u32).wrapping_mul(rhs.num as u32) >> F::U8) as $t,
@@ -186,6 +188,7 @@ macro_rules! fixed_point_signed_division {
   ($t:ident) => {
     impl<F: Unsigned> Div for Fx<$t, F> {
       type Output = Self;
+      #[allow(clippy::suspicious_arithmetic_impl)]
       fn div(self, rhs: Fx<$t, F>) -> Self::Output {
         let mul_output: i32 = (self.num as i32).wrapping_mul(1 << F::U8);
         let divide_result: i32 = crate::bios::div(mul_output, rhs.num as i32);
@@ -206,6 +209,7 @@ macro_rules! fixed_point_unsigned_division {
   ($t:ident) => {
     impl<F: Unsigned> Div for Fx<$t, F> {
       type Output = Self;
+      #[allow(clippy::suspicious_arithmetic_impl)]
       fn div(self, rhs: Fx<$t, F>) -> Self::Output {
         let mul_output: i32 = (self.num as i32).wrapping_mul(1 << F::U8);
         let divide_result: i32 = crate::bios::div(mul_output, rhs.num as i32);

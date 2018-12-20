@@ -28,7 +28,7 @@ pub extern "C" fn __clzsi2(mut x: usize) -> usize {
   {
     y = x >> 32;
     if y != 0 {
-      n = n - 32;
+      n -= 32;
       x = y;
     }
   }
@@ -36,23 +36,23 @@ pub extern "C" fn __clzsi2(mut x: usize) -> usize {
   {
     y = x >> 16;
     if y != 0 {
-      n = n - 16;
+      n -= 16;
       x = y;
     }
   }
   y = x >> 8;
   if y != 0 {
-    n = n - 8;
+    n -= 8;
     x = y;
   }
   y = x >> 4;
   if y != 0 {
-    n = n - 4;
+    n -= 4;
     x = y;
   }
   y = x >> 2;
   if y != 0 {
-    n = n - 2;
+    n -= 2;
     x = y;
   }
   y = x >> 1;

@@ -66,10 +66,9 @@ pub mod bios;
 pub mod core_extras;
 pub(crate) use crate::core_extras::*;
 
-pub mod io_registers;
+pub mod io;
 
 pub mod video_ram;
-pub(crate) use crate::video_ram::*;
 
 /// Performs unsigned divide and remainder, gives None if dividing by 0.
 pub fn divrem_u32(numer: u32, denom: u32) -> Option<(u32, u32)> {
@@ -127,12 +126,12 @@ fn divrem_u32_non_restoring(numer: u32, denom: u32) -> (u32, u32) {
     }
     i >>= 1;
   }
-  q = q - !q;
+  q -= !q;
   if r < 0 {
-    q = q - 1;
-    r = r + d;
+    q -= 1;
+    r += d;
   }
-  r = r >> 32;
+  r >>= 32;
   // TODO: remove this once we've done more checks here.
   debug_assert!(r >= 0);
   debug_assert!(r <= core::u32::MAX as i64);
@@ -168,18 +167,11 @@ pub unsafe fn divrem_i32_unchecked(numer: i32, denom: i32) -> (i32, i32) {
   } else {
     divrem_u32_non_restoring(unsigned_numer, unsigned_denom)
   };
-  if opposite_sign {
-    if numer < 0 {
-      (-(udiv as i32), -(urem as i32))
-    } else {
-      (-(udiv as i32), urem as i32)
-    }
-  } else {
-    if numer < 0 {
-      (udiv as i32, -(urem as i32))
-    } else {
-      (udiv as i32, urem as i32)
-    }
+  match (opposite_sign, numer < 0) {
+    (true, true) => (-(udiv as i32), -(urem as i32)),
+    (true, false) => (-(udiv as i32), urem as i32),
+    (false, true) => (udiv as i32, -(urem as i32)),
+    (false, false) => (udiv as i32, urem as i32),
   }
 }
 
