@@ -5,7 +5,6 @@
 //! You shouldn't need to call anything in here yourself, it just has to be in
 //! the translation unit and LLVM will find it.
 
-//TODO: make 64 bit too
 #[no_mangle]
 #[cfg(any(target_pointer_width = "16", target_pointer_width = "32", target_pointer_width = "64"))]
 pub extern "C" fn __clzsi2(mut x: usize) -> usize {
@@ -32,7 +31,7 @@ pub extern "C" fn __clzsi2(mut x: usize) -> usize {
       x = y;
     }
   }
-  #[cfg(target_pointer_width = "32")]
+  #[cfg(any(target_pointer_width = "32", target_pointer_width = "64"))]
   {
     y = x >> 16;
     if y != 0 {
