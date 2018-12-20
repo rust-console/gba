@@ -73,6 +73,7 @@ pub(crate) use crate::video_ram::*;
 
 /// Performs unsigned divide and remainder, gives None if dividing by 0.
 pub fn divrem_u32(numer: u32, denom: u32) -> Option<(u32, u32)> {
+  // TODO: const this? Requires const if
   if denom == 0 {
     None
   } else {
@@ -88,6 +89,7 @@ pub fn divrem_u32(numer: u32, denom: u32) -> Option<(u32, u32)> {
 /// defined (not literal UB) including but not limited to: an infinite loop,
 /// panic on overflow, or incorrect output.
 pub unsafe fn divrem_u32_unchecked(numer: u32, denom: u32) -> (u32, u32) {
+  // TODO: const this? Requires const if
   if (numer >> 5) < denom {
     divrem_u32_simple(numer, denom)
   } else {
@@ -99,6 +101,7 @@ pub unsafe fn divrem_u32_unchecked(numer: u32, denom: u32) -> (u32, u32) {
 /// extremely slow. If N is close enough to D then it will likely be faster than
 /// the non_restoring form.
 fn divrem_u32_simple(mut numer: u32, denom: u32) -> (u32, u32) {
+  // TODO: const this? Requires const if
   let mut quot = 0;
   while numer >= denom {
     numer -= denom;
@@ -110,6 +113,7 @@ fn divrem_u32_simple(mut numer: u32, denom: u32) -> (u32, u32) {
 /// Takes a fixed quantity of time based on the bit width of the number (in this
 /// case 32).
 fn divrem_u32_non_restoring(numer: u32, denom: u32) -> (u32, u32) {
+  // TODO: const this? Requires const if
   let mut r: i64 = numer as i64;
   let d: i64 = (denom as i64) << 32;
   let mut q: u32 = 0;
@@ -129,6 +133,7 @@ fn divrem_u32_non_restoring(numer: u32, denom: u32) -> (u32, u32) {
     r = r + d;
   }
   r = r >> 32;
+  // TODO: remove this once we've done more checks here.
   debug_assert!(r >= 0);
   debug_assert!(r <= core::u32::MAX as i64);
   (q, r as u32)
@@ -154,6 +159,7 @@ pub fn divrem_i32(numer: i32, denom: i32) -> Option<(i32, i32)> {
 /// * If you call this with `MIN/-1` you'll get a panic in debug or just `MIN`
 ///   in release (which is incorrect), because of how twos-compliment works.
 pub unsafe fn divrem_i32_unchecked(numer: i32, denom: i32) -> (i32, i32) {
+  // TODO: const this? Requires const if
   let unsigned_numer = numer.abs() as u32;
   let unsigned_denom = denom.abs() as u32;
   let opposite_sign = (numer ^ denom) < 0;
@@ -177,6 +183,7 @@ pub unsafe fn divrem_i32_unchecked(numer: i32, denom: i32) -> (i32, i32) {
   }
 }
 
+/*
 #[cfg(test)]
 mod tests {
   use super::*;
@@ -226,3 +233,4 @@ mod tests {
     }
   }
 }
+*/

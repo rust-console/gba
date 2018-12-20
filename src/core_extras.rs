@@ -1,6 +1,6 @@
 //! Things that I wish were in core, but aren't.
 
-//TODO(Lokathor): reorganize as gba::core::fixed and gba::core::volatile ?
+//TODO(Lokathor): reorganize as gba::core_extras::fixed_point and gba::core_extras::volatile ?
 
 use core::{cmp::Ordering, iter::FusedIterator, marker::PhantomData, num::NonZeroUsize};
 
@@ -263,12 +263,11 @@ impl<T> VolAddressBlock<T> {
     VolAddressBlock { vol_address, slots }
   }
 
-  /// Checked "indexing" style access of the block, giving either a `VolAddress` or a panic.
-  pub fn index(self, slot: usize) -> VolAddress<T> {
-    if slot < self.slots {
-      unsafe { self.vol_address.offset(slot as isize) }
-    } else {
-      panic!("Index Requested: {} >= Bound: {}", slot, self.slots)
+  /// Gives an iterator over this block's slots.
+  pub const fn iter(self) -> VolAddressIter<T> {
+    VolAddressIter {
+      vol_address: self.vol_address,
+      slots: self.slots,
     }
   }
 
@@ -282,20 +281,21 @@ impl<T> VolAddressBlock<T> {
     self.vol_address.offset(slot as isize)
   }
 
+  /// Checked "indexing" style access of the block, giving either a `VolAddress` or a panic.
+  pub fn index(self, slot: usize) -> VolAddress<T> {
+    if slot < self.slots {
+      unsafe { self.vol_address.offset(slot as isize) }
+    } else {
+      panic!("Index Requested: {} >= Bound: {}", slot, self.slots)
+    }
+  }
+
   /// Checked "getting" style access of the block, giving an Option value.
   pub fn get(self, slot: usize) -> Option<VolAddress<T>> {
     if slot < self.slots {
       unsafe { Some(self.vol_address.offset(slot as isize)) }
     } else {
       None
-    }
-  }
-
-  /// Gives an iterator over the block's slots.
-  pub const fn iter(self) -> VolAddressIter<T> {
-    VolAddressIter {
-      vol_address: self.vol_address,
-      slots: self.slots,
     }
   }
 }

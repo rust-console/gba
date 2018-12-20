@@ -15,8 +15,9 @@ publish = false
 typenum = "1.10"
 gba-proc-macro = "0.2.1"
 
-[dev-dependencies]
-quickcheck="0.7"
+#[dev-dependencies]
+#quickcheck="0.7"
+# TODO: F
 
 [profile.release]
 lto = true

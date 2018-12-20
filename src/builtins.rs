@@ -8,6 +8,7 @@
 #[no_mangle]
 #[cfg(any(target_pointer_width = "16", target_pointer_width = "32", target_pointer_width = "64"))]
 pub extern "C" fn __clzsi2(mut x: usize) -> usize {
+  // TODO: const this? Requires const if
   let mut y: usize;
   let mut n: usize = {
     #[cfg(target_pointer_width = "64")]
