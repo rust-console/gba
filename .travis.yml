@@ -27,8 +27,12 @@ script:
   - export PATH="$PATH:/opt/devkitpro/devkitARM/bin"
   - export PATH="$PATH:/opt/devkitpro/tools/bin"
   - cd ..
-  # Test the lib and then compile all examples with `cargo make`
-  - cargo test --lib && cargo test --lib --release
+  # Run all tests, both modes
+  - cargo test --no-fail-fast --lib
+  - cargo test --no-fail-fast --lib --release
+  - cargo test --no-fail-fast --tests
+  - cargo test --no-fail-fast --tests --release
+  # cargo make defaults to both debug and release builds of all examples
   - cargo make
   # Test build the book so that a failed book build kills this run
   - cd book && mdbook build

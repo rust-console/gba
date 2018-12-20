@@ -22,7 +22,7 @@ use super::*;
 /// LCD Control. Read/Write.
 ///
 /// * [gbatek entry](http://problemkaputt.de/gbatek.htm#lcdiodisplaycontrol)
-pub const DISPCNT: VolatilePtr<u16> = VolatilePtr(0x400_0000 as *mut u16);
+pub const DISPCNT: VolAddress<DisplayControlSetting> = unsafe { VolAddress::new_unchecked(0x400_0000) };
 
 newtype!(
   /// A newtype over the various display control options that you have on a GBA.
@@ -98,24 +98,19 @@ pub enum DisplayControlMode {
 
 /// Assigns the given display control setting.
 pub fn set_display_control(setting: DisplayControlSetting) {
-  unsafe {
-    DISPCNT.write(setting.0);
-  }
+  DISPCNT.write(setting);
 }
 /// Obtains the current display control setting.
 pub fn display_control() -> DisplayControlSetting {
-  unsafe { DisplayControlSetting(DISPCNT.read()) }
+  DISPCNT.read()
 }
 
-/// General LCD Status (STAT,LYC)
-pub const DISPSTAT: VolatilePtr<u16> = VolatilePtr(0x400_0004 as *mut u16);
-
 /// Vertical Counter (LY)
-pub const VCOUNT: VolatilePtr<u16> = VolatilePtr(0x400_0006 as *mut u16);
+pub const VCOUNT: VolAddress<u16> = unsafe { VolAddress::new_unchecked(0x400_0006) };
 
 /// Obtains the current VCount value.
 pub fn vcount() -> u16 {
-  unsafe { VCOUNT.read() }
+  VCOUNT.read()
 }
 
 /// Performs a busy loop until VBlank starts.
@@ -130,278 +125,8 @@ pub fn wait_until_vdraw() {
   while vcount() >= SCREEN_HEIGHT as u16 {}
 }
 
-/// BG0 Control
-pub const BG0CNT: VolatilePtr<u16> = VolatilePtr(0x400_0008 as *mut u16);
-
-/// BG1 Control
-pub const BG1CNT: VolatilePtr<u16> = VolatilePtr(0x400_000A as *mut u16);
-
-/// BG2 Control
-pub const BG2CNT: VolatilePtr<u16> = VolatilePtr(0x400_000C as *mut u16);
-
-/// BG3 Control
-pub const BG3CNT: VolatilePtr<u16> = VolatilePtr(0x400_000E as *mut u16);
-
-/// BG0 X-Offset
-pub const BG0HOFS: VolatilePtr<u16> = VolatilePtr(0x400_0010 as *mut u16);
-
-/// BG0 Y-Offset
-pub const BG0VOFS: VolatilePtr<u16> = VolatilePtr(0x400_0012 as *mut u16);
-
-/// BG1 X-Offset
-pub const BG1HOFS: VolatilePtr<u16> = VolatilePtr(0x400_0014 as *mut u16);
-
-/// BG1 Y-Offset
-pub const BG1VOFS: VolatilePtr<u16> = VolatilePtr(0x400_0016 as *mut u16);
-
-/// BG2 X-Offset
-pub const BG2HOFS: VolatilePtr<u16> = VolatilePtr(0x400_0018 as *mut u16);
-
-/// BG2 Y-Offset
-pub const BG2VOFS: VolatilePtr<u16> = VolatilePtr(0x400_001A as *mut u16);
-
-/// BG3 X-Offset
-pub const BG3HOFS: VolatilePtr<u16> = VolatilePtr(0x400_001C as *mut u16);
-
-/// BG3 Y-Offset
-pub const BG3VOFS: VolatilePtr<u16> = VolatilePtr(0x400_001E as *mut u16);
-
-/// BG2 Rotation/Scaling Parameter A (dx)
-pub const BG2PA: VolatilePtr<u16> = VolatilePtr(0x400_0020 as *mut u16);
-
-/// BG2 Rotation/Scaling Parameter B (dmx)
-pub const BG2PB: VolatilePtr<u16> = VolatilePtr(0x400_0022 as *mut u16);
-
-/// BG2 Rotation/Scaling Parameter C (dy)
-pub const BG2PC: VolatilePtr<u16> = VolatilePtr(0x400_0024 as *mut u16);
-
-/// BG2 Rotation/Scaling Parameter D (dmy)
-pub const BG2PD: VolatilePtr<u16> = VolatilePtr(0x400_0026 as *mut u16);
-
-/// BG2 Reference Point X-Coordinate
-pub const BG2X: VolatilePtr<u32> = VolatilePtr(0x400_0028 as *mut u32);
-
-/// BG2 Reference Point Y-Coordinate
-pub const BG2Y: VolatilePtr<u32> = VolatilePtr(0x400_002C as *mut u32);
-
-/// BG3 Rotation/Scaling Parameter A (dx)
-pub const BG3PA: VolatilePtr<u16> = VolatilePtr(0x400_0030 as *mut u16);
-
-/// BG3 Rotation/Scaling Parameter B (dmx)
-pub const BG3PB: VolatilePtr<u16> = VolatilePtr(0x400_0032 as *mut u16);
-
-/// BG3 Rotation/Scaling Parameter C (dy)
-pub const BG3PC: VolatilePtr<u16> = VolatilePtr(0x400_0034 as *mut u16);
-
-/// BG3 Rotation/Scaling Parameter D (dmy)
-pub const BG3PD: VolatilePtr<u16> = VolatilePtr(0x400_0036 as *mut u16);
-
-/// BG3 Reference Point X-Coordinate
-pub const BG3X: VolatilePtr<u32> = VolatilePtr(0x400_0038 as *mut u32);
-
-/// BG3 Reference Point Y-Coordinate
-pub const BG3Y: VolatilePtr<u32> = VolatilePtr(0x400_003C as *mut u32);
-
-/// Window 0 Horizontal Dimensions
-pub const WIN0H: VolatilePtr<u16> = VolatilePtr(0x400_0040 as *mut u16);
-
-/// Window 1 Horizontal Dimensions
-pub const WIN1H: VolatilePtr<u16> = VolatilePtr(0x400_0042 as *mut u16);
-
-/// Window 0 Vertical Dimensions
-pub const WIN0V: VolatilePtr<u16> = VolatilePtr(0x400_0044 as *mut u16);
-
-/// Window 1 Vertical Dimensions
-pub const WIN1V: VolatilePtr<u16> = VolatilePtr(0x400_0046 as *mut u16);
-
-/// Inside of Window 0 and 1
-pub const WININ: VolatilePtr<u16> = VolatilePtr(0x400_0048 as *mut u16);
-
-/// Inside of OBJ Window & Outside of Windows
-pub const WINOUT: VolatilePtr<u16> = VolatilePtr(0x400_004A as *mut u16);
-
-/// Mosaic Size
-pub const MOSAIC: VolatilePtr<u16> = VolatilePtr(0x400_004C as *mut u16);
-
-/// Color Special Effects Selection
-pub const BLDCNT: VolatilePtr<u16> = VolatilePtr(0x400_0050 as *mut u16);
-
-/// Alpha Blending Coefficients
-pub const BLDALPHA: VolatilePtr<u16> = VolatilePtr(0x400_0052 as *mut u16);
-
-/// Brightness (Fade-In/Out) Coefficient
-pub const BLDY: VolatilePtr<u16> = VolatilePtr(0x400_0054 as *mut u16);
-
-/// Channel 1 Sweep register       (NR10)
-pub const UND1CNT_L: VolatilePtr<u16> = VolatilePtr(0x400_0060 as *mut u16);
-
-/// Channel 1 Duty/Length/Envelope (NR11, NR12)
-pub const UND1CNT_H: VolatilePtr<u16> = VolatilePtr(0x400_0062 as *mut u16);
-
-/// Channel 1 Frequency/Control    (NR13, NR14)
-pub const UND1CNT_X: VolatilePtr<u16> = VolatilePtr(0x400_0064 as *mut u16);
-
-/// Channel 2 Duty/Length/Envelope (NR21, NR22)
-pub const UND2CNT_L: VolatilePtr<u16> = VolatilePtr(0x400_0068 as *mut u16);
-
-/// Channel 2 Frequency/Control    (NR23, NR24)
-pub const UND2CNT_H: VolatilePtr<u16> = VolatilePtr(0x400_006C as *mut u16);
-
-/// Channel 3 Stop/Wave RAM select (NR30)
-pub const UND3CNT_L: VolatilePtr<u16> = VolatilePtr(0x400_0070 as *mut u16);
-
-/// Channel 3 Length/Volume        (NR31, NR32)
-pub const UND3CNT_H: VolatilePtr<u16> = VolatilePtr(0x400_0072 as *mut u16);
-
-/// Channel 3 Frequency/Control    (NR33, NR34)
-pub const UND3CNT_X: VolatilePtr<u16> = VolatilePtr(0x400_0074 as *mut u16);
-
-/// Channel 4 Length/Envelope      (NR41, NR42)
-pub const UND4CNT_L: VolatilePtr<u16> = VolatilePtr(0x400_0078 as *mut u16);
-
-/// Channel 4 Frequency/Control    (NR43, NR44)
-pub const UND4CNT_H: VolatilePtr<u16> = VolatilePtr(0x400_007C as *mut u16);
-
-/// Control Stereo/Volume/Enable   (NR50, NR51)
-pub const UNDCNT_L: VolatilePtr<u16> = VolatilePtr(0x400_0080 as *mut u16);
-
-/// Control Mixing/DMA Control
-pub const UNDCNT_H: VolatilePtr<u16> = VolatilePtr(0x400_0082 as *mut u16);
-
-/// Control Sound on/off           (NR52)
-pub const UNDCNT_X: VolatilePtr<u16> = VolatilePtr(0x400_0084 as *mut u16);
-
-/// Sound PWM Control
-pub const UNDBIAS: VolatilePtr<u16> = VolatilePtr(0x400_0088 as *mut u16);
-
-/// Channel 3 Wave Pattern RAM (W/R)
-pub const WAVE_RAM0_L: VolatilePtr<u16> = VolatilePtr(0x400_0090 as *mut u16);
-
-/// Channel 3 Wave Pattern RAM (W/R)
-pub const WAVE_RAM0_H: VolatilePtr<u16> = VolatilePtr(0x400_0092 as *mut u16);
-
-/// Channel 3 Wave Pattern RAM (W/R)
-pub const WAVE_RAM1_L: VolatilePtr<u16> = VolatilePtr(0x400_0094 as *mut u16);
-
-/// Channel 3 Wave Pattern RAM (W/R)
-pub const WAVE_RAM1_H: VolatilePtr<u16> = VolatilePtr(0x400_0096 as *mut u16);
-
-/// Channel 3 Wave Pattern RAM (W/R)
-pub const WAVE_RAM2_L: VolatilePtr<u16> = VolatilePtr(0x400_0098 as *mut u16);
-
-/// Channel 3 Wave Pattern RAM (W/R)
-pub const WAVE_RAM2_H: VolatilePtr<u16> = VolatilePtr(0x400_009A as *mut u16);
-
-/// Channel 3 Wave Pattern RAM (W/R)
-pub const WAVE_RAM3_L: VolatilePtr<u16> = VolatilePtr(0x400_009C as *mut u16);
-
-/// Channel 3 Wave Pattern RAM (W/R)
-pub const WAVE_RAM3_H: VolatilePtr<u16> = VolatilePtr(0x400_009E as *mut u16);
-
-/// Channel A FIFO, Data 0-3
-pub const FIFO_A: VolatilePtr<u32> = VolatilePtr(0x400_00A0 as *mut u32);
-
-/// Channel B FIFO, Data 0-3
-pub const FIFO_B: VolatilePtr<u32> = VolatilePtr(0x400_00A4 as *mut u32);
-
-/// DMA 0 Source Address
-pub const DMA0SAD: VolatilePtr<u32> = VolatilePtr(0x400_00B0 as *mut u32);
-
-/// DMA 0 Destination Address
-pub const DMA0DAD: VolatilePtr<u32> = VolatilePtr(0x400_00B4 as *mut u32);
-
-/// DMA 0 Word Count
-pub const DMA0CNT_L: VolatilePtr<u16> = VolatilePtr(0x400_00B8 as *mut u16);
-
-/// DMA 0 Control
-pub const DMA0CNT_H: VolatilePtr<u16> = VolatilePtr(0x400_00BA as *mut u16);
-
-/// DMA 1 Source Address
-pub const DMA1SAD: VolatilePtr<u32> = VolatilePtr(0x400_00BC as *mut u32);
-
-/// DMA 1 Destination Address
-pub const DMA1DAD: VolatilePtr<u32> = VolatilePtr(0x400_00C0 as *mut u32);
-
-/// DMA 1 Word Count
-pub const DMA1CNT_L: VolatilePtr<u16> = VolatilePtr(0x400_00C4 as *mut u16);
-
-/// DMA 1 Control
-pub const DMA1CNT_H: VolatilePtr<u16> = VolatilePtr(0x400_00C6 as *mut u16);
-
-/// DMA 2 Source Address
-pub const DMA2SAD: VolatilePtr<u32> = VolatilePtr(0x400_00C8 as *mut u32);
-
-/// DMA 2 Destination Address
-pub const DMA2DAD: VolatilePtr<u32> = VolatilePtr(0x400_00CC as *mut u32);
-
-/// DMA 2 Word Count
-pub const DMA2CNT_L: VolatilePtr<u16> = VolatilePtr(0x400_00D0 as *mut u16);
-
-/// DMA 2 Control
-pub const DMA2CNT_H: VolatilePtr<u16> = VolatilePtr(0x400_00D2 as *mut u16);
-
-/// DMA 3 Source Address
-pub const DMA3SAD: VolatilePtr<u32> = VolatilePtr(0x400_00D4 as *mut u32);
-
-/// DMA 3 Destination Address
-pub const DMA3DAD: VolatilePtr<u32> = VolatilePtr(0x400_00D8 as *mut u32);
-
-/// DMA 3 Word Count
-pub const DMA3CNT_L: VolatilePtr<u16> = VolatilePtr(0x400_00DC as *mut u16);
-
-/// DMA 3 Control
-pub const DMA3CNT_H: VolatilePtr<u16> = VolatilePtr(0x400_00DE as *mut u16);
-
-/// Timer 0 Counter/Reload
-pub const TM0D: VolatilePtr<u16> = VolatilePtr(0x400_0100 as *mut u16);
-
-/// Timer 0 Control
-pub const TM0CNT: VolatilePtr<u16> = VolatilePtr(0x400_0102 as *mut u16);
-
-/// Timer 1 Counter/Reload
-pub const TM1D: VolatilePtr<u16> = VolatilePtr(0x400_0104 as *mut u16);
-
-/// Timer 1 Control
-pub const TM1CNT: VolatilePtr<u16> = VolatilePtr(0x400_0106 as *mut u16);
-
-/// Timer 2 Counter/Reload
-pub const TM2D: VolatilePtr<u16> = VolatilePtr(0x400_0108 as *mut u16);
-
-/// Timer 2 Control
-pub const TM2CNT: VolatilePtr<u16> = VolatilePtr(0x400_010A as *mut u16);
-
-/// Timer 3 Counter/Reload
-pub const TM3D: VolatilePtr<u16> = VolatilePtr(0x400_010C as *mut u16);
-
-/// Timer 3 Control
-pub const TM3CNT: VolatilePtr<u16> = VolatilePtr(0x400_010E as *mut u16);
-
-/// SIO Data (Normal-32bit Mode; shared with below)
-pub const SIODATA32: VolatilePtr<u32> = VolatilePtr(0x400_0120 as *mut u32);
-
-/// SIO Data 0 (Parent)    (Multi-Player Mode)
-pub const SIOMULTI0: VolatilePtr<u16> = VolatilePtr(0x400_0120 as *mut u16);
-
-/// SIO Data 1 (1st Child) (Multi-Player Mode)
-pub const SIOMULTI1: VolatilePtr<u16> = VolatilePtr(0x400_0122 as *mut u16);
-
-/// SIO Data 2 (2nd Child) (Multi-Player Mode)
-pub const SIOMULTI2: VolatilePtr<u16> = VolatilePtr(0x400_0124 as *mut u16);
-
-/// SIO Data 3 (3rd Child) (Multi-Player Mode)
-pub const SIOMULTI3: VolatilePtr<u16> = VolatilePtr(0x400_0126 as *mut u16);
-
-/// SIO Control Register
-pub const SIOCNT: VolatilePtr<u16> = VolatilePtr(0x400_0128 as *mut u16);
-
-/// D SIO Data (Local of MultiPlayer; shared below)
-pub const SIOMLT_SEN: VolatilePtr<u16> = VolatilePtr(0x400_012A as *mut u16);
-
-/// SIO Data (Normal-8bit and UART Mode)
-pub const SIODATA8: VolatilePtr<u16> = VolatilePtr(0x400_012A as *mut u16);
-
 /// Key Status
-pub const KEYINPUT: VolatilePtr<u16> = VolatilePtr(0x400_0130 as *mut u16);
+const KEYINPUT: VolAddress<u16> = unsafe { VolAddress::new_unchecked(0x400_0130) };
 
 /// A "tribool" value helps us interpret the arrow pad.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -467,35 +192,5 @@ pub fn key_input() -> KeyInput {
   // Note(Lokathor): The 10 used bits are "low when pressed" style, but the 6
   // unused bits are always low, so we XOR with this mask to get a result where
   // the only active bits are currently pressed keys.
-  unsafe { KeyInput(KEYINPUT.read() ^ 0b0000_0011_1111_1111) }
+  KeyInput(KEYINPUT.read() ^ 0b0000_0011_1111_1111)
 }
-
-/// Key Interrupt Control
-pub const KEYCNT: VolatilePtr<u16> = VolatilePtr(0x400_0132 as *mut u16);
-
-/// SIO Mode Select/General Purpose Data
-pub const RCNT: VolatilePtr<u16> = VolatilePtr(0x400_0134 as *mut u16);
-
-/// SIO JOY Bus Control
-pub const JOYCNT: VolatilePtr<u16> = VolatilePtr(0x400_0140 as *mut u16);
-
-/// SIO JOY Bus Receive Data
-pub const JOY_RECV: VolatilePtr<u32> = VolatilePtr(0x400_0150 as *mut u32);
-
-/// SIO JOY Bus Transmit Data
-pub const JOY_TRANS: VolatilePtr<u32> = VolatilePtr(0x400_0154 as *mut u32);
-
-/// SIO JOY Bus Receive Status
-pub const JOYSTAT: VolatilePtr<u16> = VolatilePtr(0x400_0158 as *mut u16);
-
-/// Interrupt Enable Register
-pub const IE: VolatilePtr<u16> = VolatilePtr(0x400_0200 as *mut u16);
-
-/// Interrupt Request Flags / IRQ Acknowledge
-pub const IF: VolatilePtr<u16> = VolatilePtr(0x400_0202 as *mut u16);
-
-/// Game Pak Waitstate Control
-pub const WAITCNT: VolatilePtr<u16> = VolatilePtr(0x400_0204 as *mut u16);
-
-/// Interrupt Master Enable Register
-pub const IME: VolatilePtr<u16> = VolatilePtr(0x400_0208 as *mut u16);

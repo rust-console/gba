@@ -1,5 +1,7 @@
-#![no_std]
+#![cfg_attr(not(test), no_std)]
 #![feature(asm)]
+#![feature(const_int_wrapping)]
+#![feature(min_const_unsafe_fn)]
 #![warn(missing_docs)]
 #![allow(clippy::cast_lossless)]
 #![deny(clippy::float_arithmetic)]
@@ -68,3 +70,159 @@ pub mod io_registers;
 
 pub mod video_ram;
 pub(crate) use crate::video_ram::*;
+
+/// Performs unsigned divide and remainder, gives None if dividing by 0.
+pub fn divrem_u32(numer: u32, denom: u32) -> Option<(u32, u32)> {
+  if denom == 0 {
+    None
+  } else {
+    Some(unsafe { divrem_u32_unchecked(numer, denom) })
+  }
+}
+
+/// Performs divide and remainder, no check for 0 division.
+///
+/// # Safety
+///
+/// If you call this with a denominator of 0 the result is implementation
+/// defined (not literal UB) including but not limited to: an infinite loop,
+/// panic on overflow, or incorrect output.
+pub unsafe fn divrem_u32_unchecked(numer: u32, denom: u32) -> (u32, u32) {
+  if (numer >> 5) < denom {
+    divrem_u32_simple(numer, denom)
+  } else {
+    divrem_u32_non_restoring(numer, denom)
+  }
+}
+
+/// The simplest form of division. If N is too much larger than D this will be
+/// extremely slow. If N is close enough to D then it will likely be faster than
+/// the non_restoring form.
+fn divrem_u32_simple(mut numer: u32, denom: u32) -> (u32, u32) {
+  let mut quot = 0;
+  while numer >= denom {
+    numer -= denom;
+    quot += 1;
+  }
+  (quot, numer)
+}
+
+/// Takes a fixed quantity of time based on the bit width of the number (in this
+/// case 32).
+fn divrem_u32_non_restoring(numer: u32, denom: u32) -> (u32, u32) {
+  let mut r: i64 = numer as i64;
+  let d: i64 = (denom as i64) << 32;
+  let mut q: u32 = 0;
+  let mut i = 1 << 31;
+  while i > 0 {
+    if r >= 0 {
+      q |= i;
+      r = 2 * r - d;
+    } else {
+      r = 2 * r + d;
+    }
+    i >>= 1;
+  }
+  q = q - !q;
+  if r < 0 {
+    q = q - 1;
+    r = r + d;
+  }
+  r = r >> 32;
+  debug_assert!(r >= 0);
+  debug_assert!(r <= core::u32::MAX as i64);
+  (q, r as u32)
+}
+
+/// Performs signed divide and remainder, gives None if dividing by 0 or
+/// computing `MIN/-1`
+pub fn divrem_i32(numer: i32, denom: i32) -> Option<(i32, i32)> {
+  if denom == 0 || (numer == core::i32::MIN && denom == -1) {
+    None
+  } else {
+    Some(unsafe { divrem_i32_unchecked(numer, denom) })
+  }
+}
+
+/// Performs signed divide and remainder, no check for 0 division or `MIN/-1`.
+///
+/// # Safety
+///
+/// * If you call this with a denominator of 0 the result is implementation
+///   defined (not literal UB) including but not limited to: an infinite loop,
+///   panic on overflow, or incorrect output.
+/// * If you call this with `MIN/-1` you'll get a panic in debug or just `MIN`
+///   in release (which is incorrect), because of how twos-compliment works.
+pub unsafe fn divrem_i32_unchecked(numer: i32, denom: i32) -> (i32, i32) {
+  let unsigned_numer = numer.abs() as u32;
+  let unsigned_denom = denom.abs() as u32;
+  let opposite_sign = (numer ^ denom) < 0;
+  let (udiv, urem) = if (numer >> 5) < denom {
+    divrem_u32_simple(unsigned_numer, unsigned_denom)
+  } else {
+    divrem_u32_non_restoring(unsigned_numer, unsigned_denom)
+  };
+  if opposite_sign {
+    if numer < 0 {
+      (-(udiv as i32), -(urem as i32))
+    } else {
+      (-(udiv as i32), urem as i32)
+    }
+  } else {
+    if numer < 0 {
+      (udiv as i32, -(urem as i32))
+    } else {
+      (udiv as i32, urem as i32)
+    }
+  }
+}
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+  use quickcheck::quickcheck;
+
+  // We have an explicit property on the non_restoring division
+  quickcheck! {
+    fn divrem_u32_non_restoring_prop(num: u32, denom: u32) -> bool {
+      if denom > 0 {
+        divrem_u32_non_restoring(num, denom) == (num / denom, num % denom)
+      } else {
+        true
+      }
+    }
+  }
+
+  // We have an explicit property on the simple division
+  quickcheck! {
+    fn divrem_u32_simple_prop(num: u32, denom: u32) -> bool {
+      if denom > 0 {
+        divrem_u32_simple(num, denom) == (num / denom, num % denom)
+      } else {
+        true
+      }
+    }
+  }
+
+  // Test the u32 wrapper
+  quickcheck! {
+    fn divrem_u32_prop(num: u32, denom: u32) -> bool {
+      if denom > 0 {
+        divrem_u32(num, denom).unwrap() == (num / denom, num % denom)
+      } else {
+        divrem_u32(num, denom).is_none()
+      }
+    }
+  }
+
+  // test the i32 wrapper
+  quickcheck! {
+    fn divrem_i32_prop(num: i32, denom: i32) -> bool {
+      if denom == 0 || num == core::i32::MIN && denom == -1 {
+        divrem_i32(num, denom).is_none()
+      } else {
+        divrem_i32(num, denom).unwrap() == (num / denom, num % denom)
+      }
+    }
+  }
+}

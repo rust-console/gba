@@ -237,3 +237,5 @@ them that enumerating them all here wouldn't serve much purpose.
 Which is not to say that we'll never cover any BIOS functions in this book!
 Instead, we'll simply mention them when whenever they're relevent to the task at
 hand (such as controlling sound or waiting for vblank).
+
+//TODO: list/name all BIOS functions as well as what they relate to elsewhere.
