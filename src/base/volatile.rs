@@ -1,6 +1,4 @@
-//! Things that I wish were in core, but aren't.
-
-//TODO(Lokathor): reorganize as gba::core_extras::fixed_point and gba::core_extras::volatile ?
+//! Holds types for correct handling of volatile memory.
 
 use core::{cmp::Ordering, iter::FusedIterator, marker::PhantomData, num::NonZeroUsize};
 
