@@ -1,327 +1,319 @@
 # Volatile Destination
 
-TODO: replace all this one "the rant" is finalized
-
-There's a reasonable chance that you've never heard of `volatile` before, so
-what's that? Well, it's a term that can be used in more than one context, but
-basically it means "get your grubby mitts off my stuff you over-eager compiler".
+TODO: update this when we can make more stuff `const`
 
 ## Volatile Memory
 
-The first, and most common, form of volatile thing is volatile memory. Volatile
-memory can change without your program changing it, usually because it's not a
-location in RAM, but instead some special location that represents an actual
-hardware device, or part of a hardware device perhaps. The compiler doesn't know
-what's going on in this situation, but when the program is actually run and the
-CPU gets an instruction to read or write from that location, instead of just
-accessing some place in RAM like with normal memory, it accesses whatever bit of
-hardware and does _something_. The details of that something depend on the
-hardware, but what's important is that we need to actually, definitely execute
-that read or write instruction.
-
-This is not how normal memory works. Normally when the compiler
-sees us write values into variables and read values from variables, it's free to
-optimize those expressions and eliminate some of the reads and writes if it can,
-and generally try to save us time. Maybe it even knows some stuff about the data
-dependencies in our expressions and so it does some of the reads or writes out
-of order from what the source says, because the compiler knows that it won't
-actually make a difference to the operation of the program. A good and helpful
-friend, that compiler.
-
-Volatile memory works almost the opposite way. With volatile memory we
-need the compiler to _definitely_ emit an instruction to do a read or write and
-they need to happen _exactly_ in the order that we say to do it. Each volatile
-read or write might have any sort of side effect that the compiler
-doesn't know about, and it shouldn't try to be clever about the optimization. Just do what we
-say, please.
-
-In Rust, we don't mark volatile things as being a separate type of thing,
-instead we use normal raw pointers and then call the
-[read_volatile](https://doc.rust-lang.org/core/ptr/fn.read_volatile.html) and
-[write_volatile](https://doc.rust-lang.org/core/ptr/fn.write_volatile.html)
-functions (also available as methods, if you like), which then delegate to the
-LLVM
-[volatile_load](https://doc.rust-lang.org/core/intrinsics/fn.volatile_load.html)
-and
-[volatile_store](https://doc.rust-lang.org/core/intrinsics/fn.volatile_store.html)
-intrinsics. In C and C++ you can tag a pointer as being volatile and then any
-normal read and write with it becomes the volatile version, but in Rust we have
-to remember to use the correct alternate function instead.
-
-I'm told by the experts that this makes for a cleaner and saner design from a
-_language design_ perspective, but it really kinda screws us when doing low
-level code. References, both mutable and shared, aren't volatile, so they
-compile into normal reads and writes. This means we can't do anything we'd
-normally do in Rust that utilizes references of any kind. Volatile blocks of
-memory can't use normal `.iter()` or `.iter_mut()` based iteration (which give
-`&T` or `&mut T`), and they also can't use normal `Index` and `IndexMut` sugar
-like `a + x[i]` or `x[i] = 7`.
-
-Unlike with normal raw pointers, this pain point never goes away. There's no way
-to abstract over the difference with Rust as it exists now, you'd need to
-actually adjust the core language by adding an additional pointer type (`*vol
-T`) and possibly a reference type to go with it (`&vol T`) to get the right
-semantics. And then you'd need an `IndexVol` trait, and you'd need
-`.iter_vol()`, and so on for every other little thing. It would be a lot of
-work, and the Rust developers just aren't interested in doing all that for such
-a limited portion of their user population. We'll just have to deal with not
-having any syntax sugar.
-
-### VolatilePtr
-
-No syntax sugar doesn't mean we can't at least make things a little easier for
-ourselves. Enter the `VolatilePtr<T>` type, which is a newtype over a `*mut T`.
-One of those "manual" newtypes I mentioned where we can't use our nice macro.
+The compiler is an eager friend, so when it sees a read or a write that won't
+have an effect, it eliminates that read or write. For example, if we write
 
 ```rust
-#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, PartialOrd, Ord)]
+let mut x = 5;
+x = 7;
+```
+
+The compiler won't actually ever put 5 into `x`. It'll skip straight to putting
+7 in `x`, because we never read from `x` when it's 5, so that's a safe change to
+make. Normally, values are stored in RAM, which has no side effects when you
+read and write from it. RAM is purely for keeping notes about values you'll need
+later on.
+
+However, what if we had a bit of hardware where we wanted to do a write and that
+did something _other than_ keeping the value for us to look at later? As you saw
+in the `hello_magic` example, we have to use a `write_volatile` operation.
+Volatile means "just do it anyway". The compiler thinks that it's pointless, but
+we know better, so we can force it to really do exactly what we say by using
+`write_volatile` instead of `write`.
+
+This is kinda error prone though, right? Because it's just a raw pointer, so we
+might forget to use `write_volatile` at some point.
+
+Instead, we want a type that's always going to use volatile reads and writes.
+Also, we want a pointer type that lets our reads and writes to be as safe as
+possible once we've unsafely constructed the initial value.
+
+### Constructing The VolAddress Type
+
+First, we want a type that stores a location within the address space. This can
+be a pointer, or a `usize`, and we'll use a `usize` because that's easier to
+work with in a `const` context (and we want to have `const` when we can get it).
+We'll also have our type use `NonZeroUsize` instead of just `usize` so that
+`Option<VolAddress<T>>` stays as a single machine word. This helps quite a bit
+when we want to iterate over the addresses of a block of memory (such as
+locations within the palette memory). Hardware is never at the null address
+anyway. Also, if we had _just_ an address number then we wouldn't be able to
+track what type the address is for. We need some
+[PhantomData](https://doc.rust-lang.org/core/marker/struct.PhantomData.html),
+and specifically we need the phantom data to be for `*mut T`:
+
+* If we used `*const T` that'd have the wrong
+  [variance](https://doc.rust-lang.org/nomicon/subtyping.html).
+* If we used `&mut T` then that's fusing in the ideas of _lifetime_ and
+  _exclusive access_ to our type. That's potentially important, but that's also
+  an abstraction we'll build _on top of_ this `VolAddress` type if we need it.
+
+One abstraction layer at a time, so we start with just a phantom pointer. This gives us a type that looks like this:
+
+```rust
+#[derive(Debug)]
 #[repr(transparent)]
-pub struct VolatilePtr<T>(pub *mut T);
-```
-
-Obviously we want to be able to read and write:
-
-```rust
-impl<T> VolatilePtr<T> {
-  /// Performs a `read_volatile`.
-  pub unsafe fn read(self) -> T {
-    self.0.read_volatile()
-  }
-
-  /// Performs a `write_volatile`.
-  pub unsafe fn write(self, data: T) {
-    self.0.write_volatile(data);
-  }
-```
-
-And we want a way to jump around when we do have volatile memory that's in
-blocks. This is where we can get ourselves into some trouble if we're not
-careful. We have to decide between
-[offset](https://doc.rust-lang.org/std/primitive.pointer.html#method.offset) and
-[wrapping_offset](https://doc.rust-lang.org/std/primitive.pointer.html#method.wrapping_offset).
-The difference is that `offset` optimizes better, but also it can be Undefined
-Behavior if the result is not "in bounds or one byte past the end of the same
-allocated object". I asked [ubsan](https://github.com/ubsan) (who is the expert
-that you should always listen to on matters like this) what that means exactly
-when memory mapped hardware is involved (since we never allocated anything), and
-the answer was that you _can_ use an `offset` in statically memory mapped
-situations like this as long as you don't use it to jump to the address of
-something that Rust itself allocated at some point. Cool, we all like being able
-to use the one that optimizes better. Unfortunately, the downside to using
-`offset` instead of `wrapping_offset` is that with `offset`, it's Undefined
-Behavior _simply to calculate the out of bounds result_ (with `wrapping_offset`
-it's not Undefined Behavior until you _use_ the out of bounds result). We'll
-have to be quite careful when we're using `offset`.
-
-```rust
-  /// Performs a normal `offset`.
-  pub unsafe fn offset(self, count: isize) -> Self {
-    VolatilePtr(self.0.offset(count))
-  }
-```
-
-Now, one thing of note is that doing the `offset` isn't `const`. The math for it
-is something that's possible to do in a `const` way of course, but Rust
-basically doesn't allow you to fiddle raw pointers much during `const` right
-now. Maybe in the future that will improve.
-
-If we did want to have a `const` function for finding the correct address within
-a volatile block of memory we'd have to do all the math using `usize` values,
-and then cast that value into being a pointer once we were done. It'd look
-something like this:
-
-```rust
-const fn address_index<T>(address: usize, index: usize) -> usize {
-  address + (index * std::mem::size_of::<T>())
+pub struct VolAddress<T> {
+  address: NonZeroUsize,
+  marker: PhantomData<*mut T>,
 }
 ```
 
-But, back to methods for `VolatilePtr`, well we sometimes want to be able to
-cast a `VolatilePtr` between pointer types. Since we won't be able to do that
-with `as`, we'll have to write a method for it:
+Now, because of how `derive` is specified, it derives traits _if the generic
+parameter_ supports those traits. Since our type is like a pointer, the traits
+it supports are distinct from whatever traits the target type supports. So we'll
+provide those implementations manually.
 
 ```rust
-  /// Performs a cast into some new pointer type.
-  pub fn cast<Z>(self) -> VolatilePtr<Z> {
-    VolatilePtr(self.0 as *mut Z)
+impl<T> Clone for VolAddress<T> {
+  fn clone(&self) -> Self {
+    *self
   }
+}
+impl<T> Copy for VolAddress<T> {}
+impl<T> PartialEq for VolAddress<T> {
+  fn eq(&self, other: &Self) -> bool {
+    self.address == other.address
+  }
+}
+impl<T> Eq for VolAddress<T> {}
+impl<T> PartialOrd for VolAddress<T> {
+  fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+    Some(self.address.cmp(&other.address))
+  }
+}
+impl<T> Ord for VolAddress<T> {
+  fn cmp(&self, other: &Self) -> Ordering {
+    self.address.cmp(&other.address)
+  }
+}
 ```
 
-### Volatile Iterating
+Boilerplate junk, not interesting. There's a reason that you derive those traits
+99% of the time in Rust.
 
-How about that `Iterator` stuff I said we'd be missing? We can actually make
-_an_ Iterator available, it's just not the normal "iterate by shared reference
-or unique reference" Iterator. Instead, it's more like a "throw out a series of
-`VolatilePtr` values" style Iterator. Other than that small difference it's
-totally normal, and we'll be able to use map and skip and take and all those
-neat methods.
+### Constructing A VolAddress Value
 
-So how do we make this thing we need? First we check out the [Implementing
-Iterator](https://doc.rust-lang.org/core/iter/index.html#implementing-iterator)
-section in the core documentation. It says we need a struct for holding the
-iterator state. Right-o, probably something like this:
+Okay so here's the next core concept: If we unsafely _construct_ a
+`VolAddress<T>`, then we can safely _use_ the value once it's been properly
+created.
 
 ```rust
-#[derive(Debug, Clone, Hash, PartialEq, Eq)]
-pub struct VolatilePtrIter<T> {
-  vol_ptr: VolatilePtr<T>,
+// you'll need these features enabled and a recent nightly
+#![feature(const_int_wrapping)]
+#![feature(min_const_unsafe_fn)]
+
+impl<T> VolAddress<T> {
+  pub const unsafe fn new_unchecked(address: usize) -> Self {
+    VolAddress {
+      address: NonZeroUsize::new_unchecked(address),
+      marker: PhantomData,
+    }
+  }
+  pub const unsafe fn cast<Z>(self) -> VolAddress<Z> {
+    VolAddress {
+      address: self.address,
+      marker: PhantomData,
+    }
+  }
+  pub unsafe fn offset(self, offset: isize) -> Self {
+    VolAddress {
+      address: NonZeroUsize::new_unchecked(self.address.get().wrapping_add(offset as usize * core::mem::size_of::<T>())),
+      marker: PhantomData,
+    }
+  }
+}
+```
+
+So what are the unsafety rules here?
+
+* Non-null, obviously.
+* Must be aligned for `T`
+* Must always produce valid bit patterns for `T`
+* Must not be part of the address space that Rust's stack or allocator will ever
+  uses.
+
+So, again using the `hello_magic` example, we had
+
+```rust
+(0x400_0000 as *mut u16).write_volatile(0x0403);
+```
+
+And instead we could declare
+
+```rust
+const MAGIC_LOCATION: VolAddress<u16> = unsafe { VolAddress::new_unchecked(0x400_0000) };
+```
+
+### Using A VolAddress Value
+
+Now that we've named the magic location, we want to write to it.
+
+```rust
+impl<T> VolAddress<T> {
+  pub fn read(self) -> T
+  where
+    T: Copy,
+  {
+    unsafe { (self.address.get() as *mut T).read_volatile() }
+  }
+  pub unsafe fn read_non_copy(self) -> T {
+    (self.address.get() as *mut T).read_volatile()
+  }
+  pub fn write(self, val: T) {
+    unsafe { (self.address.get() as *mut T).write_volatile(val) }
+  }
+}
+```
+
+So if the type is `Copy` we can `read` it as much as we want. If, somehow, the
+type isn't `Copy`, then it might be `Drop`, and that means if we read out a
+value over and over we could cause the `drop` method to trigger UB. Since the
+end user might really know what they're doing, we provide an unsafe backup
+`read_non_copy`.
+
+On the other hand, we can `write` to the location as much as we want. Even if
+the type isn't `Copy`, _not running `Drop` is safe_, so a `write` is always
+safe.
+
+Now we can write to our magical location.
+
+```rust
+MAGIC_LOCATION.write(0x0403);
+```
+
+### VolAddress Iteration
+
+We've already seen that sometimes we want to have a base address of some sort
+and then offset from that location to another. What if we wanted to iterate over
+_all the locations_. That's not particularly hard.
+
+```rust
+impl<T> VolAddress<T> {
+  pub const unsafe fn iter_slots(self, slots: usize) -> VolAddressIter<T> {
+    VolAddressIter { vol_address: self, slots }
+  }
+}
+
+#[derive(Debug)]
+pub struct VolAddressIter<T> {
+  vol_address: VolAddress<T>,
   slots: usize,
 }
-```
+impl<T> Clone for VolAddressIter<T> {
+  fn clone(&self) -> Self {
+    VolAddressIter {
+      vol_address: self.vol_address,
+      slots: self.slots,
+    }
+  }
+}
+impl<T> PartialEq for VolAddressIter<T> {
+  fn eq(&self, other: &Self) -> bool {
+    self.vol_address == other.vol_address && self.slots == other.slots
+  }
+}
+impl<T> Eq for VolAddressIter<T> {}
+impl<T> Iterator for VolAddressIter<T> {
+  type Item = VolAddress<T>;
 
-And then we just implement
-[core::iter::Iterator](https://doc.rust-lang.org/core/iter/trait.Iterator.html)
-on that struct. Wow, that's quite the trait though! Don't worry, we only need to
-implement two small things and then the rest of it comes free as a bunch of
-default methods.
-
-So, the code that we _want_ to write looks like this:
-
-```rust
-impl<T> Iterator for VolatilePtrIter<T> {
-  type Item = VolatilePtr<T>;
-
-  fn next(&mut self) -> Option<VolatilePtr<T>> {
+  fn next(&mut self) -> Option<Self::Item> {
     if self.slots > 0 {
-      let out = Some(self.vol_ptr);
-      self.slots -= 1;
-      self.vol_ptr = unsafe { self.vol_ptr.offset(1) };
-      out
+      let out = self.vol_address;
+      unsafe {
+        self.slots -= 1;
+        self.vol_address = self.vol_address.offset(1);
+      }
+      Some(out)
     } else {
       None
     }
   }
 }
+impl<T> FusedIterator for VolAddressIter<T> {}
 ```
 
-Except we _can't_ write that code. What? The problem is that we used
-`derive(Clone, Copy` on `VolatilePtr`. Because of a quirk in how `derive` works,
-this means `VolatilePtr<T>` will only be `Copy` if the `T` is `Copy`, _even
-though the pointer itself is always `Copy` regardless of what it points to_.
-Ugh, terrible. We've got three basic ways to handle this:
+### VolAddressBlock
 
-* Make the `Iterator` implementation be for `<T:Clone>`, and then hope that we
-  always have types that are `Clone`.
-* Hand implement every trait we want `VolatilePtr` (and `VolatilePtrIter`) to
-  have so that we can override the fact that `derive` is basically broken in
-  this case.
-* Make `VolatilePtr` store a `usize` value instead of a pointer, and then cast
-  it to `*mut T` when we actually need to read and write. This would require us
-  to also store a `PhantomData<T>` so that the type of the address is tracked
-  properly, which would make it a lot more verbose to construct a `VolatilePtr`
-  value.
-
-None of those options are particularly appealing. I guess we'll do the first one
-because it's the least amount of up front trouble, and I don't _think_ we'll
-need to be iterating non-Clone values. All we do to pick that option is add the
-bound to the very start of the `impl` block, where we introduce the `T`:
+Obviously, having a base address and a length exist separately is error prone.
+There's a good reason for slices to keep their pointer and their length
+together. We want something like that, which we'll call a "block" because
+"array" and "slice" are already things in Rust.
 
 ```rust
-impl<T: Clone> Iterator for VolatilePtrIter<T> {
-  type Item = VolatilePtr<T>;
-
-  fn next(&mut self) -> Option<VolatilePtr<T>> {
-    if self.slots > 0 {
-      let out = Some(self.vol_ptr.clone());
-      self.slots -= 1;
-      self.vol_ptr = unsafe { self.vol_ptr.clone().offset(1) };
-      out
-    } else {
-      None
-    }
-  }
-}
-```
-
-What's going on here? Okay so our iterator has a number of slots that it'll go
-over, and then when it's out of slots it starts producing `None` forever. That's
-actually pretty simple. We're also masking some unsafety too. In this case,
-we'll rely on the person who made the `VolatilePtrIter` to have selected the
-correct number of slots. This gives us a new method for `VolatilePtr`:
-
-```rust
-  pub unsafe fn iter_slots(self, slots: usize) -> VolatilePtrIter<T> {
-    VolatilePtrIter {
-      vol_ptr: self,
-      slots,
-    }
-  }
-```
-
-With this design, making the `VolatilePtrIter` at the start is `unsafe` (we have
-to trust the caller that the right number of slots exists), and then using it
-after that is totally safe (if the right number of slots was given we'll never
-screw up our end of it).
-
-### VolatilePtr Formatting
-
-Also, just as a little bonus that we probably won't use, we could enable our new
-pointer type to be formatted as a pointer value.
-
-```rust
-impl<T> core::fmt::Pointer for VolatilePtr<T> {
-  /// Formats exactly like the inner `*mut T`.
-  fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
-    write!(f, "{:p}", self.0)
-  }
-}
-```
-
-Neat!
-
-### VolatilePtr Complete
-
-That was a lot of small code blocks, let's look at it all put together:
-
-```rust
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[repr(transparent)]
-pub struct VolatilePtr<T>(pub *mut T);
-impl<T> VolatilePtr<T> {
-  pub unsafe fn read(self) -> T {
-    self.0.read_volatile()
-  }
-  pub unsafe fn write(self, data: T) {
-    self.0.write_volatile(data);
-  }
-  pub unsafe fn offset(self, count: isize) -> Self {
-    VolatilePtr(self.0.offset(count))
-  }
-  pub fn cast<Z>(self) -> VolatilePtr<Z> {
-    VolatilePtr(self.0 as *mut Z)
-  }
-  pub unsafe fn iter_slots(self, slots: usize) -> VolatilePtrIter<T> {
-    VolatilePtrIter {
-      vol_ptr: self,
-      slots,
-    }
-  }
-}
-impl<T> core::fmt::Pointer for VolatilePtr<T> {
-  fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
-    write!(f, "{:p}", self.0)
-  }
-}
-
-#[derive(Debug, Clone, Hash, PartialEq, Eq)]
-pub struct VolatilePtrIter<T> {
-  vol_ptr: VolatilePtr<T>,
+#[derive(Debug)]
+pub struct VolAddressBlock<T> {
+  vol_address: VolAddress<T>,
   slots: usize,
 }
-impl<T: Clone> Iterator for VolatilePtrIter<T> {
-  type Item = VolatilePtr<T>;
-  fn next(&mut self) -> Option<VolatilePtr<T>> {
-    if self.slots > 0 {
-      let out = Some(self.vol_ptr.clone());
-      self.slots -= 1;
-      self.vol_ptr = unsafe { self.vol_ptr.clone().offset(1) };
-      out
+impl<T> Clone for VolAddressBlock<T> {
+  fn clone(&self) -> Self {
+    VolAddressBlock {
+      vol_address: self.vol_address,
+      slots: self.slots,
+    }
+  }
+}
+impl<T> PartialEq for VolAddressBlock<T> {
+  fn eq(&self, other: &Self) -> bool {
+    self.vol_address == other.vol_address && self.slots == other.slots
+  }
+}
+impl<T> Eq for VolAddressBlock<T> {}
+
+impl<T> VolAddressBlock<T> {
+  pub const unsafe fn new_unchecked(vol_address: VolAddress<T>, slots: usize) -> Self {
+    VolAddressBlock { vol_address, slots }
+  }
+  pub const fn iter(self) -> VolAddressIter<T> {
+    VolAddressIter {
+      vol_address: self.vol_address,
+      slots: self.slots,
+    }
+  }
+  pub unsafe fn index_unchecked(self, slot: usize) -> VolAddress<T> {
+    self.vol_address.offset(slot as isize)
+  }
+  pub fn index(self, slot: usize) -> VolAddress<T> {
+    if slot < self.slots {
+      unsafe { self.vol_address.offset(slot as isize) }
+    } else {
+      panic!("Index Requested: {} >= Bound: {}", slot, self.slots)
+    }
+  }
+  pub fn get(self, slot: usize) -> Option<VolAddress<T>> {
+    if slot < self.slots {
+      unsafe { Some(self.vol_address.offset(slot as isize)) }
     } else {
       None
     }
   }
 }
 ```
+
+Now we can have something like:
+
+```rust
+const OTHER_MAGIC: VolAddressBlock<u16> = unsafe {
+  VolAddressBlock::new_unchecked(
+    VolAddress::new_unchecked(0x600_0000),
+    240 * 160
+  )
+};
+
+OTHER_MAGIC.index(120 + 80 * 240).write_volatile(0x001F);
+OTHER_MAGIC.index(136 + 80 * 240).write_volatile(0x03E0);
+OTHER_MAGIC.index(120 + 96 * 240).write_volatile(0x7C00);
+```
+
+### Docs?
+
+If you wanna see these types and methods with a full docs write up you should
+check the GBA crate's source.
 
 ## Volatile ASM
 
@@ -343,3 +335,9 @@ safely (otherwise the GBA won't ever actually wake back up from the low power
 state), but the `asm!` you use once you're ready is just a single instruction
 with no return value. The compiler can't tell what's going on, so you just have
 to say "do it anyway".
+
+Note that if you use a linker script to include any ASM with your Rust program
+(eg: the `crt0.s` file that we setup in the "Development Setup" section), all of
+that ASM is "volatile" for these purposes. Volatile isn't actually a _hardware_
+concept, it's just an LLVM concept, and the linker script runs after LLVM has
+done its work.

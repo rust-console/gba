@@ -21,7 +21,7 @@ Overall the book is sorted for easy review once you're trying to program
 something, and the GBA has a few interconnected concepts, so some parts of the
 book end up having to refer you to portions that you haven't read yet. The
 chapters and sections are sorted so that _minimal_ future references are
-required, but it's unavoidable.
+required, but it's unavoidable that it'll happen sometimes.
 
 The actual "tutorial order" of the book is the
 [Examples](../05-examples/00-index.md) chapter. Each section of that chapter
