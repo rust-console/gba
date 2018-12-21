@@ -36,7 +36,7 @@ script:
   - cargo test --no-fail-fast --tests
   - cargo test --no-fail-fast --tests --release
   # Let cargo make take over the rest
-  - cargo make build-all
+  - cargo make justrelease
   # Test build the book so that a failed book build kills this run
   - cd book && mdbook build
 
