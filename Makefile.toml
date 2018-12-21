@@ -55,12 +55,15 @@ fn main() -> std::io::Result<()> {
 '''
 ]
 
-[tasks.build]
-dependencies = ["build-examples-debug", "build-examples-release", "pack-roms"]
-
 [tasks.test]
 command = "cargo"
 args = ["test", "--lib"]
 
+[tasks.justrelease]
+dependencies = ["build-examples-release", "pack-roms"]
+
+[tasks.build-all]
+dependencies = ["build-examples-debug", "build-examples-release", "pack-roms"]
+
 [tasks.default]
-alias = "build"
+alias = "build-all"

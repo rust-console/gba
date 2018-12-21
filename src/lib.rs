@@ -1,12 +1,14 @@
 #![cfg_attr(not(test), no_std)]
-#![cfg_attr(not(test), feature(asm))]
+#![feature(asm)]
+#![feature(const_int_wrapping)]
+#![feature(min_const_unsafe_fn)]
 #![warn(missing_docs)]
 #![allow(clippy::cast_lossless)]
 #![deny(clippy::float_arithmetic)]
 
 //! This crate helps you write GBA ROMs.
 //!
-//! # SAFETY POLICY
+//! ## SAFETY POLICY
 //!
 //! Some parts of this crate are safe wrappers around unsafe operations. This is
 //! good, and what you'd expect from a Rust crate.
@@ -16,78 +18,211 @@
 //!
 //! **Do not** use this crate in programs that aren't running on the GBA. If you
 //! do, it's a giant bag of Undefined Behavior.
-//!
-//! # TESTING POLICY
-//!
-//! It is the intent of the crate authors that as much of the crate as possible
-//! be written so that you can use `cargo test` for at least some parts of your
-//! code without everything exploding instantly. To that end, where possible we
-//! attempt to use `cfg` flags to make things safe for `cargo test`. Hopefully
-//! we got it all.
+
+/// Assists in defining a newtype wrapper over some base type.
+///
+/// Note that rustdoc and derives are all the "meta" stuff, so you can write all
+/// of your docs and derives in front of your newtype in the same way you would
+/// for a normal struct. Then the inner type to be wrapped it name.
+///
+/// The macro _assumes_ that you'll be using it to wrap zero safe numeric types,
+/// so it automatically provides a `const fn` method for `new` that just wraps
+/// `0`. If this is not desired you can add `, no frills` to the invocation.
+///
+/// Example:
+/// ```
+/// newtype! {
+///   /// Records a particular key press combination.
+///   #[derive(Debug, Copy, Clone, Default, PartialEq, Eq)]
+///   KeyInput, u16
+/// }
+/// ```
+#[macro_export]
+macro_rules! newtype {
+  ($(#[$attr:meta])* $new_name:ident, $old_name:ident) => {
+    $(#[$attr])*
+    #[repr(transparent)]
+    pub struct $new_name($old_name);
+    impl $new_name {
+      /// A `const` "zero value" constructor
+      pub const fn new() -> Self {
+        $new_name(0)
+      }
+    }
+  };
+  ($(#[$attr:meta])* $new_name:ident, $old_name:ident, no frills) => {
+    $(#[$attr])*
+    #[repr(transparent)]
+    pub struct $new_name($old_name);
+  };
+}
+
+pub mod builtins;
+
+pub mod fixed;
+
+pub mod bios;
 
 pub mod core_extras;
 pub(crate) use crate::core_extras::*;
 
-pub mod io_registers;
+pub mod io;
 
 pub mod video_ram;
-pub(crate) use crate::video_ram::*;
 
-/// Combines the Red, Blue, and Green provided into a single color value.
-pub const fn rgb16(red: u16, green: u16, blue: u16) -> u16 {
-  blue << 10 | green << 5 | red
+/// Performs unsigned divide and remainder, gives None if dividing by 0.
+pub fn divrem_u32(numer: u32, denom: u32) -> Option<(u32, u32)> {
+  // TODO: const this? Requires const if
+  if denom == 0 {
+    None
+  } else {
+    Some(unsafe { divrem_u32_unchecked(numer, denom) })
+  }
 }
 
-/// BIOS Call: Div (GBA SWI 0x06).
+/// Performs divide and remainder, no check for 0 division.
 ///
-/// Gives just the DIV output of `numerator / denominator`.
+/// # Safety
 ///
-/// # Panics
-///
-/// If `denominator` is 0.
-#[inline]
-pub fn div(numerator: i32, denominator: i32) -> i32 {
-  div_modulus(numerator, denominator).0
+/// If you call this with a denominator of 0 the result is implementation
+/// defined (not literal UB) including but not limited to: an infinite loop,
+/// panic on overflow, or incorrect output.
+pub unsafe fn divrem_u32_unchecked(numer: u32, denom: u32) -> (u32, u32) {
+  // TODO: const this? Requires const if
+  if (numer >> 5) < denom {
+    divrem_u32_simple(numer, denom)
+  } else {
+    divrem_u32_non_restoring(numer, denom)
+  }
 }
 
-/// BIOS Call: Div (GBA SWI 0x06).
-///
-/// Gives just the MOD output of `numerator / denominator`.
-///
-/// # Panics
-///
-/// If `denominator` is 0.
-#[inline]
-pub fn modulus(numerator: i32, denominator: i32) -> i32 {
-  div_modulus(numerator, denominator).1
+/// The simplest form of division. If N is too much larger than D this will be
+/// extremely slow. If N is close enough to D then it will likely be faster than
+/// the non_restoring form.
+fn divrem_u32_simple(mut numer: u32, denom: u32) -> (u32, u32) {
+  // TODO: const this? Requires const if
+  let mut quot = 0;
+  while numer >= denom {
+    numer -= denom;
+    quot += 1;
+  }
+  (quot, numer)
 }
 
-/// BIOS Call: Div (GBA SWI 0x06).
-///
-/// Gives both the DIV and MOD output of `numerator / denominator`.
-///
-/// # Panics
-///
-/// If `denominator` is 0.
-#[inline]
-pub fn div_modulus(numerator: i32, denominator: i32) -> (i32, i32) {
-  assert!(denominator != 0);
-  #[cfg(not(test))]
-  {
-    let div_out: i32;
-    let mod_out: i32;
-    unsafe {
-      asm!(/* assembly template */ "swi 0x06"
-          :/* output operands */ "={r0}"(div_out), "={r1}"(mod_out)
-          :/* input operands */ "{r0}"(numerator), "{r1}"(denominator)
-          :/* clobbers */ "r3"
-          :/* options */
-      );
+/// Takes a fixed quantity of time based on the bit width of the number (in this
+/// case 32).
+fn divrem_u32_non_restoring(numer: u32, denom: u32) -> (u32, u32) {
+  // TODO: const this? Requires const if
+  let mut r: i64 = numer as i64;
+  let d: i64 = (denom as i64) << 32;
+  let mut q: u32 = 0;
+  let mut i = 1 << 31;
+  while i > 0 {
+    if r >= 0 {
+      q |= i;
+      r = 2 * r - d;
+    } else {
+      r = 2 * r + d;
     }
-    (div_out, mod_out)
+    i >>= 1;
   }
-  #[cfg(test)]
-  {
-    (numerator / denominator, numerator % denominator)
+  q -= !q;
+  if r < 0 {
+    q -= 1;
+    r += d;
+  }
+  r >>= 32;
+  // TODO: remove this once we've done more checks here.
+  debug_assert!(r >= 0);
+  debug_assert!(r <= core::u32::MAX as i64);
+  (q, r as u32)
+}
+
+/// Performs signed divide and remainder, gives None if dividing by 0 or
+/// computing `MIN/-1`
+pub fn divrem_i32(numer: i32, denom: i32) -> Option<(i32, i32)> {
+  if denom == 0 || (numer == core::i32::MIN && denom == -1) {
+    None
+  } else {
+    Some(unsafe { divrem_i32_unchecked(numer, denom) })
   }
 }
+
+/// Performs signed divide and remainder, no check for 0 division or `MIN/-1`.
+///
+/// # Safety
+///
+/// * If you call this with a denominator of 0 the result is implementation
+///   defined (not literal UB) including but not limited to: an infinite loop,
+///   panic on overflow, or incorrect output.
+/// * If you call this with `MIN/-1` you'll get a panic in debug or just `MIN`
+///   in release (which is incorrect), because of how twos-compliment works.
+pub unsafe fn divrem_i32_unchecked(numer: i32, denom: i32) -> (i32, i32) {
+  // TODO: const this? Requires const if
+  let unsigned_numer = numer.abs() as u32;
+  let unsigned_denom = denom.abs() as u32;
+  let opposite_sign = (numer ^ denom) < 0;
+  let (udiv, urem) = if (numer >> 5) < denom {
+    divrem_u32_simple(unsigned_numer, unsigned_denom)
+  } else {
+    divrem_u32_non_restoring(unsigned_numer, unsigned_denom)
+  };
+  match (opposite_sign, numer < 0) {
+    (true, true) => (-(udiv as i32), -(urem as i32)),
+    (true, false) => (-(udiv as i32), urem as i32),
+    (false, true) => (udiv as i32, -(urem as i32)),
+    (false, false) => (udiv as i32, urem as i32),
+  }
+}
+
+/*
+#[cfg(test)]
+mod tests {
+  use super::*;
+  use quickcheck::quickcheck;
+
+  // We have an explicit property on the non_restoring division
+  quickcheck! {
+    fn divrem_u32_non_restoring_prop(num: u32, denom: u32) -> bool {
+      if denom > 0 {
+        divrem_u32_non_restoring(num, denom) == (num / denom, num % denom)
+      } else {
+        true
+      }
+    }
+  }
+
+  // We have an explicit property on the simple division
+  quickcheck! {
+    fn divrem_u32_simple_prop(num: u32, denom: u32) -> bool {
+      if denom > 0 {
+        divrem_u32_simple(num, denom) == (num / denom, num % denom)
+      } else {
+        true
+      }
+    }
+  }
+
+  // Test the u32 wrapper
+  quickcheck! {
+    fn divrem_u32_prop(num: u32, denom: u32) -> bool {
+      if denom > 0 {
+        divrem_u32(num, denom).unwrap() == (num / denom, num % denom)
+      } else {
+        divrem_u32(num, denom).is_none()
+      }
+    }
+  }
+
+  // test the i32 wrapper
+  quickcheck! {
+    fn divrem_i32_prop(num: i32, denom: i32) -> bool {
+      if denom == 0 || num == core::i32::MIN && denom == -1 {
+        divrem_i32(num, denom).is_none()
+      } else {
+        divrem_i32(num, denom).unwrap() == (num / denom, num % denom)
+      }
+    }
+  }
+}
+*/

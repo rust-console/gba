@@ -1,5 +1,8 @@
 # Newtype
 
+TODO: we've already used newtype twice by now (fixed point values and volatile
+addresses), so we need to adjust how we start this section.
+
 There's a great Zero Cost abstraction that we'll be using a lot that you might
 not already be familiar with: we're talking about the "Newtype Pattern"!
 
@@ -27,30 +30,17 @@ cost at compile time.
 pub struct PixelColor(u16);
 ```
 
+TODO: we've already talked about repr(transparent) by now
+
 Ah, except that, as I'm sure you remember from [The
 Rustonomicon](https://doc.rust-lang.org/nomicon/other-reprs.html#reprtransparent)
-(and from [the
-RFC](https://github.com/rust-lang/rfcs/blob/master/text/1758-repr-transparent.md)
-too, of course), if we have a single field struct that's sometimes different
-from having just the bare value, so we should be using `#[repr(transparent)]`
-with our newtypes.
+(and from the RFC too, of course), if we have a single field struct that's
+sometimes different from having just the bare value, so we should be using
+`#[repr(transparent)]` with our newtypes.
 
 ```rust
 #[repr(transparent)]
 pub struct PixelColor(u16);
-```
-
-Ah, and of course we'll need to make it so you can unwrap the value:
-
-```rust
-#[repr(transparent)]
-pub struct PixelColor(u16);
-
-impl From<PixelColor> for u16 {
-  fn from(color: PixelColor) -> u16 {
-    color.0
-  }
-}
 ```
 
 And then we'll need to do that same thing for _every other newtype we want_.
@@ -62,7 +52,12 @@ a job for a macro to me!
 
 ## Making It A Macro
 
-The most basic version of the macro we want goes like this:
+If you're going to do much with macros you should definitely read through [The
+Little Book of Rust
+Macros](https://danielkeep.github.io/tlborm/book/index.html), but we won't be
+doing too much so you can just follow along here a bit if you like.
+
+The most basic version of a newtype macro starts like this:
 
 ```rust
 #[macro_export]
@@ -74,8 +69,39 @@ macro_rules! newtype {
 }
 ```
 
-Except we also want to be able to add attributes (which includes doc comments),
-so we upgrade our macro a bit:
+The `#[macro_export]` makes it exported by the current module (like `pub`
+kinda), and then we have one expansion option that takes an identifier, a `,`,
+and then a second identifier. The new name is the outer type we'll be using, and
+the old name is the inner type that's being wrapped. You'd use our new macro
+something like this:
+
+```rust
+newtype! {PixelColorCurly, u16}
+
+newtype!(PixelColorParens, u16);
+
+newtype![PixelColorBrackets, u16];
+```
+
+Note that you can invoke the macro with the outermost grouping as any of `()`,
+`[]`, or `{}`.  It makes no particular difference to the macro. Also, that space
+in the first version is kinda to show off that you can put white space in
+between the macro name and the grouping if you want. The difference is mostly
+style, but there are some rules and considerations here:
+
+* If you use curly braces then you _must not_ put a `;` after the invocation.
+* If you use parentheses or brackets then you _must_ put the `;` at the end.
+* Rustfmt cares which you use and formats accordingly:
+  * Curly brace macro use mostly gets treated like a code block.
+  * Parentheses macro use mostly gets treated like a function call.
+  * Bracket macro use mostly gets treated like an array declaration.
+
+## Upgrade That Macro!
+
+We also want to be able to add `derive` stuff and doc comments to our newtype.
+Within the context of `macro_rules!` definitions these are called "meta". Since
+we can have any number of them we wrap it all up in a "zero or more" matcher.
+Then our macro looks like this:
 
 ```rust
 #[macro_export]
@@ -88,52 +114,44 @@ macro_rules! newtype {
 }
 ```
 
-And we want to automatically add the ability to turn the wrapper type back into
-the wrapped type.
+So now we can write
 
 ```rust
-#[macro_export]
-macro_rules! newtype {
-  ($(#[$attr:meta])* $new_name:ident, $old_name:ident) => {
-    $(#[$attr])*
-    #[repr(transparent)]
-    pub struct $new_name($old_name);
-    
-    impl From<$new_name> for $old_name {
-      fn from(x: $new_name) -> $old_name {
-        x.0
-      }
-    }
-  };
+newtype! {
+  /// Color on the GBA gives 5 bits for each channel, the highest bit is ignored.
+  #[derive(Debug, Clone, Copy)]
+  PixelColor, u16
 }
 ```
 
-That seems like enough for all of our examples, so we'll stop there. We could
-add more things:
-
-* Making the `From` impl being optional. We'd have to make the newtype
-  invocation be more complicated somehow, the user puts ", no-unwrap" after the
-  inner type declaration or something, or something like that.
-* Allowing for more precise visibility controls on the wrapping type and on the
-  inner field. This would add a lot of line noise, so we'll just always have our
-  newtypes be `pub`.
-* Allowing for generic newtypes, which might sound silly but that we'll actually
-  see an example of soon enough. To do this you might _think_ that we can change
-  the `:ident` declarations to `:ty`, but since we're declaring a fresh type not
-  using an existing type we have to accept it as an `:ident`. The way you get
-  around this is with a proc-macro, which is a lot more powerful but which also
-  requires that you write the proc-macro in an entirely other crate that gets
-  compiled first. We don't need that much power, so for our examples we'll go
-  with the macro_rules version and just do it by hand in the few cases where we
-  need a generic newtype.
-* Allowing for `Deref` and `DerefMut`, which usually defeats the point of doing
-  the newtype, but maybe sometimes it's the right thing, so if you were going
-  for the full industrial strength version with a proc-macro and all you might
-  want to make that part of your optional add-ons as well the same way you might
-  want optional `From`. You'd probably want `From` to be "on by default" and
-  `Deref`/`DerefMut` to be "off by default", but whatever.
+And that's about all we'll need for the examples.
 
 **As a reminder:** remember that `macro_rules` macros have to appear _before_
 they're invoked in your source, so the `newtype` macro will always have to be at
 the very top of your file, or if you put it in a module within your project
 you'll need to declare the module before anything that uses it.
+
+## Potential Homework
+
+If you wanted to keep going and get really fancy with it, you could potentially
+add a lot more:
+
+* Make a `pub const fn new() -> Self` method that outputs the base value in a
+  const way. Combine this with builder style "setter" methods that are also
+  const and you can get the compiler to do quite a bit of the value building
+  work at compile time.
+* Making the macro optionally emit a `From` impl to unwrap it back into the base
+  type.
+* Allow for visibility modifiers to be applied to the inner field and the newly
+  generated type.
+* Allowing for generic newtypes. You already saw the need for this once in the
+  volatile section. Unfortunately, this particular part gets really tricky if
+  you're using `macro_rules!`, so you might need to move up to a full
+  `proc_macro`. Having a `proc_macro` isn't bad except that they have to be
+  defined in a crate of their own and they're compiled before use. You can't
+  ever use them in the crate that defines them, so we won't be using them in any
+  of our single file examples.
+* Allowing for optional `Deref` and `DerefMut` of the inner value. This takes
+  away most all the safety aspect of doing the newtype, but there may be times
+  for it. As an example, you could make a newtype with a different form of
+  Display impl that you want to otherwise treat as the base type in all places.

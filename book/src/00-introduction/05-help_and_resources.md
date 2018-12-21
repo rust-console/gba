@@ -26,9 +26,19 @@ available while you're debugging problems.
 
 ## Information Resources
 
-Ketsuban and I didn't magically learn this all from nowhere, we read various
-technical manuals and guides ourselves and then distilled the knowledge (usually
-oriented towards C and C++) into this book for Rust.
+First, if I fail to describe something related to Rust, you can always try
+checking in [The Rust
+Reference](https://doc.rust-lang.org/nightly/reference/introduction.html) to see
+if they cover it. You can mostly ignore that big scary red banner at the top,
+things are a lot better documented than they make it sound.
+
+If you need help trying to fiddle your math down as hard as you can, there are
+resources such as the [Bit Twiddling
+Hacks](https://graphics.stanford.edu/~seander/bithacks.html) page.
+
+As to GBA related lore, Ketsuban and I didn't magically learn this all from
+nowhere, we read various technical manuals and guides ourselves and then
+distilled those works oriented around C and C++ into a book for Rust.
 
 We have personally used some or all of the following:
 

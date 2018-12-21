@@ -89,10 +89,6 @@ the standard library types to be used "for free" once it was set up, or just a
 custom allocator that's GBA specific if Rust's global allocator style isn't a
 good fit for the GBA (I honestly haven't looked into it).
 
-## LLVM Intrinsics
-
-TODO: explain that we'll occasionally have to provide some intrinsics.
-
 ## Bare Metal Panic
 
 TODO: expand this
@@ -114,3 +110,10 @@ TODO: expand this
 * Sending the message also automatically zeroes the output buffer.
 * View the output within  the "Tools" menu, "View Logs...". Note that the Fatal
   message, if any doesn't get logged.
+
+TODO: this will probably fail without a `__clzsi2` implementation, which is a
+good seg for the next section
+
+## LLVM Intrinsics
+
+TODO: explain that we'll occasionally have to provide some intrinsics.

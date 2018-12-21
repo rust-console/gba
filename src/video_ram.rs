@@ -15,6 +15,8 @@
 
 pub use super::*;
 
+// TODO: kill all this too
+
 /// The physical width in pixels of the GBA screen.
 pub const SCREEN_WIDTH: isize = 240;
 
@@ -27,6 +29,8 @@ pub const SCREEN_HEIGHT: isize = 160;
 /// your program should interpret the VRAM space. Accordingly, we give the raw
 /// value as just being a `usize`.
 pub const VRAM_BASE_ADDRESS: usize = 0x0600_0000;
+
+const MODE3_VRAM: VolAddress<u16> = unsafe { VolAddress::new_unchecked(VRAM_BASE_ADDRESS) };
 
 /// Draws a pixel to the screen while in Display Mode 3, with bounds checks.
 ///
@@ -51,7 +55,7 @@ pub fn mode3_draw_pixel(col: isize, row: isize, color: u16) {
 /// * `col` must be in `0..SCREEN_WIDTH`
 /// * `row` must be in `0..SCREEN_HEIGHT`
 pub unsafe fn mode3_draw_pixel_unchecked(col: isize, row: isize, color: u16) {
-  VolatilePtr(VRAM_BASE_ADDRESS as *mut u16).offset(col + row * SCREEN_WIDTH).write(color);
+  MODE3_VRAM.offset(col + row * SCREEN_WIDTH).write(color);
 }
 
 /// Reads the given pixel of video memory according to Mode 3 placement.
@@ -61,7 +65,7 @@ pub unsafe fn mode3_draw_pixel_unchecked(col: isize, row: isize, color: u16) {
 /// If the location is out of bounds you get `None`.
 pub fn mode3_read_pixel(col: isize, row: isize) -> Option<u16> {
   if col >= 0 && col < SCREEN_WIDTH && row >= 0 && row < SCREEN_HEIGHT {
-    unsafe { Some(VolatilePtr(VRAM_BASE_ADDRESS as *mut u16).offset(col + row * SCREEN_WIDTH).read()) }
+    unsafe { Some(MODE3_VRAM.offset(col + row * SCREEN_WIDTH).read()) }
   } else {
     None
   }
@@ -72,9 +76,8 @@ pub unsafe fn mode3_clear_screen(color: u16) {
   // TODO: use DMA?
   let color = color as u32;
   let bulk_color = color << 16 | color;
-  let mut ptr = VolatilePtr(VRAM_BASE_ADDRESS as *mut u32);
-  for _ in 0..(SCREEN_HEIGHT * SCREEN_WIDTH / 2) {
-    ptr.write(bulk_color);
-    ptr = ptr.offset(1);
+  let block: VolAddressBlock<u32> = VolAddressBlock::new_unchecked(MODE3_VRAM.cast::<u32>(), (SCREEN_HEIGHT * SCREEN_WIDTH / 2) as usize);
+  for b in block.iter() {
+    b.write(bulk_color);
   }
 }

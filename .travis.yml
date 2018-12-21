@@ -9,6 +9,7 @@ rust:
 
 before_script:
   - rustup component add rust-src
+  - rustup component add clippy
   - (test -x $HOME/.cargo/bin/cargo-install-update || cargo install cargo-update)
   - (test -x $HOME/.cargo/bin/cargo-xbuild || cargo install cargo-xbuild)
   - (test -x $HOME/.cargo/bin/cargo-make || cargo install cargo-make)
@@ -27,9 +28,15 @@ script:
   - export PATH="$PATH:/opt/devkitpro/devkitARM/bin"
   - export PATH="$PATH:/opt/devkitpro/tools/bin"
   - cd ..
-  # Test the lib and then compile all examples with `cargo make`
-  - cargo test --lib && cargo test --lib --release
-  - cargo make
+  # Run all verificaions, both debug and release
+  - cargo clippy
+  - cargo clippy --release
+  - cargo test --no-fail-fast --lib
+  - cargo test --no-fail-fast --lib --release
+  - cargo test --no-fail-fast --tests
+  - cargo test --no-fail-fast --tests --release
+  # Let cargo make take over the rest
+  - cargo make build-all
   # Test build the book so that a failed book build kills this run
   - cd book && mdbook build
 
