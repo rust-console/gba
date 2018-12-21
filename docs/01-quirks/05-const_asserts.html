@@ -1,0 +1,319 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Const Asserts - Rust GBA Guide</title>
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="shortcut icon" href="../favicon.png">
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        <link rel="stylesheet" href="../css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        <link href="https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800" rel="stylesheet" type="text/css">
+        <link href="https://fonts.googleapis.com/css?family=Source+Code+Pro:500" rel="stylesheet" type="text/css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="../highlight.css">
+        <link rel="stylesheet" href="../tomorrow-night.css">
+        <link rel="stylesheet" href="../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        
+
+        
+    </head>
+    <body class="light">
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">var path_to_root = "../";</script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { } 
+            if (theme === null || theme === undefined) { theme = 'light'; }
+            document.body.className = theme;
+            document.querySelector('html').className = theme + ' js';
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <ol class="chapter"><li><a href="../00-introduction/00-index.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><ol class="section"><li><a href="../00-introduction/01-requirements.html"><strong aria-hidden="true">1.1.</strong> Reader Requirements</a></li><li><a href="../00-introduction/02-goals_and_style.html"><strong aria-hidden="true">1.2.</strong> Book Goals and Style</a></li><li><a href="../00-introduction/03-development-setup.html"><strong aria-hidden="true">1.3.</strong> Development Setup</a></li><li><a href="../00-introduction/04-hello-magic.html"><strong aria-hidden="true">1.4.</strong> Hello, Magic</a></li><li><a href="../00-introduction/05-help_and_resources.html"><strong aria-hidden="true">1.5.</strong> Help and Resources</a></li></ol></li><li><a href="../01-quirks/00-index.html"><strong aria-hidden="true">2.</strong> Quirks</a></li><li><ol class="section"><li><a href="../01-quirks/01-no_std.html"><strong aria-hidden="true">2.1.</strong> No Std</a></li><li><a href="../01-quirks/02-fixed_only.html"><strong aria-hidden="true">2.2.</strong> Fixed Only</a></li><li><a href="../01-quirks/03-volatile_destination.html"><strong aria-hidden="true">2.3.</strong> Volatile Destination</a></li><li><a href="../01-quirks/04-newtype.html"><strong aria-hidden="true">2.4.</strong> Newtype</a></li><li><a href="../01-quirks/05-const_asserts.html" class="active"><strong aria-hidden="true">2.5.</strong> Const Asserts</a></li></ol></li><li><a href="../02-concepts/00-index.html"><strong aria-hidden="true">3.</strong> Concepts</a></li><li><ol class="section"><li><a href="../02-concepts/01-cpu.html"><strong aria-hidden="true">3.1.</strong> CPU</a></li><li><a href="../02-concepts/02-bios.html"><strong aria-hidden="true">3.2.</strong> BIOS</a></li><li><a href="../02-concepts/03-wram.html"><strong aria-hidden="true">3.3.</strong> Work RAM</a></li><li><a href="../02-concepts/04-io-registers.html"><strong aria-hidden="true">3.4.</strong> IO Registers</a></li><li><a href="../02-concepts/05-palram.html"><strong aria-hidden="true">3.5.</strong> Palette RAM</a></li><li><a href="../02-concepts/06-vram.html"><strong aria-hidden="true">3.6.</strong> Video RAM</a></li><li><a href="../02-concepts/07-oam.html"><strong aria-hidden="true">3.7.</strong> Object Attribute Memory</a></li><li><a href="../02-concepts/08-rom.html"><strong aria-hidden="true">3.8.</strong> Game Pak ROM / Flash ROM</a></li><li><a href="../02-concepts/09-sram.html"><strong aria-hidden="true">3.9.</strong> Save RAM</a></li></ol></li><li><a href="../03-video/00-index.html"><strong aria-hidden="true">4.</strong> Video</a></li><li><ol class="section"><li><a href="../03-video/01-rgb15.html"><strong aria-hidden="true">4.1.</strong> RBG15 Color</a></li><li><a href="../03-video/TODO.html"><strong aria-hidden="true">4.2.</strong> TODO</a></li></ol></li><li><a href="../04-non-video/00-index.html"><strong aria-hidden="true">5.</strong> Non-Video</a></li><li><ol class="section"><li><a href="../04-non-video/01-buttons.html"><strong aria-hidden="true">5.1.</strong> Buttons</a></li><li><a href="../04-non-video/02-timers.html"><strong aria-hidden="true">5.2.</strong> Timers</a></li><li><a href="../04-non-video/03-dma.html"><strong aria-hidden="true">5.3.</strong> Direct Memory Access</a></li><li><a href="../04-non-video/04-sound.html"><strong aria-hidden="true">5.4.</strong> Sound</a></li><li><a href="../04-non-video/05-interrupts.html"><strong aria-hidden="true">5.5.</strong> Interrupts</a></li><li><a href="../04-non-video/06-link_cable.html"><strong aria-hidden="true">5.6.</strong> Link Cable</a></li><li><a href="../04-non-video/07-game_pak.html"><strong aria-hidden="true">5.7.</strong> Game Pak</a></li></ol></li><li><a href="../05-examples/00-index.html"><strong aria-hidden="true">6.</strong> Examples</a></li><li><ol class="section"><li><a href="../05-examples/01-hello_magic.html"><strong aria-hidden="true">6.1.</strong> hello_magic</a></li><li><a href="../05-examples/02-hello_world.html"><strong aria-hidden="true">6.2.</strong> hello_world</a></li><li><a href="../05-examples/03-light_cycle.html"><strong aria-hidden="true">6.3.</strong> light_cycle</a></li><li><a href="../05-examples/04-bg_demo.html"><strong aria-hidden="true">6.4.</strong> bg_demo</a></li></ol></li></ol>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                
+                <div id="menu-bar" class="menu-bar">
+                    <div id="menu-bar-sticky-container">
+                        <div class="left-buttons">
+                            <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                                <i class="fa fa-bars"></i>
+                            </button>
+                            <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                                <i class="fa fa-paint-brush"></i>
+                            </button>
+                            <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                                <li role="none"><button role="menuitem" class="theme" id="light">Light <span class="default">(default)</span></button></li>
+                                <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                                <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                                <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                                <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                            </ul>
+                            
+                            <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                                <i class="fa fa-search"></i>
+                            </button>
+                            
+                        </div>
+
+                        <h1 class="menu-title">Rust GBA Guide</h1> 
+
+                        <div class="right-buttons">
+                            <a href="../print.html" title="Print this book" aria-label="Print this book">
+                                <i id="print-button" class="fa fa-print"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" name="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+                
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <a class="header" href="#constant-assertions" id="constant-assertions"><h1>Constant Assertions</h1></a>
+<p>Have you ever wanted to assert things <em>even before runtime</em>? We all have, of
+course. Particularly when the runtime machine is a poor little GBA, we'd like to
+have the machine doing the compile handle as much checking as possible.</p>
+<p>Enter the <a href="https://docs.rs/static_assertions/">static assertions</a> crate, which
+provides a way to let you assert on a <code>const</code> expression.</p>
+<p>This is an amazing crate that you should definitely use when you can.</p>
+<p>It's written by <a href="https://github.com/nvzqz">Nikolai Vazquez</a>, and they kindly
+wrote up a <a href="https://nikolaivazquez.com/posts/programming/rust-static-assertions/">blog
+post</a> that
+explains the thinking behind it.</p>
+<p>However, I promised that each example would be single file, and I also promised
+to explain what's going on as we go, so we'll briefly touch upon giving an
+explanation here.</p>
+<a class="header" href="#how-we-const-assert" id="how-we-const-assert"><h2>How We Const Assert</h2></a>
+<p>Alright, as it stands (2018-12-15), we can't use <code>if</code> in a <code>const</code> context.</p>
+<p>Since we can't use <code>if</code>, we can't use a normal <code>assert!</code>. Some day it will be
+possible, and a failed assert at compile time will be a compile error and a
+failed assert at run time will be a panic and we'll have a nice unified
+programming experience. We can add runtime-only assertions by being a little
+tricky with the compiler.</p>
+<p>If we write</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+const ASSERT: usize = 0 - 1;
+#}</code></pre></pre>
+<p>that gives a warning, since the math would underflow. We can upgrade that
+warning to a hard error:</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+#[deny(const_err)]
+const ASSERT: usize = 0 - 1;
+#}</code></pre></pre>
+<p>And to make our construction reusable we can enable the
+<a href="https://github.com/rust-lang/rust/issues/54912">underscore_const_names</a> feature
+in our program (or library) and then give each such const an underscore for a
+name.</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#![feature(underscore_const_names)]
+
+#fn main() {
+#[deny(const_err)]
+const _: usize = 0 - 1;
+#}</code></pre></pre>
+<p>Now we wrap this in a macro where we give a <code>bool</code> expression as input. We
+negate the bool then cast it to a <code>usize</code>, meaning that <code>true</code> negates into
+<code>false</code>, which becomes <code>0usize</code>, and then there's no underflow error. Or if the
+input was <code>false</code>, it negates into <code>true</code>, then becomes <code>1usize</code>, and then the
+underflow error fires.</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+macro_rules! const_assert {
+  ($condition:expr) =&gt; {
+    #[deny(const_err)]
+    #[allow(dead_code)]
+    const ASSERT: usize = 0 - !$condition as usize;
+  }
+}
+#}</code></pre></pre>
+<p>Technically, written like this, the expression can be anything with a
+<code>core::ops::Not</code> implementation that can also be <code>as</code> cast into <code>usize</code>. That's
+<code>bool</code>, but also basically all the other number types. Since we want to ensure
+that we get proper looking type errors when things go wrong, we can use
+<code>($condition &amp;&amp; true)</code> to enforce that we get a <code>bool</code> (thanks to <code>Talchas</code> for
+that particular suggestion).</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+macro_rules! const_assert {
+  ($condition:expr) =&gt; {
+    #[deny(const_err)]
+    #[allow(dead_code)]
+    const _: usize = 0 - !($condition &amp;&amp; true) as usize;
+  }
+}
+#}</code></pre></pre>
+<a class="header" href="#asserting-something" id="asserting-something"><h2>Asserting Something</h2></a>
+<p>As an example of how we might use a <code>const_assert</code>, we'll do a demo with colors.
+There's a red, blue, and green channel. We store colors in a <code>u16</code> with 5 bits
+for each channel.</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+newtype! {
+  #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+  Color, u16
+}
+#}</code></pre></pre>
+<p>And when we're building a color, we're passing in <code>u16</code> values, but they could
+be using more than just 5 bits of space. We want to make sure that each channel
+is 31 or less, so we can make a color builder that does a <code>const_assert!</code> on the
+value of each channel.</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+macro_rules! rgb {
+  ($r:expr, $g:expr, $b:expr) =&gt; {
+    {
+      const_assert!($r &lt;= 31);
+      const_assert!($g &lt;= 31);
+      const_assert!($b &lt;= 31);
+      Color($b &lt;&lt; 10 | $g &lt;&lt; 5 | $r)
+    }
+  }
+}
+#}</code></pre></pre>
+<p>And then we can declare some colors</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+const RED: Color = rgb!(31, 0, 0);
+
+const BLUE: Color = rgb!(31, 500, 0);
+#}</code></pre></pre>
+<p>The second one is clearly out of bounds and it fires an error just like we
+wanted.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                        
+                            <a rel="prev" href="../01-quirks/04-newtype.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+                        
+
+                        
+                            <a rel="next" href="../02-concepts/00-index.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+                        
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                
+                    <a href="../01-quirks/04-newtype.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                
+
+                
+                    <a href="../02-concepts/00-index.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+                
+            </nav>
+
+        </div>
+
+        
+
+        
+
+        
+
+        
+        <script src="../elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../searcher.js" type="text/javascript" charset="utf-8"></script>
+        
+
+        <script src="../clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+        
+
+        
+
+    </body>
+</html>
