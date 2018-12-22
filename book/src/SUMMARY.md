@@ -35,7 +35,3 @@
   * [Link Cable](04-non-video/06-link_cable.md)
   * [Game Pak](04-non-video/07-game_pak.md)
 * [Examples](05-examples/00-index.md)
-  * [hello_magic](05-examples/01-hello_magic.md)
-  * [hello_world](05-examples/02-hello_world.md)
-  * [light_cycle](05-examples/03-light_cycle.md)
-  * [bg_demo](05-examples/04-bg_demo.md)
