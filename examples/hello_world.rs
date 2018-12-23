@@ -1,5 +1,6 @@
 #![no_std]
 #![feature(start)]
+#![forbid(unsafe_code)]
 
 use gba::{
   io::display::{DisplayControlMode, DisplayControlSetting, DISPCNT},

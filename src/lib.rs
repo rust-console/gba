@@ -1,6 +1,7 @@
 #![cfg_attr(not(test), no_std)]
 #![feature(asm)]
 #![feature(const_int_wrapping)]
+#![feature(const_int_rotate)]
 #![feature(min_const_unsafe_fn)]
 #![warn(missing_docs)]
 #![allow(clippy::cast_lossless)]
@@ -77,6 +78,13 @@ impl Color {
   /// into each other and produce an unintended color.
   pub const fn from_rgb(r: u16, g: u16, b: u16) -> Color {
     Color(b << 10 | g << 5 | r)
+  }
+
+  /// Does a left rotate of the bits.
+  ///
+  /// This has no particular meaning but is a wild way to cycle colors.
+  pub const fn rotate_left(self, n: u32) -> Color {
+    Color(self.0.rotate_left(n))
   }
 }
 
