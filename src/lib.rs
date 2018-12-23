@@ -62,7 +62,7 @@ pub mod base;
 pub(crate) use self::base::*;
 pub mod bios;
 pub mod io;
-
+pub mod mgba;
 pub mod video;
 
 newtype! {
