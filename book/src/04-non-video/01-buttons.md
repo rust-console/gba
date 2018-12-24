@@ -62,8 +62,8 @@ Note that the current `KEYINPUT` value changes in real time as the user presses
 or releases the buttons. To account for this, it's best to read the value just
 once per game frame and then use that single value as if it was the input across
 the whole frame. If you've worked with polling input before that should sound
-totally normal, but if not just always remember to gather the input once per
-frame and then use that value across the whole frame.
+totally normal. If not, just remember to call `read_key_input` once per frame
+and then use that `KeyInput` value across the whole frame.
 
 ### Detecting New Presses
 
