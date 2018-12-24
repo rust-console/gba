@@ -90,7 +90,7 @@ impl DMAControlSetting {
       0 => DMASrcAddressControl::Increment,
       1 => DMASrcAddressControl::Decrement,
       2 => DMASrcAddressControl::Fixed,
-      _ => unreachable!(),
+      _ => unreachable!(), // TODO: custom error message?
     }
   }
   pub const fn with_src_address_control(self, new_control: DMASrcAddressControl) -> Self {
