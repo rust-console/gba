@@ -29,9 +29,11 @@ The buttons are, going up in order from the 0th bit:
 * R
 * L
 
-Bits above that are not used. However, since the arrow left and right can never
-be pressed at the same time, and the arrows up and down can never be pressed at
-the same time, this register will never read as zero.
+Bits above that are not used. However, since the left and right directions, as
+well as the up and down directions, can never be pressed at the same time, the
+`KEYINPUT` register should never read as zero. Of course, the register _might_
+read as zero if someone is using an emulator that allows for such inputs, so I
+wouldn't go so far as to make it be `NonZeroU16` or anything like that.
 
 When programming, we usually are thinking of what buttons we want to have _be
 pressed_ instead of buttons we want to have _not be pressed_. This means that we
