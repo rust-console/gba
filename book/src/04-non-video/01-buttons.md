@@ -85,7 +85,7 @@ changes happened.
 * KEYCNT, `0x400_0132`, `u16`, read/write
 
 This lets you control what keys will trigger a keypad interrupt. Of course, for
-the actual interrupt to fire you also need to set the `IME` and IE` registers
+the actual interrupt to fire you also need to set the `IME` and `IE` registers
 properly. See the [Interrupts](05-interrupts.md) section for details there.
 
 The main thing to know about this register is that the keys are in _the exact
