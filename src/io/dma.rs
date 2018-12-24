@@ -71,7 +71,7 @@ impl DMAControlSetting {
   pub const DEST_ADDR_CONTROL_MASK: u16 = 0b11 << 5;
   pub fn dest_address_control(self) -> DMADestAddressControl {
     // TODO: constify
-    match self.0 & Self::DEST_ADDR_CONTROL_MASK {
+    match (self.0 & Self::DEST_ADDR_CONTROL_MASK) >> 5 {
       0 => DMADestAddressControl::Increment,
       1 => DMADestAddressControl::Decrement,
       2 => DMADestAddressControl::Fixed,
@@ -86,7 +86,7 @@ impl DMAControlSetting {
   pub const SRC_ADDR_CONTROL_MASK: u16 = 0b11 << 7;
   pub fn src_address_control(self) -> DMASrcAddressControl {
     // TODO: constify
-    match self.0 & Self::SRC_ADDR_CONTROL_MASK {
+    match (self.0 & Self::SRC_ADDR_CONTROL_MASK) >> 7 {
       0 => DMASrcAddressControl::Increment,
       1 => DMASrcAddressControl::Decrement,
       2 => DMASrcAddressControl::Fixed,
@@ -104,7 +104,7 @@ impl DMAControlSetting {
   pub const START_TIMING_MASK: u16 = 0b11 << 12;
   pub fn start_timing(self) -> DMAStartTiming {
     // TODO: constify
-    match self.0 & Self::DEST_ADDR_CONTROL_MASK {
+    match (self.0 & Self::DEST_ADDR_CONTROL_MASK) >> 12 {
       0 => DMAStartTiming::Immediate,
       1 => DMAStartTiming::VBlank,
       2 => DMAStartTiming::HBlank,
