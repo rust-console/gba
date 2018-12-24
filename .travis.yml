@@ -17,6 +17,8 @@ before_script:
   - cargo install-update -a
 
 script:
+  # Travis seems to cache for some dumb reason, but we don't want that at all.
+  - rm -fr target
   # Obtain the devkitPro tools, using `target/` as a temp directory
   - mkdir -p target
   - cd target
