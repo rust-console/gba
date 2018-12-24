@@ -63,6 +63,23 @@ the whole frame. If you've worked with polling input before that should sound
 totally normal, but if not just always remember to gather the input once per
 frame and then use that value across the whole frame.
 
+### Detecting New Presses
+
+The keypad only tells you what's _currently_ pressed, but if you want to check
+what's _newly_ pressed it's not too much harder.
+
+All that you do is store the last frame's keys and compare them to the current
+keys with an `XOR`. In the `gba` crate it's called `KeyInput::difference`. Once
+you've got the difference between last frame and this frame, you know what
+changes happened.
+
+* If something is in the difference and _not pressed_ in the last frame, that
+  means it was newly pressed.
+* If something is in the difference and _pressed_ in the last frame that means
+  it was newly released.
+* If something is not in the difference then there's no change between last
+  frame and this frame.
+
 ## Key Interrupt Control
 
 * KEYCNT, `0x400_0132`, `u16`, read/write

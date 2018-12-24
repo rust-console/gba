@@ -85,7 +85,7 @@ pub fn display_control() -> DisplayControlSetting {
 /// If the `VCOUNT` register reads equal to or above this then you're in vblank.
 pub const VBLANK_SCANLINE: u16 = 160;
 
-/// Vertical Counter (LY).
+/// Vertical Counter (LY). Read only.
 ///
 /// Gives the current scanline that the display controller is working on. If
 /// this is at or above the `VBLANK_SCANLINE` value then the display controller
