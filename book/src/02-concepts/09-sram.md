@@ -14,3 +14,8 @@ for full details of how the `WAITCNT` register works.
 The game pak SRAM also has only an 8-bit bus, so have fun with that.
 
 The GBA Direct Memory Access (DMA) unit cannot access SRAM.
+
+Also, you [should not write to SRAM with code executing from
+ROM](https://problemkaputt.de/gbatek.htm#gbacartbackupsramfram). Instead, you
+should move the code to WRAM and execute the save code from there. We'll cover
+how to handle that eventually.

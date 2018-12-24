@@ -1,6 +1,7 @@
 #![cfg_attr(not(test), no_std)]
 #![feature(asm)]
 #![feature(const_int_wrapping)]
+#![feature(const_int_rotate)]
 #![feature(min_const_unsafe_fn)]
 #![warn(missing_docs)]
 #![allow(clippy::cast_lossless)]
@@ -57,18 +58,39 @@ macro_rules! newtype {
   };
 }
 
-pub mod builtins;
-
-pub mod fixed;
-
+pub mod base;
+pub(crate) use self::base::*;
 pub mod bios;
-
-pub mod core_extras;
-pub(crate) use crate::core_extras::*;
-
 pub mod io;
+pub mod mgba;
+pub mod video;
 
-pub mod video_ram;
+newtype! {
+  /// A color on the GBA is an RGB 5.5.5 within a `u16`
+  #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+  Color, u16
+}
+
+impl Color {
+  /// Constructs a color from the channel values provided (should be 0..=31).
+  ///
+  /// No actual checks are performed, so illegal channel values can overflow
+  /// into each other and produce an unintended color.
+  pub const fn from_rgb(r: u16, g: u16, b: u16) -> Color {
+    Color(b << 10 | g << 5 | r)
+  }
+
+  /// Does a left rotate of the bits.
+  ///
+  /// This has no particular meaning but is a wild way to cycle colors.
+  pub const fn rotate_left(self, n: u32) -> Color {
+    Color(self.0.rotate_left(n))
+  }
+}
+
+//
+// After here is totally unsorted nonsense
+//
 
 /// Performs unsigned divide and remainder, gives None if dividing by 0.
 pub fn divrem_u32(numer: u32, denom: u32) -> Option<(u32, u32)> {

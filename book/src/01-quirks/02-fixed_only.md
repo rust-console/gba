@@ -402,9 +402,9 @@ silly but it's so much faster than doing an actual division).
 Also, again signed values can be annoying, because if the value _just happens_
 to be `i32::MIN` then when you negate it you'll have... _still_ a negative
 value. I'm not 100% on this, but I think the correct thing to do at that point
-is to give `$t::MIN` as out output num value.
+is to give `$t::MIN` as the output num value.
 
-Did you get all that? Good, because this is involves casting, we will need to
+Did you get all that? Good, because this involves casting, so we will need to
 implement it three times, which calls for another macro.
 
 ```rust
