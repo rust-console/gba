@@ -177,6 +177,55 @@ impl DMA3 {
   /// DMA 3 Control, read/write.
   const DMA3CNT_H: VolAddress<DMAControlSetting> = unsafe { VolAddress::new_unchecked(0x400_00DE) };
 
+  /// Assigns the source register.
+  ///
+  /// This register is read only, so it is not exposed directly.
+  ///
+  /// # Safety
+  ///
+  /// The source pointer must be aligned and valid to read from.
+  pub unsafe fn set_source(src: *const u32) {
+    Self::DMA3SAD.write(src)
+  }
+
+  /// Assigns the destination register.
+  ///
+  /// This register is read only, so it is not exposed directly.
+  ///
+  /// # Safety
+  ///
+  /// The source pointer must be aligned and valid to write to.
+  pub unsafe fn set_dest(dest: *mut u32) {
+    Self::DMA3DAD.write(dest)
+  }
+
+  /// Assigns the count register.
+  ///
+  /// This register is read only, so it is not exposed directly.
+  ///
+  /// # Safety
+  ///
+  /// The count given must specify a valid number of units to write, starting at
+  /// the assigned destination address.
+  pub unsafe fn set_count(count: u16) {
+    Self::DMA3CNT_L.write(count)
+  }
+
+  /// Reads the current control setting.
+  pub fn control() -> DMAControlSetting {
+    Self::DMA3CNT_H.read()
+  }
+
+  /// Writes the control setting given.
+  ///
+  /// # Safety
+  ///
+  /// You must ensure that the Source, Destination, and Count values are set
+  /// correctly **before** you activate the Enable bit.
+  pub unsafe fn set_control(setting: DMAControlSetting) {
+    Self::DMA3CNT_H.write(setting)
+  }
+
   /// Fills `count` slots (starting at `dest`) with the value at `src`.
   ///
   /// # Safety
