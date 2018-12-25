@@ -11,3 +11,4 @@ use super::*;
 pub mod display;
 pub mod dma;
 pub mod keypad;
+pub mod background;
