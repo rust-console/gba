@@ -4,7 +4,7 @@
 
 use gba::{
   io::display::{DisplayControlMode, DisplayControlSetting, DISPCNT},
-  video::Mode3,
+  video::bitmap::Mode3,
   Color,
 };
 
@@ -12,6 +12,7 @@ use gba::{
 fn panic(info: &core::panic::PanicInfo) -> ! {
   use core::fmt::Write;
   use gba::mgba::{MGBADebug, MGBADebugLevel};
+
   if let Some(mut mgba) = MGBADebug::new() {
     let _ = write!(mgba, "{}", info);
     mgba.send(MGBADebugLevel::Fatal);
