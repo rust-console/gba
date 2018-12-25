@@ -107,7 +107,7 @@ impl Mode4 {
   const PAGE0_BLOCK: VolAddressBlock<u8> = unsafe { VolAddressBlock::new_unchecked(Self::PAGE0_BASE, Self::SCREEN_PIXEL_COUNT) };
 
   // TODO: newtype this?
-  const PAGE1_BASE: VolAddress<u8> = unsafe { VolAddress::new_unchecked(VRAM_BASE_USIZE + 0x9600) };
+  const PAGE1_BASE: VolAddress<u8> = unsafe { VolAddress::new_unchecked(VRAM_BASE_USIZE + 0xA000) };
 
   // TODO: newtype this?
   const PAGE1_BLOCK: VolAddressBlock<u8> = unsafe { VolAddressBlock::new_unchecked(Self::PAGE1_BASE, Self::SCREEN_PIXEL_COUNT) };
@@ -204,7 +204,7 @@ impl Mode4 {
     let write_target = if page1 {
       VRAM_BASE_USIZE as *mut u32
     } else {
-      (VRAM_BASE_USIZE + 0x9600) as *mut u32
+      (VRAM_BASE_USIZE + 0xA000) as *mut u32
     };
     unsafe { DMA3::fill32(&bulk_color, write_target, Self::SCREEN_U32_COUNT as u16) };
   }
