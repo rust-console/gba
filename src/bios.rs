@@ -8,6 +8,8 @@
 //! whatever value is necessary for that function). Some functions also perform
 //! necessary checks to save you from yourself, such as not dividing by zero.
 
+use super::register_bit;
+
 //TODO: ALL functions in this module should have `if cfg!(test)` blocks. The
 //functions that never return must panic, the functions that return nothing
 //should just do so, and the math functions should just return the correct math
@@ -49,13 +51,17 @@
 /// perform UB, but such a scenario might exist.
 #[inline(always)]
 pub unsafe fn soft_reset() -> ! {
-  asm!(/* ASM */ "swi 0x00"
-      :/* OUT */ // none
-      :/* INP */ // none
-      :/* CLO */ // none
-      :/* OPT */ "volatile"
-  );
-  core::hint::unreachable_unchecked()
+  if cfg!(test) {
+    panic!("Attempted soft reset during testing");
+  } else {
+    asm!(/* ASM */ "swi 0x00"
+        :/* OUT */ // none
+        :/* INP */ // none
+        :/* CLO */ // none
+        :/* OPT */ "volatile"
+    );
+    core::hint::unreachable_unchecked()
+  }
 }
 
 /// (`swi 0x01`) RegisterRamReset.
@@ -84,15 +90,34 @@ pub unsafe fn soft_reset() -> ! {
 /// memory, except in the case that you were executing out of EWRAM and clear
 /// that. If you do then you return to nothing and have a bad time.
 #[inline(always)]
-pub unsafe fn register_ram_reset(flags: u8) {
-  asm!(/* ASM */ "swi 0x01"
-      :/* OUT */ // none
-      :/* INP */ "{r0}"(flags)
-      :/* CLO */ // none
-      :/* OPT */ "volatile"
-  );
+pub unsafe fn register_ram_reset(flags: RegisterRAMResetFlags) {
+  if cfg!(test) {
+    // do nothing in test mode
+  } else {
+    asm!(/* ASM */ "swi 0x01"
+        :/* OUT */ // none
+        :/* INP */ "{r0}"(flags.0)
+        :/* CLO */ // none
+        :/* OPT */ "volatile"
+    );
+  }
 }
-//TODO(lokathor): newtype this flag business.
+newtype! {
+  /// Flags for use with `register_ram_reset`.
+  #[derive(Debug, Copy, Clone, Default, PartialEq, Eq)]
+  RegisterRAMResetFlags, u8
+}
+#[allow(missing_docs)]
+impl RegisterRAMResetFlags {
+  register_bit!(EWRAM, u8, 0, ewram);
+  register_bit!(IWRAM, u8, 1 << 1, iwram);
+  register_bit!(PALRAM, u8, 1 << 2, palram);
+  register_bit!(VRAM, u8, 1 << 3, vram);
+  register_bit!(OAM, u8, 1 << 4, oam);
+  register_bit!(SIO, u8, 1 << 5, sio);
+  register_bit!(SOUND, u8, 1 << 6, sound);
+  register_bit!(OTHER_IO, u8, 1 << 7, other_io);
+}
 
 /// (`swi 0x02`) Halts the CPU until an interrupt occurs.
 ///
@@ -100,13 +125,17 @@ pub unsafe fn register_ram_reset(flags: u8) {
 /// any enabled interrupt triggers.
 #[inline(always)]
 pub fn halt() {
-  unsafe {
-    asm!(/* ASM */ "swi 0x02"
-        :/* OUT */ // none
-        :/* INP */ // none
-        :/* CLO */ // none
-        :/* OPT */ "volatile"
-    );
+  if cfg!(test) {
+    // do nothing in test mode
+  } else {
+    unsafe {
+      asm!(/* ASM */ "swi 0x02"
+          :/* OUT */ // none
+          :/* INP */ // none
+          :/* CLO */ // none
+          :/* OPT */ "volatile"
+      );
+    }
   }
 }
 
@@ -120,13 +149,17 @@ pub fn halt() {
 /// optional externals such as rumble and infra-red.
 #[inline(always)]
 pub fn stop() {
-  unsafe {
-    asm!(/* ASM */ "swi 0x03"
-        :/* OUT */ // none
-        :/* INP */ // none
-        :/* CLO */ // none
-        :/* OPT */ "volatile"
-    );
+  if cfg!(test) {
+    // do nothing in test mode
+  } else {
+    unsafe {
+      asm!(/* ASM */ "swi 0x03"
+          :/* OUT */ // none
+          :/* INP */ // none
+          :/* CLO */ // none
+          :/* OPT */ "volatile"
+      );
+    }
   }
 }
 
@@ -145,13 +178,17 @@ pub fn stop() {
 /// acknowledgement.
 #[inline(always)]
 pub fn interrupt_wait(ignore_current_flags: bool, target_flags: u16) {
-  unsafe {
-    asm!(/* ASM */ "swi 0x04"
-        :/* OUT */ // none
-        :/* INP */ "{r0}"(ignore_current_flags), "{r1}"(target_flags)
-        :/* CLO */ // none
-        :/* OPT */ "volatile"
-    );
+  if cfg!(test) {
+    // do nothing in test mode
+  } else {
+    unsafe {
+      asm!(/* ASM */ "swi 0x04"
+          :/* OUT */ // none
+          :/* INP */ "{r0}"(ignore_current_flags), "{r1}"(target_flags)
+          :/* CLO */ // none
+          :/* OPT */ "volatile"
+      );
+    }
   }
 }
 //TODO(lokathor): newtype this flag business.
@@ -162,13 +199,17 @@ pub fn interrupt_wait(ignore_current_flags: bool, target_flags: u16) {
 /// must follow the same guidelines that `interrupt_wait` outlines.
 #[inline(always)]
 pub fn vblank_interrupt_wait() {
-  unsafe {
-    asm!(/* ASM */ "swi 0x04"
-        :/* OUT */ // none
-        :/* INP */ // none
-        :/* CLO */ "r0", "r1" // both set to 1 by the routine
-        :/* OPT */ "volatile"
-    );
+  if cfg!(test) {
+    // do nothing in test mode
+  } else {
+    unsafe {
+      asm!(/* ASM */ "swi 0x04"
+          :/* OUT */ // none
+          :/* INP */ // none
+          :/* CLO */ "r0", "r1" // both set to 1 by the routine
+          :/* OPT */ "volatile"
+      );
+    }
   }
 }
 
@@ -219,16 +260,20 @@ pub fn rem(numerator: i32, denominator: i32) -> i32 {
 /// by `2n` bits to get `n` more bits of fractional precision in your output.
 #[inline(always)]
 pub fn sqrt(val: u32) -> u16 {
-  let out: u16;
-  unsafe {
-    asm!(/* ASM */ "swi 0x08"
-        :/* OUT */ "={r0}"(out)
-        :/* INP */ "{r0}"(val)
-        :/* CLO */ "r1", "r3"
-        :/* OPT */
-    );
+  if cfg!(test) {
+    0 // TODO: simulate this properly during testing builds.
+  } else {
+    let out: u16;
+    unsafe {
+      asm!(/* ASM */ "swi 0x08"
+          :/* OUT */ "={r0}"(out)
+          :/* INP */ "{r0}"(val)
+          :/* CLO */ "r1", "r3"
+          :/* OPT */
+      );
+    }
+    out
   }
-  out
 }
 
 /// (`swi 0x09`) Gives the arctangent of `theta`.
@@ -239,16 +284,20 @@ pub fn sqrt(val: u32) -> u16 {
 /// Accuracy suffers if `theta` is less than `-pi/4` or greater than `pi/4`.
 #[inline(always)]
 pub fn atan(theta: i16) -> i16 {
-  let out: i16;
-  unsafe {
-    asm!(/* ASM */ "swi 0x09"
-        :/* OUT */ "={r0}"(out)
-        :/* INP */ "{r0}"(theta)
-        :/* CLO */ "r1", "r3"
-        :/* OPT */
-    );
+  if cfg!(test) {
+    0 // TODO: simulate this properly during testing builds.
+  } else {
+    let out: i16;
+    unsafe {
+      asm!(/* ASM */ "swi 0x09"
+          :/* OUT */ "={r0}"(out)
+          :/* INP */ "{r0}"(theta)
+          :/* CLO */ "r1", "r3"
+          :/* OPT */
+      );
+    }
+    out
   }
-  out
 }
 
 /// (`swi 0x0A`) Gives the atan2 of `y` over `x`.
@@ -260,16 +309,20 @@ pub fn atan(theta: i16) -> i16 {
 /// integral, 14 bits for fractional.
 #[inline(always)]
 pub fn atan2(y: i16, x: i16) -> u16 {
-  let out: u16;
-  unsafe {
-    asm!(/* ASM */ "swi 0x0A"
-        :/* OUT */ "={r0}"(out)
-        :/* INP */ "{r0}"(x), "{r1}"(y)
-        :/* CLO */ "r3"
-        :/* OPT */
-    );
+  if cfg!(test) {
+    0 // TODO: simulate this properly during testing builds.
+  } else {
+    let out: u16;
+    unsafe {
+      asm!(/* ASM */ "swi 0x0A"
+          :/* OUT */ "={r0}"(out)
+          :/* INP */ "{r0}"(x), "{r1}"(y)
+          :/* CLO */ "r3"
+          :/* OPT */
+      );
+    }
+    out
   }
-  out
 }
 
 /// (`swi 0x0B`) "CpuSet", `u16` memory copy.
@@ -283,13 +336,17 @@ pub fn atan2(y: i16, x: i16) -> u16 {
 /// * Both pointers must be aligned
 #[inline(always)]
 pub unsafe fn cpu_set16(src: *const u16, dest: *mut u16, count: u32, fixed_source: bool) {
-  let control = count + ((fixed_source as u32) << 24);
-  asm!(/* ASM */ "swi 0x0B"
-      :/* OUT */ // none
-      :/* INP */ "{r0}"(src), "{r1}"(dest), "{r2}"(control)
-      :/* CLO */ // none
-      :/* OPT */ "volatile"
-  );
+  if cfg!(test) {
+    // do nothing in test mode
+  } else {
+    let control = count + ((fixed_source as u32) << 24);
+    asm!(/* ASM */ "swi 0x0B"
+        :/* OUT */ // none
+        :/* INP */ "{r0}"(src), "{r1}"(dest), "{r2}"(control)
+        :/* CLO */ // none
+        :/* OPT */ "volatile"
+    );
+  }
 }
 
 /// (`swi 0x0B`) "CpuSet", `u32`  memory copy/fill.
@@ -303,13 +360,17 @@ pub unsafe fn cpu_set16(src: *const u16, dest: *mut u16, count: u32, fixed_sourc
 /// * Both pointers must be aligned
 #[inline(always)]
 pub unsafe fn cpu_set32(src: *const u32, dest: *mut u32, count: u32, fixed_source: bool) {
-  let control = count + ((fixed_source as u32) << 24) + (1 << 26);
-  asm!(/* ASM */ "swi 0x0B"
-      :/* OUT */ // none
-      :/* INP */ "{r0}"(src), "{r1}"(dest), "{r2}"(control)
-      :/* CLO */ // none
-      :/* OPT */ "volatile"
-  );
+  if cfg!(test) {
+    // do nothing in test mode
+  } else {
+    let control = count + ((fixed_source as u32) << 24) + (1 << 26);
+    asm!(/* ASM */ "swi 0x0B"
+        :/* OUT */ // none
+        :/* INP */ "{r0}"(src), "{r1}"(dest), "{r2}"(control)
+        :/* CLO */ // none
+        :/* OPT */ "volatile"
+    );
+  }
 }
 
 /// (`swi 0x0C`) "CpuFastSet", copies memory in 32 byte chunks.
@@ -324,13 +385,17 @@ pub unsafe fn cpu_set32(src: *const u32, dest: *mut u32, count: u32, fixed_sourc
 /// * Both pointers must be aligned
 #[inline(always)]
 pub unsafe fn cpu_fast_set(src: *const u32, dest: *mut u32, count: u32, fixed_source: bool) {
-  let control = count + ((fixed_source as u32) << 24);
-  asm!(/* ASM */ "swi 0x0C"
-      :/* OUT */ // none
-      :/* INP */ "{r0}"(src), "{r1}"(dest), "{r2}"(control)
-      :/* CLO */ // none
-      :/* OPT */ "volatile"
-  );
+  if cfg!(test) {
+    // do nothing in test mode
+  } else {
+    let control = count + ((fixed_source as u32) << 24);
+    asm!(/* ASM */ "swi 0x0C"
+        :/* OUT */ // none
+        :/* INP */ "{r0}"(src), "{r1}"(dest), "{r2}"(control)
+        :/* CLO */ // none
+        :/* OPT */ "volatile"
+    );
+  }
 }
 
 /// (`swi 0x0C`) "GetBiosChecksum" (Undocumented)
@@ -343,16 +408,20 @@ pub unsafe fn cpu_fast_set(src: *const u32, dest: *mut u32, count: u32, fixed_so
 /// some other value I guess you're probably running on an emulator that just
 /// broke the fourth wall.
 pub fn get_bios_checksum() -> u32 {
-  let out: u32;
-  unsafe {
-    asm!(/* ASM */ "swi 0x0D"
-        :/* OUT */ "={r0}"(out)
-        :/* INP */ // none
-        :/* CLO */ // none
-        :/* OPT */ // none
-    );
+  if cfg!(test) {
+    0
+  } else {
+    let out: u32;
+    unsafe {
+      asm!(/* ASM */ "swi 0x0D"
+          :/* OUT */ "={r0}"(out)
+          :/* INP */ // none
+          :/* CLO */ // none
+          :/* OPT */ // none
+      );
+    }
+    out
   }
-  out
 }
 
 // TODO: these things will require that we build special structs
@@ -376,13 +445,17 @@ pub fn get_bios_checksum() -> u32 {
 ///
 /// The final sound level setting will be `level` * `0x200`.
 pub fn sound_bias(level: u32) {
-  unsafe {
-    asm!(/* ASM */ "swi 0x19"
-        :/* OUT */ // none
-        :/* INP */ "{r0}"(level)
-        :/* CLO */ // none
-        :/* OPT */ "volatile"
-    );
+  if cfg!(test) {
+    // do nothing in test mode
+  } else {
+    unsafe {
+      asm!(/* ASM */ "swi 0x19"
+          :/* OUT */ // none
+          :/* INP */ "{r0}"(level)
+          :/* CLO */ // none
+          :/* OPT */ "volatile"
+      );
+    }
   }
 }
 
@@ -414,13 +487,17 @@ pub fn sound_bias(level: u32) {
 /// * 10: 40137
 /// * 11: 42048
 pub fn sound_driver_mode(mode: u32) {
-  unsafe {
-    asm!(/* ASM */ "swi 0x1B"
-        :/* OUT */ // none
-        :/* INP */ "{r0}"(mode)
-        :/* CLO */ // none
-        :/* OPT */ "volatile"
-    );
+  if cfg!(test) {
+    // do nothing in test mode
+  } else {
+    unsafe {
+      asm!(/* ASM */ "swi 0x1B"
+          :/* OUT */ // none
+          :/* INP */ "{r0}"(mode)
+          :/* CLO */ // none
+          :/* OPT */ "volatile"
+      );
+    }
   }
 }
 //TODO(lokathor): newtype this mode business.
@@ -434,13 +511,17 @@ pub fn sound_driver_mode(mode: u32) {
 /// executed." --what?
 #[inline(always)]
 pub fn sound_driver_main() {
-  unsafe {
-    asm!(/* ASM */ "swi 0x1C"
-        :/* OUT */ // none
-        :/* INP */ // none
-        :/* CLO */ // none
-        :/* OPT */ "volatile"
-    );
+  if cfg!(test) {
+    // do nothing in test mode
+  } else {
+    unsafe {
+      asm!(/* ASM */ "swi 0x1C"
+          :/* OUT */ // none
+          :/* INP */ // none
+          :/* CLO */ // none
+          :/* OPT */ "volatile"
+      );
+    }
   }
 }
 
@@ -450,13 +531,17 @@ pub fn sound_driver_main() {
 /// vblank interrupt (every 1/60th of a second).
 #[inline(always)]
 pub fn sound_driver_vsync() {
-  unsafe {
-    asm!(/* ASM */ "swi 0x1D"
-        :/* OUT */ // none
-        :/* INP */ // none
-        :/* CLO */ // none
-        :/* OPT */ "volatile"
-    );
+  if cfg!(test) {
+    // do nothing in test mode
+  } else {
+    unsafe {
+      asm!(/* ASM */ "swi 0x1D"
+          :/* OUT */ // none
+          :/* INP */ // none
+          :/* CLO */ // none
+          :/* OPT */ "volatile"
+      );
+    }
   }
 }
 
@@ -468,13 +553,17 @@ pub fn sound_driver_vsync() {
 /// --what?
 #[inline(always)]
 pub fn sound_channel_clear() {
-  unsafe {
-    asm!(/* ASM */ "swi 0x1E"
-        :/* OUT */ // none
-        :/* INP */ // none
-        :/* CLO */ // none
-        :/* OPT */ "volatile"
-    );
+  if cfg!(test) {
+    // do nothing in test mode
+  } else {
+    unsafe {
+      asm!(/* ASM */ "swi 0x1E"
+          :/* OUT */ // none
+          :/* INP */ // none
+          :/* CLO */ // none
+          :/* OPT */ "volatile"
+      );
+    }
   }
 }
 
@@ -489,13 +578,17 @@ pub fn sound_channel_clear() {
 /// noise.
 #[inline(always)]
 pub fn sound_driver_vsync_off() {
-  unsafe {
-    asm!(/* ASM */ "swi 0x28"
-        :/* OUT */ // none
-        :/* INP */ // none
-        :/* CLO */ // none
-        :/* OPT */ "volatile"
-    );
+  if cfg!(test) {
+    // do nothing in test mode
+  } else {
+    unsafe {
+      asm!(/* ASM */ "swi 0x28"
+          :/* OUT */ // none
+          :/* INP */ // none
+          :/* CLO */ // none
+          :/* OPT */ "volatile"
+      );
+    }
   }
 }
 
@@ -506,12 +599,16 @@ pub fn sound_driver_vsync_off() {
 /// interrupt followed by a `sound_driver_vsync` within 2/60th of a second.
 #[inline(always)]
 pub fn sound_driver_vsync_on() {
-  unsafe {
-    asm!(/* ASM */ "swi 0x29"
-        :/* OUT */ // none
-        :/* INP */ // none
-        :/* CLO */ // none
-        :/* OPT */ "volatile"
-    );
+  if cfg!(test) {
+    // do nothing in test mode
+  } else {
+    unsafe {
+      asm!(/* ASM */ "swi 0x29"
+          :/* OUT */ // none
+          :/* INP */ // none
+          :/* CLO */ // none
+          :/* OPT */ "volatile"
+      );
+    }
   }
 }
