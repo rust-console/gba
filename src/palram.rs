@@ -1,9 +1,9 @@
-//! Module that allows interacting with `PALRAM`.
+//! Module that allows interacting with palette memory, (`PALRAM`).
 //!
-//! The `PALRAM` is 256 `Color` values for Background use, and 256 `Color`
+//! The `PALRAM` contains 256 `Color` values for Background use, and 256 `Color`
 //! values for Object use.
 //!
-//! Each type of `PALRAM` can be viewed as "8 bits per pixel" (8bpp), where
+//! Each block of `PALRAM` can be viewed as "8 bits per pixel" (8bpp), where
 //! there's a single palette of 256 entries. It can also be viewed as "4 bits
 //! per pixel" (4bpp), where there's 16 "palbank" entries that each have 16
 //! slots. **Both** interpretations are correct, simultaneously. If you're a
@@ -50,18 +50,20 @@ pub fn index_palram_obj_8bpp(slot: u8) -> VolAddress<Color> {
   unsafe { PALRAM_OBJ.index_unchecked(slot as usize) }
 }
 
-/// Obtains the address of the specified 4bpp background palbank and slot.
+/// Obtains the address of the specified 4bpp background palbank and palslot.
 ///
-/// If `palbank` or `palslot` are out of bounds they'll wrap around.
+/// Accesses `palbank * 16 + palslot`, if this is out of bounds the computation
+/// will wrap.
 pub fn index_palram_bg_4bpp(palbank: u8, palslot: u8) -> VolAddress<Color> {
   // TODO: const this
   // Note(Lokathor): because of the `u8` limit we can't go out of bounds here.
   unsafe { PALRAM_BG.index_unchecked(palbank.wrapping_mul(16).wrapping_add(palslot) as usize) }
 }
 
-/// Obtains the address of the specified 4bpp object palbank and slot.
+/// Obtains the address of the specified 4bpp object palbank and palslot.
 ///
-/// If `palbank` or `palslot` are out of bounds they'll wrap around.
+/// Accesses `palbank * 16 + palslot`, if this is out of bounds the computation
+/// will wrap.
 pub fn index_palram_obj_4bpp(palbank: u8, palslot: u8) -> VolAddress<Color> {
   // TODO: const this
   // Note(Lokathor): because of the `u8` limit we can't go out of bounds here.
