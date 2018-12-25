@@ -13,7 +13,7 @@
 //! they won't bother to check that you've set the video mode they're designed
 //! for.
 
-pub use super::*;
+pub(crate) use super::*;
 
 pub mod bitmap;
 pub mod tiled;
