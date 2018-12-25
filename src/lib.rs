@@ -42,10 +42,10 @@ pub(crate) use gba_proc_macro::register_bit;
 /// ```
 #[macro_export]
 macro_rules! newtype {
-  ($(#[$attr:meta])* $new_name:ident, $old_name:ident) => {
+  ($(#[$attr:meta])* $new_name:ident, $v:vis $old_name:ty) => {
     $(#[$attr])*
     #[repr(transparent)]
-    pub struct $new_name($old_name);
+    pub struct $new_name($v $old_name);
     impl $new_name {
       /// A `const` "zero value" constructor
       pub const fn new() -> Self {
@@ -53,10 +53,10 @@ macro_rules! newtype {
       }
     }
   };
-  ($(#[$attr:meta])* $new_name:ident, $old_name:ident, no frills) => {
+  ($(#[$attr:meta])* $new_name:ident, $v:vis $old_name:ty, no frills) => {
     $(#[$attr])*
     #[repr(transparent)]
-    pub struct $new_name($old_name);
+    pub struct $new_name($v $old_name);
   };
 }
 
@@ -65,8 +65,8 @@ pub(crate) use self::base::*;
 pub mod bios;
 pub mod io;
 pub mod mgba;
-pub mod video;
 pub mod palram;
+pub mod video;
 
 newtype! {
   /// A color on the GBA is an RGB 5.5.5 within a `u16`
