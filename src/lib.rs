@@ -20,6 +20,8 @@
 //! **Do not** use this crate in programs that aren't running on the GBA. If you
 //! do, it's a giant bag of Undefined Behavior.
 
+pub(crate) use gba_proc_macro::register_bit;
+
 /// Assists in defining a newtype wrapper over some base type.
 ///
 /// Note that rustdoc and derives are all the "meta" stuff, so you can write all
@@ -64,6 +66,7 @@ pub mod bios;
 pub mod io;
 pub mod mgba;
 pub mod video;
+pub mod palram;
 
 newtype! {
   /// A color on the GBA is an RGB 5.5.5 within a `u16`
