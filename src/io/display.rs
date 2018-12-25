@@ -10,8 +10,7 @@ pub const DISPCNT: VolAddress<DisplayControlSetting> = unsafe { VolAddress::new_
 newtype!(
   /// A newtype over the various display control options that you have on a GBA.
   #[derive(Debug, Copy, Clone, Default, PartialEq, Eq)]
-  DisplayControlSetting,
-  u16
+  DisplayControlSetting, u16
 );
 
 #[allow(missing_docs)]
