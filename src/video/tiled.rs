@@ -59,25 +59,25 @@ newtype! {
 newtype! {
   /// A screenblock for use in Affine mode.
   #[derive(Clone, Copy)]
-  AffineScreenblock_16x16, [AffineScreenblockEntry; 16*16], no frills
+  AffineScreenblock16x16, [AffineScreenblockEntry; 16*16], no frills
 }
 
 newtype! {
   /// A screenblock for use in Affine mode.
   #[derive(Clone, Copy)]
-  AffineScreenblock_32x32, [AffineScreenblockEntry; 32*32], no frills
+  AffineScreenblock32x32, [AffineScreenblockEntry; 32*32], no frills
 }
 
 newtype! {
   /// A screenblock for use in Affine mode.
   #[derive(Clone, Copy)]
-  AffineScreenblock_64x64, [AffineScreenblockEntry; 64*64], no frills
+  AffineScreenblock64x64, [AffineScreenblockEntry; 64*64], no frills
 }
 
 newtype! {
   /// A screenblock for use in Affine mode.
   #[derive(Clone, Copy)]
-  AffineScreenblock_128x128, [AffineScreenblockEntry; 128*128], no frills
+  AffineScreenblock128x128, [AffineScreenblockEntry; 128*128], no frills
 }
 
 pub const VRAM_CHARBLOCKS: VolAddressBlock<Charblock4bpp> = unsafe { VolAddressBlock::new_unchecked(VolAddress::new_unchecked(VRAM_BASE_USIZE), 6) };

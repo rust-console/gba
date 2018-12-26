@@ -2,7 +2,9 @@ language: rust
 sudo: false
 
 cache:
-  - cargo
+  # Cache ONLY .cargo, not target/ like usual
+  directories:
+  - $HOME/.cargo
 
 rust:
   - nightly
@@ -17,8 +19,6 @@ before_script:
   - cargo install-update -a
 
 script:
-  # Travis seems to cache for some dumb reason, but we don't want that at all.
-  - rm -fr target
   # Obtain the devkitPro tools, using `target/` as a temp directory
   - mkdir -p target
   - cd target
