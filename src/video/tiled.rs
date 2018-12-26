@@ -36,29 +36,12 @@ newtype! {
 }
 impl TextScreenblockEntry {
   pub const fn from_tile_index(index: u16) -> Self {
-    TextScreenblockEntry(index & Self::TILE_INDEX_MASK)
+    TextScreenblockEntry(index & Self::TILE_ID_MASK)
   }
 
-  //
+  bool_bits!(u16, [(10, hflip), (11, vflip)]);
 
-  pub const TILE_INDEX_MASK: u16 = 0xA - 1;
-  pub const fn tile_index(self) -> u16 {
-    self.0 & Self::TILE_INDEX_MASK
-  }
-  pub const fn with_tile_index(self, index: u16) -> Self {
-    TextScreenblockEntry((self.0 & !Self::TILE_INDEX_MASK) | (index & Self::TILE_INDEX_MASK))
-  }
-
-  register_bit!(HFLIP_BIT, u16, 1 << 0xA, hflip);
-  register_bit!(VFLIP_BIT, u16, 1 << 0xB, vflip);
-
-  pub const PALBANK_MASK: u16 = 0b1111 << 0xC;
-  pub const fn palbank(self) -> u16 {
-    (self.0 & Self::TILE_INDEX_MASK) >> 0xC
-  }
-  pub const fn with_palbank(self, palbank: u16) -> Self {
-    TextScreenblockEntry((self.0 & !Self::PALBANK_MASK) | (palbank << 0xC))
-  }
+  multi_bits!(u16, [(0, 10, tile_id), (12, 4, palbank)]);
 }
 
 newtype! {

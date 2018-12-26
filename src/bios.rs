@@ -8,7 +8,7 @@
 //! whatever value is necessary for that function). Some functions also perform
 //! necessary checks to save you from yourself, such as not dividing by zero.
 
-use super::register_bit;
+use super::bool_bits;
 
 //TODO: ALL functions in this module should have `if cfg!(test)` blocks. The
 //functions that never return must panic, the functions that return nothing
@@ -109,14 +109,19 @@ newtype! {
 }
 #[allow(missing_docs)]
 impl RegisterRAMResetFlags {
-  register_bit!(EWRAM, u8, 0, ewram);
-  register_bit!(IWRAM, u8, 1 << 1, iwram);
-  register_bit!(PALRAM, u8, 1 << 2, palram);
-  register_bit!(VRAM, u8, 1 << 3, vram);
-  register_bit!(OAM, u8, 1 << 4, oam);
-  register_bit!(SIO, u8, 1 << 5, sio);
-  register_bit!(SOUND, u8, 1 << 6, sound);
-  register_bit!(OTHER_IO, u8, 1 << 7, other_io);
+  bool_bits!(
+    u8,
+    [
+      (0, ewram),
+      (1, iwram),
+      (2, palram),
+      (3, vram),
+      (4, oam),
+      (5, sio),
+      (6, sound),
+      (7, other_io),
+    ]
+  );
 }
 
 /// (`swi 0x02`) Halts the CPU until an interrupt occurs.

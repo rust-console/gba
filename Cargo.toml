@@ -13,7 +13,7 @@ publish = false
 
 [dependencies]
 typenum = "1.10"
-gba-proc-macro = "0.3"
+gba-proc-macro = "0.4"
 
 #[dev-dependencies]
 #quickcheck="0.7"

@@ -68,56 +68,25 @@ newtype! {
 }
 #[allow(missing_docs)]
 impl DMAControlSetting {
-  pub const DEST_ADDR_CONTROL_MASK: u16 = 0b11 << 5;
-  pub fn dest_address_control(self) -> DMADestAddressControl {
-    // TODO: constify
-    match (self.0 & Self::DEST_ADDR_CONTROL_MASK) >> 5 {
-      0 => DMADestAddressControl::Increment,
-      1 => DMADestAddressControl::Decrement,
-      2 => DMADestAddressControl::Fixed,
-      3 => DMADestAddressControl::IncrementReload,
-      _ => unsafe { core::hint::unreachable_unchecked() },
-    }
-  }
-  pub const fn with_dest_address_control(self, new_control: DMADestAddressControl) -> Self {
-    Self((self.0 & !Self::DEST_ADDR_CONTROL_MASK) | ((new_control as u16) << 5))
-  }
+  bool_bits!(u16, [(9, dma_repeat), (10, use_32bit), (14, irq_when_done), (15, enabled)]);
 
-  pub const SRC_ADDR_CONTROL_MASK: u16 = 0b11 << 7;
-  pub fn src_address_control(self) -> DMASrcAddressControl {
-    // TODO: constify
-    match (self.0 & Self::SRC_ADDR_CONTROL_MASK) >> 7 {
-      0 => DMASrcAddressControl::Increment,
-      1 => DMASrcAddressControl::Decrement,
-      2 => DMASrcAddressControl::Fixed,
-      _ => unreachable!(), // TODO: custom error message?
-    }
-  }
-  pub const fn with_src_address_control(self, new_control: DMASrcAddressControl) -> Self {
-    Self((self.0 & !Self::SRC_ADDR_CONTROL_MASK) | ((new_control as u16) << 7))
-  }
-
-  register_bit!(REPEAT, u16, 1 << 9, repeat);
-  register_bit!(TRANSFER_U32, u16, 1 << 10, transfer_u32);
-  // TODO: Game Pak DRQ? (bit 11) DMA3 only, and requires specific hardware
-
-  pub const START_TIMING_MASK: u16 = 0b11 << 12;
-  pub fn start_timing(self) -> DMAStartTiming {
-    // TODO: constify
-    match (self.0 & Self::DEST_ADDR_CONTROL_MASK) >> 12 {
-      0 => DMAStartTiming::Immediate,
-      1 => DMAStartTiming::VBlank,
-      2 => DMAStartTiming::HBlank,
-      3 => DMAStartTiming::Special,
-      _ => unsafe { core::hint::unreachable_unchecked() },
-    }
-  }
-  pub const fn with_start_timing(self, new_control: DMAStartTiming) -> Self {
-    Self((self.0 & !Self::START_TIMING_MASK) | ((new_control as u16) << 12))
-  }
-
-  register_bit!(IRQ_AT_END, u16, 1 << 14, irq_at_end);
-  register_bit!(ENABLE, u16, 1 << 15, enable);
+  multi_bits!(
+    u16,
+    [
+      (
+        5,
+        2,
+        dest_address_control,
+        DMADestAddressControl,
+        Increment,
+        Decrement,
+        Fixed,
+        IncrementReload
+      ),
+      (7, 2, source_address_control, DMASrcAddressControl, Increment, Decrement, Fixed),
+      (12, 2, start_time, DMAStartTiming, Immediate, VBlank, HBlank, Special)
+    ]
+  );
 }
 
 /// Sets how the destination address should be adjusted per data transfer.
@@ -234,9 +203,9 @@ impl DMA3 {
   /// must be valid for writing.
   pub unsafe fn fill32(src: *const u32, dest: *mut u32, count: u16) {
     const FILL_CONTROL: DMAControlSetting = DMAControlSetting::new()
-      .with_src_address_control(DMASrcAddressControl::Fixed)
-      .with_transfer_u32(true)
-      .with_enable(true);
+      .with_source_address_control(DMASrcAddressControl::Fixed)
+      .with_use_32bit(true)
+      .with_enabled(true);
     // TODO: destination checking against SRAM
     Self::DMA3SAD.write(src);
     Self::DMA3DAD.write(dest);

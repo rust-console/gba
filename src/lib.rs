@@ -3,7 +3,7 @@
 #![feature(const_int_wrapping)]
 #![feature(const_int_rotate)]
 #![feature(min_const_unsafe_fn)]
-#![warn(missing_docs)]
+//#![warn(missing_docs)]
 #![allow(clippy::cast_lossless)]
 #![deny(clippy::float_arithmetic)]
 
@@ -20,7 +20,7 @@
 //! **Do not** use this crate in programs that aren't running on the GBA. If you
 //! do, it's a giant bag of Undefined Behavior.
 
-pub(crate) use gba_proc_macro::register_bit;
+pub(crate) use gba_proc_macro::{bool_bits, multi_bits};
 
 /// Assists in defining a newtype wrapper over some base type.
 ///

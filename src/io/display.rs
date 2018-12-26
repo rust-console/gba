@@ -15,43 +15,36 @@ newtype!(
 
 #[allow(missing_docs)]
 impl DisplayControlSetting {
-  pub const BG_MODE_MASK: u16 = 0b111;
+  bool_bits!(u16,
+    [
+      (3, cgb_mode),
+      (4, frame1),
+      (5, hblank_interval_free),
+      (6, oam_memory_1d),
+      (7, force_vblank),
+      (8, bg0),
+      (9, bg1),
+      (10, bg2),
+      (11, bg3),
+      (12, obj),
+      (13, win0),
+      (14, win1),
+      (15, obj_window)
+    ]
+  );
 
-  pub fn mode(self) -> DisplayControlMode {
-    // TODO: constify
-    match self.0 & Self::BG_MODE_MASK {
-      0 => DisplayControlMode::Tiled0,
-      1 => DisplayControlMode::Tiled1,
-      2 => DisplayControlMode::Tiled2,
-      3 => DisplayControlMode::Bitmap3,
-      4 => DisplayControlMode::Bitmap4,
-      5 => DisplayControlMode::Bitmap5,
-      _ => unreachable!(),
-    }
-  }
-  pub const fn with_mode(self, new_mode: DisplayControlMode) -> Self {
-    Self((self.0 & !Self::BG_MODE_MASK) | (new_mode as u16))
-  }
-
-  register_bit!(CGB_MODE_BIT, u16, 0b1000, cgb_mode);
-  register_bit!(PAGE_SELECT_BIT, u16, 0b1_0000, page1_enabled);
-  register_bit!(HBLANK_INTERVAL_FREE_BIT, u16, 0b10_0000, hblank_interval_free);
-  register_bit!(OBJECT_MEMORY_1D, u16, 0b100_0000, object_memory_1d);
-  register_bit!(FORCE_BLANK_BIT, u16, 0b1000_0000, force_blank);
-  register_bit!(DISPLAY_BG0_BIT, u16, 0b1_0000_0000, display_bg0);
-  register_bit!(DISPLAY_BG1_BIT, u16, 0b10_0000_0000, display_bg1);
-  register_bit!(DISPLAY_BG2_BIT, u16, 0b100_0000_0000, display_bg2);
-  register_bit!(DISPLAY_BG3_BIT, u16, 0b1000_0000_0000, display_bg3);
-  register_bit!(DISPLAY_OBJECT_BIT, u16, 0b1_0000_0000_0000, display_object);
-  register_bit!(DISPLAY_WINDOW0_BIT, u16, 0b10_0000_0000_0000, display_window0);
-  register_bit!(DISPLAY_WINDOW1_BIT, u16, 0b100_0000_0000_0000, display_window1);
-  register_bit!(OBJECT_WINDOW_BIT, u16, 0b1000_0000_0000_0000, display_object_window);
+  multi_bits!(
+    u16,
+    [
+      (0, 3, mode, DisplayMode, Tiled0, Tiled1, Tiled2, Bitmap3, Bitmap4, Bitmap5 )
+    ]
+  );
 }
 
 /// The six display modes available on the GBA.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(u16)]
-pub enum DisplayControlMode {
+pub enum DisplayMode {
   /// This basically allows for the most different things at once (all layers,
   /// 1024 tiles, two palette modes, etc), but you can't do affine
   /// transformations.
