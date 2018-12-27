@@ -8,13 +8,14 @@ newtype! {
   TextScreenblockEntry, u16
 }
 impl TextScreenblockEntry {
+  /// Generates a default entry with the specified tile index.
   pub const fn from_tile_index(index: u16) -> Self {
-    TextScreenblockEntry(index & Self::TILE_ID_MASK)
+    Self::new().with_tile_index(index)
   }
 
   bool_bits!(u16, [(10, hflip), (11, vflip)]);
 
-  multi_bits!(u16, [(0, 10, tile_id), (12, 4, palbank)]);
+  multi_bits!(u16, [(0, 10, tile_index), (12, 4, palbank)]);
 }
 
 newtype! {

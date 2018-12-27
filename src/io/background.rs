@@ -25,12 +25,6 @@ newtype! {
   BackgroundControlSetting, u16
 }
 impl BackgroundControlSetting {
-  pub const fn from_screen_base_block(screen_base_block: u16) -> Self {
-    BackgroundControlSetting((screen_base_block & 31) << 8)
-  }
-
-  //
-
   bool_bits!(u16, [(6, mosaic), (7, is_8bpp), (13, display_overflow_wrapping)]);
 
   multi_bits!(
@@ -73,24 +67,24 @@ pub enum BGSize {
   Three = 3,
 }
 
-// BG0 X-Offset. Write only. Text mode only. 9 bits.
+/// BG0 X-Offset. Write only. Text mode only. 9 bits.
 pub const BG0HOFS: VolAddress<u16> = unsafe { VolAddress::new_unchecked(0x400_0010) };
-// BG0 Y-Offset. Write only. Text mode only. 9 bits.
+/// BG0 Y-Offset. Write only. Text mode only. 9 bits.
 pub const BG0VOFS: VolAddress<u16> = unsafe { VolAddress::new_unchecked(0x400_0012) };
 
-// BG1 X-Offset. Write only. Text mode only. 9 bits.
+/// BG1 X-Offset. Write only. Text mode only. 9 bits.
 pub const BG1HOFS: VolAddress<u16> = unsafe { VolAddress::new_unchecked(0x400_0012) };
-// BG1 Y-Offset. Write only. Text mode only. 9 bits.
+/// BG1 Y-Offset. Write only. Text mode only. 9 bits.
 pub const BG1VOFS: VolAddress<u16> = unsafe { VolAddress::new_unchecked(0x400_0012) };
 
-// BG2 X-Offset. Write only. Text mode only. 9 bits.
+/// BG2 X-Offset. Write only. Text mode only. 9 bits.
 pub const BG2HOFS: VolAddress<u16> = unsafe { VolAddress::new_unchecked(0x400_0018) };
-// BG2 Y-Offset. Write only. Text mode only. 9 bits.
+/// BG2 Y-Offset. Write only. Text mode only. 9 bits.
 pub const BG2VOFS: VolAddress<u16> = unsafe { VolAddress::new_unchecked(0x400_001A) };
 
-// BG3 X-Offset. Write only. Text mode only. 9 bits.
+/// BG3 X-Offset. Write only. Text mode only. 9 bits.
 pub const BG3HOFS: VolAddress<u16> = unsafe { VolAddress::new_unchecked(0x400_001C) };
-// BG3 Y-Offset. Write only. Text mode only. 9 bits.
+/// BG3 Y-Offset. Write only. Text mode only. 9 bits.
 pub const BG3VOFS: VolAddress<u16> = unsafe { VolAddress::new_unchecked(0x400_001E) };
 
 // TODO: affine backgrounds

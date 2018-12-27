@@ -1,3 +1,5 @@
+//! Module for affine things.
+
 use super::*;
 
 newtype! {

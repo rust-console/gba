@@ -25,6 +25,8 @@
 
 use super::*;
 
+// TODO: striding blocks?
+
 /// Timer 0 Counter/Reload. Special (see module).
 pub const TM0CNT_L: VolAddress<u16> = unsafe { VolAddress::new_unchecked(0x400_0100) };
 
