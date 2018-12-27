@@ -48,9 +48,11 @@ impl Mode3 {
   pub const VRAM: VolAddressBlock<Color> =
     unsafe { VolAddressBlock::new_unchecked(VolAddress::new_unchecked(VRAM_BASE_USIZE), Self::SCREEN_WIDTH * Self::SCREEN_HEIGHT) };
 
+  const MODE3_U32_COUNT: u16 = (Self::SCREEN_WIDTH * Self::SCREEN_HEIGHT / 2) as u16;
+
   /// private iterator over the pixels, two at a time
   const BULK_ITER: VolAddressIter<u32> =
-    unsafe { VolAddressBlock::new_unchecked(VolAddress::new_unchecked(VRAM_BASE_USIZE), Self::SCREEN_WIDTH * Self::SCREEN_HEIGHT / 2).iter() };
+    unsafe { VolAddressBlock::new_unchecked(VolAddress::new_unchecked(VRAM_BASE_USIZE), Self::MODE3_U32_COUNT as usize).iter() };
 
   /// Reads the pixel at the given (col,row).
   ///
@@ -79,5 +81,12 @@ impl Mode3 {
     }
   }
 
-  // TODO: dma_clear_to?
+  /// Clears the whole screen to the desired color using DMA3.
+  pub fn dma_clear_to(color: Color) {
+    use crate::io::dma::DMA3;
+
+    let color32 = color.0 as u32;
+    let bulk_color = color32 << 16 | color32;
+    unsafe { DMA3::fill32(&bulk_color, VRAM_BASE_USIZE as *mut u32, Self::MODE3_U32_COUNT) };
+  }
 }

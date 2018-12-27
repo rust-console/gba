@@ -46,7 +46,7 @@ fn main(_argc: isize, _argv: *const *const u8) -> isize {
       let color_here = Mode3::read_pixel(px, py);
       if color_here != Some(BLACK) {
         // crashed into our own line, reset the screen
-        Mode3::clear_to(BLACK);
+        Mode3::dma_clear_to(BLACK);
         color = color.rotate_left(5);
       } else {
         // draw the new part of the line
