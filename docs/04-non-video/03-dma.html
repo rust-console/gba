@@ -137,6 +137,125 @@
                 <div id="content" class="content">
                     <main>
                         <a class="header" href="#direct-memory-access" id="direct-memory-access"><h1>Direct Memory Access</h1></a>
+<p>The GBA has four Direct Memory Access (DMA) units that can be utilized. They're
+mostly the same in terms of overall operation, but each unit has special rules
+that make it better suited to a particular task.</p>
+<p><strong>Please Note:</strong> TONC and GBATEK have slightly different concepts of how a DMA
+unit's registers should be viewed. I've chosen to go by what GBATEK uses.</p>
+<a class="header" href="#general-dma" id="general-dma"><h2>General DMA</h2></a>
+<p>A single DMA unit is controlled through four different IO Registers.</p>
+<ul>
+<li><strong>Source:</strong> (<code>DMAxSAD</code>, read only) A <code>*const</code> pointer that the DMA reads from.</li>
+<li><strong>Destination:</strong> (<code>DMAxDAD</code>, read only) A <code>*mut</code> pointer that the DMA writes
+to.</li>
+<li><strong>Count:</strong> (<code>DMAxCNT_L</code>, read only) How many transfers to perform.</li>
+<li><strong>Control:</strong> (<code>DMAxCNT_H</code>, read/write) A register full of bit-flags that
+controls all sorts of details.</li>
+</ul>
+<p>Here, the <code>x</code> is replaced with 0 through 3 when utilizing whichever particular
+DMA unit.</p>
+<a class="header" href="#source-address" id="source-address"><h3>Source Address</h3></a>
+<p>This is either a <code>u32</code> or <code>u16</code> address depending on the unit's assigned
+transfer mode (see Control). The address MUST be aligned.</p>
+<p>With DMA0 the source must be internal memory. With other DMA units the source
+can be any non-<code>SRAM</code> location.</p>
+<a class="header" href="#destination-address" id="destination-address"><h3>Destination Address</h3></a>
+<p>As with the Source, this is either a <code>u32</code> or <code>u16</code> address depending on the
+unit's assigned transfer mode (see Control). The address MUST be aligned.</p>
+<p>With DMA0/1/2 the destination must be internal memory. With DMA3 the destination
+can be any non-<code>SRAM</code> memory (allowing writes into Game Pak ROM / FlashROM,
+assuming that your Game Pak hardware supports that).</p>
+<a class="header" href="#count" id="count"><h3>Count</h3></a>
+<p>This is a <code>u16</code> that says how many transfers (<code>u16</code> or <code>u32</code>) to make.</p>
+<p>DMA0/1/2 will only actually accept a 14-bit value, while DMA3 will accept a full
+16-bit value. A value of 0 instead acts as if you'd used the <em>maximum</em> value for
+the DMA in question. Put another way, DMA0/1/2 transfer <code>1</code> through <code>0x4000</code>
+words, with <code>0</code> as the <code>0x4000</code> value, and DMA3 transfers <code>1</code> through <code>0x1_0000</code>
+words, with <code>0</code> as the <code>0x1_0000</code> value.</p>
+<p>The maximum value isn't a very harsh limit. Even in just <code>u16</code> mode, <code>0x4000</code>
+transfers is 32k, which would for example be all 32k of <code>IWRAM</code> (including your
+own user stack). If you for some reason do need to transfer more than a single
+DMA use can move around at once then you can just setup the DMA a second time
+and keep going.</p>
+<a class="header" href="#control" id="control"><h3>Control</h3></a>
+<p>This <code>u16</code> bit-flag field is where things get wild.</p>
+<ul>
+<li>Bits 0-4 do nothing</li>
+<li>Bit 5-6 control how the destination address changes per transfer:
+<ul>
+<li>0: Offset +1</li>
+<li>1: Offset -1</li>
+<li>2: No Change</li>
+<li>3: Offset +1 and reload when a Repeat starts (below)</li>
+</ul>
+</li>
+<li>Bit 7-8 similarly control how the source address changes per transfer:
+<ul>
+<li>0: Offset +1</li>
+<li>1: Offset -1</li>
+<li>2: No Change</li>
+<li>3: Prohibited</li>
+</ul>
+</li>
+<li>Bit 9: enables Repeat mode.</li>
+<li>Bit 10: Transfer <code>u16</code> (false) or <code>u32</code> (true) data.</li>
+<li>Bit 11: &quot;Game Pak DRQ&quot; flag. GBATEK says that this is only allowed for DMA3,
+and also your Game Pak hardware must be equipped to use DRQ mode. I don't even
+know what DRQ mode is all about, and GBATEK doesn't say much either. If DRQ is
+set then you <em>must not</em> set the Repeat bit as well. The <code>gba</code> crate simply
+doesn't bother to expose this flag to users.</li>
+<li>Bit 12-13: DMA Start:
+<ul>
+<li>0: &quot;Immediate&quot;, which is 2 cycles after requested.</li>
+<li>1: VBlank</li>
+<li>2: HBlank</li>
+<li>3: Special, depending on what DMA unit is involved:
+<ul>
+<li>DMA0: Prohibited.</li>
+<li>DMA1/2: Sound FIFO (see the <a href="04-sound.html">Sound</a> section)</li>
+<li>DMA3: Video Capture, intended for use with the Repeat flag, performs a
+transfer per scanline (similar to HBlank) starting at <code>VCOUNT</code> 2 and
+stopping at <code>VCOUNT</code> 162. Intended for copying things from ROM or camera
+into VRAM.</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>Bit 14: Interrupt upon DMA complete.</li>
+<li>Bit 15: Enable this DMA unit.</li>
+</ul>
+<a class="header" href="#dma-life-cycle" id="dma-life-cycle"><h2>DMA Life Cycle</h2></a>
+<p>The general technique for using a DMA unit involves first setting the relevent
+source, destination, and count registers, then setting the appropriate control
+register value with the Enable bit set.</p>
+<p>Once the Enable flag is set the appropriate DMA unit will trigger at the
+assigned time (Bit 12-13). The CPU's operation is halted while any DMA unit is
+active, until the DMA completes its task. If more than one DMA unit is supposed
+to be active at once, then the DMA unit with the lower number will activate and
+complete before any others.</p>
+<p>When the DMA triggers via <em>Enable</em>, the <code>Source</code>, <code>Destination</code>, and <code>Count</code>
+values are copied from the GBA's registers into the DMA unit's internal
+registers. Changes to the DMA unit's internal copy of the data don't affect the
+values in the GBA registers. Another <em>Enable</em> will read the same values as
+before.</p>
+<p>If DMA is triggered via having <em>Repeat</em> active then <em>only</em> the Count is copied
+in to the DMA unit registers. The <code>Source</code> and <code>Destination</code> are unaffected
+during a Repeat. The exception to this is if the destination address control
+value (Bits 5-6) are set to 3 (<code>0b11</code>), in which case a <em>Repeat</em> will also
+re-copy the <code>Destination</code> as well as the <code>Count</code>.</p>
+<p>Once a DMA operation completes, the Enable flag of its Control register will
+automatically be disabled, <em>unless</em> the Repeat flag is on, in which case the
+Enable flag is left active. You will have to manually disable it if you don't
+want the DMA to kick in again over and over at the specified starting time.</p>
+<a class="header" href="#dma-limitations" id="dma-limitations"><h2>DMA Limitations</h2></a>
+<p>The DMA units cannot access <code>SRAM</code> at all.</p>
+<p>If you're using HBlank to access any part of the memory that the display
+controller utilizes (<code>OAM</code>, <code>PALRAM</code>, <code>VRAM</code>), you need to have enabled the
+&quot;HBlank Interval Free&quot; bit in the Display Control Register (<code>DISPCNT</code>).</p>
+<p>Whenever DMA is active the CPU is <em>not</em> active, which means that
+<a href="05-interrupts.html">Interrupts</a> will not fire while DMA is happening. This can
+cause any number of hard to track down bugs. Try to limit your use of the DMA
+units if you can.</p>
 
                     </main>
 
