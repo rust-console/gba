@@ -3,7 +3,7 @@
 #![feature(const_int_wrapping)]
 #![feature(const_int_rotate)]
 #![feature(min_const_unsafe_fn)]
-//#![warn(missing_docs)]
+#![warn(missing_docs)]
 #![allow(clippy::cast_lossless)]
 #![deny(clippy::float_arithmetic)]
 
@@ -65,6 +65,7 @@ pub(crate) use self::base::*;
 pub mod bios;
 pub mod io;
 pub mod mgba;
+pub mod oam;
 pub mod palram;
 pub mod vram;
 
