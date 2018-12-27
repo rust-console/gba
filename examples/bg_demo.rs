@@ -7,9 +7,10 @@ use gba::{
     display::{DisplayControlSetting, DISPCNT},
   },
   palram::index_palram_bg_4bpp,
-  video::tiled::{TextScreenblockEntry, Tile4bpp, VRAM_CHARBLOCKS, VRAM_TEXT_SCREENBLOCKS},
+  vram::text::{TextScreenblockEntry},
   Color,
 };
+use gba::vram::{Tile4bpp, CHAR_BASE_BLOCKS, SCREEN_BASE_BLOCKS};
 
 #[panic_handler]
 fn panic(_info: &core::panic::PanicInfo) -> ! {
@@ -52,11 +53,11 @@ pub const ALL_THREES: Tile4bpp = Tile4bpp([
 pub fn set_bg_tile_4bpp(charblock: usize, index: usize, tile: Tile4bpp) {
   assert!(charblock < 4);
   assert!(index < 512);
-  unsafe { VRAM_CHARBLOCKS.index(charblock).cast::<Tile4bpp>().offset(index as isize).write(tile) }
+  unsafe { CHAR_BASE_BLOCKS.index(charblock).cast::<Tile4bpp>().offset(index as isize).write(tile) }
 }
 
 pub fn checker_screenblock(slot: usize, a_entry: TextScreenblockEntry, b_entry: TextScreenblockEntry) {
-  let mut p = unsafe { VRAM_TEXT_SCREENBLOCKS.index(slot).cast::<TextScreenblockEntry>() };
+  let mut p = unsafe { SCREEN_BASE_BLOCKS.index(slot).cast::<TextScreenblockEntry>() };
   let mut checker = true;
   for _row in 0..32 {
     for _col in 0..32 {

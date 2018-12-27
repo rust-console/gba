@@ -2,6 +2,8 @@
 
 use core::{cmp::Ordering, iter::FusedIterator, marker::PhantomData, num::NonZeroUsize};
 
+// TODO: striding block/iter
+
 /// Abstracts the use of a volatile hardware address.
 ///
 /// If you're trying to do anything other than abstract a volatile hardware

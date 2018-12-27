@@ -15,8 +15,9 @@
 
 pub(crate) use super::*;
 
+pub mod affine;
 pub mod bitmap;
-pub mod tiled;
+pub mod text;
 
 /// The start of VRAM.
 ///
@@ -25,3 +26,34 @@ pub mod tiled;
 /// value as just being a `usize`. Specific video mode types then wrap this as
 /// being the correct thing.
 pub const VRAM_BASE_USIZE: usize = 0x600_0000;
+
+pub const CHAR_BASE_BLOCKS: VolAddressBlock<[u8; 0x4000]> = unsafe { VolAddressBlock::new_unchecked(VolAddress::new_unchecked(VRAM_BASE_USIZE), 6) };
+
+pub const SCREEN_BASE_BLOCKS: VolAddressBlock<[u8; 0x800]> =
+  unsafe { VolAddressBlock::new_unchecked(VolAddress::new_unchecked(VRAM_BASE_USIZE), 32) };
+
+newtype! {
+  /// An 8x8 tile with 4bpp, packed as `u32` values for proper alignment.
+  #[derive(Debug, Clone, Copy, Default)]
+  Tile4bpp, pub [u32; 8], no frills
+}
+
+newtype! {
+  /// An 8x8 tile with 8bpp, packed as `u32` values for proper alignment.
+  #[derive(Debug, Clone, Copy, Default)]
+  Tile8bpp, pub [u32; 16], no frills
+}
+
+/*
+newtype! {
+  /// A 4bpp charblock has 512 tiles in it
+  #[derive(Clone, Copy)]
+  Charblock4bpp, pub [Tile4bpp; 512], no frills
+}
+
+newtype! {
+  /// An 8bpp charblock has 256 tiles in it
+  #[derive(Clone, Copy)]
+  Charblock8bpp, pub [Tile4bpp; 256], no frills
+}
+*/

@@ -4,7 +4,7 @@
 
 use gba::{
   io::display::{DisplayControlSetting, DisplayMode, DISPCNT},
-  video::bitmap::Mode3,
+  vram::bitmap::Mode3,
   Color,
 };
 

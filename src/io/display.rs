@@ -4,7 +4,7 @@ use super::*;
 
 /// LCD Control. Read/Write.
 ///
-/// The "force vblank" bit is always set when your rust code first executes.
+/// The "force vblank" bit is always set when your Rust code first executes.
 pub const DISPCNT: VolAddress<DisplayControlSetting> = unsafe { VolAddress::new_unchecked(0x400_0000) };
 
 newtype!(
@@ -101,7 +101,7 @@ pub fn display_control() -> DisplayControlSetting {
   DISPCNT.read()
 }
 
-/// Display Status and IRQ Control.
+/// Display Status and IRQ Control. Read/Write.
 pub const DISPSTAT: VolAddress<DisplayStatusSetting> = unsafe { VolAddress::new_unchecked(0x400_0004) };
 
 newtype!(
@@ -153,4 +153,38 @@ pub fn spin_until_vblank() {
 pub fn spin_until_vdraw() {
   // TODO: make this the better version with BIOS and interrupts and such.
   while vcount() >= VBLANK_SCANLINE {}
+}
+
+/// Global mosaic effect control. Write-only.
+pub const MOSAIC: VolAddress<MosaicSetting> = unsafe { VolAddress::new_unchecked(0x400_004C) };
+
+newtype! {
+  /// Allows control of the Mosaic effect.
+  ///
+  /// Values are the _increase_ for each top-left pixel to be duplicated in the
+  /// final result. If you want to duplicate some other pixel than the top-left,
+  /// you can offset the background or object by an appropriate amount.
+  ///
+  /// 0) No effect (1+0)
+  /// 1) Each pixel becomes 2 pixels (1+1)
+  /// 2) Each pixel becomes 3 pixels (1+2)
+  /// 3) Each pixel becomes 4 pixels (1+3)
+  ///
+  /// * Bits 0-3: BG mosaic horizontal increase
+  /// * Bits 4-7: BG mosaic vertical increase
+  /// * Bits 8-11: Object mosaic horizontal increase
+  /// * Bits 12-15: Object mosaic vertical increase
+  #[derive(Debug, Copy, Clone, Default, PartialEq, Eq)]
+  MosaicSetting, u16
+}
+impl MosaicSetting {
+  multi_bits!(
+    u16,
+    [
+      (0, 4, bg_horizontal_inc),
+      (4, 4, bg_vertical_inc),
+      (8, 4, obj_horizontal_inc),
+      (12, 4, obj_vertical_inc),
+    ]
+  );
 }

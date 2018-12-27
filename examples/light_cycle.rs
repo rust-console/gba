@@ -7,7 +7,7 @@ use gba::{
     display::{spin_until_vblank, spin_until_vdraw, DisplayControlSetting, DisplayMode, DISPCNT},
     keypad::read_key_input,
   },
-  video::bitmap::Mode3,
+  vram::bitmap::Mode3,
   Color,
 };
 

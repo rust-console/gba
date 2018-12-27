@@ -66,7 +66,7 @@ pub mod bios;
 pub mod io;
 pub mod mgba;
 pub mod palram;
-pub mod video;
+pub mod vram;
 
 newtype! {
   /// A color on the GBA is an RGB 5.5.5 within a `u16`

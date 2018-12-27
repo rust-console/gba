@@ -2,13 +2,13 @@
 
 use super::*;
 
-// BG0 Control. Read/Write.
+// BG0 Control. Read/Write. Display Mode 0/1 only.
 pub const BG0CNT: VolAddress<BackgroundControlSetting> = unsafe { VolAddress::new_unchecked(0x400_0008) };
-// BG1 Control. Read/Write.
+// BG1 Control. Read/Write. Display Mode 0/1 only.
 pub const BG1CNT: VolAddress<BackgroundControlSetting> = unsafe { VolAddress::new_unchecked(0x400_000A) };
-// BG2 Control. Read/Write.
+// BG2 Control. Read/Write. Display Mode 0/1/2 only.
 pub const BG2CNT: VolAddress<BackgroundControlSetting> = unsafe { VolAddress::new_unchecked(0x400_000C) };
-// BG3 Control. Read/Write.
+// BG3 Control. Read/Write.  Display Mode 0/2 only.
 pub const BG3CNT: VolAddress<BackgroundControlSetting> = unsafe { VolAddress::new_unchecked(0x400_000E) };
 
 newtype! {
@@ -19,7 +19,7 @@ newtype! {
   /// Bit 6: Mosaic mode
   /// Bit 7: is 8bpp
   /// Bit 8-12: Screen Base Block (0 through 31, 2k each)
-  /// Bit 13: Display area overflow wraps (otherwise transparent, affine only)
+  /// Bit 13: Display area overflow wraps (otherwise transparent, affine BG only)
   /// Bit 14-15: Screen Size
   #[derive(Debug, Copy, Clone, Default, PartialEq, Eq)]
   BackgroundControlSetting, u16
@@ -93,7 +93,7 @@ pub const BG3HOFS: VolAddress<u16> = unsafe { VolAddress::new_unchecked(0x400_00
 // BG3 Y-Offset. Write only. Text mode only. 9 bits.
 pub const BG3VOFS: VolAddress<u16> = unsafe { VolAddress::new_unchecked(0x400_001E) };
 
-// TODO: affine registers:
+// TODO: affine backgrounds
 // BG2X_L
 // BG2X_H
 // BG2Y_L
@@ -114,40 +114,6 @@ pub const BG3VOFS: VolAddress<u16> = unsafe { VolAddress::new_unchecked(0x400_00
 // pub const WIN1V: VolAddress<u16> = unsafe { VolAddress::new_unchecked(0x400_0046) };
 // pub const WININ: VolAddress<u16> = unsafe { VolAddress::new_unchecked(0x400_0048) };
 // pub const WINOUT: VolAddress<u16> = unsafe { VolAddress::new_unchecked(0x400_004A) };
-
-/// Global mosaic effect control. Write-only.
-pub const MOSAIC: VolAddress<MosaicSetting> = unsafe { VolAddress::new_unchecked(0x400_004C) };
-
-newtype! {
-  /// Allows control of the Mosaic effect.
-  ///
-  /// Values are the _increase_ for each top-left pixel to be duplicated in the
-  /// final result. If you want to duplicate some other pixel than the top-left,
-  /// you can offset the background or object by an appropriate amount.
-  ///
-  /// 0) No effect (1+0)
-  /// 1) Each pixel becomes 2 pixels (1+1)
-  /// 2) Each pixel becomes 3 pixels (1+2)
-  /// 3) Each pixel becomes 4 pixels (1+3)
-  ///
-  /// * Bits 0-3: BG mosaic horizontal increase
-  /// * Bits 4-7: BG mosaic vertical increase
-  /// * Bits 8-11: Object mosaic horizontal increase
-  /// * Bits 12-15: Object mosaic vertical increase
-  #[derive(Debug, Copy, Clone, Default, PartialEq, Eq)]
-  MosaicSetting, u16
-}
-impl MosaicSetting {
-  multi_bits!(
-    u16,
-    [
-      (0, 4, bg_horizontal_inc),
-      (4, 4, bg_vertical_inc),
-      (8, 4, obj_horizontal_inc),
-      (12, 4, obj_vertical_inc),
-    ]
-  );
-}
 
 // pub const BLDCNT: VolAddress<u16> = unsafe { VolAddress::new_unchecked(0x400_0050) };
 // pub const BLDALPHA: VolAddress<u16> = unsafe { VolAddress::new_unchecked(0x400_0052) };
