@@ -18,7 +18,7 @@ fn panic(_info: &core::panic::PanicInfo) -> ! {
 
 #[start]
 fn main(_argc: isize, _argv: *const *const u8) -> isize {
-  const SETTING: DisplayControlSetting = DisplayControlSetting::new().with_mode(DisplayMode::Bitmap3).with_bg2(true);
+  const SETTING: DisplayControlSetting = DisplayControlSetting::new().with_mode(DisplayMode::Mode3).with_bg2(true);
   DISPCNT.write(SETTING);
 
   let mut px = Mode3::SCREEN_WIDTH / 2;

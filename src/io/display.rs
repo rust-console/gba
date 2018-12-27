@@ -4,18 +4,35 @@ use super::*;
 
 /// LCD Control. Read/Write.
 ///
-/// * [gbatek entry](http://problemkaputt.de/gbatek.htm#lcdiodisplaycontrol)
+/// The "force vblank" bit is always set when your rust code first executes.
 pub const DISPCNT: VolAddress<DisplayControlSetting> = unsafe { VolAddress::new_unchecked(0x400_0000) };
 
 newtype!(
-  /// A newtype over the various display control options that you have on a GBA.
+  /// Setting for the display control register.
+  ///
+  /// * 0-2: `DisplayMode`
+  /// * 3: CGB mode flag
+  /// * 4: Display frame 1 (Modes 4/5 only)
+  /// * 5: "hblank interval free", allows full access to OAM during hblank
+  /// * 6: Object tile memory 1-dimensional
+  /// * 7: Force vblank
+  /// * 8: Display bg0 layer
+  /// * 9: Display bg1 layer
+  /// * 10: Display bg2 layer
+  /// * 11: Display bg3 layer
+  /// * 12: Display objects layer
+  /// * 13: Window 0 display
+  /// * 14: Window 1 display
+  /// * 15: Object window
   #[derive(Debug, Copy, Clone, Default, PartialEq, Eq)]
-  DisplayControlSetting, u16
+  DisplayControlSetting,
+  u16
 );
 
 #[allow(missing_docs)]
 impl DisplayControlSetting {
-  bool_bits!(u16,
+  bool_bits!(
+    u16,
     [
       (3, cgb_mode),
       (4, frame1),
@@ -33,36 +50,46 @@ impl DisplayControlSetting {
     ]
   );
 
-  multi_bits!(
-    u16,
-    [
-      (0, 3, mode, DisplayMode, Tiled0, Tiled1, Tiled2, Bitmap3, Bitmap4, Bitmap5 )
-    ]
-  );
+  multi_bits!(u16, [(0, 3, mode, DisplayMode, Mode0, Mode1, Mode2, Mode3, Mode4, Mode5)]);
 }
 
 /// The six display modes available on the GBA.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(u16)]
 pub enum DisplayMode {
-  /// This basically allows for the most different things at once (all layers,
-  /// 1024 tiles, two palette modes, etc), but you can't do affine
-  /// transformations.
-  Tiled0 = 0,
-  /// This is a mix of `Tile0` and `Tile2`: BG0 and BG1 run as if in `Tiled0`,
-  /// and BG2 runs as if in `Tiled2`.
-  Tiled1 = 1,
-  /// This allows affine transformations, but only uses BG2 and BG3.
-  Tiled2 = 2,
-  /// This is the basic bitmap draw mode. The whole screen is a single bitmap.
-  /// Uses BG2 only.
-  Bitmap3 = 3,
-  /// This uses _paletted color_ so that there's enough space to have two pages
-  /// at _full resolution_, allowing page flipping. Uses BG2 only.
-  Bitmap4 = 4,
-  /// This uses _reduced resolution_ so that there's enough space to have two
-  /// pages with _full color_, allowing page flipping. Uses BG2 only.
-  Bitmap5 = 5,
+  /// * Affine: No
+  /// * Layers: 0/1/2/3
+  /// * Size(px): 256x256 to 512x512
+  /// * Tiles: 1024
+  /// * Palette Modes: 4bpp or 8bpp
+  Mode0 = 0,
+  /// * BG0 / BG1: As Mode0
+  /// * BG2: As Mode2
+  Mode1 = 1,
+  /// * Affine: Yes
+  /// * Layers: 2/3
+  /// * Size(px): 128x128 to 1024x1024
+  /// * Tiles: 256
+  /// * Palette Modes: 8bpp
+  Mode2 = 2,
+  /// * Affine: Yes
+  /// * Layers: 2
+  /// * Size(px): 240x160 (1 page)
+  /// * Bitmap
+  /// * Full Color
+  Mode3 = 3,
+  /// * Affine: Yes
+  /// * Layers: 2
+  /// * Size(px): 240x160 (2 pages)
+  /// * Bitmap
+  /// * Palette Modes: 8bpp
+  Mode4 = 4,
+  /// * Affine: Yes
+  /// * Layers: 2
+  /// * Size(px): 160x128 (2 pages)
+  /// * Bitmap
+  /// * Full Color
+  Mode5 = 5,
 }
 
 /// Assigns the given display control setting.
@@ -74,8 +101,32 @@ pub fn display_control() -> DisplayControlSetting {
   DISPCNT.read()
 }
 
-/// If the `VCOUNT` register reads equal to or above this then you're in vblank.
-pub const VBLANK_SCANLINE: u16 = 160;
+/// Display Status and IRQ Control.
+pub const DISPSTAT: VolAddress<DisplayStatusSetting> = unsafe { VolAddress::new_unchecked(0x400_0004) };
+
+newtype!(
+  /// A newtype over display status and interrupt control values.
+  #[derive(Debug, Copy, Clone, Default, PartialEq, Eq)]
+  DisplayStatusSetting,
+  u16
+);
+
+#[allow(missing_docs)]
+impl DisplayStatusSetting {
+  bool_bits!(
+    u16,
+    [
+      (0, vblank_flag),
+      (1, hblank_flag),
+      (2, vcounter_flag),
+      (3, vblank_irq_enable),
+      (4, hblank_irq_enable),
+      (5, vcounter_irq_enable),
+    ]
+  );
+
+  multi_bits!(u16, [(8, 8, vcount_setting)]);
+}
 
 /// Vertical Counter (LY). Read only.
 ///
@@ -83,6 +134,9 @@ pub const VBLANK_SCANLINE: u16 = 160;
 /// this is at or above the `VBLANK_SCANLINE` value then the display controller
 /// is in a "vertical blank" period.
 pub const VCOUNT: VolAddress<u16> = unsafe { VolAddress::new_unchecked(0x400_0006) };
+
+/// If the `VCOUNT` register reads equal to or above this then you're in vblank.
+pub const VBLANK_SCANLINE: u16 = 160;
 
 /// Obtains the current `VCOUNT` value.
 pub fn vcount() -> u16 {
