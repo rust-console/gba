@@ -27,8 +27,10 @@ pub mod text;
 /// being the correct thing.
 pub const VRAM_BASE_USIZE: usize = 0x600_0000;
 
+/// The character base blocks.
 pub const CHAR_BASE_BLOCKS: VolAddressBlock<[u8; 0x4000]> = unsafe { VolAddressBlock::new_unchecked(VolAddress::new_unchecked(VRAM_BASE_USIZE), 6) };
 
+/// The screen entry base blocks.
 pub const SCREEN_BASE_BLOCKS: VolAddressBlock<[u8; 0x800]> =
   unsafe { VolAddressBlock::new_unchecked(VolAddress::new_unchecked(VRAM_BASE_USIZE), 32) };
 
@@ -44,16 +46,12 @@ newtype! {
   Tile8bpp, pub [u32; 16], no frills
 }
 
-/*
-newtype! {
-  /// A 4bpp charblock has 512 tiles in it
-  #[derive(Clone, Copy)]
-  Charblock4bpp, pub [Tile4bpp; 512], no frills
+/// Gives the specified charblock in 4bpp view.
+pub fn get_4bpp_character_block(slot: usize) -> VolAddressBlock<Tile4bpp> {
+  unsafe { VolAddressBlock::new_unchecked(CHAR_BASE_BLOCKS.index(slot).cast::<Tile4bpp>(), 512) }
 }
 
-newtype! {
-  /// An 8bpp charblock has 256 tiles in it
-  #[derive(Clone, Copy)]
-  Charblock8bpp, pub [Tile4bpp; 256], no frills
+/// Gives the specified charblock in 8bpp view.
+pub fn get_8bpp_character_block(slot: usize) -> VolAddressBlock<Tile8bpp> {
+  unsafe { VolAddressBlock::new_unchecked(CHAR_BASE_BLOCKS.index(slot).cast::<Tile8bpp>(), 256) }
 }
-*/
