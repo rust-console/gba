@@ -115,6 +115,7 @@ pub const BG3VOFS: VolAddress<u16> = unsafe { VolAddress::new_unchecked(0x400_00
 // pub const WININ: VolAddress<u16> = unsafe { VolAddress::new_unchecked(0x400_0048) };
 // pub const WINOUT: VolAddress<u16> = unsafe { VolAddress::new_unchecked(0x400_004A) };
 
+// TODO: blending
 // pub const BLDCNT: VolAddress<u16> = unsafe { VolAddress::new_unchecked(0x400_0050) };
 // pub const BLDALPHA: VolAddress<u16> = unsafe { VolAddress::new_unchecked(0x400_0052) };
 // pub const BLDY: VolAddress<u16> = unsafe { VolAddress::new_unchecked(0x400_0054) };
