@@ -20,7 +20,7 @@ impl OBJAttr0 {
   multi_bits!(
     u16,
     [
-      (0, 8, y_coordinate),
+      (0, 8, row_coordinate),
       (8, 2, obj_rendering, ObjectRender, Normal, Affine, Disabled, DoubleAreaAffine),
       (10, 2, obj_mode, ObjectMode, Normal, SemiTransparent, OBJWindow),
       (14, 2, obj_shape, ObjectShape, Square, Horizontal, Vertical),
@@ -86,7 +86,7 @@ impl OBJAttr1 {
   multi_bits!(
     u16,
     [
-      (0, 9, x_coordinate),
+      (0, 9, col_coordinate),
       (9, 5, affine_index),
       (14, 2, obj_size, ObjectSize, Zero, One, Two, Three),
     ]

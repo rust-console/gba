@@ -13,10 +13,12 @@ pub const KEYINPUT: VolAddress<u16> = unsafe { VolAddress::new_unchecked(0x400_0
 /// A "tribool" value helps us interpret the arrow pad.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(i32)]
-#[allow(missing_docs)]
 pub enum TriBool {
+  /// -1
   Minus = -1,
+  /// +0
   Neutral = 0,
+  /// +1
   Plus = 1,
 }
 

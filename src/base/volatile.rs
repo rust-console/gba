@@ -286,7 +286,7 @@ impl<T> VolAddressBlock<T> {
     if slot < self.slots {
       unsafe { self.vol_address.offset(slot as isize) }
     } else {
-      panic!("Index Requested: {} >= Bound: {}", slot, self.slots)
+      panic!("Index Requested: {} >= Slot Count: {}", slot, self.slots)
     }
   }
 

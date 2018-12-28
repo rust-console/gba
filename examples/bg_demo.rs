@@ -36,9 +36,7 @@ fn main(_argc: isize, _argv: *const *const u8) -> isize {
   BG0CNT.write(BackgroundControlSetting::new().with_screen_base_block(8));
   // Display Control
   DISPCNT.write(DisplayControlSetting::new().with_bg0(true));
-  loop {
-    // TODO the whole thing
-  }
+  loop {}
 }
 
 pub const ALL_TWOS: Tile4bpp = Tile4bpp([
