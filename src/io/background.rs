@@ -2,13 +2,13 @@
 
 use super::*;
 
-// BG0 Control. Read/Write. Display Mode 0/1 only.
+/// BG0 Control. Read/Write. Display Mode 0/1 only.
 pub const BG0CNT: VolAddress<BackgroundControlSetting> = unsafe { VolAddress::new_unchecked(0x400_0008) };
-// BG1 Control. Read/Write. Display Mode 0/1 only.
+/// BG1 Control. Read/Write. Display Mode 0/1 only.
 pub const BG1CNT: VolAddress<BackgroundControlSetting> = unsafe { VolAddress::new_unchecked(0x400_000A) };
-// BG2 Control. Read/Write. Display Mode 0/1/2 only.
+/// BG2 Control. Read/Write. Display Mode 0/1/2 only.
 pub const BG2CNT: VolAddress<BackgroundControlSetting> = unsafe { VolAddress::new_unchecked(0x400_000C) };
-// BG3 Control. Read/Write.  Display Mode 0/2 only.
+/// BG3 Control. Read/Write.  Display Mode 0/2 only.
 pub const BG3CNT: VolAddress<BackgroundControlSetting> = unsafe { VolAddress::new_unchecked(0x400_000E) };
 
 newtype! {
