@@ -96,6 +96,11 @@ style, but there are some rules and considerations here:
   * Parentheses macro use mostly gets treated like a function call.
   * Bracket macro use mostly gets treated like an array declaration.
 
+**As a reminder:** remember that `macro_rules` macros have to appear _before_
+they're invoked in your source, so the `newtype` macro will always have to be at
+the very top of your file, or if you put it in a module within your project
+you'll need to declare the module before anything that uses it.
+
 ## Upgrade That Macro!
 
 We also want to be able to add `derive` stuff and doc comments to our newtype.
@@ -124,34 +129,78 @@ newtype! {
 }
 ```
 
-And that's about all we'll need for the examples.
+Next, we can allow for the wrapping of types that aren't just a single
+identifier by changing `$old_name` from `:ident` to `:ty`. We can't _also_ do
+this for the `$new_type` part because declaring a new struct expects a valid
+identifier that's _not_ already declared (obviously), and `:ty` is intended for
+capturing types that already exist.
 
-**As a reminder:** remember that `macro_rules` macros have to appear _before_
-they're invoked in your source, so the `newtype` macro will always have to be at
-the very top of your file, or if you put it in a module within your project
-you'll need to declare the module before anything that uses it.
+```rust
+#[macro_export]
+macro_rules! newtype {
+  ($(#[$attr:meta])* $new_name:ident, $old_name:ty) => {
+    $(#[$attr])*
+    #[repr(transparent)]
+    pub struct $new_name($old_name);
+  };
+}
+```
 
-## Potential Homework
+Next of course we'll want to usually have a `new` method that's const and just
+gives a 0 value. We won't always be making a newtype over a number value, but we
+often will. It's usually silly to have a `new` method with no arguments since we
+might as well just impl `Default`, but `Default::default` isn't `const`, so
+having `pub const fn new() -> Self` is justified here.
 
-If you wanted to keep going and get really fancy with it, you could potentially
-add a lot more:
+Here, the token `0` is given the `{integer}` type, which can be converted into
+any of the integer types as needed, but it still can't be converted into an
+array type or a pointer or things like that. Accordingly we've added the "no
+frills" option which declares the struct and no `new` method.
 
-* Make a `pub const fn new() -> Self` method that outputs the base value in a
-  const way. Combine this with builder style "setter" methods that are also
-  const and you can get the compiler to do quite a bit of the value building
-  work at compile time.
-* Making the macro optionally emit a `From` impl to unwrap it back into the base
-  type.
-* Allow for visibility modifiers to be applied to the inner field and the newly
-  generated type.
-* Allowing for generic newtypes. You already saw the need for this once in the
-  volatile section. Unfortunately, this particular part gets really tricky if
-  you're using `macro_rules!`, so you might need to move up to a full
-  `proc_macro`. Having a `proc_macro` isn't bad except that they have to be
-  defined in a crate of their own and they're compiled before use. You can't
-  ever use them in the crate that defines them, so we won't be using them in any
-  of our single file examples.
-* Allowing for optional `Deref` and `DerefMut` of the inner value. This takes
-  away most all the safety aspect of doing the newtype, but there may be times
-  for it. As an example, you could make a newtype with a different form of
-  Display impl that you want to otherwise treat as the base type in all places.
+```rust
+#[macro_export]
+macro_rules! newtype {
+  ($(#[$attr:meta])* $new_name:ident, $old_name:ty) => {
+    $(#[$attr])*
+    #[repr(transparent)]
+    pub struct $new_name($old_name);
+    impl $new_name {
+      /// A `const` "zero value" constructor
+      pub const fn new() -> Self {
+        $new_name(0)
+      }
+    }
+  };
+  ($(#[$attr:meta])* $new_name:ident, $old_name:ty, no frills) => {
+    $(#[$attr])*
+    #[repr(transparent)]
+    pub struct $new_name($old_name);
+  };
+}
+```
+
+Finally, we usually want to have the wrapped value be totally private, but there
+_are_ occasions where that's not the case. For this, we can allow the wrapped
+field to accept a visibility modifier.
+
+```rust
+#[macro_export]
+macro_rules! newtype {
+  ($(#[$attr:meta])* $new_name:ident, $v:vis $old_name:ty) => {
+    $(#[$attr])*
+    #[repr(transparent)]
+    pub struct $new_name($v $old_name);
+    impl $new_name {
+      /// A `const` "zero value" constructor
+      pub const fn new() -> Self {
+        $new_name(0)
+      }
+    }
+  };
+  ($(#[$attr:meta])* $new_name:ident, $v:vis $old_name:ty, no frills) => {
+    $(#[$attr])*
+    #[repr(transparent)]
+    pub struct $new_name($v $old_name);
+  };
+}
+```

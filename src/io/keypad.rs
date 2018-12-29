@@ -13,10 +13,12 @@ pub const KEYINPUT: VolAddress<u16> = unsafe { VolAddress::new_unchecked(0x400_0
 /// A "tribool" value helps us interpret the arrow pad.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(i32)]
-#[allow(missing_docs)]
 pub enum TriBool {
+  /// -1
   Minus = -1,
+  /// +0
   Neutral = 0,
+  /// +1
   Plus = 1,
 }
 
@@ -31,16 +33,21 @@ newtype! {
 
 #[allow(missing_docs)]
 impl KeyInput {
-  register_bit!(A_BIT, u16, 1, a_pressed);
-  register_bit!(B_BIT, u16, 1 << 1, b_pressed);
-  register_bit!(SELECT_BIT, u16, 1 << 2, select_pressed);
-  register_bit!(START_BIT, u16, 1 << 3, start_pressed);
-  register_bit!(RIGHT_BIT, u16, 1 << 4, right_pressed);
-  register_bit!(LEFT_BIT, u16, 1 << 5, left_pressed);
-  register_bit!(UP_BIT, u16, 1 << 6, up_pressed);
-  register_bit!(DOWN_BIT, u16, 1 << 7, down_pressed);
-  register_bit!(R_BIT, u16, 1 << 8, r_pressed);
-  register_bit!(L_BIT, u16, 1 << 9, l_pressed);
+  bool_bits!(
+    u16,
+    [
+      (0, a),
+      (1, b),
+      (2, select),
+      (3, start),
+      (4, right),
+      (5, left),
+      (6, up),
+      (7, down),
+      (8, r),
+      (9, l)
+    ]
+  );
 
   /// Takes the set difference between these keys and another set of keys.
   pub fn difference(self, other: Self) -> Self {
@@ -50,9 +57,9 @@ impl KeyInput {
   /// Gives the arrow pad value as a tribool, with Plus being increased column
   /// value (right).
   pub fn column_direction(self) -> TriBool {
-    if self.right_pressed() {
+    if self.right() {
       TriBool::Plus
-    } else if self.left_pressed() {
+    } else if self.left() {
       TriBool::Minus
     } else {
       TriBool::Neutral
@@ -62,9 +69,9 @@ impl KeyInput {
   /// Gives the arrow pad value as a tribool, with Plus being increased row
   /// value (down).
   pub fn row_direction(self) -> TriBool {
-    if self.down_pressed() {
+    if self.down() {
       TriBool::Plus
-    } else if self.up_pressed() {
+    } else if self.up() {
       TriBool::Minus
     } else {
       TriBool::Neutral
@@ -100,19 +107,23 @@ newtype! {
 }
 #[allow(missing_docs)]
 impl KeyInterruptSetting {
-  register_bit!(A_BIT, u16, 1, a_pressed);
-  register_bit!(B_BIT, u16, 1 << 1, b_pressed);
-  register_bit!(SELECT_BIT, u16, 1 << 2, select_pressed);
-  register_bit!(START_BIT, u16, 1 << 3, start_pressed);
-  register_bit!(RIGHT_BIT, u16, 1 << 4, right_pressed);
-  register_bit!(LEFT_BIT, u16, 1 << 5, left_pressed);
-  register_bit!(UP_BIT, u16, 1 << 6, up_pressed);
-  register_bit!(DOWN_BIT, u16, 1 << 7, down_pressed);
-  register_bit!(R_BIT, u16, 1 << 8, r_pressed);
-  register_bit!(L_BIT, u16, 1 << 9, l_pressed);
-  //
-  register_bit!(IRQ_ENABLE_BIT, u16, 1 << 14, irq_enabled);
-  register_bit!(IRQ_AND_BIT, u16, 1 << 15, irq_logical_and);
+  bool_bits!(
+    u16,
+    [
+      (0, a),
+      (1, b),
+      (2, select),
+      (3, start),
+      (4, right),
+      (5, left),
+      (6, up),
+      (7, down),
+      (8, r),
+      (9, l),
+      (14, irq_enabled),
+      (15, irq_logical_and)
+    ]
+  );
 }
 
 /// Use this to configure when a keypad interrupt happens.

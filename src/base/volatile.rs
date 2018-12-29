@@ -2,6 +2,8 @@
 
 use core::{cmp::Ordering, iter::FusedIterator, marker::PhantomData, num::NonZeroUsize};
 
+// TODO: striding block/iter
+
 /// Abstracts the use of a volatile hardware address.
 ///
 /// If you're trying to do anything other than abstract a volatile hardware
@@ -284,7 +286,7 @@ impl<T> VolAddressBlock<T> {
     if slot < self.slots {
       unsafe { self.vol_address.offset(slot as isize) }
     } else {
-      panic!("Index Requested: {} >= Bound: {}", slot, self.slots)
+      panic!("Index Requested: {} >= Slot Count: {}", slot, self.slots)
     }
   }
 

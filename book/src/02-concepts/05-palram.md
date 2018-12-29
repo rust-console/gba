@@ -16,8 +16,8 @@ the larger 16-bit location. This doesn't really affect us much with PALRAM,
 because palette values are all supposed to be `u16` anyway.
 
 The palette memory actually contains not one, but _two_ sets of palettes. First
-there's 256 entries for the background palette data (starting at `0x5000000`),
-and then there's 256 entries for object palette data (starting at `0x5000200`).
+there's 256 entries for the background palette data (starting at `0x500_0000`),
+and then there's 256 entries for object palette data (starting at `0x500_0200`).
 
 The GBA also has two modes for palette access: 8-bits-per-pixel (8bpp) and
 4-bits-per-pixel (4bpp).

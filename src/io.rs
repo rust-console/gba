@@ -8,8 +8,8 @@
 
 use super::*;
 
-use gba_proc_macro::register_bit;
-
+pub mod background;
 pub mod display;
 pub mod dma;
 pub mod keypad;
+pub mod timers;

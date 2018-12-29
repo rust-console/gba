@@ -91,29 +91,70 @@ good fit for the GBA (I honestly haven't looked into it).
 
 ## Bare Metal Panic
 
-TODO: expand this
+If our code panics, we usually want to see that panic message. Unfortunately,
+without a way to access something like `stdout` or `stderr` we've gotta do
+something a little weirder.
 
-* Write `0xC0DE` to `0x4fff780` (`u16`) to enable mGBA logging. Write any other
-  value to disable it.
-* Read `0x4fff780` (`u16`) to check mGBA logging status.
-  * You get `0x1DEA` if debugging is active.
-  * Otherwise you get standard open bus nonsense values.
-* Write your message into the virtual `[u8; 255]` array starting at `0x4fff600`.
-  mGBA will interpret these bytes as a CString value.
-* Write `0x100` PLUS the message level to `0x4fff700` (`u16`) when you're ready
-  to send a message line:
-  * 0: Fatal (halts execution with a popup)
-  * 1: Error
-  * 2: Warning
-  * 3: Info
-  * 4: Debug
-* Sending the message also automatically zeroes the output buffer.
-* View the output within  the "Tools" menu, "View Logs...". Note that the Fatal
-  message, if any doesn't get logged.
+If our program is running within the `mGBA` emulator, version 0.7 or later, we
+can access a special set of addresses that allow us to send out `CString`
+values, which then appear within a message log that you can check.
 
-TODO: this will probably fail without a `__clzsi2` implementation, which is a
-good seg for the next section
+We can capture this behavior by making an `MGBADebug` type, and then implement
+`core::fmt::Write` for that type. Once done, the `write!` macro will let us
+target the mGBA debug output channel.
+
+When used, it looks like this:
+
+```rust
+#[panic_handler]
+fn panic(info: &core::panic::PanicInfo) -> ! {
+  use core::fmt::Write;
+  use gba::mgba::{MGBADebug, MGBADebugLevel};
+
+  if let Some(mut mgba) = MGBADebug::new() {
+    let _ = write!(mgba, "{}", info);
+    mgba.send(MGBADebugLevel::Fatal);
+  }
+  loop {}
+}
+```
+
+If you want to follow the particulars you can check the `MGBADebug` source in
+the `gba` crate. Basically, there's one address you can use to try and activate
+the debug output, and if it works you write your message into the "array" at
+another address, and then finally write a send value to a third address. You'll
+need to have read the [volatile](03-volatile_destination.md) section for the
+details to make sense.
 
 ## LLVM Intrinsics
 
-TODO: explain that we'll occasionally have to provide some intrinsics.
+The above code will make your program fail to build in debug mode, saying that
+`__clzsi2` can't be found. This is a special builtin function that LLVM attempts
+to use when there's no hardware version of an operation it wants to do (in this
+case, counting the leading zeros). It's not _actually_ necessary in this case,
+which is why you only need it in debug mode. The higher optimization level of
+release mode makes LLVM pre-compute more and fold more constants or whatever and
+then it stops trying to call `__clzsi2`.
+
+Unfortunately, sometimes a build will fail with a missing intrinsic even in
+release mode.
+
+If LLVM wants _core_ to have that intrinsic then you're in
+trouble, you'll have to send a PR to the
+[compiler-builtins](https://github.com/rust-lang-nursery/compiler-builtins)
+repository and hope to get it into rust itself.
+
+If LLVM wants _your code_ to have the intrinsic then you're in less trouble. You
+can look up the details and then implement it yourself. It can go anywhere in
+your program, as long as it has the right ABI and name. In the case of
+`__clzsi2` it takes a `usize` and returns a `usize`, so you'd write something
+like:
+
+```rust
+#[no_mangle]
+pub extern "C" fn __clzsi2(mut x: usize) -> usize {
+  //
+}
+```
+
+And so on for whatever other missing intrinsic.

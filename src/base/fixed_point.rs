@@ -230,7 +230,7 @@ fixed_point_unsigned_division! {u32}
 pub type fx8_8 = Fx<i16, U8>;
 
 #[cfg(test)]
-mod fixed_tests {
+mod tests {
   use super::*;
 
   #[test]
