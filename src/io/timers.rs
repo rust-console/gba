@@ -65,9 +65,12 @@ newtype! {
   TimerControlSetting, u16
 }
 impl TimerControlSetting {
-  bool_bits!(u16, [(6, overflow_irq), (7, enabled)]);
-
-  multi_bits!(u16, [(0, 3, tick_rate, TimerTickRate, CPU1, CPU64, CPU256, CPU1024, Cascade),]);
+  phantom_fields! {
+    self.0: u16,
+    tick_rate: 0-2=TimerTickRate<CPU1, CPU64, CPU256, CPU1024, Cascade>,
+    overflow_irq: 6,
+    enabled: 7,
+  }
 }
 
 /// Controls how often an enabled timer ticks upward.

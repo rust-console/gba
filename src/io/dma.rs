@@ -68,25 +68,16 @@ newtype! {
 }
 #[allow(missing_docs)]
 impl DMAControlSetting {
-  bool_bits!(u16, [(9, dma_repeat), (10, use_32bit), (14, irq_when_done), (15, enabled)]);
-
-  multi_bits!(
-    u16,
-    [
-      (
-        5,
-        2,
-        dest_address_control,
-        DMADestAddressControl,
-        Increment,
-        Decrement,
-        Fixed,
-        IncrementReload
-      ),
-      (7, 2, source_address_control, DMASrcAddressControl, Increment, Decrement, Fixed),
-      (12, 2, start_time, DMAStartTiming, Immediate, VBlank, HBlank, Special)
-    ]
-  );
+  phantom_fields! {
+    self.0: u16,
+    dest_address_control: 5-6=DMADestAddressControl<Increment, Decrement, Fixed, IncrementReload>,
+    source_address_control: 7-8=DMASrcAddressControl<Increment, Decrement, Fixed>,
+    dma_repeat: 9,
+    use_32bit: 10,
+    start_time: 12-13=DMAStartTiming<Immediate, VBlank, HBlank, Special>,
+    irq_when_done: 14,
+    enabled: 15,
+  }
 }
 
 /// Sets how the destination address should be adjusted per data transfer.

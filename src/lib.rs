@@ -20,7 +20,7 @@
 //! **Do not** use this crate in programs that aren't running on the GBA. If you
 //! do, it's a giant bag of Undefined Behavior.
 
-pub(crate) use gba_proc_macro::{bool_bits, multi_bits};
+pub(crate) use gba_proc_macro::phantom_fields;
 
 /// Assists in defining a newtype wrapper over some base type.
 ///

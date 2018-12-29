@@ -15,17 +15,15 @@ newtype! {
   OBJAttr0, u16
 }
 impl OBJAttr0 {
-  bool_bits!(u16, [(12, mosaic), (13, is_8bpp),]);
-
-  multi_bits!(
-    u16,
-    [
-      (0, 8, row_coordinate),
-      (8, 2, obj_rendering, ObjectRender, Normal, Affine, Disabled, DoubleAreaAffine),
-      (10, 2, obj_mode, ObjectMode, Normal, SemiTransparent, OBJWindow),
-      (14, 2, obj_shape, ObjectShape, Square, Horizontal, Vertical),
-    ]
-  );
+  phantom_fields! {
+    self.0: u16,
+    row_coordinate: 0-7,
+    obj_rendering: 8-9=ObjectRender<Normal, Affine, Disabled, DoubleAreaAffine>,
+    obj_mode: 10-11=ObjectMode<Normal, SemiTransparent, OBJWindow>,
+    mosaic: 12,
+    is_8bpp: 13,
+    obj_shape: 14-15=ObjectShape<Square, Horizontal, Vertical>,
+  }
 }
 
 /// What style of rendering for this object
@@ -81,16 +79,14 @@ newtype! {
   OBJAttr1, u16
 }
 impl OBJAttr1 {
-  bool_bits!(u16, [(12, hflip), (13, vflip),]);
-
-  multi_bits!(
-    u16,
-    [
-      (0, 9, col_coordinate),
-      (9, 5, affine_index),
-      (14, 2, obj_size, ObjectSize, Zero, One, Two, Three),
-    ]
-  );
+  phantom_fields! {
+    self.0: u16,
+    col_coordinate: 0-8,
+    affine_index: 9-13,
+    hflip: 12,
+    vflip: 13,
+    obj_size: 14-15=ObjectSize<Zero, One, Two, Three>,
+  }
 }
 
 /// The object's size.
@@ -127,5 +123,10 @@ newtype! {
   OBJAttr2, u16
 }
 impl OBJAttr2 {
-  multi_bits!(u16, [(0, 10, tile_id), (10, 2, priority), (12, 4, palbank),]);
+  phantom_fields! {
+    self.0: u16,
+    tile_id: 0-9,
+    priority: 10-11,
+    palbank: 12-15,
+  }
 }

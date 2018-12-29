@@ -31,26 +31,23 @@ newtype!(
 
 #[allow(missing_docs)]
 impl DisplayControlSetting {
-  bool_bits!(
-    u16,
-    [
-      (3, cgb_mode),
-      (4, frame1),
-      (5, hblank_interval_free),
-      (6, oam_memory_1d),
-      (7, force_vblank),
-      (8, bg0),
-      (9, bg1),
-      (10, bg2),
-      (11, bg3),
-      (12, obj),
-      (13, win0),
-      (14, win1),
-      (15, obj_window)
-    ]
-  );
-
-  multi_bits!(u16, [(0, 3, mode, DisplayMode, Mode0, Mode1, Mode2, Mode3, Mode4, Mode5)]);
+  phantom_fields! {
+    self.0: u16,
+    mode: 0-2=DisplayMode<Mode0, Mode1, Mode2, Mode3, Mode4, Mode5>,
+    cgb_mode: 3,
+    frame1: 4,
+    hblank_interval_free: 5,
+    oam_memory_1d: 6,
+    force_vblank: 7,
+    bg0: 8,
+    bg1: 9,
+    bg2: 10,
+    bg3: 11,
+    obj: 12,
+    win0: 13,
+    win1: 14,
+    obj_window: 15,
+  }
 }
 
 /// The six display modes available on the GBA.
@@ -113,19 +110,16 @@ newtype!(
 
 #[allow(missing_docs)]
 impl DisplayStatusSetting {
-  bool_bits!(
-    u16,
-    [
-      (0, vblank_flag),
-      (1, hblank_flag),
-      (2, vcounter_flag),
-      (3, vblank_irq_enable),
-      (4, hblank_irq_enable),
-      (5, vcounter_irq_enable),
-    ]
-  );
-
-  multi_bits!(u16, [(8, 8, vcount_setting)]);
+  phantom_fields! {
+    self.0: u16,
+    vblank_flag: 0,
+    hblank_flag: 1,
+    vcounter_flag: 2,
+    vblank_irq_enable: 3,
+    hblank_irq_enable: 4,
+    vcounter_irq_enable: 5,
+    vcount_setting: 8-15,
+  }
 }
 
 /// Vertical Counter (LY). Read only.
@@ -178,13 +172,11 @@ newtype! {
   MosaicSetting, u16
 }
 impl MosaicSetting {
-  multi_bits!(
-    u16,
-    [
-      (0, 4, bg_horizontal_inc),
-      (4, 4, bg_vertical_inc),
-      (8, 4, obj_horizontal_inc),
-      (12, 4, obj_vertical_inc),
-    ]
-  );
+  phantom_fields! {
+    self.0: u16,
+    bg_horizontal_inc: 0-3,
+    bg_vertical_inc: 4-7,
+    obj_horizontal_inc: 8-11,
+    obj_vertical_inc: 12-15,
+  }
 }
