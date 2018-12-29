@@ -539,36 +539,65 @@ the standard library types to be used &quot;for free&quot; once it was set up, o
 custom allocator that's GBA specific if Rust's global allocator style isn't a
 good fit for the GBA (I honestly haven't looked into it).</p>
 <a class="header" href="#bare-metal-panic" id="bare-metal-panic"><h2>Bare Metal Panic</h2></a>
-<p>TODO: expand this</p>
-<ul>
-<li>Write <code>0xC0DE</code> to <code>0x4fff780</code> (<code>u16</code>) to enable mGBA logging. Write any other
-value to disable it.</li>
-<li>Read <code>0x4fff780</code> (<code>u16</code>) to check mGBA logging status.
-<ul>
-<li>You get <code>0x1DEA</code> if debugging is active.</li>
-<li>Otherwise you get standard open bus nonsense values.</li>
-</ul>
-</li>
-<li>Write your message into the virtual <code>[u8; 255]</code> array starting at <code>0x4fff600</code>.
-mGBA will interpret these bytes as a CString value.</li>
-<li>Write <code>0x100</code> PLUS the message level to <code>0x4fff700</code> (<code>u16</code>) when you're ready
-to send a message line:
-<ul>
-<li>0: Fatal (halts execution with a popup)</li>
-<li>1: Error</li>
-<li>2: Warning</li>
-<li>3: Info</li>
-<li>4: Debug</li>
-</ul>
-</li>
-<li>Sending the message also automatically zeroes the output buffer.</li>
-<li>View the output within  the &quot;Tools&quot; menu, &quot;View Logs...&quot;. Note that the Fatal
-message, if any doesn't get logged.</li>
-</ul>
-<p>TODO: this will probably fail without a <code>__clzsi2</code> implementation, which is a
-good seg for the next section</p>
+<p>If our code panics, we usually want to see that panic message. Unfortunately,
+without a way to access something like <code>stdout</code> or <code>stderr</code> we've gotta do
+something a little weirder.</p>
+<p>If our program is running within the <code>mGBA</code> emulator, version 0.7 or later, we
+can access a special set of addresses that allow us to send out <code>CString</code>
+values, which then appear within a message log that you can check.</p>
+<p>We can capture this behavior by making an <code>MGBADebug</code> type, and then implement
+<code>core::fmt::Write</code> for that type. Once done, the <code>write!</code> macro will let us
+target the mGBA debug output channel.</p>
+<p>When used, it looks like this:</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+#[panic_handler]
+fn panic(info: &amp;core::panic::PanicInfo) -&gt; ! {
+  use core::fmt::Write;
+  use gba::mgba::{MGBADebug, MGBADebugLevel};
+
+  if let Some(mut mgba) = MGBADebug::new() {
+    let _ = write!(mgba, &quot;{}&quot;, info);
+    mgba.send(MGBADebugLevel::Fatal);
+  }
+  loop {}
+}
+#}</code></pre></pre>
+<p>If you want to follow the particulars you can check the <code>MGBADebug</code> source in
+the <code>gba</code> crate. Basically, there's one address you can use to try and activate
+the debug output, and if it works you write your message into the &quot;array&quot; at
+another address, and then finally write a send value to a third address. You'll
+need to have read the <a href="03-volatile_destination.html">volatile</a> section for the
+details to make sense.</p>
 <a class="header" href="#llvm-intrinsics" id="llvm-intrinsics"><h2>LLVM Intrinsics</h2></a>
-<p>TODO: explain that we'll occasionally have to provide some intrinsics.</p>
+<p>The above code will make your program fail to build in debug mode, saying that
+<code>__clzsi2</code> can't be found. This is a special builtin function that LLVM attempts
+to use when there's no hardware version of an operation it wants to do (in this
+case, counting the leading zeros). It's not <em>actually</em> necessary in this case,
+which is why you only need it in debug mode. The higher optimization level of
+release mode makes LLVM pre-compute more and fold more constants or whatever and
+then it stops trying to call <code>__clzsi2</code>.</p>
+<p>Unfortunately, sometimes a build will fail with a missing intrinsic even in
+release mode.</p>
+<p>If LLVM wants <em>core</em> to have that intrinsic then you're in
+trouble, you'll have to send a PR to the
+<a href="https://github.com/rust-lang-nursery/compiler-builtins">compiler-builtins</a>
+repository and hope to get it into rust itself.</p>
+<p>If LLVM wants <em>your code</em> to have the intrinsic then you're in less trouble. You
+can look up the details and then implement it yourself. It can go anywhere in
+your program, as long as it has the right ABI and name. In the case of
+<code>__clzsi2</code> it takes a <code>usize</code> and returns a <code>usize</code>, so you'd write something
+like:</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+#[no_mangle]
+pub extern &quot;C&quot; fn __clzsi2(mut x: usize) -&gt; usize {
+  //
+}
+#}</code></pre></pre>
+<p>And so on for whatever other missing intrinsic.</p>
 <a class="header" href="#fixed-only" id="fixed-only"><h1>Fixed Only</h1></a>
 <p>In addition to not having much of the standard library available, we don't even
 have a floating point unit available! We can't do floating point math in
@@ -1481,6 +1510,10 @@ style, but there are some rules and considerations here:</p>
 </ul>
 </li>
 </ul>
+<p><strong>As a reminder:</strong> remember that <code>macro_rules</code> macros have to appear <em>before</em>
+they're invoked in your source, so the <code>newtype</code> macro will always have to be at
+the very top of your file, or if you put it in a module within your project
+you'll need to declare the module before anything that uses it.</p>
 <a class="header" href="#upgrade-that-macro" id="upgrade-that-macro"><h2>Upgrade That Macro!</h2></a>
 <p>We also want to be able to add <code>derive</code> stuff and doc comments to our newtype.
 Within the context of <code>macro_rules!</code> definitions these are called &quot;meta&quot;. Since
@@ -1508,35 +1541,81 @@ newtype! {
   PixelColor, u16
 }
 #}</code></pre></pre>
-<p>And that's about all we'll need for the examples.</p>
-<p><strong>As a reminder:</strong> remember that <code>macro_rules</code> macros have to appear <em>before</em>
-they're invoked in your source, so the <code>newtype</code> macro will always have to be at
-the very top of your file, or if you put it in a module within your project
-you'll need to declare the module before anything that uses it.</p>
-<a class="header" href="#potential-homework" id="potential-homework"><h2>Potential Homework</h2></a>
-<p>If you wanted to keep going and get really fancy with it, you could potentially
-add a lot more:</p>
-<ul>
-<li>Make a <code>pub const fn new() -&gt; Self</code> method that outputs the base value in a
-const way. Combine this with builder style &quot;setter&quot; methods that are also
-const and you can get the compiler to do quite a bit of the value building
-work at compile time.</li>
-<li>Making the macro optionally emit a <code>From</code> impl to unwrap it back into the base
-type.</li>
-<li>Allow for visibility modifiers to be applied to the inner field and the newly
-generated type.</li>
-<li>Allowing for generic newtypes. You already saw the need for this once in the
-volatile section. Unfortunately, this particular part gets really tricky if
-you're using <code>macro_rules!</code>, so you might need to move up to a full
-<code>proc_macro</code>. Having a <code>proc_macro</code> isn't bad except that they have to be
-defined in a crate of their own and they're compiled before use. You can't
-ever use them in the crate that defines them, so we won't be using them in any
-of our single file examples.</li>
-<li>Allowing for optional <code>Deref</code> and <code>DerefMut</code> of the inner value. This takes
-away most all the safety aspect of doing the newtype, but there may be times
-for it. As an example, you could make a newtype with a different form of
-Display impl that you want to otherwise treat as the base type in all places.</li>
-</ul>
+<p>Next, we can allow for the wrapping of types that aren't just a single
+identifier by changing <code>$old_name</code> from <code>:ident</code> to <code>:ty</code>. We can't <em>also</em> do
+this for the <code>$new_type</code> part because declaring a new struct expects a valid
+identifier that's <em>not</em> already declared (obviously), and <code>:ty</code> is intended for
+capturing types that already exist.</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+#[macro_export]
+macro_rules! newtype {
+  ($(#[$attr:meta])* $new_name:ident, $old_name:ty) =&gt; {
+    $(#[$attr])*
+    #[repr(transparent)]
+    pub struct $new_name($old_name);
+  };
+}
+#}</code></pre></pre>
+<p>Next of course we'll want to usually have a <code>new</code> method that's const and just
+gives a 0 value. We won't always be making a newtype over a number value, but we
+often will. It's usually silly to have a <code>new</code> method with no arguments since we
+might as well just impl <code>Default</code>, but <code>Default::default</code> isn't <code>const</code>, so
+having <code>pub const fn new() -&gt; Self</code> is justified here.</p>
+<p>Here, the token <code>0</code> is given the <code>{integer}</code> type, which can be converted into
+any of the integer types as needed, but it still can't be converted into an
+array type or a pointer or things like that. Accordingly we've added the &quot;no
+frills&quot; option which declares the struct and no <code>new</code> method.</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+#[macro_export]
+macro_rules! newtype {
+  ($(#[$attr:meta])* $new_name:ident, $old_name:ty) =&gt; {
+    $(#[$attr])*
+    #[repr(transparent)]
+    pub struct $new_name($old_name);
+    impl $new_name {
+      /// A `const` &quot;zero value&quot; constructor
+      pub const fn new() -&gt; Self {
+        $new_name(0)
+      }
+    }
+  };
+  ($(#[$attr:meta])* $new_name:ident, $old_name:ty, no frills) =&gt; {
+    $(#[$attr])*
+    #[repr(transparent)]
+    pub struct $new_name($old_name);
+  };
+}
+#}</code></pre></pre>
+<p>Finally, we usually want to have the wrapped value be totally private, but there
+<em>are</em> occasions where that's not the case. For this, we can allow the wrapped
+field to accept a visibility modifier.</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+#[macro_export]
+macro_rules! newtype {
+  ($(#[$attr:meta])* $new_name:ident, $v:vis $old_name:ty) =&gt; {
+    $(#[$attr])*
+    #[repr(transparent)]
+    pub struct $new_name($v $old_name);
+    impl $new_name {
+      /// A `const` &quot;zero value&quot; constructor
+      pub const fn new() -&gt; Self {
+        $new_name(0)
+      }
+    }
+  };
+  ($(#[$attr:meta])* $new_name:ident, $v:vis $old_name:ty, no frills) =&gt; {
+    $(#[$attr])*
+    #[repr(transparent)]
+    pub struct $new_name($v $old_name);
+  };
+}
+#}</code></pre></pre>
 <a class="header" href="#constant-assertions" id="constant-assertions"><h1>Constant Assertions</h1></a>
 <p>Have you ever wanted to assert things <em>even before runtime</em>? We all have, of
 course. Particularly when the runtime machine is a poor little GBA, we'd like to
@@ -1939,8 +2018,8 @@ byte: if you try to write just 1 byte, it writes that byte into <em>both</em> pa
 the larger 16-bit location. This doesn't really affect us much with PALRAM,
 because palette values are all supposed to be <code>u16</code> anyway.</p>
 <p>The palette memory actually contains not one, but <em>two</em> sets of palettes. First
-there's 256 entries for the background palette data (starting at <code>0x5000000</code>),
-and then there's 256 entries for object palette data (starting at <code>0x5000200</code>).</p>
+there's 256 entries for the background palette data (starting at <code>0x500_0000</code>),
+and then there's 256 entries for object palette data (starting at <code>0x500_0200</code>).</p>
 <p>The GBA also has two modes for palette access: 8-bits-per-pixel (8bpp) and
 4-bits-per-pixel (4bpp).</p>
 <ul>

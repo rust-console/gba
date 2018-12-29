@@ -152,8 +152,8 @@ byte: if you try to write just 1 byte, it writes that byte into <em>both</em> pa
 the larger 16-bit location. This doesn't really affect us much with PALRAM,
 because palette values are all supposed to be <code>u16</code> anyway.</p>
 <p>The palette memory actually contains not one, but <em>two</em> sets of palettes. First
-there's 256 entries for the background palette data (starting at <code>0x5000000</code>),
-and then there's 256 entries for object palette data (starting at <code>0x5000200</code>).</p>
+there's 256 entries for the background palette data (starting at <code>0x500_0000</code>),
+and then there's 256 entries for object palette data (starting at <code>0x500_0200</code>).</p>
 <p>The GBA also has two modes for palette access: 8-bits-per-pixel (8bpp) and
 4-bits-per-pixel (4bpp).</p>
 <ul>

@@ -227,6 +227,10 @@ style, but there are some rules and considerations here:</p>
 </ul>
 </li>
 </ul>
+<p><strong>As a reminder:</strong> remember that <code>macro_rules</code> macros have to appear <em>before</em>
+they're invoked in your source, so the <code>newtype</code> macro will always have to be at
+the very top of your file, or if you put it in a module within your project
+you'll need to declare the module before anything that uses it.</p>
 <a class="header" href="#upgrade-that-macro" id="upgrade-that-macro"><h2>Upgrade That Macro!</h2></a>
 <p>We also want to be able to add <code>derive</code> stuff and doc comments to our newtype.
 Within the context of <code>macro_rules!</code> definitions these are called &quot;meta&quot;. Since
@@ -254,35 +258,81 @@ newtype! {
   PixelColor, u16
 }
 #}</code></pre></pre>
-<p>And that's about all we'll need for the examples.</p>
-<p><strong>As a reminder:</strong> remember that <code>macro_rules</code> macros have to appear <em>before</em>
-they're invoked in your source, so the <code>newtype</code> macro will always have to be at
-the very top of your file, or if you put it in a module within your project
-you'll need to declare the module before anything that uses it.</p>
-<a class="header" href="#potential-homework" id="potential-homework"><h2>Potential Homework</h2></a>
-<p>If you wanted to keep going and get really fancy with it, you could potentially
-add a lot more:</p>
-<ul>
-<li>Make a <code>pub const fn new() -&gt; Self</code> method that outputs the base value in a
-const way. Combine this with builder style &quot;setter&quot; methods that are also
-const and you can get the compiler to do quite a bit of the value building
-work at compile time.</li>
-<li>Making the macro optionally emit a <code>From</code> impl to unwrap it back into the base
-type.</li>
-<li>Allow for visibility modifiers to be applied to the inner field and the newly
-generated type.</li>
-<li>Allowing for generic newtypes. You already saw the need for this once in the
-volatile section. Unfortunately, this particular part gets really tricky if
-you're using <code>macro_rules!</code>, so you might need to move up to a full
-<code>proc_macro</code>. Having a <code>proc_macro</code> isn't bad except that they have to be
-defined in a crate of their own and they're compiled before use. You can't
-ever use them in the crate that defines them, so we won't be using them in any
-of our single file examples.</li>
-<li>Allowing for optional <code>Deref</code> and <code>DerefMut</code> of the inner value. This takes
-away most all the safety aspect of doing the newtype, but there may be times
-for it. As an example, you could make a newtype with a different form of
-Display impl that you want to otherwise treat as the base type in all places.</li>
-</ul>
+<p>Next, we can allow for the wrapping of types that aren't just a single
+identifier by changing <code>$old_name</code> from <code>:ident</code> to <code>:ty</code>. We can't <em>also</em> do
+this for the <code>$new_type</code> part because declaring a new struct expects a valid
+identifier that's <em>not</em> already declared (obviously), and <code>:ty</code> is intended for
+capturing types that already exist.</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+#[macro_export]
+macro_rules! newtype {
+  ($(#[$attr:meta])* $new_name:ident, $old_name:ty) =&gt; {
+    $(#[$attr])*
+    #[repr(transparent)]
+    pub struct $new_name($old_name);
+  };
+}
+#}</code></pre></pre>
+<p>Next of course we'll want to usually have a <code>new</code> method that's const and just
+gives a 0 value. We won't always be making a newtype over a number value, but we
+often will. It's usually silly to have a <code>new</code> method with no arguments since we
+might as well just impl <code>Default</code>, but <code>Default::default</code> isn't <code>const</code>, so
+having <code>pub const fn new() -&gt; Self</code> is justified here.</p>
+<p>Here, the token <code>0</code> is given the <code>{integer}</code> type, which can be converted into
+any of the integer types as needed, but it still can't be converted into an
+array type or a pointer or things like that. Accordingly we've added the &quot;no
+frills&quot; option which declares the struct and no <code>new</code> method.</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+#[macro_export]
+macro_rules! newtype {
+  ($(#[$attr:meta])* $new_name:ident, $old_name:ty) =&gt; {
+    $(#[$attr])*
+    #[repr(transparent)]
+    pub struct $new_name($old_name);
+    impl $new_name {
+      /// A `const` &quot;zero value&quot; constructor
+      pub const fn new() -&gt; Self {
+        $new_name(0)
+      }
+    }
+  };
+  ($(#[$attr:meta])* $new_name:ident, $old_name:ty, no frills) =&gt; {
+    $(#[$attr])*
+    #[repr(transparent)]
+    pub struct $new_name($old_name);
+  };
+}
+#}</code></pre></pre>
+<p>Finally, we usually want to have the wrapped value be totally private, but there
+<em>are</em> occasions where that's not the case. For this, we can allow the wrapped
+field to accept a visibility modifier.</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+#[macro_export]
+macro_rules! newtype {
+  ($(#[$attr:meta])* $new_name:ident, $v:vis $old_name:ty) =&gt; {
+    $(#[$attr])*
+    #[repr(transparent)]
+    pub struct $new_name($v $old_name);
+    impl $new_name {
+      /// A `const` &quot;zero value&quot; constructor
+      pub const fn new() -&gt; Self {
+        $new_name(0)
+      }
+    }
+  };
+  ($(#[$attr:meta])* $new_name:ident, $v:vis $old_name:ty, no frills) =&gt; {
+    $(#[$attr])*
+    #[repr(transparent)]
+    pub struct $new_name($v $old_name);
+  };
+}
+#}</code></pre></pre>
 
                     </main>
 

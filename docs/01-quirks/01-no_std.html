@@ -217,36 +217,65 @@ the standard library types to be used &quot;for free&quot; once it was set up, o
 custom allocator that's GBA specific if Rust's global allocator style isn't a
 good fit for the GBA (I honestly haven't looked into it).</p>
 <a class="header" href="#bare-metal-panic" id="bare-metal-panic"><h2>Bare Metal Panic</h2></a>
-<p>TODO: expand this</p>
-<ul>
-<li>Write <code>0xC0DE</code> to <code>0x4fff780</code> (<code>u16</code>) to enable mGBA logging. Write any other
-value to disable it.</li>
-<li>Read <code>0x4fff780</code> (<code>u16</code>) to check mGBA logging status.
-<ul>
-<li>You get <code>0x1DEA</code> if debugging is active.</li>
-<li>Otherwise you get standard open bus nonsense values.</li>
-</ul>
-</li>
-<li>Write your message into the virtual <code>[u8; 255]</code> array starting at <code>0x4fff600</code>.
-mGBA will interpret these bytes as a CString value.</li>
-<li>Write <code>0x100</code> PLUS the message level to <code>0x4fff700</code> (<code>u16</code>) when you're ready
-to send a message line:
-<ul>
-<li>0: Fatal (halts execution with a popup)</li>
-<li>1: Error</li>
-<li>2: Warning</li>
-<li>3: Info</li>
-<li>4: Debug</li>
-</ul>
-</li>
-<li>Sending the message also automatically zeroes the output buffer.</li>
-<li>View the output within  the &quot;Tools&quot; menu, &quot;View Logs...&quot;. Note that the Fatal
-message, if any doesn't get logged.</li>
-</ul>
-<p>TODO: this will probably fail without a <code>__clzsi2</code> implementation, which is a
-good seg for the next section</p>
+<p>If our code panics, we usually want to see that panic message. Unfortunately,
+without a way to access something like <code>stdout</code> or <code>stderr</code> we've gotta do
+something a little weirder.</p>
+<p>If our program is running within the <code>mGBA</code> emulator, version 0.7 or later, we
+can access a special set of addresses that allow us to send out <code>CString</code>
+values, which then appear within a message log that you can check.</p>
+<p>We can capture this behavior by making an <code>MGBADebug</code> type, and then implement
+<code>core::fmt::Write</code> for that type. Once done, the <code>write!</code> macro will let us
+target the mGBA debug output channel.</p>
+<p>When used, it looks like this:</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+#[panic_handler]
+fn panic(info: &amp;core::panic::PanicInfo) -&gt; ! {
+  use core::fmt::Write;
+  use gba::mgba::{MGBADebug, MGBADebugLevel};
+
+  if let Some(mut mgba) = MGBADebug::new() {
+    let _ = write!(mgba, &quot;{}&quot;, info);
+    mgba.send(MGBADebugLevel::Fatal);
+  }
+  loop {}
+}
+#}</code></pre></pre>
+<p>If you want to follow the particulars you can check the <code>MGBADebug</code> source in
+the <code>gba</code> crate. Basically, there's one address you can use to try and activate
+the debug output, and if it works you write your message into the &quot;array&quot; at
+another address, and then finally write a send value to a third address. You'll
+need to have read the <a href="03-volatile_destination.html">volatile</a> section for the
+details to make sense.</p>
 <a class="header" href="#llvm-intrinsics" id="llvm-intrinsics"><h2>LLVM Intrinsics</h2></a>
-<p>TODO: explain that we'll occasionally have to provide some intrinsics.</p>
+<p>The above code will make your program fail to build in debug mode, saying that
+<code>__clzsi2</code> can't be found. This is a special builtin function that LLVM attempts
+to use when there's no hardware version of an operation it wants to do (in this
+case, counting the leading zeros). It's not <em>actually</em> necessary in this case,
+which is why you only need it in debug mode. The higher optimization level of
+release mode makes LLVM pre-compute more and fold more constants or whatever and
+then it stops trying to call <code>__clzsi2</code>.</p>
+<p>Unfortunately, sometimes a build will fail with a missing intrinsic even in
+release mode.</p>
+<p>If LLVM wants <em>core</em> to have that intrinsic then you're in
+trouble, you'll have to send a PR to the
+<a href="https://github.com/rust-lang-nursery/compiler-builtins">compiler-builtins</a>
+repository and hope to get it into rust itself.</p>
+<p>If LLVM wants <em>your code</em> to have the intrinsic then you're in less trouble. You
+can look up the details and then implement it yourself. It can go anywhere in
+your program, as long as it has the right ABI and name. In the case of
+<code>__clzsi2</code> it takes a <code>usize</code> and returns a <code>usize</code>, so you'd write something
+like:</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+#[no_mangle]
+pub extern &quot;C&quot; fn __clzsi2(mut x: usize) -&gt; usize {
+  //
+}
+#}</code></pre></pre>
+<p>And so on for whatever other missing intrinsic.</p>
 
                     </main>
 
