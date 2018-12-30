@@ -8,16 +8,18 @@
 
 # gba
 
-This repository is both a [Tutorial Book](https://rust-console.github.io/gba/)
-that teaches you what you need to know to write Rust games for the GameBoy
-Advance (GBA), and also a [crate](https://crates.io/crates/gba) that you can
-use to do the same.
+_Eventually_ there will be a full [Tutorial
+Book](https://rust-console.github.io/gba/) that goes along with this crate.
+However, currently the development focus is leaning towards having minimal
+coverage of all the parts of the GBA. Until that's done, unfortunately the book
+will be in a rather messy state.
 
 ## First Time Setup
 
 Writing a Rust program for the GBA requires a fair amount of special setup. All
-of the steps are detailed for you [in the Introduction chapter of the
-book](https://rust-console.github.io/gba/00-introduction/03-development-setup.html).
+of the steps are detailed for you in the [Development
+Setup](https://rust-console.github.io/gba/development-setup.html) part at the
+start of the book.
 
 If you've done the described global setup once before and just want to get a new
 project started quickly we got you covered:
