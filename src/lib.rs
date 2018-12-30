@@ -42,7 +42,7 @@ pub(crate) use gba_proc_macro::phantom_fields;
 /// }
 /// newtype! {
 ///   /// You can't derive most stuff above array size 32, so we add
-///   /// the `, no frills` modifier.
+///   /// the `, no frills` modifier to this one.
 ///   BigArray, [u8; 200], no frills
 /// }
 /// ```
@@ -67,6 +67,26 @@ macro_rules! newtype {
   };
 }
 
+/// Assists in defining a newtype that's an enum.
+///
+/// First give `NewType = OldType,`, then define the tags and their explicit
+/// values with zero or more entries of `TagName = base_value,`. In both cases
+/// you can place doc comments or other attributes directly on to the type
+/// declaration or the tag declaration.
+///
+/// The generated enum will get an appropriate `repr` attribute as well as Debug, Clone, Copy,
+///
+/// Example:
+/// ```
+/// newtype_enum! {
+///   /// The Foo
+///   Foo = u16,
+///   /// The Bar
+///   Bar = 0,
+///   /// The Zap
+///   Zap = 1,
+/// }
+/// ```
 #[macro_export]
 macro_rules! newtype_enum {
   (
@@ -86,21 +106,14 @@ macro_rules! newtype_enum {
   };
 }
 
-newtype_enum! {
-  /// the Foo
-  Foo = u16,
-  /// the Bar
-  Bar = 0,
-  /// The Zap
-  Zap = 1,
-}
-
 pub mod base;
 pub(crate) use self::base::*;
 
 pub mod bios;
 
-pub mod wram;
+pub mod iwram;
+
+pub mod ewram;
 
 pub mod io;
 

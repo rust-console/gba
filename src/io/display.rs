@@ -49,10 +49,9 @@ impl DisplayControlSetting {
   }
 }
 
-/// The six display modes available on the GBA.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-#[repr(u16)]
-pub enum DisplayMode {
+newtype_enum! {
+  /// The six display modes available on the GBA.
+  DisplayMode = u16,
   /// * Affine: No
   /// * Layers: 0/1/2/3
   /// * Size(px): 256x256 to 512x512
