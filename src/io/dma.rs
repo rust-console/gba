@@ -63,7 +63,6 @@ use super::*;
 
 newtype! {
   /// Allows you to configure a DMA unit.
-  #[derive(Debug, Copy, Clone, Default, PartialEq, Eq)]
   DMAControlSetting, u16
 }
 #[allow(missing_docs)]

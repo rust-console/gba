@@ -21,7 +21,6 @@ newtype! {
   /// Bit 8-12: Screen Base Block (0 through 31, 2k each)
   /// Bit 13: Display area overflow wraps (otherwise transparent, affine BG only)
   /// Bit 14-15: Screen Size
-  #[derive(Debug, Copy, Clone, Default, PartialEq, Eq)]
   BackgroundControlSetting, u16
 }
 impl BackgroundControlSetting {

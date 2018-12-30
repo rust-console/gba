@@ -104,7 +104,6 @@ pub unsafe fn register_ram_reset(flags: RegisterRAMResetFlags) {
 }
 newtype! {
   /// Flags for use with `register_ram_reset`.
-  #[derive(Debug, Copy, Clone, Default, PartialEq, Eq)]
   RegisterRAMResetFlags, u8
 }
 #[allow(missing_docs)]

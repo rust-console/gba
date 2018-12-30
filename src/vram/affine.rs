@@ -4,7 +4,6 @@ use super::*;
 
 newtype! {
   /// A screenblock entry for use in Affine mode.
-  #[derive(Debug, Clone, Copy, Default)]
   AffineScreenblockEntry, u8
 }
 

@@ -61,7 +61,6 @@ newtype! {
   ///   mode naturally does nothing when used with Timer 0.
   /// * Bit 6: Raise a timer interrupt upon overflow.
   /// * Bit 7: Enable the timer.
-  #[derive(Debug, Copy, Clone, Default, PartialEq, Eq)]
   TimerControlSetting, u16
 }
 impl TimerControlSetting {

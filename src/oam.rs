@@ -11,7 +11,6 @@ newtype! {
   /// * Bit 12: Mosaic
   /// * Bit 13: is 8bpp
   /// * Bits 14-15: Object Shape: Square, Horizontal, Vertical
-  #[derive(Debug, Copy, Clone, Default, PartialEq, Eq)]
   OBJAttr0, u16
 }
 impl OBJAttr0 {
@@ -75,7 +74,6 @@ newtype! {
   ///   * Normal render: Bit 12 holds hflip and 13 holds vflip.
   ///   * Affine render: The affine parameter selection.
   /// * Bits 14-15: Object Size
-  #[derive(Debug, Copy, Clone, Default, PartialEq, Eq)]
   OBJAttr1, u16
 }
 impl OBJAttr1 {
@@ -119,7 +117,6 @@ newtype! {
   /// * Bits 0-9: Base Tile Index (tile offset from CBB4)
   /// * Bits 10-11: Priority
   /// * Bits 12-15: Palbank (if using 4bpp)
-  #[derive(Debug, Copy, Clone, Default, PartialEq, Eq)]
   OBJAttr2, u16
 }
 impl OBJAttr2 {

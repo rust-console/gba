@@ -27,7 +27,6 @@ newtype! {
   ///
   /// Methods here follow the "high-active" convention, where a bit is enabled
   /// when it's part of the set.
-  #[derive(Debug, Copy, Clone, Default, PartialEq, Eq)]
   KeyInput, u16
 }
 
@@ -100,7 +99,6 @@ newtype! {
   /// NOTE: This _only_ configures the operation of when keypad interrupts can
   /// fire. You must still set the `IME` to have interrupts at all, and you must
   /// further set `IE` for keypad interrupts to be possible.
-  #[derive(Debug, Copy, Clone, Default, PartialEq, Eq)]
   KeyInterruptSetting, u16
 }
 #[allow(missing_docs)]

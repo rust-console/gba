@@ -4,7 +4,6 @@ use super::*;
 
 newtype! {
   /// A screenblock entry for use in Text mode.
-  #[derive(Debug, Clone, Copy, Default)]
   TextScreenblockEntry, u16
 }
 impl TextScreenblockEntry {

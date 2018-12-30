@@ -28,22 +28,29 @@ pub(crate) use gba_proc_macro::phantom_fields;
 /// of your docs and derives in front of your newtype in the same way you would
 /// for a normal struct. Then the inner type to be wrapped it name.
 ///
-/// The macro _assumes_ that you'll be using it to wrap zero safe numeric types,
-/// so it automatically provides a `const fn` method for `new` that just wraps
-/// `0`. If this is not desired you can add `, no frills` to the invocation.
+/// The macro _assumes_ that you'll be using it to wrap numeric types and that
+/// it's safe to have a `0` value, so it automatically provides a `const fn`
+/// method for `new` that just wraps `0`. Also, it derives Debug, Clone, Copy,
+/// Default, PartialEq, and Eq. If all this is not desired you can add `, no
+/// frills` to the invocation.
 ///
 /// Example:
 /// ```
 /// newtype! {
 ///   /// Records a particular key press combination.
-///   #[derive(Debug, Copy, Clone, Default, PartialEq, Eq)]
 ///   KeyInput, u16
+/// }
+/// newtype! {
+///   /// You can't derive most stuff above array size 32, so we add
+///   /// the `, no frills` modifier.
+///   BigArray, [u8; 200], no frills
 /// }
 /// ```
 #[macro_export]
 macro_rules! newtype {
   ($(#[$attr:meta])* $new_name:ident, $v:vis $old_name:ty) => {
     $(#[$attr])*
+    #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
     #[repr(transparent)]
     pub struct $new_name($v $old_name);
     impl $new_name {
@@ -60,18 +67,58 @@ macro_rules! newtype {
   };
 }
 
+#[macro_export]
+macro_rules! newtype_enum {
+  (
+    $(#[$struct_attr:meta])*
+    $new_name:ident = $old_name:ident,
+    $($(#[$tag_attr:meta])* $tag_name:ident = $base_value:expr,)*
+  ) => {
+    $(#[$struct_attr])*
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    #[repr($old_name)]
+    pub enum $new_name {
+      $(
+        $(#[$tag_attr])*
+        $tag_name = $base_value,
+      )*
+    }
+  };
+}
+
+newtype_enum! {
+  /// the Foo
+  Foo = u16,
+  /// the Bar
+  Bar = 0,
+  /// The Zap
+  Zap = 1,
+}
+
 pub mod base;
 pub(crate) use self::base::*;
+
 pub mod bios;
+
+pub mod wram;
+
 pub mod io;
-pub mod mgba;
-pub mod oam;
+
 pub mod palram;
+
 pub mod vram;
+
+pub mod oam;
+
+pub mod rom;
+
+pub mod sram;
+
+pub mod mgba;
 
 newtype! {
   /// A color on the GBA is an RGB 5.5.5 within a `u16`
-  #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+  #[derive(PartialOrd, Ord, Hash)]
   Color, u16
 }
 

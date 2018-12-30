@@ -24,7 +24,6 @@ newtype!(
   /// * 13: Window 0 display
   /// * 14: Window 1 display
   /// * 15: Object window
-  #[derive(Debug, Copy, Clone, Default, PartialEq, Eq)]
   DisplayControlSetting,
   u16
 );
@@ -103,12 +102,10 @@ pub const DISPSTAT: VolAddress<DisplayStatusSetting> = unsafe { VolAddress::new_
 
 newtype!(
   /// A newtype over display status and interrupt control values.
-  #[derive(Debug, Copy, Clone, Default, PartialEq, Eq)]
   DisplayStatusSetting,
   u16
 );
 
-#[allow(missing_docs)]
 impl DisplayStatusSetting {
   phantom_fields! {
     self.0: u16,
@@ -168,7 +165,6 @@ newtype! {
   /// * Bits 4-7: BG mosaic vertical increase
   /// * Bits 8-11: Object mosaic horizontal increase
   /// * Bits 12-15: Object mosaic vertical increase
-  #[derive(Debug, Copy, Clone, Default, PartialEq, Eq)]
   MosaicSetting, u16
 }
 impl MosaicSetting {
