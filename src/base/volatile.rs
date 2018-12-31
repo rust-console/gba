@@ -118,8 +118,7 @@ impl<T> VolAddress<T> {
   /// # Safety
   ///
   /// You must follow the standard safety rules as outlined in the type docs.
-  pub unsafe fn offset(self, offset: isize) -> Self {
-    // TODO: const this
+  pub const unsafe fn offset(self, offset: isize) -> Self {
     VolAddress {
       address: NonZeroUsize::new_unchecked(self.address.get().wrapping_add(offset as usize * core::mem::size_of::<T>())),
       marker: PhantomData,
@@ -135,8 +134,7 @@ impl<T> VolAddress<T> {
   /// from the operation or throw a `debug_assert!` or something instead of
   /// triggering UB. Eventually this will be `const fn`, which will potentially
   /// let you spot errors without even having to run your program.
-  pub fn is_aligned(self) -> bool {
-    // TODO: const this
+  pub const fn is_aligned(self) -> bool {
     self.address.get() % core::mem::align_of::<T>() == 0
   }
 
@@ -276,8 +274,7 @@ impl<T> VolAddressBlock<T> {
   /// # Safety
   ///
   /// The slot given must be in bounds.
-  pub unsafe fn index_unchecked(self, slot: usize) -> VolAddress<T> {
-    // TODO: const this
+  pub const unsafe fn index_unchecked(self, slot: usize) -> VolAddress<T> {
     self.vol_address.offset(slot as isize)
   }
 

@@ -15,10 +15,6 @@ publish = false
 typenum = "1.10"
 gba-proc-macro = "0.5"
 
-#[dev-dependencies]
-#quickcheck="0.7"
-# TODO: F
-
 [profile.release]
 lto = true
 panic = "abort"

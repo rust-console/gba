@@ -2,10 +2,9 @@
 #![feature(asm)]
 #![feature(const_int_wrapping)]
 #![feature(const_int_rotate)]
-#![feature(min_const_unsafe_fn)]
-#![warn(missing_docs)]
 #![allow(clippy::cast_lossless)]
 #![deny(clippy::float_arithmetic)]
+#![warn(missing_docs)]
 
 //! This crate helps you write GBA ROMs.
 //!
