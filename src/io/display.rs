@@ -33,7 +33,6 @@ impl DisplayControlSetting {
   phantom_fields! {
     self.0: u16,
     mode: 0-2=DisplayMode<Mode0, Mode1, Mode2, Mode3, Mode4, Mode5>,
-    cgb_mode: 3,
     frame1: 4,
     hblank_interval_free: 5,
     oam_memory_1d: 6,

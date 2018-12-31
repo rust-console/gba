@@ -124,6 +124,189 @@ pub enum DMAStartTiming {
   Special = 3,
 }
 
+pub struct DMA0;
+impl DMA0 {
+  /// DMA 0 Source Address, read only.
+  const DMA0SAD: VolAddress<*const u32> = unsafe { VolAddress::new_unchecked(0x400_00B0) };
+  /// DMA 0 Destination Address, read only.
+  const DMA0DAD: VolAddress<*mut u32> = unsafe { VolAddress::new_unchecked(0x400_00B4) };
+  /// DMA 0 Word Count, read only.
+  const DMA0CNT_L: VolAddress<u16> = unsafe { VolAddress::new_unchecked(0x400_00B8) };
+  /// DMA 0 Control, read/write.
+  const DMA0CNT_H: VolAddress<DMAControlSetting> = unsafe { VolAddress::new_unchecked(0x400_00BA) };
+
+  /// Assigns the source register.
+  ///
+  /// This register is read only, so it is not exposed directly.
+  ///
+  /// # Safety
+  ///
+  /// The source pointer must be aligned and valid to read from.
+  pub unsafe fn set_source(src: *const u32) {
+    Self::DMA0SAD.write(src)
+  }
+
+  /// Assigns the destination register.
+  ///
+  /// This register is read only, so it is not exposed directly.
+  ///
+  /// # Safety
+  ///
+  /// The source pointer must be aligned and valid to write to.
+  pub unsafe fn set_dest(dest: *mut u32) {
+    Self::DMA0DAD.write(dest)
+  }
+
+  /// Assigns the count register.
+  ///
+  /// This register is read only, so it is not exposed directly.
+  ///
+  /// # Safety
+  ///
+  /// The count given must specify a valid number of units to write, starting at
+  /// the assigned destination address.
+  pub unsafe fn set_count(count: u16) {
+    Self::DMA0CNT_L.write(count)
+  }
+
+  /// Reads the current control setting.
+  pub fn control() -> DMAControlSetting {
+    Self::DMA0CNT_H.read()
+  }
+
+  /// Writes the control setting given.
+  ///
+  /// # Safety
+  ///
+  /// You must ensure that the Source, Destination, and Count values are set
+  /// correctly **before** you activate the Enable bit.
+  pub unsafe fn set_control(setting: DMAControlSetting) {
+    Self::DMA0CNT_H.write(setting)
+  }
+}
+
+pub struct DMA1;
+impl DMA1 {
+  /// DMA 1 Source Address, read only.
+  const DMA1SAD: VolAddress<*const u32> = unsafe { VolAddress::new_unchecked(0x400_00BC) };
+  /// DMA 1 Destination Address, read only.
+  const DMA1DAD: VolAddress<*mut u32> = unsafe { VolAddress::new_unchecked(0x400_00C0) };
+  /// DMA 1 Word Count, read only.
+  const DMA1CNT_L: VolAddress<u16> = unsafe { VolAddress::new_unchecked(0x400_00C4) };
+  /// DMA 1 Control, read/write.
+  const DMA1CNT_H: VolAddress<DMAControlSetting> = unsafe { VolAddress::new_unchecked(0x400_00C6) };
+
+  /// Assigns the source register.
+  ///
+  /// This register is read only, so it is not exposed directly.
+  ///
+  /// # Safety
+  ///
+  /// The source pointer must be aligned and valid to read from.
+  pub unsafe fn set_source(src: *const u32) {
+    Self::DMA1SAD.write(src)
+  }
+
+  /// Assigns the destination register.
+  ///
+  /// This register is read only, so it is not exposed directly.
+  ///
+  /// # Safety
+  ///
+  /// The source pointer must be aligned and valid to write to.
+  pub unsafe fn set_dest(dest: *mut u32) {
+    Self::DMA1DAD.write(dest)
+  }
+
+  /// Assigns the count register.
+  ///
+  /// This register is read only, so it is not exposed directly.
+  ///
+  /// # Safety
+  ///
+  /// The count given must specify a valid number of units to write, starting at
+  /// the assigned destination address.
+  pub unsafe fn set_count(count: u16) {
+    Self::DMA1CNT_L.write(count)
+  }
+
+  /// Reads the current control setting.
+  pub fn control() -> DMAControlSetting {
+    Self::DMA1CNT_H.read()
+  }
+
+  /// Writes the control setting given.
+  ///
+  /// # Safety
+  ///
+  /// You must ensure that the Source, Destination, and Count values are set
+  /// correctly **before** you activate the Enable bit.
+  pub unsafe fn set_control(setting: DMAControlSetting) {
+    Self::DMA1CNT_H.write(setting)
+  }
+}
+
+pub struct DMA2;
+impl DMA2 {
+  /// DMA 2 Source Address, read only.
+  const DMA2SAD: VolAddress<*const u32> = unsafe { VolAddress::new_unchecked(0x400_00C8) };
+  /// DMA 2 Destination Address, read only.
+  const DMA2DAD: VolAddress<*mut u32> = unsafe { VolAddress::new_unchecked(0x400_00CC) };
+  /// DMA 2 Word Count, read only.
+  const DMA2CNT_L: VolAddress<u16> = unsafe { VolAddress::new_unchecked(0x400_00D0) };
+  /// DMA 2 Control, read/write.
+  const DMA2CNT_H: VolAddress<DMAControlSetting> = unsafe { VolAddress::new_unchecked(0x400_00D2) };
+
+  /// Assigns the source register.
+  ///
+  /// This register is read only, so it is not exposed directly.
+  ///
+  /// # Safety
+  ///
+  /// The source pointer must be aligned and valid to read from.
+  pub unsafe fn set_source(src: *const u32) {
+    Self::DMA2SAD.write(src)
+  }
+
+  /// Assigns the destination register.
+  ///
+  /// This register is read only, so it is not exposed directly.
+  ///
+  /// # Safety
+  ///
+  /// The source pointer must be aligned and valid to write to.
+  pub unsafe fn set_dest(dest: *mut u32) {
+    Self::DMA2DAD.write(dest)
+  }
+
+  /// Assigns the count register.
+  ///
+  /// This register is read only, so it is not exposed directly.
+  ///
+  /// # Safety
+  ///
+  /// The count given must specify a valid number of units to write, starting at
+  /// the assigned destination address.
+  pub unsafe fn set_count(count: u16) {
+    Self::DMA2CNT_L.write(count)
+  }
+
+  /// Reads the current control setting.
+  pub fn control() -> DMAControlSetting {
+    Self::DMA2CNT_H.read()
+  }
+
+  /// Writes the control setting given.
+  ///
+  /// # Safety
+  ///
+  /// You must ensure that the Source, Destination, and Count values are set
+  /// correctly **before** you activate the Enable bit.
+  pub unsafe fn set_control(setting: DMAControlSetting) {
+    Self::DMA2CNT_H.write(setting)
+  }
+}
+
 /// This is the "general purpose" DMA unit, with the fewest limits.
 pub struct DMA3;
 impl DMA3 {

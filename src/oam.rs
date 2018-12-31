@@ -127,3 +127,67 @@ impl OBJAttr2 {
     palbank: 12-15,
   }
 }
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct ObjectAttributes {
+  attr0: OBJAttr0,
+  attr1: OBJAttr1,
+  attr2: OBJAttr2,
+}
+
+/// The object attributes, but there are gaps in the array, so we must not
+/// expose this directly.
+const OBJ_ATTR_APPROX: VolAddressBlock<[u16; 4]> = unsafe { VolAddressBlock::new_unchecked(VolAddress::new_unchecked(0x700_0000), 128) };
+
+pub fn write_obj_attributes(slot: usize, attributes: ObjectAttributes) -> Option<()> {
+  OBJ_ATTR_APPROX.get(slot).map(|va| unsafe {
+    let va_u16 = va.cast::<u16>();
+    va_u16.cast::<OBJAttr0>().write(attributes.attr0);
+    va_u16.offset(1).cast::<OBJAttr1>().write(attributes.attr1);
+    va_u16.offset(2).cast::<OBJAttr2>().write(attributes.attr2);
+  })
+}
+
+pub fn read_obj_attributes(slot: usize) -> Option<ObjectAttributes> {
+  OBJ_ATTR_APPROX.get(slot).map(|va| unsafe {
+    let va_u16 = va.cast::<u16>();
+    let attr0 = va_u16.cast::<OBJAttr0>().read();
+    let attr1 = va_u16.offset(1).cast::<OBJAttr1>().read();
+    let attr2 = va_u16.offset(2).cast::<OBJAttr2>().read();
+    ObjectAttributes { attr0, attr1, attr2 }
+  })
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct AffineParameters {
+  pa: i16,
+  pb: i16,
+  pc: i16,
+  pd: i16,
+}
+// TODO: find the correct fixed-point type here.
+
+/// The object attributes, but there are gaps in the array, so we must not
+/// expose this directly.
+const AFFINE_PARAMS_APPROX: VolAddressBlock<[i16; 16]> = unsafe { VolAddressBlock::new_unchecked(VolAddress::new_unchecked(0x700_0000), 32) };
+
+pub fn write_affine_parameters(slot: usize, params: AffineParameters) -> Option<()> {
+  AFFINE_PARAMS_APPROX.get(slot).map(|va| unsafe {
+    let va_i16 = va.cast::<i16>();
+    va_i16.offset(3).write(params.pa);
+    va_i16.offset(7).write(params.pb);
+    va_i16.offset(11).write(params.pc);
+    va_i16.offset(15).write(params.pd);
+  })
+}
+
+pub fn read_affine_parameters(slot: usize) -> Option<AffineParameters> {
+  AFFINE_PARAMS_APPROX.get(slot).map(|va| unsafe {
+    let va_i16 = va.cast::<i16>();
+    let pa = va_i16.offset(3).read();
+    let pb = va_i16.offset(7).read();
+    let pc = va_i16.offset(11).read();
+    let pd = va_i16.offset(15).read();
+    AffineParameters { pa, pb, pc, pd }
+  })
+}
