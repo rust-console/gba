@@ -1,0 +1,339 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>No Std - Rust GBA Guide</title>
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="shortcut icon" href="../favicon.png">
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        <link rel="stylesheet" href="../css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        <link href="https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800" rel="stylesheet" type="text/css">
+        <link href="https://fonts.googleapis.com/css?family=Source+Code+Pro:500" rel="stylesheet" type="text/css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="../highlight.css">
+        <link rel="stylesheet" href="../tomorrow-night.css">
+        <link rel="stylesheet" href="../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        
+
+        
+    </head>
+    <body class="light">
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">var path_to_root = "../";</script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { } 
+            if (theme === null || theme === undefined) { theme = 'light'; }
+            document.body.className = theme;
+            document.querySelector('html').className = theme + ' js';
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <ol class="chapter"><li><a href="../00-introduction/00-index.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><ol class="section"><li><a href="../00-introduction/01-requirements.html"><strong aria-hidden="true">1.1.</strong> Reader Requirements</a></li><li><a href="../00-introduction/02-goals_and_style.html"><strong aria-hidden="true">1.2.</strong> Book Goals and Style</a></li><li><a href="../00-introduction/03-development-setup.html"><strong aria-hidden="true">1.3.</strong> Development Setup</a></li><li><a href="../00-introduction/04-hello-magic.html"><strong aria-hidden="true">1.4.</strong> Hello, Magic</a></li><li><a href="../00-introduction/05-help_and_resources.html"><strong aria-hidden="true">1.5.</strong> Help and Resources</a></li></ol></li><li><a href="../01-quirks/00-index.html"><strong aria-hidden="true">2.</strong> Quirks</a></li><li><ol class="section"><li><a href="../01-quirks/01-no_std.html" class="active"><strong aria-hidden="true">2.1.</strong> No Std</a></li><li><a href="../01-quirks/02-fixed_only.html"><strong aria-hidden="true">2.2.</strong> Fixed Only</a></li><li><a href="../01-quirks/03-volatile_destination.html"><strong aria-hidden="true">2.3.</strong> Volatile Destination</a></li><li><a href="../01-quirks/04-newtype.html"><strong aria-hidden="true">2.4.</strong> Newtype</a></li><li><a href="../01-quirks/05-const_asserts.html"><strong aria-hidden="true">2.5.</strong> Const Asserts</a></li></ol></li><li><a href="../02-concepts/00-index.html"><strong aria-hidden="true">3.</strong> Concepts</a></li><li><ol class="section"><li><a href="../02-concepts/01-cpu.html"><strong aria-hidden="true">3.1.</strong> CPU</a></li><li><a href="../02-concepts/02-bios.html"><strong aria-hidden="true">3.2.</strong> BIOS</a></li><li><a href="../02-concepts/03-wram.html"><strong aria-hidden="true">3.3.</strong> Work RAM</a></li><li><a href="../02-concepts/04-io-registers.html"><strong aria-hidden="true">3.4.</strong> IO Registers</a></li><li><a href="../02-concepts/05-palram.html"><strong aria-hidden="true">3.5.</strong> Palette RAM</a></li><li><a href="../02-concepts/06-vram.html"><strong aria-hidden="true">3.6.</strong> Video RAM</a></li><li><a href="../02-concepts/07-oam.html"><strong aria-hidden="true">3.7.</strong> Object Attribute Memory</a></li><li><a href="../02-concepts/08-rom.html"><strong aria-hidden="true">3.8.</strong> Game Pak ROM / Flash ROM</a></li><li><a href="../02-concepts/09-sram.html"><strong aria-hidden="true">3.9.</strong> Save RAM</a></li></ol></li><li><a href="../03-video/00-index.html"><strong aria-hidden="true">4.</strong> Video</a></li><li><ol class="section"><li><a href="../03-video/01-rgb15.html"><strong aria-hidden="true">4.1.</strong> RBG15 Color</a></li><li><a href="../03-video/TODO.html"><strong aria-hidden="true">4.2.</strong> TODO</a></li></ol></li><li><a href="../04-non-video/00-index.html"><strong aria-hidden="true">5.</strong> Non-Video</a></li><li><ol class="section"><li><a href="../04-non-video/01-buttons.html"><strong aria-hidden="true">5.1.</strong> Buttons</a></li><li><a href="../04-non-video/02-timers.html"><strong aria-hidden="true">5.2.</strong> Timers</a></li><li><a href="../04-non-video/03-dma.html"><strong aria-hidden="true">5.3.</strong> Direct Memory Access</a></li><li><a href="../04-non-video/04-sound.html"><strong aria-hidden="true">5.4.</strong> Sound</a></li><li><a href="../04-non-video/05-interrupts.html"><strong aria-hidden="true">5.5.</strong> Interrupts</a></li><li><a href="../04-non-video/06-link_cable.html"><strong aria-hidden="true">5.6.</strong> Link Cable</a></li><li><a href="../04-non-video/07-game_pak.html"><strong aria-hidden="true">5.7.</strong> Game Pak</a></li></ol></li><li><a href="../05-examples/00-index.html"><strong aria-hidden="true">6.</strong> Examples</a></li></ol>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                
+                <div id="menu-bar" class="menu-bar">
+                    <div id="menu-bar-sticky-container">
+                        <div class="left-buttons">
+                            <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                                <i class="fa fa-bars"></i>
+                            </button>
+                            <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                                <i class="fa fa-paint-brush"></i>
+                            </button>
+                            <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                                <li role="none"><button role="menuitem" class="theme" id="light">Light <span class="default">(default)</span></button></li>
+                                <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                                <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                                <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                                <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                            </ul>
+                            
+                            <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                                <i class="fa fa-search"></i>
+                            </button>
+                            
+                        </div>
+
+                        <h1 class="menu-title">Rust GBA Guide</h1> 
+
+                        <div class="right-buttons">
+                            <a href="../print.html" title="Print this book" aria-label="Print this book">
+                                <i id="print-button" class="fa fa-print"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" name="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+                
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <a class="header" href="#no-std" id="no-std"><h1>No Std</h1></a>
+<p>First up, as you already saw in the <code>hello_magic</code> code, we have to use the
+<code>#![no_std]</code> outer attribute on our program when we target the GBA. You can find
+some info about <code>no_std</code> in two official sources:</p>
+<ul>
+<li><a href="https://doc.rust-lang.org/unstable-book/language-features/lang-items.html#writing-an-executable-without-stdlib">unstable
+book section</a></li>
+<li><a href="https://rust-embedded.github.io/book/intro/no-std.html?highlight=no_std#a--no_std--rust-environment">embedded
+book section</a></li>
+</ul>
+<p>The unstable book is borderline useless here because it's describing too many
+things in too many words. The embedded book is much better, but still fairly
+terse.</p>
+<a class="header" href="#bare-metal" id="bare-metal"><h2>Bare Metal</h2></a>
+<p>The GBA falls under what the Embedded Book calls &quot;Bare Metal Environments&quot;.
+Basically, the machine powers on and immediately begins executing some ASM code.
+Our ASM startup was provided by <code>Ketsuban</code> (check the <code>crt0.s</code> file). We'll go
+over <em>how</em> it works much later on, for now it's enough to know that it does
+work, and eventually control passes into Rust code.</p>
+<p>On the rust code side of things, we determine our starting point with the
+<code>#[start]</code> attribute on our <code>main</code> function. The <code>main</code> function also has a
+specific type signature that's different from the usual <code>main</code> that you'd see in
+Rust. I'd tell you to read the unstable-book entry on <code>#[start]</code> but they
+<a href="https://doc.rust-lang.org/unstable-book/language-features/start.html">literally</a>
+just tell you to look at the <a href="https://github.com/rust-lang/rust/issues/29633">tracking issue for
+it</a> instead, and that's not very
+helpful either. Basically it just <em>has</em> to be declared the way it is, even
+though there's nothing passing in the arguments and there's no place that the
+return value will go. The compiler won't accept it any other way.</p>
+<a class="header" href="#no-standard-library" id="no-standard-library"><h2>No Standard Library</h2></a>
+<p>The Embedded Book tells us that we can't use the standard library, but we get
+access to something called &quot;libcore&quot;, which sounds kinda funny. What they're
+talking about is just <a href="https://doc.rust-lang.org/core/index.html">the core
+crate</a>, which is called <code>libcore</code>
+within the rust repository for historical reasons.</p>
+<p>The <code>core</code> crate is actually still a really big portion of Rust. The standard
+library doesn't actually hold too much code (relatively speaking), instead it
+just takes code form other crates and then re-exports it in an organized way. So
+with just <code>core</code> instead of <code>std</code>, what are we missing?</p>
+<p>In no particular order:</p>
+<ul>
+<li>Allocation</li>
+<li>Clock</li>
+<li>Network</li>
+<li>File System</li>
+</ul>
+<p>The allocation system and all the types that you can use if you have a global
+allocator are neatly packaged up in the
+<a href="https://doc.rust-lang.org/alloc/index.html">alloc</a> crate. The rest isn't as
+nicely organized.</p>
+<p>It's <em>possible</em> to implement a fair portion of the entire standard library
+within a GBA context and make the rest just panic if you try to use it. However,
+do you really need all that? Eh... probably not?</p>
+<ul>
+<li>We don't need a file system, because all of our data is just sitting there in
+the ROM for us to use. When programming we can organize our <code>const</code> data into
+modules and such to keep it organized, but once the game is compiled it's just
+one huge flat address space. TODO: Parasyte says that a FS can be handy even
+if it's all just ReadOnly, so we'll eventually talk about how you might set up
+such a thing I guess, since we'll already be talking about replacements for
+three of the other four things we &quot;lost&quot;. Maybe we'll make Parasyte write that
+section.</li>
+<li>Networking, well, the GBA has a Link Cable you can use to communicate with
+another GBA, but it's not really like a unix socket with TCP, so the standard
+Rust networking isn't a very good match.</li>
+<li>Clock is actually two different things at once. One is the ability to store
+the time long term, which is a bit of hardware that some gamepaks have in them
+(eg: pokemon ruby/sapphire/emerald). The GBA itself can't keep time while
+power is off. However, the second part is just tracking time moment to moment,
+which the GBA can totally do. We'll see how to access the timers soon enough.</li>
+</ul>
+<p>Which just leaves us with allocation. Do we need an allocator? Depends on your
+game. For demos and small games you probably don't need one. For bigger games
+you'll maybe want to get an allocator going eventually. It's in some sense a
+crutch, but it's a very useful one.</p>
+<p>So I promise that at some point we'll cover how to get an allocator going.
+Either a Rust Global Allocator (if practical), which would allow for a lot of
+the standard library types to be used &quot;for free&quot; once it was set up, or just a
+custom allocator that's GBA specific if Rust's global allocator style isn't a
+good fit for the GBA (I honestly haven't looked into it).</p>
+<a class="header" href="#bare-metal-panic" id="bare-metal-panic"><h2>Bare Metal Panic</h2></a>
+<p>If our code panics, we usually want to see that panic message. Unfortunately,
+without a way to access something like <code>stdout</code> or <code>stderr</code> we've gotta do
+something a little weirder.</p>
+<p>If our program is running within the <code>mGBA</code> emulator, version 0.7 or later, we
+can access a special set of addresses that allow us to send out <code>CString</code>
+values, which then appear within a message log that you can check.</p>
+<p>We can capture this behavior by making an <code>MGBADebug</code> type, and then implement
+<code>core::fmt::Write</code> for that type. Once done, the <code>write!</code> macro will let us
+target the mGBA debug output channel.</p>
+<p>When used, it looks like this:</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+#[panic_handler]
+fn panic(info: &amp;core::panic::PanicInfo) -&gt; ! {
+  use core::fmt::Write;
+  use gba::mgba::{MGBADebug, MGBADebugLevel};
+
+  if let Some(mut mgba) = MGBADebug::new() {
+    let _ = write!(mgba, &quot;{}&quot;, info);
+    mgba.send(MGBADebugLevel::Fatal);
+  }
+  loop {}
+}
+#}</code></pre></pre>
+<p>If you want to follow the particulars you can check the <code>MGBADebug</code> source in
+the <code>gba</code> crate. Basically, there's one address you can use to try and activate
+the debug output, and if it works you write your message into the &quot;array&quot; at
+another address, and then finally write a send value to a third address. You'll
+need to have read the <a href="03-volatile_destination.html">volatile</a> section for the
+details to make sense.</p>
+<a class="header" href="#llvm-intrinsics" id="llvm-intrinsics"><h2>LLVM Intrinsics</h2></a>
+<p>The above code will make your program fail to build in debug mode, saying that
+<code>__clzsi2</code> can't be found. This is a special builtin function that LLVM attempts
+to use when there's no hardware version of an operation it wants to do (in this
+case, counting the leading zeros). It's not <em>actually</em> necessary in this case,
+which is why you only need it in debug mode. The higher optimization level of
+release mode makes LLVM pre-compute more and fold more constants or whatever and
+then it stops trying to call <code>__clzsi2</code>.</p>
+<p>Unfortunately, sometimes a build will fail with a missing intrinsic even in
+release mode.</p>
+<p>If LLVM wants <em>core</em> to have that intrinsic then you're in
+trouble, you'll have to send a PR to the
+<a href="https://github.com/rust-lang-nursery/compiler-builtins">compiler-builtins</a>
+repository and hope to get it into rust itself.</p>
+<p>If LLVM wants <em>your code</em> to have the intrinsic then you're in less trouble. You
+can look up the details and then implement it yourself. It can go anywhere in
+your program, as long as it has the right ABI and name. In the case of
+<code>__clzsi2</code> it takes a <code>usize</code> and returns a <code>usize</code>, so you'd write something
+like:</p>
+<pre><pre class="playpen"><code class="language-rust">
+# #![allow(unused_variables)]
+#fn main() {
+#[no_mangle]
+pub extern &quot;C&quot; fn __clzsi2(mut x: usize) -&gt; usize {
+  //
+}
+#}</code></pre></pre>
+<p>And so on for whatever other missing intrinsic.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                        
+                            <a rel="prev" href="../01-quirks/00-index.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+                        
+
+                        
+                            <a rel="next" href="../01-quirks/02-fixed_only.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+                        
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                
+                    <a href="../01-quirks/00-index.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                
+
+                
+                    <a href="../01-quirks/02-fixed_only.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+                
+            </nav>
+
+        </div>
+
+        
+
+        
+
+        
+
+        
+        <script src="../elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../searcher.js" type="text/javascript" charset="utf-8"></script>
+        
+
+        <script src="../clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+        
+
+        
+
+    </body>
+</html>
