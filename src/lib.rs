@@ -4,7 +4,7 @@
 #![feature(const_int_rotate)]
 #![allow(clippy::cast_lossless)]
 #![deny(clippy::float_arithmetic)]
-#![warn(missing_docs)]
+//#![warn(missing_docs)]
 
 //! This crate helps you write GBA ROMs.
 //!

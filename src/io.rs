@@ -12,4 +12,5 @@ pub mod background;
 pub mod display;
 pub mod dma;
 pub mod keypad;
+pub mod sound;
 pub mod timers;

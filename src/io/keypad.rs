@@ -30,7 +30,6 @@ newtype! {
   KeyInput, u16
 }
 
-#[allow(missing_docs)]
 impl KeyInput {
   phantom_fields! {
     self.0: u16,
@@ -84,6 +83,11 @@ pub fn read_key_input() -> KeyInput {
   KeyInput(KEYINPUT.read() ^ 0b0000_0011_1111_1111)
 }
 
+/// Use this to configure when a keypad interrupt happens.
+///
+/// See the `KeyInterruptSetting` type for more.
+pub const KEYCNT: VolAddress<KeyInterruptSetting> = unsafe { VolAddress::new_unchecked(0x400_0132) };
+
 newtype! {
   /// Allows configuration of when a keypad interrupt fires.
   ///
@@ -119,8 +123,3 @@ impl KeyInterruptSetting {
     irq_logical_and: 15,
   }
 }
-
-/// Use this to configure when a keypad interrupt happens.
-///
-/// See the `KeyInterruptSetting` type for more.
-pub const KEYCNT: VolAddress<KeyInterruptSetting> = unsafe { VolAddress::new_unchecked(0x400_0132) };
