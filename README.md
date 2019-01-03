@@ -14,6 +14,14 @@ However, currently the development focus is leaning towards having minimal
 coverage of all the parts of the GBA. Until that's done, unfortunately the book
 will be in a rather messy state.
 
+## What's Missing
+
+The following major GBA features are still missing from the crate:
+
+* Affine Graphics
+* Interrupt Handling
+* Serial Communication
+
 ## First Time Setup
 
 Writing a Rust program for the GBA requires a fair amount of special setup. All
