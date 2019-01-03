@@ -44,10 +44,10 @@ script:
 
 deploy:
   provider: pages
+  local-dir: target/book-output
   skip-cleanup: true
   github-token: $GITHUB_TOKEN
-  target-branch: master
-  keep-history: true
+  keep-history: false
   name: DocsBot
   verbose: true
   on:

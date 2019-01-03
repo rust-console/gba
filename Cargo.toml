@@ -9,7 +9,7 @@ keywords = ["gba"]
 edition = "2018"
 license = "Apache-2.0"
 
-#publish = false
+publish = false
 
 [dependencies]
 typenum = "1.10"
