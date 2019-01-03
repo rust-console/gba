@@ -11,21 +11,18 @@ newtype! {
   /// * Bit 12: Mosaic
   /// * Bit 13: is 8bpp
   /// * Bits 14-15: Object Shape: Square, Horizontal, Vertical
-  #[derive(Debug, Copy, Clone, Default, PartialEq, Eq)]
   OBJAttr0, u16
 }
 impl OBJAttr0 {
-  bool_bits!(u16, [(12, mosaic), (13, is_8bpp),]);
-
-  multi_bits!(
-    u16,
-    [
-      (0, 8, row_coordinate),
-      (8, 2, obj_rendering, ObjectRender, Normal, Affine, Disabled, DoubleAreaAffine),
-      (10, 2, obj_mode, ObjectMode, Normal, SemiTransparent, OBJWindow),
-      (14, 2, obj_shape, ObjectShape, Square, Horizontal, Vertical),
-    ]
-  );
+  phantom_fields! {
+    self.0: u16,
+    row_coordinate: 0-7,
+    obj_rendering: 8-9=ObjectRender<Normal, Affine, Disabled, DoubleAreaAffine>,
+    obj_mode: 10-11=ObjectMode<Normal, SemiTransparent, OBJWindow>,
+    mosaic: 12,
+    is_8bpp: 13,
+    obj_shape: 14-15=ObjectShape<Square, Horizontal, Vertical>,
+  }
 }
 
 /// What style of rendering for this object
@@ -77,20 +74,17 @@ newtype! {
   ///   * Normal render: Bit 12 holds hflip and 13 holds vflip.
   ///   * Affine render: The affine parameter selection.
   /// * Bits 14-15: Object Size
-  #[derive(Debug, Copy, Clone, Default, PartialEq, Eq)]
   OBJAttr1, u16
 }
 impl OBJAttr1 {
-  bool_bits!(u16, [(12, hflip), (13, vflip),]);
-
-  multi_bits!(
-    u16,
-    [
-      (0, 9, col_coordinate),
-      (9, 5, affine_index),
-      (14, 2, obj_size, ObjectSize, Zero, One, Two, Three),
-    ]
-  );
+  phantom_fields! {
+    self.0: u16,
+    col_coordinate: 0-8,
+    affine_index: 9-13,
+    hflip: 12,
+    vflip: 13,
+    obj_size: 14-15=ObjectSize<Zero, One, Two, Three>,
+  }
 }
 
 /// The object's size.
@@ -123,9 +117,77 @@ newtype! {
   /// * Bits 0-9: Base Tile Index (tile offset from CBB4)
   /// * Bits 10-11: Priority
   /// * Bits 12-15: Palbank (if using 4bpp)
-  #[derive(Debug, Copy, Clone, Default, PartialEq, Eq)]
   OBJAttr2, u16
 }
 impl OBJAttr2 {
-  multi_bits!(u16, [(0, 10, tile_id), (10, 2, priority), (12, 4, palbank),]);
+  phantom_fields! {
+    self.0: u16,
+    tile_id: 0-9,
+    priority: 10-11,
+    palbank: 12-15,
+  }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct ObjectAttributes {
+  attr0: OBJAttr0,
+  attr1: OBJAttr1,
+  attr2: OBJAttr2,
+}
+
+/// The object attributes, but there are gaps in the array, so we must not
+/// expose this directly.
+const OBJ_ATTR_APPROX: VolAddressBlock<[u16; 4]> = unsafe { VolAddressBlock::new_unchecked(VolAddress::new_unchecked(0x700_0000), 128) };
+
+pub fn write_obj_attributes(slot: usize, attributes: ObjectAttributes) -> Option<()> {
+  OBJ_ATTR_APPROX.get(slot).map(|va| unsafe {
+    let va_u16 = va.cast::<u16>();
+    va_u16.cast::<OBJAttr0>().write(attributes.attr0);
+    va_u16.offset(1).cast::<OBJAttr1>().write(attributes.attr1);
+    va_u16.offset(2).cast::<OBJAttr2>().write(attributes.attr2);
+  })
+}
+
+pub fn read_obj_attributes(slot: usize) -> Option<ObjectAttributes> {
+  OBJ_ATTR_APPROX.get(slot).map(|va| unsafe {
+    let va_u16 = va.cast::<u16>();
+    let attr0 = va_u16.cast::<OBJAttr0>().read();
+    let attr1 = va_u16.offset(1).cast::<OBJAttr1>().read();
+    let attr2 = va_u16.offset(2).cast::<OBJAttr2>().read();
+    ObjectAttributes { attr0, attr1, attr2 }
+  })
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct AffineParameters {
+  pa: i16,
+  pb: i16,
+  pc: i16,
+  pd: i16,
+}
+// TODO: find the correct fixed-point type here.
+
+/// The object attributes, but there are gaps in the array, so we must not
+/// expose this directly.
+const AFFINE_PARAMS_APPROX: VolAddressBlock<[i16; 16]> = unsafe { VolAddressBlock::new_unchecked(VolAddress::new_unchecked(0x700_0000), 32) };
+
+pub fn write_affine_parameters(slot: usize, params: AffineParameters) -> Option<()> {
+  AFFINE_PARAMS_APPROX.get(slot).map(|va| unsafe {
+    let va_i16 = va.cast::<i16>();
+    va_i16.offset(3).write(params.pa);
+    va_i16.offset(7).write(params.pb);
+    va_i16.offset(11).write(params.pc);
+    va_i16.offset(15).write(params.pd);
+  })
+}
+
+pub fn read_affine_parameters(slot: usize) -> Option<AffineParameters> {
+  AFFINE_PARAMS_APPROX.get(slot).map(|va| unsafe {
+    let va_i16 = va.cast::<i16>();
+    let pa = va_i16.offset(3).read();
+    let pb = va_i16.offset(7).read();
+    let pc = va_i16.offset(11).read();
+    let pd = va_i16.offset(15).read();
+    AffineParameters { pa, pb, pc, pd }
+  })
 }

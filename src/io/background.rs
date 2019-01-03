@@ -21,21 +21,19 @@ newtype! {
   /// Bit 8-12: Screen Base Block (0 through 31, 2k each)
   /// Bit 13: Display area overflow wraps (otherwise transparent, affine BG only)
   /// Bit 14-15: Screen Size
-  #[derive(Debug, Copy, Clone, Default, PartialEq, Eq)]
   BackgroundControlSetting, u16
 }
 impl BackgroundControlSetting {
-  bool_bits!(u16, [(6, mosaic), (7, is_8bpp), (13, display_overflow_wrapping)]);
-
-  multi_bits!(
-    u16,
-    [
-      (0, 2, bg_priority),
-      (2, 2, char_base_block),
-      (8, 5, screen_base_block),
-      (2, 2, size, BGSize, Zero, One, Two, Three),
-    ]
-  );
+  phantom_fields! {
+    self.0: u16,
+    bg_priority: 0-1,
+    char_base_block: 2-3,
+    mosaic: 6,
+    is_8bpp: 7,
+    screen_base_block: 8-12,
+    affine_display_overflow_wrapping: 13,
+    size: 14-15=BGSize<Zero, One, Two, Three>,
+  }
 }
 
 /// The size of a background.

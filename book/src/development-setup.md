@@ -141,3 +141,42 @@ And you're _finally_ done!
 Of course, you probably want to make a script for all that, but it's up to you.
 On our own project we have it mostly set up within a `Makefile.toml` which runs
 using the [cargo-make](https://github.com/sagiegurari/cargo-make) plugin.
+
+## Checking Your Setup
+
+As I said, you need some source code to compile just to check that your
+compilation pipeline is working. Here's a sample file that just puts three dots
+on the screen without depending on any crates or anything at all.
+
+`hello_magic.rs`:
+
+```rust
+#![no_std]
+#![feature(start)]
+
+#[panic_handler]
+fn panic(_info: &core::panic::PanicInfo) -> ! {
+  loop {}
+}
+
+#[start]
+fn main(_argc: isize, _argv: *const *const u8) -> isize {
+  unsafe {
+    (0x400_0000 as *mut u16).write_volatile(0x0403);
+    (0x600_0000 as *mut u16).offset(120 + 80 * 240).write_volatile(0x001F);
+    (0x600_0000 as *mut u16).offset(136 + 80 * 240).write_volatile(0x03E0);
+    (0x600_0000 as *mut u16).offset(120 + 96 * 240).write_volatile(0x7C00);
+    loop {}
+  }
+}
+```
+
+Throw that into your project skeleton, build the program, and give it a run. You
+should see a red, green, and blue dot close-ish to the middle of the screen. If
+you don't, something _already_ went wrong. Double check things, phone a friend,
+write your senators, try asking `Lokathor` or `Ketsuban` on the [Rust Community
+Discord](https://discordapp.com/invite/aVESxV8), until you're eventually able to
+get your three dots going.
+
+Of course, I'm sure you want to know why those numbers are the numbers to use.
+Well that's what the whole rest of the book is about!

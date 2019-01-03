@@ -37,15 +37,13 @@ pub const PALRAM_BG: VolAddressBlock<Color> = unsafe { VolAddressBlock::new_unch
 pub const PALRAM_OBJ: VolAddressBlock<Color> = unsafe { VolAddressBlock::new_unchecked(VolAddress::new_unchecked(0x500_0200), 256) };
 
 /// Obtains the address of the specified 8bpp background palette slot.
-pub fn index_palram_bg_8bpp(slot: u8) -> VolAddress<Color> {
-  // TODO: const this
+pub const fn index_palram_bg_8bpp(slot: u8) -> VolAddress<Color> {
   // Note(Lokathor): because of the `u8` limit we can't go out of bounds here.
   unsafe { PALRAM_BG.index_unchecked(slot as usize) }
 }
 
 /// Obtains the address of the specified 8bpp object palette slot.
-pub fn index_palram_obj_8bpp(slot: u8) -> VolAddress<Color> {
-  // TODO: const this
+pub const fn index_palram_obj_8bpp(slot: u8) -> VolAddress<Color> {
   // Note(Lokathor): because of the `u8` limit we can't go out of bounds here.
   unsafe { PALRAM_OBJ.index_unchecked(slot as usize) }
 }
@@ -54,8 +52,7 @@ pub fn index_palram_obj_8bpp(slot: u8) -> VolAddress<Color> {
 ///
 /// Accesses `palbank * 16 + palslot`, if this is out of bounds the computation
 /// will wrap.
-pub fn index_palram_bg_4bpp(palbank: u8, palslot: u8) -> VolAddress<Color> {
-  // TODO: const this
+pub const fn index_palram_bg_4bpp(palbank: u8, palslot: u8) -> VolAddress<Color> {
   // Note(Lokathor): because of the `u8` limit we can't go out of bounds here.
   unsafe { PALRAM_BG.index_unchecked(palbank.wrapping_mul(16).wrapping_add(palslot) as usize) }
 }
@@ -64,8 +61,7 @@ pub fn index_palram_bg_4bpp(palbank: u8, palslot: u8) -> VolAddress<Color> {
 ///
 /// Accesses `palbank * 16 + palslot`, if this is out of bounds the computation
 /// will wrap.
-pub fn index_palram_obj_4bpp(palbank: u8, palslot: u8) -> VolAddress<Color> {
-  // TODO: const this
+pub const fn index_palram_obj_4bpp(palbank: u8, palslot: u8) -> VolAddress<Color> {
   // Note(Lokathor): because of the `u8` limit we can't go out of bounds here.
   unsafe { PALRAM_OBJ.index_unchecked(palbank.wrapping_mul(16).wrapping_add(palslot) as usize) }
 }

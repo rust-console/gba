@@ -27,27 +27,23 @@ newtype! {
   ///
   /// Methods here follow the "high-active" convention, where a bit is enabled
   /// when it's part of the set.
-  #[derive(Debug, Copy, Clone, Default, PartialEq, Eq)]
   KeyInput, u16
 }
 
-#[allow(missing_docs)]
 impl KeyInput {
-  bool_bits!(
-    u16,
-    [
-      (0, a),
-      (1, b),
-      (2, select),
-      (3, start),
-      (4, right),
-      (5, left),
-      (6, up),
-      (7, down),
-      (8, r),
-      (9, l)
-    ]
-  );
+  phantom_fields! {
+    self.0: u16,
+    a: 0,
+    b: 1,
+    select: 2,
+    start: 3,
+    right: 4,
+    left: 5,
+    up: 6,
+    down: 7,
+    r: 8,
+    l: 9,
+  }
 
   /// Takes the set difference between these keys and another set of keys.
   pub fn difference(self, other: Self) -> Self {
@@ -87,6 +83,11 @@ pub fn read_key_input() -> KeyInput {
   KeyInput(KEYINPUT.read() ^ 0b0000_0011_1111_1111)
 }
 
+/// Use this to configure when a keypad interrupt happens.
+///
+/// See the `KeyInterruptSetting` type for more.
+pub const KEYCNT: VolAddress<KeyInterruptSetting> = unsafe { VolAddress::new_unchecked(0x400_0132) };
+
 newtype! {
   /// Allows configuration of when a keypad interrupt fires.
   ///
@@ -102,31 +103,23 @@ newtype! {
   /// NOTE: This _only_ configures the operation of when keypad interrupts can
   /// fire. You must still set the `IME` to have interrupts at all, and you must
   /// further set `IE` for keypad interrupts to be possible.
-  #[derive(Debug, Copy, Clone, Default, PartialEq, Eq)]
   KeyInterruptSetting, u16
 }
 #[allow(missing_docs)]
 impl KeyInterruptSetting {
-  bool_bits!(
-    u16,
-    [
-      (0, a),
-      (1, b),
-      (2, select),
-      (3, start),
-      (4, right),
-      (5, left),
-      (6, up),
-      (7, down),
-      (8, r),
-      (9, l),
-      (14, irq_enabled),
-      (15, irq_logical_and)
-    ]
-  );
+  phantom_fields! {
+    self.0: u16,
+    a: 0,
+    b: 1,
+    select: 2,
+    start: 3,
+    right: 4,
+    left: 5,
+    up: 6,
+    down: 7,
+    r: 8,
+    l: 9,
+    irq_enabled: 14,
+    irq_logical_and: 15,
+  }
 }
-
-/// Use this to configure when a keypad interrupt happens.
-///
-/// See the `KeyInterruptSetting` type for more.
-pub const KEYCNT: VolAddress<KeyInterruptSetting> = unsafe { VolAddress::new_unchecked(0x400_0132) };

@@ -11,7 +11,7 @@ rust:
 
 before_script:
   - rustup component add rust-src
-  #- rustup component add clippy --toolchain=nightly
+  - rustup component add clippy --toolchain=nightly
   - (test -x $HOME/.cargo/bin/cargo-install-update || cargo install cargo-update)
   - (test -x $HOME/.cargo/bin/cargo-xbuild || cargo install cargo-xbuild)
   - (test -x $HOME/.cargo/bin/cargo-make || cargo install cargo-make)
@@ -44,10 +44,10 @@ script:
 
 deploy:
   provider: pages
+  local-dir: target/book-output
   skip-cleanup: true
   github-token: $GITHUB_TOKEN
-  target-branch: master
-  keep-history: true
+  keep-history: false
   name: DocsBot
   verbose: true
   on:

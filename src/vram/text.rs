@@ -4,18 +4,21 @@ use super::*;
 
 newtype! {
   /// A screenblock entry for use in Text mode.
-  #[derive(Debug, Clone, Copy, Default)]
   TextScreenblockEntry, u16
 }
 impl TextScreenblockEntry {
   /// Generates a default entry with the specified tile index.
-  pub const fn from_tile_index(index: u16) -> Self {
-    Self::new().with_tile_index(index)
+  pub const fn from_tile_id(id: u16) -> Self {
+    Self::new().with_tile_id(id)
   }
 
-  bool_bits!(u16, [(10, hflip), (11, vflip)]);
-
-  multi_bits!(u16, [(0, 10, tile_index), (12, 4, palbank)]);
+  phantom_fields! {
+    self.0: u16,
+    tile_id: 0-9,
+    hflip: 10,
+    vflip: 11,
+    palbank: 12-15,
+  }
 }
 
 newtype! {

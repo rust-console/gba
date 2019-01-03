@@ -9,7 +9,10 @@
 use super::*;
 
 pub mod background;
+pub mod color_blend;
 pub mod display;
 pub mod dma;
 pub mod keypad;
+pub mod sound;
 pub mod timers;
+pub mod window;

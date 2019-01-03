@@ -24,39 +24,33 @@ newtype!(
   /// * 13: Window 0 display
   /// * 14: Window 1 display
   /// * 15: Object window
-  #[derive(Debug, Copy, Clone, Default, PartialEq, Eq)]
   DisplayControlSetting,
   u16
 );
 
 #[allow(missing_docs)]
 impl DisplayControlSetting {
-  bool_bits!(
-    u16,
-    [
-      (3, cgb_mode),
-      (4, frame1),
-      (5, hblank_interval_free),
-      (6, oam_memory_1d),
-      (7, force_vblank),
-      (8, bg0),
-      (9, bg1),
-      (10, bg2),
-      (11, bg3),
-      (12, obj),
-      (13, win0),
-      (14, win1),
-      (15, obj_window)
-    ]
-  );
-
-  multi_bits!(u16, [(0, 3, mode, DisplayMode, Mode0, Mode1, Mode2, Mode3, Mode4, Mode5)]);
+  phantom_fields! {
+    self.0: u16,
+    mode: 0-2=DisplayMode<Mode0, Mode1, Mode2, Mode3, Mode4, Mode5>,
+    frame1: 4,
+    hblank_interval_free: 5,
+    oam_memory_1d: 6,
+    force_vblank: 7,
+    bg0: 8,
+    bg1: 9,
+    bg2: 10,
+    bg3: 11,
+    obj: 12,
+    win0: 13,
+    win1: 14,
+    obj_window: 15,
+  }
 }
 
-/// The six display modes available on the GBA.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-#[repr(u16)]
-pub enum DisplayMode {
+newtype_enum! {
+  /// The six display modes available on the GBA.
+  DisplayMode = u16,
   /// * Affine: No
   /// * Layers: 0/1/2/3
   /// * Size(px): 256x256 to 512x512
@@ -106,26 +100,21 @@ pub const DISPSTAT: VolAddress<DisplayStatusSetting> = unsafe { VolAddress::new_
 
 newtype!(
   /// A newtype over display status and interrupt control values.
-  #[derive(Debug, Copy, Clone, Default, PartialEq, Eq)]
   DisplayStatusSetting,
   u16
 );
 
-#[allow(missing_docs)]
 impl DisplayStatusSetting {
-  bool_bits!(
-    u16,
-    [
-      (0, vblank_flag),
-      (1, hblank_flag),
-      (2, vcounter_flag),
-      (3, vblank_irq_enable),
-      (4, hblank_irq_enable),
-      (5, vcounter_irq_enable),
-    ]
-  );
-
-  multi_bits!(u16, [(8, 8, vcount_setting)]);
+  phantom_fields! {
+    self.0: u16,
+    vblank_flag: 0,
+    hblank_flag: 1,
+    vcounter_flag: 2,
+    vblank_irq_enable: 3,
+    hblank_irq_enable: 4,
+    vcounter_irq_enable: 5,
+    vcount_setting: 8-15,
+  }
 }
 
 /// Vertical Counter (LY). Read only.
@@ -174,17 +163,14 @@ newtype! {
   /// * Bits 4-7: BG mosaic vertical increase
   /// * Bits 8-11: Object mosaic horizontal increase
   /// * Bits 12-15: Object mosaic vertical increase
-  #[derive(Debug, Copy, Clone, Default, PartialEq, Eq)]
   MosaicSetting, u16
 }
 impl MosaicSetting {
-  multi_bits!(
-    u16,
-    [
-      (0, 4, bg_horizontal_inc),
-      (4, 4, bg_vertical_inc),
-      (8, 4, obj_horizontal_inc),
-      (12, 4, obj_vertical_inc),
-    ]
-  );
+  phantom_fields! {
+    self.0: u16,
+    bg_horizontal_inc: 0-3,
+    bg_vertical_inc: 4-7,
+    obj_horizontal_inc: 8-11,
+    obj_vertical_inc: 12-15,
+  }
 }

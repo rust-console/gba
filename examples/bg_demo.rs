@@ -29,8 +29,8 @@ fn main(_argc: isize, _argv: *const *const u8) -> isize {
   set_bg_tile_4bpp(0, 0, ALL_TWOS);
   set_bg_tile_4bpp(0, 1, ALL_THREES);
   // screenblock
-  let light_entry = TextScreenblockEntry::from_tile_index(0);
-  let dark_entry = TextScreenblockEntry::from_tile_index(1);
+  let light_entry = TextScreenblockEntry::from_tile_id(0);
+  let dark_entry = TextScreenblockEntry::from_tile_id(1);
   checker_screenblock(8, light_entry, dark_entry);
   // bg0 control
   BG0CNT.write(BackgroundControlSetting::new().with_screen_base_block(8));
