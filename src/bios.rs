@@ -8,6 +8,8 @@
 //! whatever value is necessary for that function). Some functions also perform
 //! necessary checks to save you from yourself, such as not dividing by zero.
 
+#![cfg_attr(not(all(target_vendor = "nintendo", target_env = "agb")), allow(unused_variables))]
+
 use super::*;
 
 //TODO: ALL functions in this module should have `if cfg!(test)` blocks. The
@@ -51,9 +53,12 @@ use super::*;
 /// perform UB, but such a scenario might exist.
 #[inline(always)]
 pub unsafe fn soft_reset() -> ! {
-  if cfg!(test) {
-    panic!("Attempted soft reset during testing");
-  } else {
+  #[cfg(not(all(target_vendor = "nintendo", target_env = "agb")))]
+  {
+    unimplemented!()
+  }
+  #[cfg(all(target_vendor = "nintendo", target_env = "agb"))]
+  {
     asm!(/* ASM */ "swi 0x00"
         :/* OUT */ // none
         :/* INP */ // none
@@ -91,9 +96,12 @@ pub unsafe fn soft_reset() -> ! {
 /// that. If you do then you return to nothing and have a bad time.
 #[inline(always)]
 pub unsafe fn register_ram_reset(flags: RegisterRAMResetFlags) {
-  if cfg!(test) {
-    // do nothing in test mode
-  } else {
+  #[cfg(not(all(target_vendor = "nintendo", target_env = "agb")))]
+  {
+    unimplemented!()
+  }
+  #[cfg(all(target_vendor = "nintendo", target_env = "agb"))]
+  {
     asm!(/* ASM */ "swi 0x01"
         :/* OUT */ // none
         :/* INP */ "{r0}"(flags.0)
@@ -127,9 +135,12 @@ impl RegisterRAMResetFlags {
 /// any enabled interrupt triggers.
 #[inline(always)]
 pub fn halt() {
-  if cfg!(test) {
-    // do nothing in test mode
-  } else {
+  #[cfg(not(all(target_vendor = "nintendo", target_env = "agb")))]
+  {
+    unimplemented!()
+  }
+  #[cfg(all(target_vendor = "nintendo", target_env = "agb"))]
+  {
     unsafe {
       asm!(/* ASM */ "swi 0x02"
           :/* OUT */ // none
@@ -151,9 +162,12 @@ pub fn halt() {
 /// optional externals such as rumble and infra-red.
 #[inline(always)]
 pub fn stop() {
-  if cfg!(test) {
-    // do nothing in test mode
-  } else {
+  #[cfg(not(all(target_vendor = "nintendo", target_env = "agb")))]
+  {
+    unimplemented!()
+  }
+  #[cfg(all(target_vendor = "nintendo", target_env = "agb"))]
+  {
     unsafe {
       asm!(/* ASM */ "swi 0x03"
           :/* OUT */ // none
@@ -180,9 +194,12 @@ pub fn stop() {
 /// acknowledgement.
 #[inline(always)]
 pub fn interrupt_wait(ignore_current_flags: bool, target_flags: u16) {
-  if cfg!(test) {
-    // do nothing in test mode
-  } else {
+  #[cfg(not(all(target_vendor = "nintendo", target_env = "agb")))]
+  {
+    unimplemented!()
+  }
+  #[cfg(all(target_vendor = "nintendo", target_env = "agb"))]
+  {
     unsafe {
       asm!(/* ASM */ "swi 0x04"
           :/* OUT */ // none
@@ -201,9 +218,12 @@ pub fn interrupt_wait(ignore_current_flags: bool, target_flags: u16) {
 /// must follow the same guidelines that `interrupt_wait` outlines.
 #[inline(always)]
 pub fn vblank_interrupt_wait() {
-  if cfg!(test) {
-    // do nothing in test mode
-  } else {
+  #[cfg(not(all(target_vendor = "nintendo", target_env = "agb")))]
+  {
+    unimplemented!()
+  }
+  #[cfg(all(target_vendor = "nintendo", target_env = "agb"))]
+  {
     unsafe {
       asm!(/* ASM */ "swi 0x04"
           :/* OUT */ // none
@@ -223,9 +243,12 @@ pub fn vblank_interrupt_wait() {
 #[inline(always)]
 pub fn div_rem(numerator: i32, denominator: i32) -> (i32, i32) {
   assert!(denominator != 0);
-  if cfg!(test) {
+  #[cfg(not(all(target_vendor = "nintendo", target_env = "agb")))]
+  {
     (numerator / denominator, numerator % denominator)
-  } else {
+  }
+  #[cfg(all(target_vendor = "nintendo", target_env = "agb"))]
+  {
     let div_out: i32;
     let rem_out: i32;
     unsafe {
@@ -262,9 +285,12 @@ pub fn rem(numerator: i32, denominator: i32) -> i32 {
 /// by `2n` bits to get `n` more bits of fractional precision in your output.
 #[inline(always)]
 pub fn sqrt(val: u32) -> u16 {
-  if cfg!(test) {
-    0 // TODO: simulate this properly during testing builds.
-  } else {
+  #[cfg(not(all(target_vendor = "nintendo", target_env = "agb")))]
+  {
+    0 // TODO: simulate this properly when not on GBA
+  }
+  #[cfg(all(target_vendor = "nintendo", target_env = "agb"))]
+  {
     let out: u16;
     unsafe {
       asm!(/* ASM */ "swi 0x08"
@@ -286,9 +312,12 @@ pub fn sqrt(val: u32) -> u16 {
 /// Accuracy suffers if `theta` is less than `-pi/4` or greater than `pi/4`.
 #[inline(always)]
 pub fn atan(theta: i16) -> i16 {
-  if cfg!(test) {
-    0 // TODO: simulate this properly during testing builds.
-  } else {
+  #[cfg(not(all(target_vendor = "nintendo", target_env = "agb")))]
+  {
+    0 // TODO: simulate this properly when not on GBA
+  }
+  #[cfg(all(target_vendor = "nintendo", target_env = "agb"))]
+  {
     let out: i16;
     unsafe {
       asm!(/* ASM */ "swi 0x09"
@@ -311,9 +340,12 @@ pub fn atan(theta: i16) -> i16 {
 /// integral, 14 bits for fractional.
 #[inline(always)]
 pub fn atan2(y: i16, x: i16) -> u16 {
-  if cfg!(test) {
-    0 // TODO: simulate this properly during testing builds.
-  } else {
+  #[cfg(not(all(target_vendor = "nintendo", target_env = "agb")))]
+  {
+    0 // TODO: simulate this properly when not on GBA
+  }
+  #[cfg(all(target_vendor = "nintendo", target_env = "agb"))]
+  {
     let out: u16;
     unsafe {
       asm!(/* ASM */ "swi 0x0A"
@@ -338,9 +370,12 @@ pub fn atan2(y: i16, x: i16) -> u16 {
 /// * Both pointers must be aligned
 #[inline(always)]
 pub unsafe fn cpu_set16(src: *const u16, dest: *mut u16, count: u32, fixed_source: bool) {
-  if cfg!(test) {
-    // do nothing in test mode
-  } else {
+  #[cfg(not(all(target_vendor = "nintendo", target_env = "agb")))]
+  {
+    unimplemented!()
+  }
+  #[cfg(all(target_vendor = "nintendo", target_env = "agb"))]
+  {
     let control = count + ((fixed_source as u32) << 24);
     asm!(/* ASM */ "swi 0x0B"
         :/* OUT */ // none
@@ -362,9 +397,12 @@ pub unsafe fn cpu_set16(src: *const u16, dest: *mut u16, count: u32, fixed_sourc
 /// * Both pointers must be aligned
 #[inline(always)]
 pub unsafe fn cpu_set32(src: *const u32, dest: *mut u32, count: u32, fixed_source: bool) {
-  if cfg!(test) {
-    // do nothing in test mode
-  } else {
+  #[cfg(not(all(target_vendor = "nintendo", target_env = "agb")))]
+  {
+    unimplemented!()
+  }
+  #[cfg(all(target_vendor = "nintendo", target_env = "agb"))]
+  {
     let control = count + ((fixed_source as u32) << 24) + (1 << 26);
     asm!(/* ASM */ "swi 0x0B"
         :/* OUT */ // none
@@ -387,9 +425,12 @@ pub unsafe fn cpu_set32(src: *const u32, dest: *mut u32, count: u32, fixed_sourc
 /// * Both pointers must be aligned
 #[inline(always)]
 pub unsafe fn cpu_fast_set(src: *const u32, dest: *mut u32, count: u32, fixed_source: bool) {
-  if cfg!(test) {
-    // do nothing in test mode
-  } else {
+  #[cfg(not(all(target_vendor = "nintendo", target_env = "agb")))]
+  {
+    unimplemented!()
+  }
+  #[cfg(all(target_vendor = "nintendo", target_env = "agb"))]
+  {
     let control = count + ((fixed_source as u32) << 24);
     asm!(/* ASM */ "swi 0x0C"
         :/* OUT */ // none
@@ -410,9 +451,12 @@ pub unsafe fn cpu_fast_set(src: *const u32, dest: *mut u32, count: u32, fixed_so
 /// some other value I guess you're probably running on an emulator that just
 /// broke the fourth wall.
 pub fn get_bios_checksum() -> u32 {
-  if cfg!(test) {
-    0
-  } else {
+  #[cfg(not(all(target_vendor = "nintendo", target_env = "agb")))]
+  {
+    unimplemented!()
+  }
+  #[cfg(all(target_vendor = "nintendo", target_env = "agb"))]
+  {
     let out: u32;
     unsafe {
       asm!(/* ASM */ "swi 0x0D"
@@ -447,9 +491,12 @@ pub fn get_bios_checksum() -> u32 {
 ///
 /// The final sound level setting will be `level` * `0x200`.
 pub fn sound_bias(level: u32) {
-  if cfg!(test) {
-    // do nothing in test mode
-  } else {
+  #[cfg(not(all(target_vendor = "nintendo", target_env = "agb")))]
+  {
+    unimplemented!()
+  }
+  #[cfg(all(target_vendor = "nintendo", target_env = "agb"))]
+  {
     unsafe {
       asm!(/* ASM */ "swi 0x19"
           :/* OUT */ // none
@@ -489,9 +536,12 @@ pub fn sound_bias(level: u32) {
 /// * 10: 40137
 /// * 11: 42048
 pub fn sound_driver_mode(mode: u32) {
-  if cfg!(test) {
-    // do nothing in test mode
-  } else {
+  #[cfg(not(all(target_vendor = "nintendo", target_env = "agb")))]
+  {
+    unimplemented!()
+  }
+  #[cfg(all(target_vendor = "nintendo", target_env = "agb"))]
+  {
     unsafe {
       asm!(/* ASM */ "swi 0x1B"
           :/* OUT */ // none
@@ -513,9 +563,12 @@ pub fn sound_driver_mode(mode: u32) {
 /// executed." --what?
 #[inline(always)]
 pub fn sound_driver_main() {
-  if cfg!(test) {
-    // do nothing in test mode
-  } else {
+  #[cfg(not(all(target_vendor = "nintendo", target_env = "agb")))]
+  {
+    unimplemented!()
+  }
+  #[cfg(all(target_vendor = "nintendo", target_env = "agb"))]
+  {
     unsafe {
       asm!(/* ASM */ "swi 0x1C"
           :/* OUT */ // none
@@ -533,9 +586,12 @@ pub fn sound_driver_main() {
 /// vblank interrupt (every 1/60th of a second).
 #[inline(always)]
 pub fn sound_driver_vsync() {
-  if cfg!(test) {
-    // do nothing in test mode
-  } else {
+  #[cfg(not(all(target_vendor = "nintendo", target_env = "agb")))]
+  {
+    unimplemented!()
+  }
+  #[cfg(all(target_vendor = "nintendo", target_env = "agb"))]
+  {
     unsafe {
       asm!(/* ASM */ "swi 0x1D"
           :/* OUT */ // none
@@ -555,9 +611,12 @@ pub fn sound_driver_vsync() {
 /// --what?
 #[inline(always)]
 pub fn sound_channel_clear() {
-  if cfg!(test) {
-    // do nothing in test mode
-  } else {
+  #[cfg(not(all(target_vendor = "nintendo", target_env = "agb")))]
+  {
+    unimplemented!()
+  }
+  #[cfg(all(target_vendor = "nintendo", target_env = "agb"))]
+  {
     unsafe {
       asm!(/* ASM */ "swi 0x1E"
           :/* OUT */ // none
@@ -580,9 +639,12 @@ pub fn sound_channel_clear() {
 /// noise.
 #[inline(always)]
 pub fn sound_driver_vsync_off() {
-  if cfg!(test) {
-    // do nothing in test mode
-  } else {
+  #[cfg(not(all(target_vendor = "nintendo", target_env = "agb")))]
+  {
+    unimplemented!()
+  }
+  #[cfg(all(target_vendor = "nintendo", target_env = "agb"))]
+  {
     unsafe {
       asm!(/* ASM */ "swi 0x28"
           :/* OUT */ // none
@@ -601,9 +663,12 @@ pub fn sound_driver_vsync_off() {
 /// interrupt followed by a `sound_driver_vsync` within 2/60th of a second.
 #[inline(always)]
 pub fn sound_driver_vsync_on() {
-  if cfg!(test) {
-    // do nothing in test mode
-  } else {
+  #[cfg(not(all(target_vendor = "nintendo", target_env = "agb")))]
+  {
+    unimplemented!()
+  }
+  #[cfg(all(target_vendor = "nintendo", target_env = "agb"))]
+  {
     unsafe {
       asm!(/* ASM */ "swi 0x29"
           :/* OUT */ // none
