@@ -130,9 +130,9 @@ impl OBJAttr2 {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct ObjectAttributes {
-  attr0: OBJAttr0,
-  attr1: OBJAttr1,
-  attr2: OBJAttr2,
+  pub attr0: OBJAttr0,
+  pub attr1: OBJAttr1,
+  pub attr2: OBJAttr2,
 }
 
 /// The object attributes, but there are gaps in the array, so we must not
@@ -160,10 +160,10 @@ pub fn read_obj_attributes(slot: usize) -> Option<ObjectAttributes> {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct AffineParameters {
-  pa: i16,
-  pb: i16,
-  pc: i16,
-  pd: i16,
+  pub pa: i16,
+  pub pb: i16,
+  pub pc: i16,
+  pub pd: i16,
 }
 // TODO: find the correct fixed-point type here.
 
