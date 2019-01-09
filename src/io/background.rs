@@ -71,9 +71,9 @@ pub const BG0HOFS: VolAddress<u16> = unsafe { VolAddress::new_unchecked(0x400_00
 pub const BG0VOFS: VolAddress<u16> = unsafe { VolAddress::new_unchecked(0x400_0012) };
 
 /// BG1 X-Offset. Write only. Text mode only. 9 bits.
-pub const BG1HOFS: VolAddress<u16> = unsafe { VolAddress::new_unchecked(0x400_0012) };
+pub const BG1HOFS: VolAddress<u16> = unsafe { VolAddress::new_unchecked(0x400_0014) };
 /// BG1 Y-Offset. Write only. Text mode only. 9 bits.
-pub const BG1VOFS: VolAddress<u16> = unsafe { VolAddress::new_unchecked(0x400_0012) };
+pub const BG1VOFS: VolAddress<u16> = unsafe { VolAddress::new_unchecked(0x400_0016) };
 
 /// BG2 X-Offset. Write only. Text mode only. 9 bits.
 pub const BG2HOFS: VolAddress<u16> = unsafe { VolAddress::new_unchecked(0x400_0018) };
