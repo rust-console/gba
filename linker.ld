@@ -29,6 +29,7 @@ SECTIONS {
     .bss : {
         *(.bss .bss.*);
         . = ALIGN(4);
+        __bss_end = ABSOLUTE(.);
     } >iwram
 
     /* debugging sections */
