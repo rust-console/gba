@@ -26,6 +26,12 @@ SECTIONS {
         __data_end = ABSOLUTE(.);
     } >iwram AT>rom = 0xff
 
+    .bss : {
+        *(.bss .bss.*);
+        . = ALIGN(4);
+        __bss_end = ABSOLUTE(.);
+    } >iwram
+
     /* debugging sections */
     /* Stabs */
     .stab            0 : { *(.stab) }
