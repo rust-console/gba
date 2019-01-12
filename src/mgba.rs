@@ -1,4 +1,8 @@
 //! Special utils for if you're running on the mGBA emulator.
+//!
+//! Note that this assumes that you're using the very latest version (0.7-beta1
+//! at the time of this writing). If you've got some older version of things
+//! there might be any number of differences or problems.
 
 use super::*;
 
