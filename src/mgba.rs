@@ -1,4 +1,8 @@
 //! Special utils for if you're running on the mGBA emulator.
+//!
+//! Note that this assumes that you're using the very latest version (0.7-beta1
+//! at the time of this writing). If you've got some older version of things
+//! there might be any number of differences or problems.
 
 use super::*;
 
@@ -6,6 +10,7 @@ use super::*;
 #[repr(u16)]
 #[allow(missing_docs)]
 pub enum MGBADebugLevel {
+  /// Warning! This causes the emulator to halt emulation!
   Fatal = 0,
   Error = 1,
   Warning = 2,
@@ -51,9 +56,12 @@ impl MGBADebug {
   pub fn send(&mut self, level: MGBADebugLevel) {
     if level == MGBADebugLevel::Fatal {
       Self::SEND_ADDRESS.write(Self::SEND_FLAG | MGBADebugLevel::Error as u16);
+
+      // Note(Lokathor): A Fatal send causes the emulator to halt!
       Self::SEND_ADDRESS.write(Self::SEND_FLAG | MGBADebugLevel::Fatal as u16);
     } else {
       Self::SEND_ADDRESS.write(Self::SEND_FLAG | level as u16);
+      self.bytes_written = 0;
     }
   }
 }

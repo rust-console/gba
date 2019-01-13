@@ -1,7 +1,5 @@
 #![cfg_attr(not(test), no_std)]
 #![feature(asm)]
-#![feature(const_int_wrapping)]
-#![feature(const_int_rotate)]
 #![feature(cfg_target_vendor)]
 #![allow(clippy::cast_lossless)]
 #![deny(clippy::float_arithmetic)]
@@ -128,6 +126,15 @@ pub mod rom;
 pub mod sram;
 
 pub mod mgba;
+
+extern "C" {
+  /// This marks the end of the `.data` and `.bss` sections in IWRAM.
+  ///
+  /// Memory in IWRAM _before_ this location is not free to use, you'll trash
+  /// your globals and stuff. Memory here or after is freely available for use
+  /// (careful that you don't run into your own stack of course).
+  static __bss_end: u8;
+}
 
 newtype! {
   /// A color on the GBA is an RGB 5.5.5 within a `u16`
