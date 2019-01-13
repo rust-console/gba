@@ -1,7 +1,5 @@
 #![cfg_attr(not(test), no_std)]
 #![feature(asm)]
-#![feature(const_int_wrapping)]
-#![feature(const_int_rotate)]
 #![feature(cfg_target_vendor)]
 #![allow(clippy::cast_lossless)]
 #![deny(clippy::float_arithmetic)]
