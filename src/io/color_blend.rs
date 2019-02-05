@@ -3,7 +3,7 @@
 use super::*;
 
 /// Color Special Effects Selection (R/W)
-pub const BLDCNT: VolAddress<ColorEffectSetting> = unsafe { VolAddress::new_unchecked(0x400_0050) };
+pub const BLDCNT: VolAddress<ColorEffectSetting> = unsafe { VolAddress::new(0x400_0050) };
 
 newtype! {
   ColorEffectSetting, u16
@@ -37,7 +37,7 @@ newtype_enum! {
 }
 
 /// Alpha Blending Coefficients (R/W) (not W)
-pub const BLDALPHA: VolAddress<AlphaBlendingSetting> = unsafe { VolAddress::new_unchecked(0x400_0052) };
+pub const BLDALPHA: VolAddress<AlphaBlendingSetting> = unsafe { VolAddress::new(0x400_0052) };
 
 newtype! {
   AlphaBlendingSetting, u16
@@ -52,7 +52,7 @@ impl AlphaBlendingSetting {
 }
 
 /// Brightness (Fade-In/Out) Coefficient (W) (not R/W)
-pub const BLDY: VolAddress<BrightnessSetting> = unsafe { VolAddress::new_unchecked(0x400_0054) };
+pub const BLDY: VolAddress<BrightnessSetting> = unsafe { VolAddress::new(0x400_0054) };
 
 newtype! {
   BrightnessSetting, u32

@@ -8,7 +8,7 @@ use super::*;
 /// follow the "high-active" convention (hint: you probably do, it's far easier
 /// to work with) then call `read_key_input()` rather than reading this register
 /// directly. It will perform the necessary bit flip operation for you.
-pub const KEYINPUT: VolAddress<u16> = unsafe { VolAddress::new_unchecked(0x400_0130) };
+pub const KEYINPUT: VolAddress<u16> = unsafe { VolAddress::new(0x400_0130) };
 
 /// A "tribool" value helps us interpret the arrow pad.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -86,7 +86,7 @@ pub fn read_key_input() -> KeyInput {
 /// Use this to configure when a keypad interrupt happens.
 ///
 /// See the `KeyInterruptSetting` type for more.
-pub const KEYCNT: VolAddress<KeyInterruptSetting> = unsafe { VolAddress::new_unchecked(0x400_0132) };
+pub const KEYCNT: VolAddress<KeyInterruptSetting> = unsafe { VolAddress::new(0x400_0132) };
 
 newtype! {
   /// Allows configuration of when a keypad interrupt fires.

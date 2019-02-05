@@ -24,13 +24,13 @@ pub struct MGBADebug {
   bytes_written: u8,
 }
 impl MGBADebug {
-  const ENABLE_ADDRESS: VolAddress<u16> = unsafe { VolAddress::new_unchecked(0x4fff780) };
+  const ENABLE_ADDRESS: VolAddress<u16> = unsafe { VolAddress::new(0x4fff780) };
   const ENABLE_ADDRESS_INPUT: u16 = 0xC0DE;
   const ENABLE_ADDRESS_OUTPUT: u16 = 0x1DEA;
 
-  const OUTPUT_BASE: VolAddress<u8> = unsafe { VolAddress::new_unchecked(0x4fff600) };
+  const OUTPUT_BASE: VolAddress<u8> = unsafe { VolAddress::new(0x4fff600) };
 
-  const SEND_ADDRESS: VolAddress<u16> = unsafe { VolAddress::new_unchecked(0x4fff700) };
+  const SEND_ADDRESS: VolAddress<u16> = unsafe { VolAddress::new(0x4fff700) };
   const SEND_FLAG: u16 = 0x100;
 
   /// Gives a new MGBADebug, if running within `mGBA`
