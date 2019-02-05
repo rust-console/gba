@@ -5,7 +5,7 @@ use super::*;
 /// LCD Control. Read/Write.
 ///
 /// The "force vblank" bit is always set when your Rust code first executes.
-pub const DISPCNT: VolAddress<DisplayControlSetting> = unsafe { VolAddress::new_unchecked(0x400_0000) };
+pub const DISPCNT: VolAddress<DisplayControlSetting> = unsafe { VolAddress::new(0x400_0000) };
 
 newtype!(
   /// Setting for the display control register.
@@ -96,7 +96,7 @@ pub fn display_control() -> DisplayControlSetting {
 }
 
 /// Display Status and IRQ Control. Read/Write.
-pub const DISPSTAT: VolAddress<DisplayStatusSetting> = unsafe { VolAddress::new_unchecked(0x400_0004) };
+pub const DISPSTAT: VolAddress<DisplayStatusSetting> = unsafe { VolAddress::new(0x400_0004) };
 
 newtype!(
   /// A newtype over display status and interrupt control values.
@@ -122,7 +122,7 @@ impl DisplayStatusSetting {
 /// Gives the current scanline that the display controller is working on. If
 /// this is at or above the `VBLANK_SCANLINE` value then the display controller
 /// is in a "vertical blank" period.
-pub const VCOUNT: VolAddress<u16> = unsafe { VolAddress::new_unchecked(0x400_0006) };
+pub const VCOUNT: VolAddress<u16> = unsafe { VolAddress::new(0x400_0006) };
 
 /// If the `VCOUNT` register reads equal to or above this then you're in vblank.
 pub const VBLANK_SCANLINE: u16 = 160;
@@ -145,7 +145,7 @@ pub fn spin_until_vdraw() {
 }
 
 /// Global mosaic effect control. Write-only.
-pub const MOSAIC: VolAddress<MosaicSetting> = unsafe { VolAddress::new_unchecked(0x400_004C) };
+pub const MOSAIC: VolAddress<MosaicSetting> = unsafe { VolAddress::new(0x400_004C) };
 
 newtype! {
   /// Allows control of the Mosaic effect.

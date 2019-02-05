@@ -146,7 +146,7 @@ So, again using the `hello_magic` example, we had
 And instead we could declare
 
 ```rust
-const MAGIC_LOCATION: VolAddress<u16> = unsafe { VolAddress::new_unchecked(0x400_0000) };
+const MAGIC_LOCATION: VolAddress<u16> = unsafe { VolAddress::new(0x400_0000) };
 ```
 
 ### Using A VolAddress Value
@@ -300,7 +300,7 @@ Now we can have something like:
 ```rust
 const OTHER_MAGIC: VolAddressBlock<u16> = unsafe {
   VolAddressBlock::new_unchecked(
-    VolAddress::new_unchecked(0x600_0000),
+    VolAddress::new(0x600_0000),
     240 * 160
   )
 };
