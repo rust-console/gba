@@ -17,21 +17,32 @@ sometimes. Accordingly, you should know how assembly works on the GBA.
   Version](http://infocenter.arm.com/help/topic/com.arm.doc.ddi0210c/DDI0210B.pdf)
   of the documentation available, if you'd like that.
 
+* In addition to the `ARM7TDMI` book, which is specific to the GBA's CPU, you'll
+  need to find a copy of the ARM Architecture Reference Manual if you want
+  general ARM knowledge. The ARM Infocenter has the
+  [ARMv5](http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.ddi0100i/index.html)
+  version of said manual hosted on their site. Unfortunately, they don't seem to
+  host the `ARMv4T` version of the manual any more.
+
 * The [GBATek: ARM CPU
   Overview](https://problemkaputt.de/gbatek.htm#armcpuoverview) also has quite a
   bit of info. Some of it is a duplication of what you'd find in the ARM
-  Infocenter reference manual. Some of it is specific to the GBA's chip. Some of
-  it is specific to the ARM chips within the DS and DSi. It's a bit of a jumbled
-  mess, and as with the rest of GBATEK, the explanations are in a "sparse" style
-  (to put it nicely), so I wouldn't take it as your only source.
+  Infocenter reference manuals. Some of it is information that's specific to the
+  GBA's layout and how the CPU interacts with other parts (such as how its
+  timings and the display adapter's timings line up). Some of it is specific to
+  the ARM chips _within the DS and DSi_, so be careful to make sure that you
+  don't wander into the wrong section. GBATEK is always a bit of a jumbled mess,
+  and the explanations are often "sparse" (to put it nicely), so I'd advise that
+  you also look at the official ARM manuals.
 
 * The [Compiler Explorer](https://rust.godbolt.org/z/ndCnk3) can be used to
   quickly look at assembly versions of your Rust code. That link there will load
   up an essentially blank `no_std` file with `opt-level=3` set and targeting
   `thumbv6m-none-eabi`. That's _not_ the same target as the GBA (it's two ISA
-  revisions later, ARMv6 instead of ARMv4), but it's the closest CPU target that
-  is bundled with rustc, so it's the closest you can get with the compiler
-  explorer website. If you're very dedicated I suppose you could setup a [local
+  revisions later, `ARMv6` instead of `ARMv4`), but it's the closest CPU target
+  that is bundled with `rustc`, so it's the closest you can get with the
+  compiler explorer website. If you're very dedicated I suppose you could setup
+  a [local
   instance](https://github.com/mattgodbolt/compiler-explorer#running-a-local-instance)
   of compiler explorer and then add the extra target definition and so on, but
   that's _probably_ overkill.
