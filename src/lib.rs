@@ -136,7 +136,7 @@ extern "C" {
   ///
   /// The actual value is unimportant, you just want to use the _address of_
   /// this location as the start of your IWRAM usage.
-  static __bss_end: u8;
+  pub static __bss_end: u8;
 }
 
 newtype! {
