@@ -133,7 +133,10 @@ extern "C" {
   /// Memory in IWRAM _before_ this location is not free to use, you'll trash
   /// your globals and stuff. Memory here or after is freely available for use
   /// (careful that you don't run into your own stack of course).
-  static __bss_end: u8;
+  ///
+  /// The actual value is unimportant, you just want to use the _address of_
+  /// this location as the start of your IWRAM usage.
+  pub static __bss_end: u8;
 }
 
 newtype! {

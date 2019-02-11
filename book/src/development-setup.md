@@ -171,12 +171,14 @@ fn main(_argc: isize, _argv: *const *const u8) -> isize {
 }
 ```
 
-Throw that into your project skeleton, build the program, and give it a run. You
-should see a red, green, and blue dot close-ish to the middle of the screen. If
-you don't, something _already_ went wrong. Double check things, phone a friend,
-write your senators, try asking `Lokathor` or `Ketsuban` on the [Rust Community
+Throw that into your project skeleton, build the program, and give it a run in
+an emulator. I suggest [mgba](https://mgba.io/2019/01/26/mgba-0.7.0/), it has
+some developer tools we'll use later on. You should see a red, green, and blue
+dot close-ish to the middle of the screen. If you don't, something _already_
+went wrong. Double check things, phone a friend, write your senators, try asking
+`Lokathor` or `Ketsuban` on the [Rust Community
 Discord](https://discordapp.com/invite/aVESxV8), until you're eventually able to
 get your three dots going.
 
-Of course, I'm sure you want to know why those numbers are the numbers to use.
-Well that's what the whole rest of the book is about!
+Of course, I'm sure you want to know why those particular numbers are the
+numbers to use. Well that's what the whole rest of the book is about!
