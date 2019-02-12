@@ -133,9 +133,8 @@ when the `hello_magic` demo says
 We could re-write that more sensibly like this
 
 ```rust
-  const SETTING: DisplayControlSetting = DisplayControlSetting::new()
-    .with_mode(DisplayMode::Mode3)
-    .with_bg2(true);
+  const SETTING: DisplayControlSetting =
+    DisplayControlSetting::new().with_mode(DisplayMode::Mode3).with_bg2(true);
   DISPCNT.write(SETTING);
 ```
 
