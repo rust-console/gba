@@ -157,7 +157,11 @@ pub fn read_obj_attributes(slot: usize) -> Option<ObjectAttributes> {
     let attr0 = va_u16.cast::<OBJAttr0>().read();
     let attr1 = va_u16.offset(1).cast::<OBJAttr1>().read();
     let attr2 = va_u16.offset(2).cast::<OBJAttr2>().read();
-    ObjectAttributes { attr0, attr1, attr2 }
+    ObjectAttributes {
+      attr0,
+      attr1,
+      attr2,
+    }
   })
 }
 

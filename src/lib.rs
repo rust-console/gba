@@ -19,7 +19,7 @@
 //! do, it's a giant bag of Undefined Behavior.
 
 pub(crate) use gba_proc_macro::phantom_fields;
-pub(crate) use voladdress::{VolAddress, VolBlock};
+pub(crate) use voladdress::{read_only::ROVolAddress, VolAddress, VolBlock};
 
 /// Assists in defining a newtype wrapper over some base type.
 ///

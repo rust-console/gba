@@ -122,7 +122,7 @@ impl DisplayStatusSetting {
 /// Gives the current scanline that the display controller is working on. If
 /// this is at or above the `VBLANK_SCANLINE` value then the display controller
 /// is in a "vertical blank" period.
-pub const VCOUNT: VolAddress<u16> = unsafe { VolAddress::new(0x400_0006) };
+pub const VCOUNT: ROVolAddress<u16> = unsafe { ROVolAddress::new(0x400_0006) };
 
 /// If the `VCOUNT` register reads equal to or above this then you're in vblank.
 pub const VBLANK_SCANLINE: u16 = 160;

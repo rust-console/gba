@@ -60,7 +60,8 @@ pub const SOUND2CNT_L: VolAddress<DutyLenEnvelopeSetting> = unsafe { VolAddress:
 pub const SOUND2CNT_H: VolAddress<FrequencyControlSetting> = unsafe { VolAddress::new(0x400_006C) };
 
 /// Sound Channel 3 Stop/Wave RAM select (`NR23`, `NR24`). Read/Write.
-pub const SOUND3CNT_L: VolAddress<StopWaveRAMSelectSetting> = unsafe { VolAddress::new(0x400_0070) };
+pub const SOUND3CNT_L: VolAddress<StopWaveRAMSelectSetting> =
+  unsafe { VolAddress::new(0x400_0070) };
 
 newtype! {
   StopWaveRAMSelectSetting, u16
@@ -158,7 +159,8 @@ pub const FIFO_B_L: VolAddress<u16> = unsafe { VolAddress::new(0x400_00A4) };
 pub const FIFO_B_H: VolAddress<u16> = unsafe { VolAddress::new(0x400_00A6) };
 
 /// Channel L/R Volume/Enable (`NR50`, `NR51`). Read/Write.
-pub const SOUNDCNT_L: VolAddress<NonWaveVolumeEnableSetting> = unsafe { VolAddress::new(0x400_0080) };
+pub const SOUNDCNT_L: VolAddress<NonWaveVolumeEnableSetting> =
+  unsafe { VolAddress::new(0x400_0080) };
 
 newtype! {
   NonWaveVolumeEnableSetting, u16

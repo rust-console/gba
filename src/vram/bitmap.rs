@@ -30,10 +30,12 @@ impl Mode3 {
   ///
   /// Use `col + row * SCREEN_WIDTH` to get the address of an individual pixel,
   /// or use the helpers provided in this module.
-  pub const VRAM: VolBlock<Color, <U256 as Mul<U160>>::Output> = unsafe { VolBlock::new(VRAM_BASE_USIZE) };
+  pub const VRAM: VolBlock<Color, <U256 as Mul<U160>>::Output> =
+    unsafe { VolBlock::new(VRAM_BASE_USIZE) };
 
   /// private iterator over the pixels, two at a time
-  const VRAM_BULK: VolBlock<u32, <<U256 as Mul<U160>>::Output as Div<U2>>::Output> = unsafe { VolBlock::new(VRAM_BASE_USIZE) };
+  const VRAM_BULK: VolBlock<u32, <<U256 as Mul<U160>>::Output as Div<U2>>::Output> =
+    unsafe { VolBlock::new(VRAM_BASE_USIZE) };
 
   /// Reads the pixel at the given (col,row).
   ///
@@ -41,7 +43,9 @@ impl Mode3 {
   ///
   /// Gives `None` if out of bounds.
   pub fn read_pixel(col: usize, row: usize) -> Option<Color> {
-    Self::VRAM.get(col + row * Self::SCREEN_WIDTH).map(VolAddress::read)
+    Self::VRAM
+      .get(col + row * Self::SCREEN_WIDTH)
+      .map(VolAddress::read)
   }
 
   /// Writes the pixel at the given (col,row).
@@ -50,7 +54,9 @@ impl Mode3 {
   ///
   /// Gives `None` if out of bounds.
   pub fn write_pixel(col: usize, row: usize, color: Color) -> Option<()> {
-    Self::VRAM.get(col + row * Self::SCREEN_WIDTH).map(|va| va.write(color))
+    Self::VRAM
+      .get(col + row * Self::SCREEN_WIDTH)
+      .map(|va| va.write(color))
   }
 
   /// Clears the whole screen to the desired color.
@@ -68,7 +74,13 @@ impl Mode3 {
 
     let color32 = color.0 as u32;
     let bulk_color = color32 << 16 | color32;
-    unsafe { DMA3::fill32(&bulk_color, VRAM_BASE_USIZE as *mut u32, (Self::SCREEN_PIXEL_COUNT / 2) as u16) };
+    unsafe {
+      DMA3::fill32(
+        &bulk_color,
+        VRAM_BASE_USIZE as *mut u32,
+        (Self::SCREEN_PIXEL_COUNT / 2) as u16,
+      )
+    };
   }
 }
 
@@ -102,22 +114,28 @@ impl Mode4 {
   const SCREEN_U32_COUNT: usize = Self::SCREEN_PIXEL_COUNT / 4;
 
   // TODO: newtype this?
-  const PAGE0_BLOCK8: VolBlock<u8, <U256 as Mul<U160>>::Output> = unsafe { VolBlock::new(VRAM_BASE_USIZE) };
+  const PAGE0_BLOCK8: VolBlock<u8, <U256 as Mul<U160>>::Output> =
+    unsafe { VolBlock::new(VRAM_BASE_USIZE) };
 
   // TODO: newtype this?
-  const PAGE1_BLOCK8: VolBlock<u8, <U256 as Mul<U160>>::Output> = unsafe { VolBlock::new(VRAM_BASE_USIZE + 0xA000) };
+  const PAGE1_BLOCK8: VolBlock<u8, <U256 as Mul<U160>>::Output> =
+    unsafe { VolBlock::new(VRAM_BASE_USIZE + 0xA000) };
 
   // TODO: newtype this?
-  const PAGE0_BLOCK16: VolBlock<u16, <<U256 as Mul<U160>>::Output as Div<U2>>::Output> = unsafe { VolBlock::new(VRAM_BASE_USIZE) };
+  const PAGE0_BLOCK16: VolBlock<u16, <<U256 as Mul<U160>>::Output as Div<U2>>::Output> =
+    unsafe { VolBlock::new(VRAM_BASE_USIZE) };
 
   // TODO: newtype this?
-  const PAGE1_BLOCK16: VolBlock<u16, <<U256 as Mul<U160>>::Output as Div<U2>>::Output> = unsafe { VolBlock::new(VRAM_BASE_USIZE + 0xA000) };
+  const PAGE1_BLOCK16: VolBlock<u16, <<U256 as Mul<U160>>::Output as Div<U2>>::Output> =
+    unsafe { VolBlock::new(VRAM_BASE_USIZE + 0xA000) };
 
   /// private iterator over the page0 pixels, four at a time
-  const PAGE0_BULK32: VolBlock<u32, <<U256 as Mul<U160>>::Output as Div<U4>>::Output> = unsafe { VolBlock::new(VRAM_BASE_USIZE) };
+  const PAGE0_BULK32: VolBlock<u32, <<U256 as Mul<U160>>::Output as Div<U4>>::Output> =
+    unsafe { VolBlock::new(VRAM_BASE_USIZE) };
 
   /// private iterator over the page1 pixels, four at a time
-  const PAGE1_BULK32: VolBlock<u32, <<U256 as Mul<U160>>::Output as Div<U4>>::Output> = unsafe { VolBlock::new(VRAM_BASE_USIZE + 0xA000) };
+  const PAGE1_BULK32: VolBlock<u32, <<U256 as Mul<U160>>::Output as Div<U4>>::Output> =
+    unsafe { VolBlock::new(VRAM_BASE_USIZE + 0xA000) };
 
   /// Reads the pixel at the given (col,row).
   ///
@@ -127,9 +145,13 @@ impl Mode4 {
   pub fn read_pixel(page1: bool, col: usize, row: usize) -> Option<u8> {
     // Note(Lokathor): byte _reads_ from VRAM are okay.
     if page1 {
-      Self::PAGE1_BLOCK8.get(col + row * Self::SCREEN_WIDTH).map(VolAddress::read)
+      Self::PAGE1_BLOCK8
+        .get(col + row * Self::SCREEN_WIDTH)
+        .map(VolAddress::read)
     } else {
-      Self::PAGE0_BLOCK8.get(col + row * Self::SCREEN_WIDTH).map(VolAddress::read)
+      Self::PAGE0_BLOCK8
+        .get(col + row * Self::SCREEN_WIDTH)
+        .map(VolAddress::read)
     }
   }
 
@@ -171,7 +193,9 @@ impl Mode4 {
   /// The page is imagined to be a series of `u16` values rather than `u8`
   /// values, allowing you to write two palette entries side by side as a single
   /// write operation.
-  pub fn write_wide_pixel(page1: bool, wide_col: usize, row: usize, wide_pal8bpp: u16) -> Option<()> {
+  pub fn write_wide_pixel(
+    page1: bool, wide_col: usize, row: usize, wide_pal8bpp: u16,
+  ) -> Option<()> {
     if wide_col < Self::SCREEN_WIDTH / 2 && row < Self::SCREEN_HEIGHT {
       let wide_index = wide_col + row * Self::SCREEN_WIDTH / 2;
       let address: VolAddress<u16> = if page1 {
@@ -189,7 +213,13 @@ impl Mode4 {
   pub fn clear_page_to(page1: bool, pal8bpp: u8) {
     let pal8bpp_32 = pal8bpp as u32;
     let bulk_color = (pal8bpp_32 << 24) | (pal8bpp_32 << 16) | (pal8bpp_32 << 8) | pal8bpp_32;
-    for va in (if page1 { Self::PAGE1_BULK32 } else { Self::PAGE0_BULK32 }).iter() {
+    for va in (if page1 {
+      Self::PAGE1_BULK32
+    } else {
+      Self::PAGE0_BULK32
+    })
+    .iter()
+    {
       va.write(bulk_color)
     }
   }
@@ -237,16 +267,20 @@ impl Mode5 {
   const SCREEN_U32_COUNT: usize = Self::SCREEN_PIXEL_COUNT / 2;
 
   // TODO: newtype this?
-  const PAGE0_BLOCK: VolBlock<Color, <U160 as Mul<U128>>::Output> = unsafe { VolBlock::new(VRAM_BASE_USIZE) };
+  const PAGE0_BLOCK: VolBlock<Color, <U160 as Mul<U128>>::Output> =
+    unsafe { VolBlock::new(VRAM_BASE_USIZE) };
 
   // TODO: newtype this?
-  const PAGE1_BLOCK: VolBlock<Color, <U160 as Mul<U128>>::Output> = unsafe { VolBlock::new(VRAM_BASE_USIZE + 0xA000) };
+  const PAGE1_BLOCK: VolBlock<Color, <U160 as Mul<U128>>::Output> =
+    unsafe { VolBlock::new(VRAM_BASE_USIZE + 0xA000) };
 
   /// private iterator over the page0 pixels, four at a time
-  const PAGE0_BULK32: VolBlock<u32, <<U160 as Mul<U128>>::Output as Div<U2>>::Output> = unsafe { VolBlock::new(VRAM_BASE_USIZE) };
+  const PAGE0_BULK32: VolBlock<u32, <<U160 as Mul<U128>>::Output as Div<U2>>::Output> =
+    unsafe { VolBlock::new(VRAM_BASE_USIZE) };
 
   /// private iterator over the page1 pixels, four at a time
-  const PAGE1_BULK32: VolBlock<u32, <<U160 as Mul<U128>>::Output as Div<U2>>::Output> = unsafe { VolBlock::new(VRAM_BASE_USIZE + 0xA000) };
+  const PAGE1_BULK32: VolBlock<u32, <<U160 as Mul<U128>>::Output as Div<U2>>::Output> =
+    unsafe { VolBlock::new(VRAM_BASE_USIZE + 0xA000) };
 
   /// Reads the pixel at the given (col,row).
   ///
@@ -255,9 +289,13 @@ impl Mode5 {
   /// Gives `None` if out of bounds.
   pub fn read_pixel(page1: bool, col: usize, row: usize) -> Option<Color> {
     if page1 {
-      Self::PAGE1_BLOCK.get(col + row * Self::SCREEN_WIDTH).map(VolAddress::read)
+      Self::PAGE1_BLOCK
+        .get(col + row * Self::SCREEN_WIDTH)
+        .map(VolAddress::read)
     } else {
-      Self::PAGE0_BLOCK.get(col + row * Self::SCREEN_WIDTH).map(VolAddress::read)
+      Self::PAGE0_BLOCK
+        .get(col + row * Self::SCREEN_WIDTH)
+        .map(VolAddress::read)
     }
   }
 
@@ -268,9 +306,13 @@ impl Mode5 {
   /// Gives `None` if out of bounds.
   pub fn write_pixel(page1: bool, col: usize, row: usize, color: Color) -> Option<()> {
     if page1 {
-      Self::PAGE1_BLOCK.get(col + row * Self::SCREEN_WIDTH).map(|va| va.write(color))
+      Self::PAGE1_BLOCK
+        .get(col + row * Self::SCREEN_WIDTH)
+        .map(|va| va.write(color))
     } else {
-      Self::PAGE0_BLOCK.get(col + row * Self::SCREEN_WIDTH).map(|va| va.write(color))
+      Self::PAGE0_BLOCK
+        .get(col + row * Self::SCREEN_WIDTH)
+        .map(|va| va.write(color))
     }
   }
 
@@ -278,7 +320,13 @@ impl Mode5 {
   pub fn clear_page_to(page1: bool, color: Color) {
     let color32 = color.0 as u32;
     let bulk_color = color32 << 16 | color32;
-    for va in (if page1 { Self::PAGE1_BULK32 } else { Self::PAGE0_BULK32 }).iter() {
+    for va in (if page1 {
+      Self::PAGE1_BULK32
+    } else {
+      Self::PAGE0_BULK32
+    })
+    .iter()
+    {
       va.write(bulk_color)
     }
   }
