@@ -122,7 +122,22 @@ now and skip the other bits:
   if they were drawing into BG2 (even though it's the only BG layer available in
   those modes).
 
-There's a bunch of other stuff, but we'll get to those things later.
+There's a bunch of other stuff, but we'll get to those things later. They're not
+relevent right now, and there's enough to learn already. Already we can see that
+when the `hello_magic` demo says
+
+```rust
+  (0x400_0000 as *mut u16).write_volatile(0x0403);
+```
+
+We could re-write that more sensibly like this
+
+```rust
+  const SETTING: DisplayControlSetting = DisplayControlSetting::new()
+    .with_mode(DisplayMode::Mode3)
+    .with_bg2(true);
+  DISPCNT.write(SETTING);
+```
 
 ### VCOUNT: Vertical Display Counter
 
@@ -221,10 +236,3 @@ pub fn read_key_input() -> KeyInput {
 ```
 
 Now we can treat the KeyInput values like a totally normal bitset.
-
-## De-mystifying `hello_magic`
-
-So, given what we've learned, we can look again at the `hello_magic` program
-with some of that stuff replaced to be a more readable form:
-
-TODO
