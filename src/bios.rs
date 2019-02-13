@@ -225,7 +225,7 @@ pub fn vblank_interrupt_wait() {
   #[cfg(all(target_vendor = "nintendo", target_env = "agb"))]
   {
     unsafe {
-      asm!(/* ASM */ "swi 0x04"
+      asm!(/* ASM */ "swi 0x05"
           :/* OUT */ // none
           :/* INP */ // none
           :/* CLO */ "r0", "r1" // both set to 1 by the routine
