@@ -55,8 +55,6 @@ impl MGBADebug {
   /// it might accidentally be discarded.
   pub fn send(&mut self, level: MGBADebugLevel) {
     if level == MGBADebugLevel::Fatal {
-      Self::SEND_ADDRESS.write(Self::SEND_FLAG | MGBADebugLevel::Error as u16);
-
       // Note(Lokathor): A Fatal send causes the emulator to halt!
       Self::SEND_ADDRESS.write(Self::SEND_FLAG | MGBADebugLevel::Fatal as u16);
     } else {
