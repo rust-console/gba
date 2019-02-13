@@ -11,6 +11,7 @@
 #![cfg_attr(not(all(target_vendor = "nintendo", target_env = "agb")), allow(unused_variables))]
 
 use super::*;
+use io::irq::IrqFlags;
 
 //TODO: ALL functions in this module should have `if cfg!(test)` blocks. The
 //functions that never return must panic, the functions that return nothing
@@ -184,16 +185,16 @@ pub fn stop() {
 /// * The first argument controls if you want to ignore all current flags and
 ///   wait until a new flag is set.
 /// * The second argument is what flags you're waiting on (same format as the
-///   IE/IF registers).
+///   [`IE`](io::irq::IE)/[`IF`](io::irq::IF) registers).
 ///
 /// If you're trying to handle more than one interrupt at once this has less
 /// overhead than calling `halt` over and over.
 ///
 /// When using this routing your interrupt handler MUST update the BIOS
-/// Interrupt Flags `0x300_7FF8` in addition to the usual interrupt
-/// acknowledgement.
+/// Interrupt Flags at [`BIOS_IF`](io::irq::BIOS_IF) in addition to
+/// the usual interrupt acknowledgement.
 #[inline(always)]
-pub fn interrupt_wait(ignore_current_flags: bool, target_flags: u16) {
+pub fn interrupt_wait(ignore_current_flags: bool, target_flags: IrqFlags) {
   #[cfg(not(all(target_vendor = "nintendo", target_env = "agb")))]
   {
     unimplemented!()
@@ -203,19 +204,19 @@ pub fn interrupt_wait(ignore_current_flags: bool, target_flags: u16) {
     unsafe {
       asm!(/* ASM */ "swi 0x04"
           :/* OUT */ // none
-          :/* INP */ "{r0}"(ignore_current_flags), "{r1}"(target_flags)
+          :/* INP */ "{r0}"(ignore_current_flags), "{r1}"(target_flags.0)
           :/* CLO */ // none
           :/* OPT */ "volatile"
       );
     }
   }
 }
-//TODO(lokathor): newtype this flag business.
 
 /// (`swi 0x05`) "VBlankIntrWait", VBlank Interrupt Wait.
 ///
-/// This is as per `interrupt_wait(true, 1)` (aka "wait for a new vblank"). You
-/// must follow the same guidelines that `interrupt_wait` outlines.
+/// This is as per `interrupt_wait(true, IrqFlags::new().with_vblank(true))`
+/// (aka "wait for a new vblank"). You must follow the same guidelines that
+/// [`interrupt_wait`](interrupt_wait) outlines.
 #[inline(always)]
 pub fn vblank_interrupt_wait() {
   #[cfg(not(all(target_vendor = "nintendo", target_env = "agb")))]
