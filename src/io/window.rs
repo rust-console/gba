@@ -9,6 +9,7 @@ pub const WIN0H: VolAddress<HorizontalWindowSetting> = unsafe { VolAddress::new(
 pub const WIN1H: VolAddress<HorizontalWindowSetting> = unsafe { VolAddress::new(0x400_0042) };
 
 newtype! {
+  /// TODO: docs
   HorizontalWindowSetting, u16
 }
 
@@ -27,6 +28,7 @@ pub const WIN0V: VolAddress<VerticalWindowSetting> = unsafe { VolAddress::new(0x
 pub const WIN1V: VolAddress<VerticalWindowSetting> = unsafe { VolAddress::new(0x400_0046) };
 
 newtype! {
+  /// TODO: docs
   VerticalWindowSetting, u16
 }
 
@@ -42,6 +44,7 @@ impl VerticalWindowSetting {
 pub const WININ: VolAddress<InsideWindowSetting> = unsafe { VolAddress::new(0x400_0048) };
 
 newtype! {
+  /// TODO: docs
   InsideWindowSetting, u16
 }
 
@@ -67,6 +70,7 @@ impl InsideWindowSetting {
 pub const WINOUT: VolAddress<OutsideWindowSetting> = unsafe { VolAddress::new(0x400_004A) };
 
 newtype! {
+  /// TODO: docs
   OutsideWindowSetting, u16
 }
 
