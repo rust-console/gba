@@ -21,8 +21,8 @@ fn main(_argc: isize, _argv: *const *const u8) -> isize {
   const SETTING: DisplayControlSetting = DisplayControlSetting::new().with_mode(DisplayMode::Mode3).with_bg2(true);
   DISPCNT.write(SETTING);
 
-  let mut px = Mode3::SCREEN_WIDTH / 2;
-  let mut py = Mode3::SCREEN_HEIGHT / 2;
+  let mut px = Mode3::WIDTH / 2;
+  let mut py = Mode3::HEIGHT / 2;
   let mut color = Color::from_rgb(31, 0, 0);
 
   loop {
@@ -36,24 +36,24 @@ fn main(_argc: isize, _argv: *const *const u8) -> isize {
 
     // draw the new game and wait until the next frame starts.
     const BLACK: Color = Color::from_rgb(0, 0, 0);
-    if px >= Mode3::SCREEN_WIDTH || py >= Mode3::SCREEN_HEIGHT {
+    if px >= Mode3::WIDTH || py >= Mode3::HEIGHT {
       // out of bounds, reset the screen and position.
       Mode3::clear_to(BLACK);
       color = color.rotate_left(5);
-      px = Mode3::SCREEN_WIDTH / 2;
-      py = Mode3::SCREEN_HEIGHT / 2;
+      px = Mode3::WIDTH / 2;
+      py = Mode3::HEIGHT / 2;
     } else {
-      let color_here = Mode3::read_pixel(px, py);
+      let color_here = Mode3::read(px, py);
       if color_here != Some(BLACK) {
         // crashed into our own line, reset the screen
         Mode3::dma_clear_to(BLACK);
         color = color.rotate_left(5);
       } else {
         // draw the new part of the line
-        Mode3::write_pixel(px, py, color);
-        Mode3::write_pixel(px, py + 1, color);
-        Mode3::write_pixel(px + 1, py, color);
-        Mode3::write_pixel(px + 1, py + 1, color);
+        Mode3::write(px, py, color);
+        Mode3::write(px, py + 1, color);
+        Mode3::write(px + 1, py, color);
+        Mode3::write(px + 1, py + 1, color);
       }
     }
     spin_until_vdraw();
