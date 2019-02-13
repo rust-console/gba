@@ -29,6 +29,8 @@ pub mod text;
 /// being the correct thing.
 pub const VRAM_BASE_USIZE: usize = 0x600_0000;
 
+pub const PAGE1_OFFSET: usize = 0xA000;
+
 /// The character base blocks.
 pub const CHAR_BASE_BLOCKS: VolBlock<[u8; 0x4000], U6> = unsafe { VolBlock::new(VRAM_BASE_USIZE) };
 
