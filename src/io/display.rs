@@ -133,14 +133,28 @@ pub fn vcount() -> u16 {
 }
 
 /// Performs a busy loop until VBlank starts.
+///
+/// NOTE: This method isn't very power efficient, since it is equivalent to
+/// calling "halt" repeatedly. The recommended way to wait for a VBlank or VDraw
+/// is to set an IRQ handler with
+/// [`io::irq::set_irq_handler`](`io::irq::set_irq_handler`) and using
+/// [`bios::vblank_intr_wait`](bios::vblank_interrupt_wait) to sleep the CPU
+/// until a VBlank IRQ is generated. See the [`io::irq`](io::irq) module for
+/// more details.
 pub fn spin_until_vblank() {
-  // TODO: make this the better version with BIOS and interrupts and such.
   while vcount() < VBLANK_SCANLINE {}
 }
 
 /// Performs a busy loop until VDraw starts.
+///
+/// NOTE: This method isn't very power efficient, since it is equivalent to
+/// calling "halt" repeatedly. The recommended way to wait for a VBlank or VDraw
+/// is to set an IRQ handler with
+/// [`io::irq::set_irq_handler`](`io::irq::set_irq_handler`) and using
+/// [`bios::vblank_intr_wait`](bios::vblank_interrupt_wait) to sleep the CPU
+/// until a VBlank IRQ is generated. See the [`io::irq`](io::irq) module for
+/// more details.
 pub fn spin_until_vdraw() {
-  // TODO: make this the better version with BIOS and interrupts and such.
   while vcount() >= VBLANK_SCANLINE {}
 }
 
