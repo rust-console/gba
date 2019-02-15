@@ -21,6 +21,22 @@ fn panic(info: &core::panic::PanicInfo) -> ! {
   loop {}
 }
 
+/// Performs a busy loop until VBlank starts.
+///
+/// This is very inefficient, and please keep following the lessons until we
+/// cover how interrupts work!
+pub fn spin_until_vblank() {
+  while VCOUNT.read() < VBLANK_SCANLINE {}
+}
+
+/// Performs a busy loop until VDraw starts.
+///
+/// This is very inefficient, and please keep following the lessons until we
+/// cover how interrupts work!
+pub fn spin_until_vdraw() {
+  while VCOUNT.read() >= VBLANK_SCANLINE {}
+}
+
 #[start]
 fn main(_argc: isize, _argv: *const *const u8) -> isize {
   const SETTING: DisplayControlSetting =
@@ -49,10 +65,9 @@ fn main(_argc: isize, _argv: *const *const u8) -> isize {
     spin_until_vblank();
 
     // draw the new game and wait until the next frame starts.
-    const BLACK: Color = Color::from_rgb(0, 0, 0);
     if px >= Mode3::WIDTH || py >= Mode3::HEIGHT {
       // out of bounds, reset the screen and position.
-      Mode3::dma_clear_to(BLACK);
+      Mode3::dma_clear_to(Color::from_rgb(0, 0, 0));
       px = Mode3::WIDTH / 2;
       py = Mode3::HEIGHT / 2;
     } else {
@@ -66,20 +81,4 @@ fn main(_argc: isize, _argv: *const *const u8) -> isize {
     // now we wait again
     spin_until_vdraw();
   }
-}
-
-/// Performs a busy loop until VBlank starts.
-///
-/// This is very inefficient, and please keep following the lessons until we
-/// cover how interrupts work!
-pub fn spin_until_vblank() {
-  while VCOUNT.read() < VBLANK_SCANLINE {}
-}
-
-/// Performs a busy loop until VDraw starts.
-///
-/// This is very inefficient, and please keep following the lessons until we
-/// cover how interrupts work!
-pub fn spin_until_vdraw() {
-  while VCOUNT.read() >= VBLANK_SCANLINE {}
 }
