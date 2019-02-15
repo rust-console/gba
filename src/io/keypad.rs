@@ -50,9 +50,10 @@ impl KeyInput {
     KeyInput(self.0 ^ other.0)
   }
 
-  /// Gives the arrow pad value as a tribool, with Plus being increased column
-  /// value (right).
-  pub fn column_direction(self) -> TriBool {
+  /// Right/left tribool.
+  ///
+  /// Right is Plus and Left is Minus
+  pub fn x_tribool(self) -> TriBool {
     if self.right() {
       TriBool::Plus
     } else if self.left() {
@@ -62,9 +63,10 @@ impl KeyInput {
     }
   }
 
-  /// Gives the arrow pad value as a tribool, with Plus being increased row
-  /// value (down).
-  pub fn row_direction(self) -> TriBool {
+  /// Up/down tribool.
+  ///
+  /// Down is Plus and Up is Minus
+  pub fn y_tribool(self) -> TriBool {
     if self.down() {
       TriBool::Plus
     } else if self.up() {
