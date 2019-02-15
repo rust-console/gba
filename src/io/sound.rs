@@ -1,4 +1,5 @@
-///! Module for sound registers.
+//! Module for sound registers.
+
 use super::*;
 
 //TODO within these "read/write" registers only some bits are actually read/write!
@@ -7,6 +8,7 @@ use super::*;
 pub const SOUND1CNT_L: VolAddress<SweepRegisterSetting> = unsafe { VolAddress::new(0x400_0060) };
 
 newtype! {
+  /// TODO: docs
   SweepRegisterSetting, u16
 }
 
@@ -23,6 +25,7 @@ impl SweepRegisterSetting {
 pub const SOUND1CNT_H: VolAddress<DutyLenEnvelopeSetting> = unsafe { VolAddress::new(0x400_0062) };
 
 newtype! {
+  /// TODO: docs
   DutyLenEnvelopeSetting, u16
 }
 
@@ -41,6 +44,7 @@ impl DutyLenEnvelopeSetting {
 pub const SOUND1CNT_X: VolAddress<FrequencyControlSetting> = unsafe { VolAddress::new(0x400_0064) };
 
 newtype! {
+  /// TODO: docs
   FrequencyControlSetting, u32 // TODO: u16 or u32?
 }
 
@@ -60,9 +64,11 @@ pub const SOUND2CNT_L: VolAddress<DutyLenEnvelopeSetting> = unsafe { VolAddress:
 pub const SOUND2CNT_H: VolAddress<FrequencyControlSetting> = unsafe { VolAddress::new(0x400_006C) };
 
 /// Sound Channel 3 Stop/Wave RAM select (`NR23`, `NR24`). Read/Write.
-pub const SOUND3CNT_L: VolAddress<StopWaveRAMSelectSetting> = unsafe { VolAddress::new(0x400_0070) };
+pub const SOUND3CNT_L: VolAddress<StopWaveRAMSelectSetting> =
+  unsafe { VolAddress::new(0x400_0070) };
 
 newtype! {
+  /// TODO: docs
   StopWaveRAMSelectSetting, u16
 }
 
@@ -79,6 +85,7 @@ impl StopWaveRAMSelectSetting {
 pub const SOUND3CNT_H: VolAddress<LengthVolumeSetting> = unsafe { VolAddress::new(0x400_0072) };
 
 newtype! {
+  /// TODO: docs
   LengthVolumeSetting, u16
 }
 
@@ -115,6 +122,7 @@ pub const WAVE_RAM3_H: VolAddress<u16> = unsafe { VolAddress::new(0x400_009E) };
 pub const SOUND4CNT_L: VolAddress<LengthEnvelopeSetting> = unsafe { VolAddress::new(0x400_0078) };
 
 newtype! {
+  /// TODO: docs
   LengthEnvelopeSetting, u32 // TODO: is this u32?
 }
 
@@ -132,6 +140,7 @@ impl LengthEnvelopeSetting {
 pub const SOUND4CNT_H: VolAddress<NoiseFrequencySetting> = unsafe { VolAddress::new(0x400_007C) };
 
 newtype! {
+  /// TODO: docs
   NoiseFrequencySetting, u32 // TODO: is this u32?
 }
 
@@ -158,9 +167,11 @@ pub const FIFO_B_L: VolAddress<u16> = unsafe { VolAddress::new(0x400_00A4) };
 pub const FIFO_B_H: VolAddress<u16> = unsafe { VolAddress::new(0x400_00A6) };
 
 /// Channel L/R Volume/Enable (`NR50`, `NR51`). Read/Write.
-pub const SOUNDCNT_L: VolAddress<NonWaveVolumeEnableSetting> = unsafe { VolAddress::new(0x400_0080) };
+pub const SOUNDCNT_L: VolAddress<NonWaveVolumeEnableSetting> =
+  unsafe { VolAddress::new(0x400_0080) };
 
 newtype! {
+  /// TODO: docs
   NonWaveVolumeEnableSetting, u16
 }
 
@@ -178,6 +189,7 @@ impl NonWaveVolumeEnableSetting {
 pub const SOUNDCNT_H: VolAddress<WaveVolumeEnableSetting> = unsafe { VolAddress::new(0x400_0082) };
 
 newtype! {
+  /// TODO: docs
   WaveVolumeEnableSetting, u16
 }
 
@@ -199,9 +211,13 @@ impl WaveVolumeEnableSetting {
 }
 
 newtype_enum! {
+  /// TODO: docs
   NumberSoundVolume = u16,
+  /// TODO: docs
   Quarter = 0,
+  /// TODO: docs
   Half = 1,
+  /// TODO: docs
   Full = 2,
 }
 
@@ -209,6 +225,7 @@ newtype_enum! {
 pub const SOUNDCNT_X: VolAddress<SoundMasterSetting> = unsafe { VolAddress::new(0x400_0084) };
 
 newtype! {
+  /// TODO: docs
   SoundMasterSetting, u16
 }
 
@@ -227,6 +244,7 @@ impl SoundMasterSetting {
 pub const SOUNDBIAS: VolAddress<SoundPWMSetting> = unsafe { VolAddress::new(0x400_0088) };
 
 newtype! {
+  /// TODO: docs
   SoundPWMSetting, u16
 }
 

@@ -26,7 +26,8 @@ fn panic(_info: &core::panic::PanicInfo) -> ! {
 
 fn start_timers() {
   let init_val: u16 = u32::wrapping_sub(0x1_0000, 64) as u16;
-  const TIMER_SETTINGS: TimerControlSetting = TimerControlSetting::new().with_overflow_irq(true).with_enabled(true);
+  const TIMER_SETTINGS: TimerControlSetting =
+    TimerControlSetting::new().with_overflow_irq(true).with_enabled(true);
 
   TM0CNT_L.write(init_val);
   TM0CNT_H.write(TIMER_SETTINGS.with_tick_rate(TimerTickRate::CPU1024));
@@ -90,8 +91,8 @@ static mut PIXEL: usize = 0;
 
 fn write_pixel(color: Color) {
   unsafe {
-    Mode3::write_pixel(PIXEL, 0, color);
-    PIXEL = (PIXEL + 1) % Mode3::SCREEN_PIXEL_COUNT;
+    Mode3::write(PIXEL, 0, color);
+    PIXEL = (PIXEL + 1) % (Mode3::WIDTH * Mode3::HEIGHT);
   }
 }
 

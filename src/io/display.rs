@@ -122,41 +122,10 @@ impl DisplayStatusSetting {
 /// Gives the current scanline that the display controller is working on. If
 /// this is at or above the `VBLANK_SCANLINE` value then the display controller
 /// is in a "vertical blank" period.
-pub const VCOUNT: VolAddress<u16> = unsafe { VolAddress::new(0x400_0006) };
+pub const VCOUNT: ROVolAddress<u16> = unsafe { ROVolAddress::new(0x400_0006) };
 
 /// If the `VCOUNT` register reads equal to or above this then you're in vblank.
 pub const VBLANK_SCANLINE: u16 = 160;
-
-/// Obtains the current `VCOUNT` value.
-pub fn vcount() -> u16 {
-  VCOUNT.read()
-}
-
-/// Performs a busy loop until VBlank starts.
-///
-/// NOTE: This method isn't very power efficient, since it is equivalent to
-/// calling "halt" repeatedly. The recommended way to wait for a VBlank or VDraw
-/// is to set an IRQ handler with
-/// [`io::irq::set_irq_handler`](`io::irq::set_irq_handler`) and using
-/// [`bios::vblank_intr_wait`](bios::vblank_interrupt_wait) to sleep the CPU
-/// until a VBlank IRQ is generated. See the [`io::irq`](io::irq) module for
-/// more details.
-pub fn spin_until_vblank() {
-  while vcount() < VBLANK_SCANLINE {}
-}
-
-/// Performs a busy loop until VDraw starts.
-///
-/// NOTE: This method isn't very power efficient, since it is equivalent to
-/// calling "halt" repeatedly. The recommended way to wait for a VBlank or VDraw
-/// is to set an IRQ handler with
-/// [`io::irq::set_irq_handler`](`io::irq::set_irq_handler`) and using
-/// [`bios::vblank_intr_wait`](bios::vblank_interrupt_wait) to sleep the CPU
-/// until a VBlank IRQ is generated. See the [`io::irq`](io::irq) module for
-/// more details.
-pub fn spin_until_vdraw() {
-  while vcount() >= VBLANK_SCANLINE {}
-}
 
 /// Global mosaic effect control. Write-only.
 pub const MOSAIC: VolAddress<MosaicSetting> = unsafe { VolAddress::new(0x400_004C) };

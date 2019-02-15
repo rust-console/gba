@@ -1,8 +1,9 @@
+color = "Never"
 error_on_line_overflow = false
 fn_args_density = "Compressed"
 merge_imports = true
 reorder_imports = true
 use_try_shorthand = true
 tab_spaces = 2
-max_width = 150
-color = "Never"
+max_width = 100
+use_small_heuristics = "Max"
