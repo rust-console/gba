@@ -101,8 +101,9 @@ newtype! {
   ///   of the interrupt firing.
   ///
   /// NOTE: This _only_ configures the operation of when keypad interrupts can
-  /// fire. You must still set the `IME` to have interrupts at all, and you must
-  /// further set `IE` for keypad interrupts to be possible.
+  /// fire. You must still set the [`IME`](irq::IME) to have interrupts at all,
+  /// and you must further set [`IE`](irq::IE) for keypad interrupts to be
+  /// possible.
   KeyInterruptSetting, u16
 }
 #[allow(missing_docs)]
