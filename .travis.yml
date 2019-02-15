@@ -6,6 +6,13 @@ cache:
   directories:
   - $HOME/.cargo
 
+branches:
+  only:
+    - staging
+    - trying
+    - master
+    - lokathor
+
 rust:
   - nightly
 

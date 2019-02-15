@@ -1,0 +1,2 @@
+status = ["continuous-integration/travis-ci/"]
+required_approvals = 1
