@@ -204,7 +204,7 @@ pub fn interrupt_wait(ignore_current_flags: bool, target_flags: IrqFlags) {
     unsafe {
       asm!(/* ASM */ "swi 0x04"
           :/* OUT */ // none
-          :/* INP */ "{r0}"(ignore_current_flags), "{r1}"(target_flags.0)
+          :/* INP */ "{r0}"(ignore_current_flags), "{r1}"(target_flags)
           :/* CLO */ // none
           :/* OPT */ "volatile"
       );

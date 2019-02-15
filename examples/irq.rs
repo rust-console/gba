@@ -44,7 +44,7 @@ fn main(_argc: isize, _argv: *const *const u8) -> isize {
   irq::set_irq_handler(irq_handler);
 
   // Enable all interrupts that are set in the IE register.
-  IME.write(IrqEnableSetting::UseIE);
+  IME.write(IrqEnableSetting::IRQ_YES);
 
   // Request that VBlank, HBlank and VCount will generate IRQs.
   const DISPLAY_SETTINGS: DisplayStatusSetting = DisplayStatusSetting::new()
