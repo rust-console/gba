@@ -102,7 +102,8 @@ use super::*;
 
 newtype!(
   /// A newtype over all interrupt flags.
-  IrqFlags, pub u16
+  IrqFlags,
+  u16
 );
 
 impl IrqFlags {
@@ -140,13 +141,23 @@ pub const IE: VolAddress<IrqFlags> = unsafe { VolAddress::new(0x400_0200) };
 /// when it is called.
 pub const IF: VolAddress<IrqFlags> = unsafe { VolAddress::new(0x400_0200) };
 
-newtype_enum! {
+newtype! {
     /// Setting to control whether interrupts are enabled.
-    IrqEnableSetting = u32,
-    /// Disable all interrupts.
-    DisableAll = 0,
-    /// Enable interrupts according to the flags set in the [`IE`](irq::IE) register.
-    UseIE = 1,
+    IrqEnableSetting, u16
+}
+
+impl IrqEnableSetting {
+  phantom_fields! {
+    self.0: u16,
+    /// System-wide control for if interrupts of all kinds are enabled or not.
+    interrupts_enabled: 0,
+  }
+
+  /// Yes, you want to have interrupts.
+  pub const IRQ_YES: Self = Self::new().with_interrupts_enabled(true);
+
+  /// No, please do not have interrupts.
+  pub const IRQ_NO: Self = Self::new();
 }
 
 /// Interrupt Master Enable Register. Read/Write.
