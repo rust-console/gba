@@ -1,154 +1,213 @@
 //! Module for the Bitmap video modes.
 
 use super::*;
+use core::ops::{Div, Mul};
+use typenum::consts::{U128, U160, U2, U256, U4};
 
-/// Mode 3 is a bitmap mode with full color and full resolution.
+/// A bitmap video mode with full color and full resolution.
 ///
 /// * **Width:** 240
 /// * **Height:** 160
 ///
-/// Because the memory requirements are so large, there's only a single page
-/// available instead of two pages like the other video modes have.
+/// Because it takes so much space to have full color and full resolution at the
+/// same time, there's no alternate page available when using mode 3.
 ///
-/// As with all bitmap modes, the image itself utilizes BG2 for display, so you
-/// must have BG2 enabled in addition to being within Mode 3.
+/// As with all the bitmap video modes, the bitmap is considered to be BG2, so
+/// you have to enable BG2 as well if you want to see the bitmap.
 pub struct Mode3;
+
 impl Mode3 {
-  /// The physical width in pixels of the GBA screen.
-  pub const SCREEN_WIDTH: usize = 240;
+  /// The screen's width in this mode.
+  pub const WIDTH: usize = 240;
 
-  /// The physical height in pixels of the GBA screen.
-  pub const SCREEN_HEIGHT: usize = 160;
+  /// The screen's height in this mode.
+  pub const HEIGHT: usize = 160;
 
-  /// The number of pixels on the screen.
-  pub const SCREEN_PIXEL_COUNT: usize = Self::SCREEN_WIDTH * Self::SCREEN_HEIGHT;
+  const VRAM: VolBlock<Color, <U256 as Mul<U160>>::Output> =
+    unsafe { VolBlock::new(VRAM_BASE_USIZE) };
 
-  /// The Mode 3 VRAM.
+  const WORDS_BLOCK: VolBlock<u32, <<U256 as Mul<U160>>::Output as Div<U2>>::Output> =
+    unsafe { VolBlock::new(VRAM_BASE_USIZE) };
+
+  /// Gets the address of the pixel specified.
   ///
-  /// Use `col + row * SCREEN_WIDTH` to get the address of an individual pixel,
-  /// or use the helpers provided in this module.
-  pub const VRAM: VolAddressBlock<Color> =
-    unsafe { VolAddressBlock::new_unchecked(VolAddress::new_unchecked(VRAM_BASE_USIZE), Self::SCREEN_PIXEL_COUNT) };
-
-  /// private iterator over the pixels, two at a time
-  const BULK_ITER: VolAddressIter<u32> =
-    unsafe { VolAddressBlock::new_unchecked(VolAddress::new_unchecked(VRAM_BASE_USIZE), Self::SCREEN_PIXEL_COUNT / 2).iter() };
-
-  /// Reads the pixel at the given (col,row).
+  /// ## Failure
   ///
-  /// # Failure
-  ///
-  /// Gives `None` if out of bounds.
-  pub fn read_pixel(col: usize, row: usize) -> Option<Color> {
-    Self::VRAM.get(col + row * Self::SCREEN_WIDTH).map(VolAddress::read)
+  /// Gives `None` if out of bounds
+  fn get(col: usize, row: usize) -> Option<VolAddress<Color>> {
+    Self::VRAM.get(col + row * Self::WIDTH)
   }
 
-  /// Writes the pixel at the given (col,row).
+  /// Reads the color of the pixel specified.
   ///
-  /// # Failure
+  /// ## Failure
   ///
-  /// Gives `None` if out of bounds.
-  pub fn write_pixel(col: usize, row: usize, color: Color) -> Option<()> {
-    Self::VRAM.get(col + row * Self::SCREEN_WIDTH).map(|va| va.write(color))
+  /// Gives `None` if out of bounds
+  pub fn read(col: usize, row: usize) -> Option<Color> {
+    Self::get(col, row).map(VolAddress::read)
   }
 
-  /// Clears the whole screen to the desired color.
+  /// Writes a color to the pixel specified.
+  ///
+  /// ## Failure
+  ///
+  /// Gives `None` if out of bounds
+  pub fn write(col: usize, row: usize, color: Color) -> Option<()> {
+    Self::get(col, row).map(|va| va.write(color))
+  }
+
+  /// Clear the screen to the color specified.
+  ///
+  /// Takes ~430,000 cycles (~1.5 frames).
   pub fn clear_to(color: Color) {
     let color32 = color.0 as u32;
     let bulk_color = color32 << 16 | color32;
-    for va in Self::BULK_ITER {
+    for va in Self::WORDS_BLOCK.iter() {
       va.write(bulk_color)
     }
   }
 
-  /// Clears the whole screen to the desired color using DMA3.
+  /// Clears the screen to the color specified using DMA3.
+  ///
+  /// Takes ~61,500 frames (~73% of VBlank)
   pub fn dma_clear_to(color: Color) {
     use crate::io::dma::DMA3;
-
     let color32 = color.0 as u32;
     let bulk_color = color32 << 16 | color32;
-    unsafe { DMA3::fill32(&bulk_color, VRAM_BASE_USIZE as *mut u32, (Self::SCREEN_PIXEL_COUNT / 2) as u16) };
+    unsafe {
+      DMA3::fill32(&bulk_color, VRAM_BASE_USIZE as *mut u32, Self::WORDS_BLOCK.len() as u16)
+    };
+  }
+
+  /// Draws a line between the two points given `(c1,r1,c2,r2,color)`.
+  ///
+  /// Works fine with out of bounds points. It only draws to in bounds
+  /// locations.
+  pub fn draw_line(c1: isize, r1: isize, c2: isize, r2: isize, color: Color) {
+    let mut col = c1;
+    let mut row = r1;
+    let w = c2 - c1;
+    let h = r2 - r1;
+    let mut dx1 = 0;
+    let mut dx2 = 0;
+    let mut dy1 = 0;
+    let mut dy2 = 0;
+    let mut longest = w.abs();
+    let mut shortest = h.abs();
+    if w < 0 {
+      dx1 = -1;
+    } else if w > 0 {
+      dx1 = 1;
+    };
+    if h < 0 {
+      dy1 = -1;
+    } else if h > 0 {
+      dy1 = 1;
+    };
+    if w < 0 {
+      dx2 = -1;
+    } else if w > 0 {
+      dx2 = 1;
+    };
+    if !(longest > shortest) {
+      core::mem::swap(&mut longest, &mut shortest);
+      if h < 0 {
+        dy2 = -1;
+      } else if h > 0 {
+        dy2 = 1
+      };
+      dx2 = 0;
+    }
+    let mut numerator = longest >> 1;
+
+    (0..(longest + 1)).for_each(|_| {
+      Self::write(col as usize, row as usize, color);
+      numerator += shortest;
+      if !(numerator < longest) {
+        numerator -= longest;
+        col += dx1;
+        row += dy1;
+      } else {
+        col += dx2;
+        row += dy2;
+      }
+    });
   }
 }
 
-//TODO: Mode3 Iter Scanlines / Pixels?
-//TODO: Mode3 Line Drawing?
+/// Used to select what page to read from or write to in Mode 4 and Mode 5.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Page {
+  /// Page 0
+  Zero,
+  /// Page 1
+  One,
+}
 
-/// Mode 4 is a bitmap mode with 8bpp paletted color.
+/// A bitmap video mode with full resolution and paletted color.
 ///
 /// * **Width:** 240
 /// * **Height:** 160
 /// * **Pages:** 2
 ///
-/// VRAM has a minimum write size of 2 bytes at a time, so writing individual
-/// palette entries for the pixels is more costly than with the other bitmap
-/// modes.
+/// Because the pixels use palette indexes there's enough space to have two
+/// pages.
 ///
-/// As with all bitmap modes, the image itself utilizes BG2 for display, so you
-/// must have BG2 enabled in addition to being within Mode 4.
+/// As with all the bitmap video modes, the bitmap is considered to be BG2, so
+/// you have to enable BG2 as well if you want to see the bitmap.
 pub struct Mode4;
+
 impl Mode4 {
-  /// The physical width in pixels of the GBA screen.
-  pub const SCREEN_WIDTH: usize = 240;
+  /// The screen's width in this mode.
+  pub const WIDTH: usize = 240;
 
-  /// The physical height in pixels of the GBA screen.
-  pub const SCREEN_HEIGHT: usize = 160;
+  /// The screen's height in this mode.
+  pub const HEIGHT: usize = 160;
 
-  /// The number of pixels on the screen.
-  pub const SCREEN_PIXEL_COUNT: usize = Self::SCREEN_WIDTH * Self::SCREEN_HEIGHT;
+  const PAGE0_INDEXES: VolBlock<u8, <U256 as Mul<U160>>::Output> =
+    unsafe { VolBlock::new(VRAM_BASE_USIZE) };
 
-  /// Used for bulk clearing operations.
-  const SCREEN_U32_COUNT: usize = Self::SCREEN_PIXEL_COUNT / 4;
+  const PAGE1_INDEXES: VolBlock<u8, <U256 as Mul<U160>>::Output> =
+    unsafe { VolBlock::new(VRAM_BASE_USIZE + PAGE1_OFFSET) };
 
-  // TODO: newtype this?
-  const PAGE0_BASE: VolAddress<u8> = unsafe { VolAddress::new_unchecked(VRAM_BASE_USIZE) };
+  const PAGE0_WORDS: VolBlock<u32, <<U256 as Mul<U160>>::Output as Div<U4>>::Output> =
+    unsafe { VolBlock::new(VRAM_BASE_USIZE) };
 
-  // TODO: newtype this?
-  const PAGE0_BLOCK: VolAddressBlock<u8> = unsafe { VolAddressBlock::new_unchecked(Self::PAGE0_BASE, Self::SCREEN_PIXEL_COUNT) };
+  const PAGE1_WORDS: VolBlock<u32, <<U256 as Mul<U160>>::Output as Div<U4>>::Output> =
+    unsafe { VolBlock::new(VRAM_BASE_USIZE + PAGE1_OFFSET) };
 
-  // TODO: newtype this?
-  const PAGE1_BASE: VolAddress<u8> = unsafe { VolAddress::new_unchecked(VRAM_BASE_USIZE + 0xA000) };
-
-  // TODO: newtype this?
-  const PAGE1_BLOCK: VolAddressBlock<u8> = unsafe { VolAddressBlock::new_unchecked(Self::PAGE1_BASE, Self::SCREEN_PIXEL_COUNT) };
-
-  /// private iterator over the page0 pixels, four at a time
-  const BULK_ITER0: VolAddressIter<u32> = unsafe { VolAddressBlock::new_unchecked(Self::PAGE0_BASE.cast::<u32>(), Self::SCREEN_U32_COUNT).iter() };
-
-  /// private iterator over the page1 pixels, four at a time
-  const BULK_ITER1: VolAddressIter<u32> = unsafe { VolAddressBlock::new_unchecked(Self::PAGE1_BASE.cast::<u32>(), Self::SCREEN_U32_COUNT).iter() };
-
-  /// Reads the pixel at the given (col,row).
+  /// Reads the color of the pixel specified.
   ///
-  /// # Failure
+  /// ## Failure
   ///
-  /// Gives `None` if out of bounds.
-  pub fn read_pixel(page1: bool, col: usize, row: usize) -> Option<u8> {
-    // Note(Lokathor): byte _reads_ from VRAM are okay.
-    if page1 {
-      Self::PAGE1_BLOCK.get(col + row * Self::SCREEN_WIDTH).map(VolAddress::read)
-    } else {
-      Self::PAGE0_BLOCK.get(col + row * Self::SCREEN_WIDTH).map(VolAddress::read)
+  /// Gives `None` if out of bounds
+  pub fn read(page: Page, col: usize, row: usize) -> Option<u8> {
+    match page {
+      Page::Zero => Self::PAGE0_INDEXES,
+      Page::One => Self::PAGE1_INDEXES,
     }
+    .get(col + row * Self::WIDTH)
+    .map(VolAddress::read)
   }
 
-  /// Writes the pixel at the given (col,row).
+  /// Writes a color to the pixel specified.
   ///
-  /// # Failure
+  /// ## Failure
   ///
-  /// Gives `None` if out of bounds.
-  pub fn write_pixel(page1: bool, col: usize, row: usize, pal8bpp: u8) -> Option<()> {
-    // Note(Lokathor): byte _writes_ to VRAM are not permitted. We must jump
-    // through hoops when we attempt to write just a single byte.
-    if col < Self::SCREEN_WIDTH && row < Self::SCREEN_HEIGHT {
-      let real_index = col + row * Self::SCREEN_WIDTH;
+  /// Gives `None` if out of bounds
+  pub fn write(page: Page, col: usize, row: usize, pal8bpp: u8) -> Option<()> {
+    // Note(Lokathor): Byte writes to VRAM aren't permitted, we have to jump
+    // through some hoops.
+    if col < Self::WIDTH && row < Self::HEIGHT {
+      let real_index = col + row * Self::WIDTH;
       let rounded_down_index = real_index & !1;
       let address: VolAddress<u16> = unsafe {
-        if page1 {
-          Self::PAGE1_BASE.offset(rounded_down_index as isize).cast()
-        } else {
-          Self::PAGE0_BASE.offset(rounded_down_index as isize).cast()
+        match page {
+          Page::Zero => Self::PAGE0_INDEXES,
+          Page::One => Self::PAGE1_INDEXES,
         }
+        .index_unchecked(rounded_down_index)
+        .cast::<u16>()
       };
       if real_index == rounded_down_index {
         // even byte, change the high bits
@@ -165,53 +224,93 @@ impl Mode4 {
     }
   }
 
-  /// Writes a "wide" pairing of palette entries to the location specified.
+  /// Clear the screen to the palette index specified.
   ///
-  /// The page is imagined to be a series of `u16` values rather than `u8`
-  /// values, allowing you to write two palette entries side by side as a single
-  /// write operation.
-  pub fn write_wide_pixel(page1: bool, wide_col: usize, row: usize, wide_pal8bpp: u16) -> Option<()> {
-    if wide_col < Self::SCREEN_WIDTH / 2 && row < Self::SCREEN_HEIGHT {
-      let wide_index = wide_col + row * Self::SCREEN_WIDTH / 2;
-      let address: VolAddress<u16> = unsafe {
-        if page1 {
-          Self::PAGE1_BASE.cast::<u16>().offset(wide_index as isize)
-        } else {
-          Self::PAGE0_BASE.cast::<u16>().offset(wide_index as isize)
-        }
-      };
-      Some(address.write(wide_pal8bpp))
-    } else {
-      None
-    }
-  }
-
-  /// Clears the page to the desired color.
-  pub fn clear_page_to(page1: bool, pal8bpp: u8) {
+  /// Takes ~215,000 cycles (~76% of a frame)
+  pub fn clear_to(page: Page, pal8bpp: u8) {
     let pal8bpp_32 = pal8bpp as u32;
     let bulk_color = (pal8bpp_32 << 24) | (pal8bpp_32 << 16) | (pal8bpp_32 << 8) | pal8bpp_32;
-    for va in if page1 { Self::BULK_ITER1 } else { Self::BULK_ITER0 } {
+    let words = match page {
+      Page::Zero => Self::PAGE0_WORDS,
+      Page::One => Self::PAGE1_WORDS,
+    };
+    for va in words.iter() {
       va.write(bulk_color)
     }
   }
 
-  /// Clears the page to the desired color using DMA3.
-  pub fn dma_clear_page_to(page1: bool, pal8bpp: u8) {
+  /// Clears the screen to the palette index specified using DMA3.
+  ///
+  /// Takes ~30,800 frames (~37% of VBlank)
+  pub fn dma_clear_to(page: Page, pal8bpp: u8) {
     use crate::io::dma::DMA3;
 
     let pal8bpp_32 = pal8bpp as u32;
     let bulk_color = (pal8bpp_32 << 24) | (pal8bpp_32 << 16) | (pal8bpp_32 << 8) | pal8bpp_32;
-    let write_target = if page1 {
-      VRAM_BASE_USIZE as *mut u32
-    } else {
-      (VRAM_BASE_USIZE + 0xA000) as *mut u32
+    let words_address = unsafe {
+      match page {
+        Page::Zero => Self::PAGE0_WORDS.index_unchecked(0).to_usize(),
+        Page::One => Self::PAGE1_WORDS.index_unchecked(0).to_usize(),
+      }
     };
-    unsafe { DMA3::fill32(&bulk_color, write_target, Self::SCREEN_U32_COUNT as u16) };
+    unsafe { DMA3::fill32(&bulk_color, words_address as *mut u32, Self::PAGE0_WORDS.len() as u16) };
+  }
+
+  /// Draws a line between the two points given `(c1,r1,c2,r2,color)`.
+  ///
+  /// Works fine with out of bounds points. It only draws to in bounds
+  /// locations.
+  pub fn draw_line(page: Page, c1: isize, r1: isize, c2: isize, r2: isize, pal8bpp: u8) {
+    let mut col = c1;
+    let mut row = r1;
+    let w = c2 - c1;
+    let h = r2 - r1;
+    let mut dx1 = 0;
+    let mut dx2 = 0;
+    let mut dy1 = 0;
+    let mut dy2 = 0;
+    let mut longest = w.abs();
+    let mut shortest = h.abs();
+    if w < 0 {
+      dx1 = -1;
+    } else if w > 0 {
+      dx1 = 1;
+    };
+    if h < 0 {
+      dy1 = -1;
+    } else if h > 0 {
+      dy1 = 1;
+    };
+    if w < 0 {
+      dx2 = -1;
+    } else if w > 0 {
+      dx2 = 1;
+    };
+    if !(longest > shortest) {
+      core::mem::swap(&mut longest, &mut shortest);
+      if h < 0 {
+        dy2 = -1;
+      } else if h > 0 {
+        dy2 = 1
+      };
+      dx2 = 0;
+    }
+    let mut numerator = longest >> 1;
+
+    (0..(longest + 1)).for_each(|_| {
+      Self::write(page, col as usize, row as usize, pal8bpp);
+      numerator += shortest;
+      if !(numerator < longest) {
+        numerator -= longest;
+        col += dx1;
+        row += dy1;
+      } else {
+        col += dx2;
+        row += dy2;
+      }
+    });
   }
 }
-
-//TODO: Mode4 Iter Scanlines / Pixels?
-//TODO: Mode4 Line Drawing?
 
 /// Mode 5 is a bitmap mode with full color and reduced resolution.
 ///
@@ -219,91 +318,143 @@ impl Mode4 {
 /// * **Height:** 128
 /// * **Pages:** 2
 ///
-/// Because of the reduced resolution, we're allowed two pages for display.
+/// Because of the reduced resolutions there's enough space to have two pages.
 ///
-/// As with all bitmap modes, the image itself utilizes BG2 for display, so you
-/// must have BG2 enabled in addition to being within Mode 3.
+/// As with all the bitmap video modes, the bitmap is considered to be BG2, so
+/// you have to enable BG2 as well if you want to see the bitmap.
 pub struct Mode5;
+
 impl Mode5 {
-  /// The physical width in pixels of the GBA screen.
-  pub const SCREEN_WIDTH: usize = 160;
+  /// The screen's width in this mode.
+  pub const WIDTH: usize = 160;
 
-  /// The physical height in pixels of the GBA screen.
-  pub const SCREEN_HEIGHT: usize = 128;
+  /// The screen's height in this mode.
+  pub const HEIGHT: usize = 128;
 
-  /// The number of pixels on the screen.
-  pub const SCREEN_PIXEL_COUNT: usize = Self::SCREEN_WIDTH * Self::SCREEN_HEIGHT;
+  const PAGE0_PIXELS: VolBlock<Color, <U160 as Mul<U128>>::Output> =
+    unsafe { VolBlock::new(VRAM_BASE_USIZE) };
 
-  /// Used for bulk clearing operations.
-  const SCREEN_U32_COUNT: usize = Self::SCREEN_PIXEL_COUNT / 2;
+  const PAGE1_PIXELS: VolBlock<Color, <U160 as Mul<U128>>::Output> =
+    unsafe { VolBlock::new(VRAM_BASE_USIZE + PAGE1_OFFSET) };
 
-  // TODO: newtype this?
-  const PAGE0_BASE: VolAddress<Color> = unsafe { VolAddress::new_unchecked(VRAM_BASE_USIZE) };
+  const PAGE0_WORDS: VolBlock<u32, <<U160 as Mul<U128>>::Output as Div<U2>>::Output> =
+    unsafe { VolBlock::new(VRAM_BASE_USIZE) };
 
-  // TODO: newtype this?
-  const PAGE0_BLOCK: VolAddressBlock<Color> = unsafe { VolAddressBlock::new_unchecked(Self::PAGE0_BASE, Self::SCREEN_PIXEL_COUNT) };
+  const PAGE1_WORDS: VolBlock<u32, <<U160 as Mul<U128>>::Output as Div<U2>>::Output> =
+    unsafe { VolBlock::new(VRAM_BASE_USIZE + PAGE1_OFFSET) };
 
-  // TODO: newtype this?
-  const PAGE1_BASE: VolAddress<Color> = unsafe { VolAddress::new_unchecked(VRAM_BASE_USIZE + 0xA000) };
-
-  // TODO: newtype this?
-  const PAGE1_BLOCK: VolAddressBlock<Color> = unsafe { VolAddressBlock::new_unchecked(Self::PAGE1_BASE, Self::SCREEN_PIXEL_COUNT) };
-
-  /// private iterator over the page0 pixels, four at a time
-  const BULK_ITER0: VolAddressIter<u32> = unsafe { VolAddressBlock::new_unchecked(Self::PAGE0_BASE.cast::<u32>(), Self::SCREEN_U32_COUNT).iter() };
-
-  /// private iterator over the page1 pixels, four at a time
-  const BULK_ITER1: VolAddressIter<u32> = unsafe { VolAddressBlock::new_unchecked(Self::PAGE1_BASE.cast::<u32>(), Self::SCREEN_U32_COUNT).iter() };
-
-  /// Reads the pixel at the given (col,row).
+  /// Reads the color of the pixel specified.
   ///
-  /// # Failure
+  /// ## Failure
   ///
-  /// Gives `None` if out of bounds.
-  pub fn read_pixel(page1: bool, col: usize, row: usize) -> Option<Color> {
-    if page1 {
-      Self::PAGE1_BLOCK.get(col + row * Self::SCREEN_WIDTH).map(VolAddress::read)
-    } else {
-      Self::PAGE0_BLOCK.get(col + row * Self::SCREEN_WIDTH).map(VolAddress::read)
+  /// Gives `None` if out of bounds
+  pub fn read(page: Page, col: usize, row: usize) -> Option<Color> {
+    match page {
+      Page::Zero => Self::PAGE0_PIXELS,
+      Page::One => Self::PAGE1_PIXELS,
     }
+    .get(col + row * Self::WIDTH)
+    .map(VolAddress::read)
   }
 
-  /// Writes the pixel at the given (col,row).
+  /// Writes a color to the pixel specified.
   ///
-  /// # Failure
+  /// ## Failure
   ///
-  /// Gives `None` if out of bounds.
-  pub fn write_pixel(page1: bool, col: usize, row: usize, color: Color) -> Option<()> {
-    if page1 {
-      Self::PAGE1_BLOCK.get(col + row * Self::SCREEN_WIDTH).map(|va| va.write(color))
-    } else {
-      Self::PAGE0_BLOCK.get(col + row * Self::SCREEN_WIDTH).map(|va| va.write(color))
+  /// Gives `None` if out of bounds
+  pub fn write(page: Page, col: usize, row: usize, color: Color) -> Option<()> {
+    match page {
+      Page::Zero => Self::PAGE0_PIXELS,
+      Page::One => Self::PAGE1_PIXELS,
     }
+    .get(col + row * Self::WIDTH)
+    .map(|va| va.write(color))
   }
 
-  /// Clears the whole screen to the desired color.
-  pub fn clear_page_to(page1: bool, color: Color) {
+  /// Clear the screen to the color specified.
+  ///
+  /// Takes ~215,000 cycles (~76% of a frame)
+  pub fn clear_to(page: Page, color: Color) {
     let color32 = color.0 as u32;
     let bulk_color = color32 << 16 | color32;
-    for va in if page1 { Self::BULK_ITER1 } else { Self::BULK_ITER0 } {
+    let words = match page {
+      Page::Zero => Self::PAGE0_WORDS,
+      Page::One => Self::PAGE1_WORDS,
+    };
+    for va in words.iter() {
       va.write(bulk_color)
     }
   }
 
-  /// Clears the whole screen to the desired color using DMA3.
-  pub fn dma_clear_page_to(page1: bool, color: Color) {
+  /// Clears the screen to the color specified using DMA3.
+  ///
+  /// Takes ~30,800 frames (~37% of VBlank)
+  pub fn dma_clear_to(page: Page, color: Color) {
     use crate::io::dma::DMA3;
 
     let color32 = color.0 as u32;
     let bulk_color = color32 << 16 | color32;
-    let write_target = if page1 {
-      VRAM_BASE_USIZE as *mut u32
-    } else {
-      (VRAM_BASE_USIZE + 0xA000) as *mut u32
+    let words_address = unsafe {
+      match page {
+        Page::Zero => Self::PAGE0_WORDS.index_unchecked(0).to_usize(),
+        Page::One => Self::PAGE1_WORDS.index_unchecked(0).to_usize(),
+      }
     };
-    unsafe { DMA3::fill32(&bulk_color, write_target, Self::SCREEN_U32_COUNT as u16) };
+    unsafe { DMA3::fill32(&bulk_color, words_address as *mut u32, Self::PAGE0_WORDS.len() as u16) };
+  }
+
+  /// Draws a line between the two points given `(c1,r1,c2,r2,color)`.
+  ///
+  /// Works fine with out of bounds points. It only draws to in bounds
+  /// locations.
+  pub fn draw_line(page: Page, c1: isize, r1: isize, c2: isize, r2: isize, color: Color) {
+    let mut col = c1;
+    let mut row = r1;
+    let w = c2 - c1;
+    let h = r2 - r1;
+    let mut dx1 = 0;
+    let mut dx2 = 0;
+    let mut dy1 = 0;
+    let mut dy2 = 0;
+    let mut longest = w.abs();
+    let mut shortest = h.abs();
+    if w < 0 {
+      dx1 = -1;
+    } else if w > 0 {
+      dx1 = 1;
+    };
+    if h < 0 {
+      dy1 = -1;
+    } else if h > 0 {
+      dy1 = 1;
+    };
+    if w < 0 {
+      dx2 = -1;
+    } else if w > 0 {
+      dx2 = 1;
+    };
+    if !(longest > shortest) {
+      core::mem::swap(&mut longest, &mut shortest);
+      if h < 0 {
+        dy2 = -1;
+      } else if h > 0 {
+        dy2 = 1
+      };
+      dx2 = 0;
+    }
+    let mut numerator = longest >> 1;
+
+    (0..(longest + 1)).for_each(|_| {
+      Self::write(page, col as usize, row as usize, color);
+      numerator += shortest;
+      if !(numerator < longest) {
+        numerator -= longest;
+        col += dx1;
+        row += dy1;
+      } else {
+        col += dx2;
+        row += dy2;
+      }
+    });
   }
 }
-
-//TODO: Mode5 Iter Scanlines / Pixels?
-//TODO: Mode5 Line Drawing?

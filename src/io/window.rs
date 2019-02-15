@@ -3,12 +3,13 @@
 use super::*;
 
 /// Window 0 Horizontal Dimensions (W)
-pub const WIN0H: VolAddress<HorizontalWindowSetting> = unsafe { VolAddress::new_unchecked(0x400_0040) };
+pub const WIN0H: VolAddress<HorizontalWindowSetting> = unsafe { VolAddress::new(0x400_0040) };
 
 /// Window 1 Horizontal Dimensions (W)
-pub const WIN1H: VolAddress<HorizontalWindowSetting> = unsafe { VolAddress::new_unchecked(0x400_0042) };
+pub const WIN1H: VolAddress<HorizontalWindowSetting> = unsafe { VolAddress::new(0x400_0042) };
 
 newtype! {
+  /// TODO: docs
   HorizontalWindowSetting, u16
 }
 
@@ -21,12 +22,13 @@ impl HorizontalWindowSetting {
 }
 
 /// Window 0 Vertical Dimensions (W)
-pub const WIN0V: VolAddress<VerticalWindowSetting> = unsafe { VolAddress::new_unchecked(0x400_0044) };
+pub const WIN0V: VolAddress<VerticalWindowSetting> = unsafe { VolAddress::new(0x400_0044) };
 
 /// Window 1 Vertical Dimensions (W)
-pub const WIN1V: VolAddress<VerticalWindowSetting> = unsafe { VolAddress::new_unchecked(0x400_0046) };
+pub const WIN1V: VolAddress<VerticalWindowSetting> = unsafe { VolAddress::new(0x400_0046) };
 
 newtype! {
+  /// TODO: docs
   VerticalWindowSetting, u16
 }
 
@@ -39,9 +41,10 @@ impl VerticalWindowSetting {
 }
 
 /// Control of Inside of Window(s) (R/W)
-pub const WININ: VolAddress<InsideWindowSetting> = unsafe { VolAddress::new_unchecked(0x400_0048) };
+pub const WININ: VolAddress<InsideWindowSetting> = unsafe { VolAddress::new(0x400_0048) };
 
 newtype! {
+  /// TODO: docs
   InsideWindowSetting, u16
 }
 
@@ -64,9 +67,10 @@ impl InsideWindowSetting {
 }
 
 ///  Control of Outside of Windows & Inside of OBJ Window (R/W)
-pub const WINOUT: VolAddress<OutsideWindowSetting> = unsafe { VolAddress::new_unchecked(0x400_004A) };
+pub const WINOUT: VolAddress<OutsideWindowSetting> = unsafe { VolAddress::new(0x400_004A) };
 
 newtype! {
+  /// TODO: docs
   OutsideWindowSetting, u16
 }
 

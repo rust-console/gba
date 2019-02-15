@@ -6,12 +6,18 @@ cache:
   directories:
   - $HOME/.cargo
 
+branches:
+  only:
+    - staging
+    - trying
+    - master
+    - lokathor
+
 rust:
   - nightly
 
 before_script:
   - rustup component add rust-src
-  - rustup component add clippy --toolchain=nightly
   - (test -x $HOME/.cargo/bin/cargo-install-update || cargo install cargo-update)
   - (test -x $HOME/.cargo/bin/cargo-xbuild || cargo install cargo-xbuild)
   - (test -x $HOME/.cargo/bin/cargo-make || cargo install cargo-make)
@@ -31,15 +37,13 @@ script:
   - export PATH="$PATH:/opt/devkitpro/tools/bin"
   - cd ..
   # Run all verificaions, both debug and release
-  #- cargo clippy
-  #- cargo clippy --release
-  - cargo test --no-fail-fast --lib
-  - cargo test --no-fail-fast --lib --release
-  - cargo test --no-fail-fast --tests
-  - cargo test --no-fail-fast --tests --release
+  - cargo test --lib
+  - cargo test --lib --release
+  - cargo test --tests
+  - cargo test --tests --release
   # Let cargo make take over the rest
   - cargo make justrelease
-  # Test build the book so that a failed book build kills this run
+  # Test a build of the book so that a failed book build kills this run
   - cd book && mdbook build
 
 deploy:

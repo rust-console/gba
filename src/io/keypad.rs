@@ -8,7 +8,7 @@ use super::*;
 /// follow the "high-active" convention (hint: you probably do, it's far easier
 /// to work with) then call `read_key_input()` rather than reading this register
 /// directly. It will perform the necessary bit flip operation for you.
-pub const KEYINPUT: VolAddress<u16> = unsafe { VolAddress::new_unchecked(0x400_0130) };
+pub const KEYINPUT: ROVolAddress<u16> = unsafe { ROVolAddress::new(0x400_0130) };
 
 /// A "tribool" value helps us interpret the arrow pad.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -50,9 +50,10 @@ impl KeyInput {
     KeyInput(self.0 ^ other.0)
   }
 
-  /// Gives the arrow pad value as a tribool, with Plus being increased column
-  /// value (right).
-  pub fn column_direction(self) -> TriBool {
+  /// Right/left tribool.
+  ///
+  /// Right is Plus and Left is Minus
+  pub fn x_tribool(self) -> TriBool {
     if self.right() {
       TriBool::Plus
     } else if self.left() {
@@ -62,9 +63,10 @@ impl KeyInput {
     }
   }
 
-  /// Gives the arrow pad value as a tribool, with Plus being increased row
-  /// value (down).
-  pub fn row_direction(self) -> TriBool {
+  /// Up/down tribool.
+  ///
+  /// Down is Plus and Up is Minus
+  pub fn y_tribool(self) -> TriBool {
     if self.down() {
       TriBool::Plus
     } else if self.up() {
@@ -86,7 +88,7 @@ pub fn read_key_input() -> KeyInput {
 /// Use this to configure when a keypad interrupt happens.
 ///
 /// See the `KeyInterruptSetting` type for more.
-pub const KEYCNT: VolAddress<KeyInterruptSetting> = unsafe { VolAddress::new_unchecked(0x400_0132) };
+pub const KEYCNT: VolAddress<KeyInterruptSetting> = unsafe { VolAddress::new(0x400_0132) };
 
 newtype! {
   /// Allows configuration of when a keypad interrupt fires.
@@ -101,8 +103,9 @@ newtype! {
   ///   of the interrupt firing.
   ///
   /// NOTE: This _only_ configures the operation of when keypad interrupts can
-  /// fire. You must still set the `IME` to have interrupts at all, and you must
-  /// further set `IE` for keypad interrupts to be possible.
+  /// fire. You must still set the [`IME`](irq::IME) to have interrupts at all,
+  /// and you must further set [`IE`](irq::IE) for keypad interrupts to be
+  /// possible.
   KeyInterruptSetting, u16
 }
 #[allow(missing_docs)]

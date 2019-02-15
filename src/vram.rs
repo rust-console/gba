@@ -15,6 +15,8 @@
 
 pub(crate) use super::*;
 
+use typenum::consts::{U256, U32, U512, U6};
+
 pub mod affine;
 pub mod bitmap;
 pub mod text;
@@ -27,12 +29,14 @@ pub mod text;
 /// being the correct thing.
 pub const VRAM_BASE_USIZE: usize = 0x600_0000;
 
+pub const PAGE1_OFFSET: usize = 0xA000;
+
 /// The character base blocks.
-pub const CHAR_BASE_BLOCKS: VolAddressBlock<[u8; 0x4000]> = unsafe { VolAddressBlock::new_unchecked(VolAddress::new_unchecked(VRAM_BASE_USIZE), 6) };
+pub const CHAR_BASE_BLOCKS: VolBlock<[u8; 0x4000], U6> = unsafe { VolBlock::new(VRAM_BASE_USIZE) };
 
 /// The screen entry base blocks.
-pub const SCREEN_BASE_BLOCKS: VolAddressBlock<[u8; 0x800]> =
-  unsafe { VolAddressBlock::new_unchecked(VolAddress::new_unchecked(VRAM_BASE_USIZE), 32) };
+pub const SCREEN_BASE_BLOCKS: VolBlock<[u8; 0x800], U32> =
+  unsafe { VolBlock::new(VRAM_BASE_USIZE) };
 
 newtype! {
   /// An 8x8 tile with 4bpp, packed as `u32` values for proper alignment.
@@ -47,11 +51,11 @@ newtype! {
 }
 
 /// Gives the specified charblock in 4bpp view.
-pub fn get_4bpp_character_block(slot: usize) -> VolAddressBlock<Tile4bpp> {
-  unsafe { VolAddressBlock::new_unchecked(CHAR_BASE_BLOCKS.index(slot).cast::<Tile4bpp>(), 512) }
+pub fn get_4bpp_character_block(slot: usize) -> VolBlock<Tile4bpp, U512> {
+  unsafe { VolBlock::new(CHAR_BASE_BLOCKS.index(slot).to_usize()) }
 }
 
 /// Gives the specified charblock in 8bpp view.
-pub fn get_8bpp_character_block(slot: usize) -> VolAddressBlock<Tile8bpp> {
-  unsafe { VolAddressBlock::new_unchecked(CHAR_BASE_BLOCKS.index(slot).cast::<Tile8bpp>(), 256) }
+pub fn get_8bpp_character_block(slot: usize) -> VolBlock<Tile8bpp, U256> {
+  unsafe { VolBlock::new(CHAR_BASE_BLOCKS.index(slot).to_usize()) }
 }
