@@ -181,3 +181,23 @@ macro_rules! debug {
     }
   }};
 }
+
+/// Using timers 0 and 1, performs a crude timing of the expression given.
+#[macro_export]
+macro_rules! time_this01 {
+  ($x:expr) => {{
+    use $crate::io::timers::*;
+    const NORMAL_ON: TimerControlSetting = TimerControlSetting::new().with_enabled(true);
+    const CASCADE_ON: TimerControlSetting =
+      TimerControlSetting::new().with_enabled(true).with_tick_rate(TimerTickRate::Cascade);
+    const OFF: TimerControlSetting = TimerControlSetting::new();
+    TM1CNT_H.write(CASCADE_ON);
+    TM0CNT_H.write(NORMAL_ON);
+    $x;
+    TM0CNT_H.write(OFF);
+    TM1CNT_H.write(OFF);
+    let end_low = TM0CNT_L.read() as u32;
+    let end_high = TM1CNT_L.read() as u32;
+    end_high << 16 | end_low
+  }};
+}

@@ -14,6 +14,13 @@ However, currently the development focus is leaning towards having minimal
 coverage of all the parts of the GBA. Until that's done, unfortunately the book
 will be in a rather messy state.
 
+**Branches:**
+
+* `master` is the code that's on crates.io, though maybe the book has been
+  updated since then.
+* `dev` is the hopefully more settled parts of the next version.
+* Anything else is just stuff scratch space basically.
+
 ## What's Missing
 
 The following major GBA features are still missing from the crate:
