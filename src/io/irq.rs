@@ -156,7 +156,7 @@ impl IrqEnableSetting {
   /// Yes, you want to have interrupts.
   pub const IRQ_YES: Self = Self::new().with_interrupts_enabled(true);
 
-  /// No, please do not have interrupts.
+  /// No, you do not want to have interrupts.
   pub const IRQ_NO: Self = Self::new();
 }
 
