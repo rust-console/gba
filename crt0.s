@@ -24,8 +24,8 @@ __start:
     @ copy .data section to IWRAM
     ldr r0, =__data_lma     @ source address
     ldr r1, =__data_start   @ destination address
-    ldr r3, =__data_end
-    sub r2, r3, r1
+    ldr r2, =__data_end
+    sub r2, r2, r1
     beq .Lskip              @ don't try to copy an empty .data section
     add r2, #3
     mov r2, r2, asr #2      @ length (in words)
@@ -69,9 +69,9 @@ MainIrqHandler:
     ldr r2, =__IRQ_HANDLER
     ldr r1, [r2]
     stmdb sp!, {lr}
-    adr lr, MainIrqHandler_Return
+    adr lr, .Lreturn
     bx r1
-MainIrqHandler_Return:
+.Lreturn:
     ldmia sp!, {lr}
 
     @ Switch to IRQ mode
