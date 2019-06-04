@@ -45,9 +45,6 @@ fn main() -> std::io::Result<()> {
         &format!("target/thumbv4-none-agb/release/examples/{}",name),
         &format!("target/{}.gba",name)])
         .output().expect("failed to objcopy!");
-      std::process::Command::new("gbafix").args(
-        &[&format!("target/{}.gba",name)])
-        .output().expect("failed to gbafix!");
     }
   }
   Ok(())
