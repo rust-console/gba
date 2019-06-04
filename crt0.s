@@ -63,14 +63,14 @@ __start:
     ldr r0, =__data_lma     @ source address
     ldr r1, =__data_start   @ destination address
     ldr r2, =__data_end
-    sub r2, r2, r1
-    beq .Lskip              @ don't try to copy an empty .data section
-    add r2, #3
-    mov r2, r2, asr #2      @ length (in words)
-    add r2, #0x04000000     @ copy by words
-    swi 0xb0000
+    subs r2, r1             @ length
+    @ these instructions are only executed if r2 is nonzero
+    @ (i.e. don't bother copying an empty .data section)
+    addne r2, #3
+    asrne r2, #2
+    addne r2, #0x04000000
+    swine 0xb0000
 
-.Lskip:
     @ jump to user code
     ldr r0, =main
     bx r0
