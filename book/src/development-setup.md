@@ -169,6 +169,11 @@ fn main(_argc: isize, _argv: *const *const u8) -> isize {
     loop {}
   }
 }
+
+#[no_mangle]
+static __IRQ_HANDLER: extern "C" fn() = irq_handler;
+
+extern "C" fn irq_handler() {}
 ```
 
 Throw that into your project skeleton, build the program, and give it a run in
