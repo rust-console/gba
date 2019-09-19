@@ -51,12 +51,12 @@ __start:
 
     @ set IRQ stack pointer
     mov r0, #0x12
-    msr CPSR_cf, r0
+    msr CPSR_c, r0
     ldr sp, =0x3007fa0
 
     @ set user stack pointer
     mov r0, #0x1f
-    msr CPSR_cf, r0
+    msr CPSR_c, r0
     ldr sp, =0x3007f00
 
     @ copy .data section to IWRAM
@@ -89,19 +89,19 @@ MainIrqHandler:
     stmdb sp!, {r0-r2,lr}
 
     @ Disable all interrupts by writing to IME
-    mov r0, #0
-    strh r0, [r2, #8]
+    @ r2 (0x4000200) can be used as we only care about bit 0 being unset
+    strh r2, [r2, #8]
 
     @ Acknowledge all received interrupts that were enabled in IE
     ldr r3, [r2, #0]
     and r0, r3, r3, lsr #16
     strh r0, [r2, #2]
 
-    @ Switch to system mode
+    @ Switch from IRQ mode to system mode
+    @ cpsr_c = 0b000_10010u8 | 0b000_01101u8
     mrs r2, cpsr
-    bic r2, r2, #0x1F
-    orr r2, r2, #0x1F
-    msr cpsr_cf, r2
+    orr r2, r2, #0xD
+    msr cpsr_c, r2
 
     @ Jump to user specified IRQ handler
     ldr r2, =__IRQ_HANDLER
@@ -112,11 +112,12 @@ MainIrqHandler:
 .Lreturn:
     ldmia sp!, {lr}
 
-    @ Switch to IRQ mode
+    @ Switch from ??? mode to IRQ mode, disable IRQ
+    @ cpsr_c = ( !0b000_01101u8 & cpsr_c ) | 0b100_10010u8
     mrs r2, cpsr
-    bic r2, r2, #0x1F
+    bic r2, r2, #0xD
     orr r2, r2, #0x92
-    msr cpsr_cf, r2
+    msr cpsr_c, r2
 
     @ Restore IRQ stack pointer and IME
     ldmia sp!, {r0-r2,lr}
