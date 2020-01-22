@@ -21,6 +21,11 @@
   "llvm-target": "thumbv4-none-agb",
   "os": "none",
   "panic-strategy": "abort",
+  "pre-link-args-crt": {
+        "ld": [
+            "crt0.o"
+        ]
+    },
   "pre-link-args": {
     "ld": [
       "-Tlinker.ld"
