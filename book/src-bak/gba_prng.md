@@ -786,15 +786,12 @@ overhead I mentioned), the BIOS does its thing, and then eventually control
 returns to us.
 
 The precise details of what the BIOS call does depends on the function number
-that we call. We'd even have to potentially mark it as volatile asm if there's
-no clear outputs, otherwise the compiler would "helpfully" eliminate it for us
-during optimization. In our case there _are_ clear outputs. The numerator goes
-into register 0, and the denominator goes into register 1, the divmod happens,
-and then the division output is left in register 0 and the modulus output is
-left in register 1. I keep calling it "divmod" because div and modulus are two
-sides of the same coin. There's no way to do one of them faster by not doing the
-other or anything like that, so we'll first define it as a unified function that
-returns a tuple:
+that we call. The numerator goes into register 0, and the denominator goes into
+register 1, the divmod happens, and then the division output is left in register
+0 and the modulus output is left in register 1. I keep calling it "divmod"
+because div and modulus are two sides of the same coin. There's no way to do one
+of them faster by not doing the other or anything like that, so we'll first
+define it as a unified function that returns a tuple:
 
 ```rust
 #![feature(asm)]
@@ -806,12 +803,18 @@ pub fn div_modulus(numerator: i32, denominator: i32) -> (i32, i32) {
     let div_out: i32;
     let mod_out: i32;
     unsafe {
-      asm!(/* assembly template */ "swi 0x06"
-          :/* output operands */ "={r0}"(div_out), "={r1}"(mod_out)
-          :/* input operands */ "{r0}"(numerator), "{r1}"(denominator)
-          :/* clobbers */ "r3"
-          :/* options */
-    );
+      asm!(
+        // Assembly template
+        "swi 0x06",
+        // in+output registers
+        inout("r0") numerator => div_out,
+        inout("r0") denominator => mod_out,
+        // Clobber (not part of in/output but used by the operation)
+        out("r3") _,
+        // Additional compiler optimization options. See for details:
+        // https://github.com/Amanieu/rfcs/blob/inline-asm/text/0000-inline-asm.md#options-1
+        options(nostack, nomem),
+      );
     }
     (div_out, mod_out)
   }

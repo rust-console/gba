@@ -315,29 +315,3 @@ OTHER_MAGIC.index(120 + 96 * 240).write_volatile(0x7C00);
 If you wanna see these types and methods with a full docs write up you should
 check the GBA crate's source.
 
-## Volatile ASM
-
-In addition to some memory locations being volatile, it's also possible for
-inline assembly to be declared volatile. This is basically the same idea, "hey
-just do what I'm telling you, don't get smart about it".
-
-Normally when you have some `asm!` it's basically treated like a function,
-there's inputs and outputs and the compiler will try to optimize it so that if
-you don't actually use the outputs it won't bother with doing those
-instructions. However, `asm!` is basically a pure black box, so the compiler
-doesn't know what's happening inside at all, and it can't see if there's any
-important side effects going on.
-
-An example of an important side effect that doesn't have output values would be
-putting the CPU into a low power state while we want for the next VBlank. This
-lets us save quite a bit of battery power. It requires some setup to be done
-safely (otherwise the GBA won't ever actually wake back up from the low power
-state), but the `asm!` you use once you're ready is just a single instruction
-with no return value. The compiler can't tell what's going on, so you just have
-to say "do it anyway".
-
-Note that if you use a linker script to include any ASM with your Rust program
-(eg: the `crt0.s` file that we setup in the "Development Setup" section), all of
-that ASM is "volatile" for these purposes. Volatile isn't actually a _hardware_
-concept, it's just an LLVM concept, and the linker script runs after LLVM has
-done its work.

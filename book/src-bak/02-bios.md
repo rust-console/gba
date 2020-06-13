@@ -26,7 +26,7 @@ at all. (TODO: investigate more about  what parts of the BIOS we could
 potentially offer faster alternatives for.)
 
 I'd like to take a moment to thank [Marc Brinkmann](https://github.com/mbr)
-(with contributions from [Oliver Schneider](https://github.com/oli-obk) and
+(with contributions from [Oliver Scherer](https://github.com/oli-obk) and
 [Philipp Oppermann](https://github.com/phil-opp)) for writing [this blog
 post](http://embed.rs/articles/2016/arm-inline-assembly-rust/). It's at least
 ten times the tutorial quality as the `asm` entry in the Unstable Book has. In
@@ -39,15 +39,7 @@ So let's be slow and pedantic about this process.
 
 ## Inline ASM
 
-**Fair Warning:** Inline asm is one of the least stable parts of Rust overall,
-and if you write bad things you can trigger internal compiler errors and panics
-and crashes and make LLVM choke and die without explanation. If you write some
-inline asm and then suddenly your program suddenly stops compiling without
-explanation, try commenting out that whole inline asm use and see if it's
-causing the problem. Double check that you've written every single part of the
-asm call absolutely correctly, etc, etc.
-
-**Bonus Warning:** The general information that follows regarding the asm macro
+**Fair Warning:** The general information that follows regarding the asm macro
 is consistent from system to system, but specific information about register
 names, register quantities, asm instruction argument ordering, and so on is
 specific to ARM on the GBA. If you're programming for any other device you'll
@@ -57,39 +49,44 @@ Now then, with those out of the way, the inline asm docs describe an asm call as
 looking like this:
 
 ```rust
-asm!(assembly template
-   : output operands
-   : input operands
-   : clobbers
-   : options
-   );
-```
-
-And once you stick a lot of stuff in there it can _absolutely_ be hard to
-remember the ordering of the elements. So we'll start with a code block that
-has some comments thrown in on each line:
-
-```rust
-asm!(/* ASM */ TODO
-    :/* OUT */ TODO
-    :/* INP */ TODO
-    :/* CLO */ TODO
-    :/* OPT */
+let x = 10u32;
+let y = 34u32;
+let result: u32;
+asm!(
+  // assembly template
+  "add {lhs}, {rhs}",
+  lhs = inout(reg_thumb) x => result,
+  rhs = in(reg_thumb) y,
+  options(nostack, nomem),
 );
+// result == 44
 ```
+
+The `asm` macro follows the [RFC
+2873](https://github.com/Amanieu/rfcs/blob/inline-asm/text/0000-inline-asm.md)
+syntax. The following is just a summary of the RFC.
 
 Now we have to decide what we're gonna write. Obviously we're going to do some
 instructions, but those instructions use registers, and how are we gonna talk
 about them? We've got two choices.
 
 1) We can pick each and every register used by specifying exact register names.
-   In THUMB mode we have 8 registers available, named `r0` through `r7`. If you
-   switch into 32-bit mode there's additional registers that are also available.
+   In THUMB mode we have 8 registers available, named `r0` through `r7`. To use
+   those registers you would write  `in("r0") x` instead of
+   `rhs = in(reg_thumb) x`, and directly refer to `r0` in the assembly template.
 
-2) We can specify slots for registers we need and let LLVM decide. In this style
-   you name your slots `$0`, `$1` and so on. Slot numbers are assigned first to
-   all specified outputs, then to all specified inputs, in the order that you
-   list them.
+2) We can specify slots for registers we need and let LLVM decide. This is what
+   we do when we write `rhs = in(reg_thumb) y` and use `{rhs}` in the assembly
+   template.
+
+   The `reg_thumb` stands for the register class we are using. Since we are
+   in THUMB mode, the set of registers we can use is limited. `reg_thumb` tells
+   LLVM: "use only registers available in THUMB mode". In 32-bit mode, you have
+   access to more register and you should use a different register class.
+
+   The register classes [are described in the
+   RFC](https://github.com/Amanieu/rfcs/blob/inline-asm/text/0000-inline-asm.md#register-operands).
+   Look for "ARM" register classes.
 
 In the case of the GBA BIOS, each BIOS function has pre-designated input and
 output registers, so we will use the first style. If you use inline ASM in other
@@ -110,22 +107,22 @@ Remember that our Rust code is in 16-bit mode. You _can_ switch to 32-bit mode
 within your asm as long as you switch back by the time the block ends. Otherwise
 you'll have a bad time.
 
-### Outputs
+### Register bindings
 
-A comma separated list. Each entry looks like
+After the assembly string literal, you need to define your binding (which
+rust variables are getting into your registers and which ones are going to refer
+to their value afterward).
 
-* `"constraint" (binding)`
+There are many operand types [as per the
+RFC](https://github.com/Amanieu/rfcs/blob/inline-asm/text/0000-inline-asm.md#operand-type),
+but you will most often use:
 
-An output constraint starts with a symbol:
-
-* `=` for write only
-* `+` for reads and writes
-* `&` for for "early clobber", meaning that you'll write to this at some point
-  before all input values have been read. It prevents this register from being
-  assigned to an input register.
-
-Followed by _either_ the letter `r` (if you want LLVM to pick the register to
-use) or curly braces around a specific register (if you want to pick).
+```
+[alias =] in(<reg>) <binding> // input
+[alias =] out(<reg>) <binding> // output
+[alias =] inout(<reg>) <in binding> => <out binding> // both
+out(<reg>) _ // Clobber
+```
 
 * The binding can be any single 32-bit or smaller value.
 * If your binding has bit pattern requirements ("must be non-zero", etc) you are
@@ -134,22 +131,12 @@ use) or curly braces around a specific register (if you want to pick).
   being in a fit state to do that.
 * The binding must be either a mutable binding or a binding that was
   pre-declared but not yet assigned.
-
-Anything else is UB.
-
-### Inputs
-
-This is a similar comma separated list.
-
-* `"constraint" (binding)`
-
-An input constraint doesn't have the symbol prefix, you just pick either `r` or
-a named register with curly braces around it.
-
 * An input binding must be a single 32-bit or smaller value.
 * An input binding _should_ be a type that is `Copy` but this is not an absolute
   requirement. Having the input be read is semantically similar to using
   `core::ptr::read(&binding)` and forgetting the value when you're done.
+
+Anything else is UB.
 
 ### Clobbers
 
@@ -166,11 +153,21 @@ Failure to define all of your clobbers can cause UB.
 
 ### Options
 
-There's only one option we'd care to specify. That option is "volatile".
+By default the compiler won't optimize the code you wrote in an `asm` block. You
+will need to specify with the `options(..)` parameter that your code can be
+optimized. The available options [are specified in the
+RFC](https://github.com/Amanieu/rfcs/blob/inline-asm/text/0000-inline-asm.md#options-1).
 
-Just like with a function call, LLVM will skip a block of asm if it doesn't see
-that any outputs from the asm were used later on. Nearly every single BIOS call
-(other than the math operations) will need to be marked as "volatile".
+An optimization might duplicate or remove your instructions from the final
+code.
+
+Typically when executing a BIOS call (such as `swi 0x01`, which resets the
+console), it's important that the instruction is executed, and not optimized
+away, even though it has no observable input and output to the compiler.
+
+However some BIOS calls, such as _some_ math functions, have no observable
+effects outside of the registers we specified, in this case, we instruct the
+compiler to optimize them.
 
 ### BIOS ASM
 
@@ -215,11 +212,12 @@ pub fn div_rem(numerator: i32, denominator: i32) -> (i32, i32) {
   let div_out: i32;
   let rem_out: i32;
   unsafe {
-    asm!(/* ASM */ "swi 0x06"
-        :/* OUT */ "={r0}"(div_out), "={r1}"(rem_out)
-        :/* INP */ "{r0}"(numerator), "{r1}"(denominator)
-        :/* CLO */ "r3"
-        :/* OPT */
+    asm!(
+      "swi 0x06",
+      inout("r0") numerator => div_out,
+      inout("r1") denominator => rem_out,
+      out("r3") _,
+      options(nostack, nomem),
     );
   }
   (div_out, rem_out)

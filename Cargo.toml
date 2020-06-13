@@ -1,7 +1,7 @@
 [package]
 name = "gba"
 description = "A crate (and book) for making GBA games with Rust."
-version = "0.4.0-pre"
+version = "0.4.0-pre1"
 authors = ["Lokathor <zefria@gmail.com>", "Thomas Winwood <twwinwood@gmail.com>"]
 repository = "https://github.com/rust-console/gba"
 readme = "README.md"
