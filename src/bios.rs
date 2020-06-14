@@ -10,6 +10,7 @@
 
 #![cfg_attr(not(all(target_vendor = "nintendo", target_env = "agb")), allow(unused_variables))]
 
+use core::mem;
 use super::*;
 use io::irq::IrqFlags;
 
@@ -60,13 +61,7 @@ pub unsafe fn soft_reset() -> ! {
   }
   #[cfg(all(target_vendor = "nintendo", target_env = "agb"))]
   {
-    asm!(/* ASM */ "swi 0x00"
-        :/* OUT */ // none
-        :/* INP */ // none
-        :/* CLO */ // none
-        :/* OPT */ "volatile"
-    );
-    core::hint::unreachable_unchecked()
+    asm!("swi 0x00", options(noreturn))
   }
 }
 
@@ -103,12 +98,7 @@ pub unsafe fn register_ram_reset(flags: RegisterRAMResetFlags) {
   }
   #[cfg(all(target_vendor = "nintendo", target_env = "agb"))]
   {
-    asm!(/* ASM */ "swi 0x01"
-        :/* OUT */ // none
-        :/* INP */ "{r0}"(flags.0)
-        :/* CLO */ // none
-        :/* OPT */ "volatile"
-    );
+    asm!("swi 0x01", in("r0") flags.0);
   }
 }
 newtype! {
@@ -143,12 +133,7 @@ pub fn halt() {
   #[cfg(all(target_vendor = "nintendo", target_env = "agb"))]
   {
     unsafe {
-      asm!(/* ASM */ "swi 0x02"
-          :/* OUT */ // none
-          :/* INP */ // none
-          :/* CLO */ // none
-          :/* OPT */ "volatile"
-      );
+      asm!("swi 0x02");
     }
   }
 }
@@ -170,12 +155,7 @@ pub fn stop() {
   #[cfg(all(target_vendor = "nintendo", target_env = "agb"))]
   {
     unsafe {
-      asm!(/* ASM */ "swi 0x03"
-          :/* OUT */ // none
-          :/* INP */ // none
-          :/* CLO */ // none
-          :/* OPT */ "volatile"
-      );
+      asm!("swi 0x03");
     }
   }
 }
@@ -202,11 +182,10 @@ pub fn interrupt_wait(ignore_current_flags: bool, target_flags: IrqFlags) {
   #[cfg(all(target_vendor = "nintendo", target_env = "agb"))]
   {
     unsafe {
-      asm!(/* ASM */ "swi 0x04"
-          :/* OUT */ // none
-          :/* INP */ "{r0}"(ignore_current_flags), "{r1}"(target_flags)
-          :/* CLO */ // none
-          :/* OPT */ "volatile"
+      asm!(
+          "swi 0x04",
+          in("r0") mem::transmute::<bool, u8>(ignore_current_flags),
+          in("r1") mem::transmute::<IrqFlags, u16>(target_flags),
       );
     }
   }
@@ -226,11 +205,10 @@ pub fn vblank_interrupt_wait() {
   #[cfg(all(target_vendor = "nintendo", target_env = "agb"))]
   {
     unsafe {
-      asm!(/* ASM */ "swi 0x05"
-          :/* OUT */ // none
-          :/* INP */ // none
-          :/* CLO */ "r0", "r1" // both set to 1 by the routine
-          :/* OPT */ "volatile"
+      asm!(
+          "swi 0x05",
+          out("r0") _,
+          out("r1") _,
       );
     }
   }
@@ -253,11 +231,12 @@ pub fn div_rem(numerator: i32, denominator: i32) -> (i32, i32) {
     let div_out: i32;
     let rem_out: i32;
     unsafe {
-      asm!(/* ASM */ "swi 0x06"
-          :/* OUT */ "={r0}"(div_out), "={r1}"(rem_out)
-          :/* INP */ "{r0}"(numerator), "{r1}"(denominator)
-          :/* CLO */ "r3"
-          :/* OPT */
+      asm!(
+          "swi 0x06",
+          inout("r0") numerator => div_out,
+          inout("r1") denominator => rem_out,
+          out("r3") _,
+          options(nostack, nomem),
       );
     }
     (div_out, rem_out)
@@ -292,16 +271,17 @@ pub fn sqrt(val: u32) -> u16 {
   }
   #[cfg(all(target_vendor = "nintendo", target_env = "agb"))]
   {
-    let out: u16;
+    let out: u32;
     unsafe {
-      asm!(/* ASM */ "swi 0x08"
-          :/* OUT */ "={r0}"(out)
-          :/* INP */ "{r0}"(val)
-          :/* CLO */ "r1", "r3"
-          :/* OPT */
+      asm!(
+          "swi 0x08",
+          inout("r0") val => out,
+          out("r1") _,
+          out("r3") _,
+          options(pure, nomem),
       );
     }
-    out
+    out as u16
   }
 }
 
@@ -321,11 +301,12 @@ pub fn atan(theta: i16) -> i16 {
   {
     let out: i16;
     unsafe {
-      asm!(/* ASM */ "swi 0x09"
-          :/* OUT */ "={r0}"(out)
-          :/* INP */ "{r0}"(theta)
-          :/* CLO */ "r1", "r3"
-          :/* OPT */
+      asm!(
+          "swi 0x09",
+          inout("r0") theta => out,
+          out("r1") _,
+          out("r3") _,
+          options(pure, nomem),
       );
     }
     out
@@ -349,11 +330,12 @@ pub fn atan2(y: i16, x: i16) -> u16 {
   {
     let out: u16;
     unsafe {
-      asm!(/* ASM */ "swi 0x0A"
-          :/* OUT */ "={r0}"(out)
-          :/* INP */ "{r0}"(x), "{r1}"(y)
-          :/* CLO */ "r3"
-          :/* OPT */
+      asm!(
+          "swi 0x0A",
+          inout("r0") x => out,
+          in("r1") y,
+          out("r3") _,
+          options(pure, nomem),
       );
     }
     out
@@ -378,11 +360,11 @@ pub unsafe fn cpu_set16(src: *const u16, dest: *mut u16, count: u32, fixed_sourc
   #[cfg(all(target_vendor = "nintendo", target_env = "agb"))]
   {
     let control = count + ((fixed_source as u32) << 24);
-    asm!(/* ASM */ "swi 0x0B"
-        :/* OUT */ // none
-        :/* INP */ "{r0}"(src), "{r1}"(dest), "{r2}"(control)
-        :/* CLO */ // none
-        :/* OPT */ "volatile"
+    asm!(
+        "swi 0x0B",
+        in("r0") src,
+        in("r1") dest,
+        in("r2") control,
     );
   }
 }
@@ -405,11 +387,11 @@ pub unsafe fn cpu_set32(src: *const u32, dest: *mut u32, count: u32, fixed_sourc
   #[cfg(all(target_vendor = "nintendo", target_env = "agb"))]
   {
     let control = count + ((fixed_source as u32) << 24) + (1 << 26);
-    asm!(/* ASM */ "swi 0x0B"
-        :/* OUT */ // none
-        :/* INP */ "{r0}"(src), "{r1}"(dest), "{r2}"(control)
-        :/* CLO */ // none
-        :/* OPT */ "volatile"
+    asm!(
+        "swi 0x0B",
+        in("r0") src,
+        in("r1") dest,
+        in("r2") control,
     );
   }
 }
@@ -433,11 +415,11 @@ pub unsafe fn cpu_fast_set(src: *const u32, dest: *mut u32, count: u32, fixed_so
   #[cfg(all(target_vendor = "nintendo", target_env = "agb"))]
   {
     let control = count + ((fixed_source as u32) << 24);
-    asm!(/* ASM */ "swi 0x0C"
-        :/* OUT */ // none
-        :/* INP */ "{r0}"(src), "{r1}"(dest), "{r2}"(control)
-        :/* CLO */ // none
-        :/* OPT */ "volatile"
+    asm!(
+        "swi 0x0C",
+        in("r0") src,
+        in("r1") dest,
+        in("r2") control,
     );
   }
 }
@@ -460,11 +442,10 @@ pub fn get_bios_checksum() -> u32 {
   {
     let out: u32;
     unsafe {
-      asm!(/* ASM */ "swi 0x0D"
-          :/* OUT */ "={r0}"(out)
-          :/* INP */ // none
-          :/* CLO */ // none
-          :/* OPT */ // none
+      asm!(
+          "swi 0x0D",
+          out("r0") out,
+          options(pure, readonly),
       );
     }
     out
@@ -499,12 +480,7 @@ pub fn sound_bias(level: u32) {
   #[cfg(all(target_vendor = "nintendo", target_env = "agb"))]
   {
     unsafe {
-      asm!(/* ASM */ "swi 0x19"
-          :/* OUT */ // none
-          :/* INP */ "{r0}"(level)
-          :/* CLO */ // none
-          :/* OPT */ "volatile"
-      );
+      asm!("swi 0x19", in("r0") level);
     }
   }
 }
@@ -544,12 +520,7 @@ pub fn sound_driver_mode(mode: u32) {
   #[cfg(all(target_vendor = "nintendo", target_env = "agb"))]
   {
     unsafe {
-      asm!(/* ASM */ "swi 0x1B"
-          :/* OUT */ // none
-          :/* INP */ "{r0}"(mode)
-          :/* CLO */ // none
-          :/* OPT */ "volatile"
-      );
+      asm!("swi 0x1B", in("r0") mode);
     }
   }
 }
@@ -571,12 +542,7 @@ pub fn sound_driver_main() {
   #[cfg(all(target_vendor = "nintendo", target_env = "agb"))]
   {
     unsafe {
-      asm!(/* ASM */ "swi 0x1C"
-          :/* OUT */ // none
-          :/* INP */ // none
-          :/* CLO */ // none
-          :/* OPT */ "volatile"
-      );
+      asm!("swi 0x1C");
     }
   }
 }
@@ -594,12 +560,7 @@ pub fn sound_driver_vsync() {
   #[cfg(all(target_vendor = "nintendo", target_env = "agb"))]
   {
     unsafe {
-      asm!(/* ASM */ "swi 0x1D"
-          :/* OUT */ // none
-          :/* INP */ // none
-          :/* CLO */ // none
-          :/* OPT */ "volatile"
-      );
+      asm!("swi 0x1D");
     }
   }
 }
@@ -619,12 +580,7 @@ pub fn sound_channel_clear() {
   #[cfg(all(target_vendor = "nintendo", target_env = "agb"))]
   {
     unsafe {
-      asm!(/* ASM */ "swi 0x1E"
-          :/* OUT */ // none
-          :/* INP */ // none
-          :/* CLO */ // none
-          :/* OPT */ "volatile"
-      );
+      asm!("swi 0x1E");
     }
   }
 }
@@ -647,12 +603,7 @@ pub fn sound_driver_vsync_off() {
   #[cfg(all(target_vendor = "nintendo", target_env = "agb"))]
   {
     unsafe {
-      asm!(/* ASM */ "swi 0x28"
-          :/* OUT */ // none
-          :/* INP */ // none
-          :/* CLO */ // none
-          :/* OPT */ "volatile"
-      );
+      asm!("swi 0x28");
     }
   }
 }
@@ -671,12 +622,7 @@ pub fn sound_driver_vsync_on() {
   #[cfg(all(target_vendor = "nintendo", target_env = "agb"))]
   {
     unsafe {
-      asm!(/* ASM */ "swi 0x29"
-          :/* OUT */ // none
-          :/* INP */ // none
-          :/* CLO */ // none
-          :/* OPT */ "volatile"
-      );
+      asm!("swi 0x29");
     }
   }
 }
