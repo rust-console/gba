@@ -389,9 +389,12 @@ impl DMA3 {
     // it's only two cycles we just insert two NOP instructions to ensure that
     // successive calls to `fill32` or other DMA methods don't interfere with
     // each other.
-    asm!("
+    asm!(
+      "
         NOP
         NOP
-    ", options(nomem, nostack));
+    ",
+      options(nomem, nostack)
+    );
   }
 }

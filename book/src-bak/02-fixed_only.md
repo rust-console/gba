@@ -30,82 +30,25 @@ of range very easily.
 
 ## Representing A Fixed Point Value
 
-So we want to associate our numbers with a mental note of what units they're in:
-
-* [PhantomData](https://doc.rust-lang.org/core/marker/struct.PhantomData.html)
-  is a type that tells the compiler "please remember this extra type info" when
-  you add it as a field to a struct. It goes away at compile time, so it's
-  perfect for us to use as space for a note to ourselves without causing runtime
-  overhead.
-* The [typenum](https://crates.io/crates/typenum) crate is the best way to
-  represent a number within a type in Rust. Since our values on the GBA are
-  always specified as a number of fractional bits to count the number as, we can
-  put `typenum` types such as `U8` or `U14` into our `PhantomData` to keep track
-  of what's going on.
-
-Now, those of you who know me, or perhaps just know my reputation, will of
-course _immediately_ question what happened to the real Lokathor. I do not care
-for most crates, and I particularly don't care for using a crate in teaching
-situations. However, `typenum` has a number of factors on its side that let me
-suggest it in this situation:
-
-* It's version 1.10 with a total of 21 versions and nearly 700k downloads, so we
-  can expect that the major troubles have been shaken out and that it will remain
-  fairly stable for quite some time to come.
-* It has no further dependencies that it's going to drag into the compilation.
-* It happens all at compile time, so it's not clogging up our actual game with
-  any nonsense.
-* The (interesting) subject of "how do you do math inside Rust's trait system?" is
-  totally separate from the concern that we're trying to focus on here.
-
-Therefore, we will consider it acceptable to use this crate.
-
-Now the `typenum` crate defines a whole lot, but we'll focus down to just a
-single type at the moment:
-[UInt](https://docs.rs/typenum/1.10.0/typenum/uint/struct.UInt.html) is a
-type-level unsigned value. It's like `u8` or `u16`, but while they're types that
-then have values, each `UInt` construction statically equates to a specific
-value. Like how the `()` type only has one value, which is also called `()`. In
-this case, you wrap up `UInt` around smaller `UInt` values and a `B1` or `B0`
-value to build up the binary number that you want at the type level.
-
-In other words, instead of writing
-
-```rust
-let six = 0b110;
-```
-
-We write
-
-```rust
-type U6 = UInt<UInt<UInt<UTerm, B1>, B1>, B0>;
-```
-
-Wild, I know. If you look into the `typenum` crate you can do math and stuff
-with these type level numbers, and we will a little bit below, but to start off
-we _just_ need to store one in some `PhantomData`.
-
-### A struct For Fixed Point
+We will need to use the `const_generics` rustc feature. In short, it's a way to
+use constants in types we define the same way we can use them in array
+definitions (`[u16; 8]`).
 
 Our actual type for a fixed point value looks like this:
 
 ```rust
-use core::marker::PhantomData;
-use typenum::marker_traits::Unsigned;
+#![features(const_generics)]
 
 /// Fixed point `T` value with `F` fractional bits.
 #[derive(Debug, Copy, Clone, Default, PartialEq, Eq, PartialOrd, Ord)]
 #[repr(transparent)]
-pub struct Fx<T, F: Unsigned> {
-  bits: T,
-  _phantom: PhantomData<F>,
+pub struct Fx<T, const F: usize> {
+  bits: T
 }
 ```
 
 This says that `Fx<T,F>` is a generic type that holds some base number type `T`
-and a `F` type that's marking off how many fractional bits we're using. We only
-want people giving unsigned type-level values for the `PhantomData` type, so we
-use the trait bound `F: Unsigned`.
+and a `F` type that's marking off how many fractional bits we're using.
 
 We use
 [repr(transparent)](https://github.com/rust-lang/rfcs/blob/master/text/1758-repr-transparent.md)
@@ -125,7 +68,7 @@ and then `fxu` if we need an unsigned value.
 
 ```rust
 /// Alias for an `i16` fixed point value with 8 fractional bits.
-pub type fx8_8 = Fx<i16,U8>;
+pub type fx8_8 = Fx<i16,8>;
 ```
 
 Rust will complain about having `non_camel_case_types`, and you can shut that
@@ -139,17 +82,14 @@ did).
 So how do we actually _make_ one of these values? Well, we can always just wrap or unwrap any value in our `Fx` type:
 
 ```rust
-impl<T, F: Unsigned> Fx<T, F> {
+impl<T, const F: usize> Fx<T, F> {
   /// Uses the provided value directly.
   pub fn from_raw(r: T) -> Self {
-    Fx {
-      num: r,
-      phantom: PhantomData,
-    }
+    Fx { bits: r }
   }
   /// Unwraps the inner value.
   pub fn into_raw(self) -> T {
-    self.num
+    self.bits
   }
 }
 ```
@@ -157,29 +97,18 @@ impl<T, F: Unsigned> Fx<T, F> {
 I'd like to use the `From` trait of course, but it was giving me some trouble, i
 think because of the orphan rule. Oh well.
 
-If we want to be particular to the fact that these are supposed to be
-_numbers_... that gets tricky. Rust is actually quite bad at being generic about
-number types. You can use the [num](https://crates.io/crates/num) crate, or you
-can just use a macro and invoke it once per type. Guess what we're gonna do.
-
 ```rust
 macro_rules! fixed_point_methods {
   ($t:ident) => {
-    impl<F: Unsigned> Fx<$t, F> {
+    impl<const F: usize> Fx<$t, F> {
       /// Gives the smallest positive non-zero value.
       pub fn precision() -> Self {
-        Fx {
-          num: 1,
-          phantom: PhantomData,
-        }
+        Fx { bits: 1 }
       }
 
       /// Makes a value with the integer part shifted into place.
       pub fn from_int_part(i: $t) -> Self {
-        Fx {
-          num: i << F::U8,
-          phantom: PhantomData,
-        }
+        Fx { bits: i << F as u8 }
       }
     }
   };
@@ -225,10 +154,7 @@ we can, it's a little easier to cope with I think.
 ```rust
   /// Casts the base type, keeping the fractional bit quantity the same.
   pub fn cast_inner<Z, C: Fn(T) -> Z>(self, op: C) -> Fx<Z, F> {
-    Fx {
-      num: op(self.num),
-      phantom: PhantomData,
-    }
+    Fx { bits: op(self.num) }
   }
 ```
 
@@ -293,7 +219,7 @@ subtraction, and bit shifting (which we need to do ourselves).
 This code can go outside the macro, with sufficient trait bounds.
 
 ```rust
-impl<T: Add<Output = T>, F: Unsigned> Add for Fx<T, F> {
+impl<T: Add<Output = T>, const F: usize> Add for Fx<T, F> {
   type Output = Self;
   fn add(self, rhs: Fx<T, F>) -> Self::Output {
     Fx {
@@ -310,7 +236,7 @@ pattern for `Sub`, `Shl`, `Shr`, and `Neg`. With enough trait bounds, we can do
 anything!
 
 ```rust
-impl<T: Sub<Output = T>, F: Unsigned> Sub for Fx<T, F> {
+impl<T: Sub<Output = T>, const F: usize> Sub for Fx<T, F> {
   type Output = Self;
   fn sub(self, rhs: Fx<T, F>) -> Self::Output {
     Fx {
@@ -320,7 +246,7 @@ impl<T: Sub<Output = T>, F: Unsigned> Sub for Fx<T, F> {
   }
 }
 
-impl<T: Shl<u32, Output = T>, F: Unsigned> Shl<u32> for Fx<T, F> {
+impl<T: Shl<u32, Output = T>, const F: usize> Shl<u32> for Fx<T, F> {
   type Output = Self;
   fn shl(self, rhs: u32) -> Self::Output {
     Fx {
@@ -330,7 +256,7 @@ impl<T: Shl<u32, Output = T>, F: Unsigned> Shl<u32> for Fx<T, F> {
   }
 }
 
-impl<T: Shr<u32, Output = T>, F: Unsigned> Shr<u32> for Fx<T, F> {
+impl<T: Shr<u32, Output = T>, const F: usize> Shr<u32> for Fx<T, F> {
   type Output = Self;
   fn shr(self, rhs: u32) -> Self::Output {
     Fx {
@@ -340,7 +266,7 @@ impl<T: Shr<u32, Output = T>, F: Unsigned> Shr<u32> for Fx<T, F> {
   }
 }
 
-impl<T: Neg<Output = T>, F: Unsigned> Neg for Fx<T, F> {
+impl<T: Neg<Output = T>, const F: usize> Neg for Fx<T, F> {
   type Output = Self;
   fn neg(self) -> Self::Output {
     Fx {
@@ -410,7 +336,7 @@ implement it three times, which calls for another macro.
 ```rust
 macro_rules! fixed_point_signed_multiply {
   ($t:ident) => {
-    impl<F: Unsigned> Mul for Fx<$t, F> {
+    impl<const F: usize> Mul for Fx<$t, F> {
       type Output = Self;
       fn mul(self, rhs: Fx<$t, F>) -> Self::Output {
         let pre_shift = (self.num as i32).wrapping_mul(rhs.num as i32);
@@ -443,7 +369,7 @@ fixed_point_signed_multiply! {i32}
 
 macro_rules! fixed_point_unsigned_multiply {
   ($t:ident) => {
-    impl<F: Unsigned> Mul for Fx<$t, F> {
+    impl<const F: usize> Mul for Fx<$t, F> {
       type Output = Self;
       fn mul(self, rhs: Fx<$t, F>) -> Self::Output {
         Fx {
@@ -491,7 +417,7 @@ suffer some.
 ```rust
 macro_rules! fixed_point_signed_division {
   ($t:ident) => {
-    impl<F: Unsigned> Div for Fx<$t, F> {
+    impl<const F: usize> Div for Fx<$t, F> {
       type Output = Self;
       fn div(self, rhs: Fx<$t, F>) -> Self::Output {
         let mul_output: i32 = (self.num as i32).wrapping_mul(1 << F::U8);
@@ -511,7 +437,7 @@ fixed_point_signed_division! {i32}
 
 macro_rules! fixed_point_unsigned_division {
   ($t:ident) => {
-    impl<F: Unsigned> Div for Fx<$t, F> {
+    impl<const F: usize> Div for Fx<$t, F> {
       type Output = Self;
       fn div(self, rhs: Fx<$t, F>) -> Self::Output {
         let mul_output: i32 = (self.num as i32).wrapping_mul(1 << F::U8);

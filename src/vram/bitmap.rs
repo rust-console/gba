@@ -1,8 +1,6 @@
 //! Module for the Bitmap video modes.
 
 use super::*;
-use core::ops::{Div, Mul};
-use typenum::consts::{U128, U160, U2, U256, U4};
 
 /// A bitmap video mode with full color and full resolution.
 ///
@@ -23,11 +21,8 @@ impl Mode3 {
   /// The screen's height in this mode.
   pub const HEIGHT: usize = 160;
 
-  const VRAM: VolBlock<Color, <U256 as Mul<U160>>::Output> =
-    unsafe { VolBlock::new(VRAM_BASE_USIZE) };
-
-  const WORDS_BLOCK: VolBlock<u32, <<U256 as Mul<U160>>::Output as Div<U2>>::Output> =
-    unsafe { VolBlock::new(VRAM_BASE_USIZE) };
+  const VRAM: VolBlock<Color, { 256 * 160 }> = unsafe { VolBlock::new(VRAM_BASE_USIZE) };
+  const WORDS_BLOCK: VolBlock<u32, { 256 * 160 / 2 }> = unsafe { VolBlock::new(VRAM_BASE_USIZE) };
 
   /// Gets the address of the pixel specified.
   ///
@@ -164,16 +159,14 @@ impl Mode4 {
   /// The screen's height in this mode.
   pub const HEIGHT: usize = 160;
 
-  const PAGE0_INDEXES: VolBlock<u8, <U256 as Mul<U160>>::Output> =
-    unsafe { VolBlock::new(VRAM_BASE_USIZE) };
+  const PAGE0_INDEXES: VolBlock<u8, { 256 * 160 }> = unsafe { VolBlock::new(VRAM_BASE_USIZE) };
 
-  const PAGE1_INDEXES: VolBlock<u8, <U256 as Mul<U160>>::Output> =
+  const PAGE1_INDEXES: VolBlock<u8, { 256 * 160 }> =
     unsafe { VolBlock::new(VRAM_BASE_USIZE + PAGE1_OFFSET) };
 
-  const PAGE0_WORDS: VolBlock<u32, <<U256 as Mul<U160>>::Output as Div<U4>>::Output> =
-    unsafe { VolBlock::new(VRAM_BASE_USIZE) };
+  const PAGE0_WORDS: VolBlock<u32, { 256 * 160 / 4 }> = unsafe { VolBlock::new(VRAM_BASE_USIZE) };
 
-  const PAGE1_WORDS: VolBlock<u32, <<U256 as Mul<U160>>::Output as Div<U4>>::Output> =
+  const PAGE1_WORDS: VolBlock<u32, { 256 * 160 / 4 }> =
     unsafe { VolBlock::new(VRAM_BASE_USIZE + PAGE1_OFFSET) };
 
   /// Reads the color of the pixel specified.
@@ -331,16 +324,14 @@ impl Mode5 {
   /// The screen's height in this mode.
   pub const HEIGHT: usize = 128;
 
-  const PAGE0_PIXELS: VolBlock<Color, <U160 as Mul<U128>>::Output> =
-    unsafe { VolBlock::new(VRAM_BASE_USIZE) };
+  const PAGE0_PIXELS: VolBlock<Color, { 160 * 128 }> = unsafe { VolBlock::new(VRAM_BASE_USIZE) };
 
-  const PAGE1_PIXELS: VolBlock<Color, <U160 as Mul<U128>>::Output> =
+  const PAGE1_PIXELS: VolBlock<Color, { 160 * 128 }> =
     unsafe { VolBlock::new(VRAM_BASE_USIZE + PAGE1_OFFSET) };
 
-  const PAGE0_WORDS: VolBlock<u32, <<U160 as Mul<U128>>::Output as Div<U2>>::Output> =
-    unsafe { VolBlock::new(VRAM_BASE_USIZE) };
+  const PAGE0_WORDS: VolBlock<u32, { 160 * 128 / 2 }> = unsafe { VolBlock::new(VRAM_BASE_USIZE) };
 
-  const PAGE1_WORDS: VolBlock<u32, <<U160 as Mul<U128>>::Output as Div<U2>>::Output> =
+  const PAGE1_WORDS: VolBlock<u32, { 160 * 128 / 2 }> =
     unsafe { VolBlock::new(VRAM_BASE_USIZE + PAGE1_OFFSET) };
 
   /// Reads the color of the pixel specified.

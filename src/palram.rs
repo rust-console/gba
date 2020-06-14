@@ -25,15 +25,13 @@
 
 use super::*;
 
-use typenum::consts::U256;
-
 // TODO: PalIndex newtypes?
 
 /// The `PALRAM` for background colors, 256 slot view.
-pub const PALRAM_BG: VolBlock<Color, U256> = unsafe { VolBlock::new(0x500_0000) };
+pub const PALRAM_BG: VolBlock<Color, 256> = unsafe { VolBlock::new(0x500_0000) };
 
 /// The `PALRAM` for object colors, 256 slot view.
-pub const PALRAM_OBJ: VolBlock<Color, U256> = unsafe { VolBlock::new(0x500_0200) };
+pub const PALRAM_OBJ: VolBlock<Color, 256> = unsafe { VolBlock::new(0x500_0200) };
 
 /// Obtains the address of the specified 8bpp background palette slot.
 pub const fn index_palram_bg_8bpp(slot: u8) -> VolAddress<Color> {

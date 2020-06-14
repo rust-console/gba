@@ -2,8 +2,6 @@
 
 use super::*;
 
-use typenum::consts::{U128, U32};
-
 newtype! {
   /// 0th part of an object's attributes.
   ///
@@ -139,7 +137,7 @@ pub struct ObjectAttributes {
 
 /// The object attributes, but there are gaps in the array, so we must not
 /// expose this directly.
-const OBJ_ATTR_APPROX: VolBlock<[u16; 4], U128> = unsafe { VolBlock::new(0x700_0000) };
+const OBJ_ATTR_APPROX: VolBlock<[u16; 4], 128> = unsafe { VolBlock::new(0x700_0000) };
 // TODO: VolSeries
 
 pub fn write_obj_attributes(slot: usize, attributes: ObjectAttributes) -> Option<()> {
@@ -172,7 +170,7 @@ pub struct AffineParameters {
 
 /// The object attributes, but there are gaps in the array, so we must not
 /// expose this directly.
-const AFFINE_PARAMS_APPROX: VolBlock<[i16; 16], U32> = unsafe { VolBlock::new(0x700_0000) };
+const AFFINE_PARAMS_APPROX: VolBlock<[i16; 16], 32> = unsafe { VolBlock::new(0x700_0000) };
 // TODO: VolSeries
 
 pub fn write_affine_parameters(slot: usize, params: AffineParameters) -> Option<()> {

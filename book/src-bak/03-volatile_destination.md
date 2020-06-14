@@ -237,7 +237,7 @@ impl<T> Iterator for VolAddressIter<T> {
 impl<T> FusedIterator for VolAddressIter<T> {}
 ```
 
-### VolAddressBlock
+### VolBlock
 
 Obviously, having a base address and a length exist separately is error prone.
 There's a good reason for slices to keep their pointer and their length
@@ -246,28 +246,28 @@ together. We want something like that, which we'll call a "block" because
 
 ```rust
 #[derive(Debug)]
-pub struct VolAddressBlock<T> {
+pub struct VolBlock<T> {
   vol_address: VolAddress<T>,
   slots: usize,
 }
-impl<T> Clone for VolAddressBlock<T> {
+impl<T> Clone for VolBlock<T> {
   fn clone(&self) -> Self {
-    VolAddressBlock {
+    VolBlock {
       vol_address: self.vol_address,
       slots: self.slots,
     }
   }
 }
-impl<T> PartialEq for VolAddressBlock<T> {
+impl<T> PartialEq for VolBlock<T> {
   fn eq(&self, other: &Self) -> bool {
     self.vol_address == other.vol_address && self.slots == other.slots
   }
 }
-impl<T> Eq for VolAddressBlock<T> {}
+impl<T> Eq for VolBlock<T> {}
 
-impl<T> VolAddressBlock<T> {
+impl<T> VolBlock<T> {
   pub const unsafe fn new_unchecked(vol_address: VolAddress<T>, slots: usize) -> Self {
-    VolAddressBlock { vol_address, slots }
+    VolBlock { vol_address, slots }
   }
   pub const fn iter(self) -> VolAddressIter<T> {
     VolAddressIter {
@@ -298,8 +298,8 @@ impl<T> VolAddressBlock<T> {
 Now we can have something like:
 
 ```rust
-const OTHER_MAGIC: VolAddressBlock<u16> = unsafe {
-  VolAddressBlock::new_unchecked(
+const OTHER_MAGIC: VolBlock<u16> = unsafe {
+  VolBlock::new_unchecked(
     VolAddress::new(0x600_0000),
     240 * 160
   )
