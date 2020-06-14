@@ -240,11 +240,10 @@ the `u16` that would be associated with that address. For example, if you tried
 to write `0x01u8` to either `0x500_0000` or `0x500_0001` then you'd actually
 _effectively_ be writing `0x0101u16` to `0x500_0000`.
 
-PALRAM follows what we'll call the "Video Memory Wait" rule: If you to access
-the memory during a vertical blank or horizontal blank period there's 0 wait
-cycles, and if you try to access the memory while the display controller is
-drawing there is a 1 cycle wait inserted _if_ the display controller was using
-that memory at that moment.
+PALRAM follows what we'll call the "Video Memory Wait" rule: If you try to
+access the memory during a vertical blank or horizontal blank period there's 0
+wait cycles, otherwise there is a chance of a 1 cycle wait _if_ the display
+controller was using that precise memory location at that moment.
 
 ### Video RAM (VRAM)
 
@@ -253,22 +252,20 @@ that memory at that moment.
 * **Access:** Read any, single bytes _sometimes_ mirrored (see text).
 * **Wait Cycles:** Video Memory Wait (see text)
 
-Video RAM is the memory for what you want the display controller to be
-displaying. The GBA actually has 6 different display modes (numbered 0 through
-5), and depending on the mode you're using the layout that you should imagine
-VRAM having changes. Because there's so much involved here, I'll leave more
-precise details to the following sections which talk about how to use VRAM in
-each mode.
+Video RAM tells the display controller what to draw on the screen. The GBA
+actually has 6 different display modes (numbered 0 through 5). Depending on the
+mode you're using, the way the controller uses the VRAM changes. Because there's
+so much involved here, I'll leave more precise details to the following sections
+which talk about how to use VRAM in each mode.
 
-VRAM can't be written to in individual bytes. If you try to write a single byte
-to background VRAM the byte gets mirrored like with PALRAM, and if you try with
-object VRAM the write gets ignored entirely. Exactly what address ranges those
-memory types are depends on video mode, but just don't bother with individual
-byte writes to VRAM. If you want to change a single byte of data (and you might)
-then the correct style is to read the full `u16`, mask out the old data, mask in
-your new value, and then write the whole `u16`.
+You can't write to VRAM in individual bytes. If you try to write a single byte
+to background VRAM, the byte gets mirrored like with PALRAM. And if you try with
+object VRAM the write gets ignored entirely. What is VRAM and what is object
+VRAM depends on the video mode. If you want to change a single byte of data (and
+you might) then the correct style is to read the full `u16`, mask out the old
+data, mask in your new value, and then write the whole `u16`.
 
-VRAM follows the same "Video Memory Wait" rule that PALRAM has.
+VRAM follows the same "Video Memory Wait" rule as PALRAM.
 
 ### Object Attribute Memory (OAM)
 
@@ -306,13 +303,13 @@ OAM can't ever be written to with individual bytes. The write just has no effect
 at all.
 
 OAM follows the same "Video Memory Wait" rule that PALRAM has, **and** you can
-also only freely access OAM during a horizontal blank if you set a special
-"HBlank Interval Free" bit in one of the IO registers (the "Display Control"
-register, which we'll talk about next lesson). The reason that you might _not_
-want to set that bit is because when it's enabled you can't draw as many objects
-at once. You don't lose the use of an exact number of objects, you actually lose
-the use of a number of display adapter drawing cycles. Since not all objects
-take the same number of cycles to render, it depends on what you're drawing.
+only freely access OAM during a horizontal blank if you set a special "HBlank
+Interval Free" bit in one of the IO registers (the "Display Control" register,
+which we'll talk about next lesson). The reason that you might _not_ want to set
+that bit is because when it's enabled you can't draw as many objects at once.
+You don't lose the use of an exact number of objects, you actually lose the use
+of a number of display adapter drawing cycles. Since not all objects take the
+same number of cycles to render, it depends on what you're drawing.
 GBATEK [has the details](https://problemkaputt.de/gbatek.htm#lcdobjoverview) if
 you want to know precisely.
 
@@ -324,9 +321,9 @@ you want to know precisely.
 * **Wait Cycles:** Special
 
 This is where your actual game is located! As you might guess, since each
-cartridge is different, the details here depend quite a bit on the cartridge
-that you use for your game. Even a simple statement like "you can't write to the
-ROM region" isn't true for some carts if they have FlashROM.
+cartridge is different, the details here depend quite a bit on the one you are
+using for your game. Even a simple statement like "you can't write to the ROM
+region" isn't true for some carts if they have FlashROM.
 
 The _most important_ thing to concern yourself with when considering the ROM
 portion of memory is the 32MB limit. That's compiled code, images, sound,
