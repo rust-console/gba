@@ -10,7 +10,6 @@
 
 #![cfg_attr(not(all(target_vendor = "nintendo", target_env = "agb")), allow(unused_variables))]
 
-use core::mem;
 use super::*;
 use io::irq::IrqFlags;
 
@@ -184,8 +183,8 @@ pub fn interrupt_wait(ignore_current_flags: bool, target_flags: IrqFlags) {
     unsafe {
       asm!(
           "swi 0x04",
-          in("r0") mem::transmute::<bool, u8>(ignore_current_flags),
-          in("r1") mem::transmute::<IrqFlags, u16>(target_flags),
+          in("r0") if ignore_current_flags { 1 } else { 0 },
+          in("r1") core::mem::transmute::<IrqFlags, u16>(target_flags),
       );
     }
   }
