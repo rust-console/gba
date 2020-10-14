@@ -2,14 +2,8 @@
 skip_core_tasks = true
 
 [tasks.create-target-dir]
-script_runner = "@rust"
-script = [
-'''
-fn main() {
-  std::fs::DirBuilder::new().recursive(true).create("./target/").unwrap();
-}
-'''
-]
+script_runner = "@duckscript"
+script = [ "mkdir ./target/" ]
 
 [tasks.assemble]
 dependencies = ["create-target-dir"]
@@ -19,42 +13,37 @@ args = ["crt0.s", "-o", "target/crt0.o"]
 [tasks.build-examples-debug]
 dependencies = ["assemble"]
 command = "cargo"
-args = ["xbuild", "--examples", "--target", "thumbv4-none-agb.json"]
+args = ["build", "--examples"]
 
 [tasks.build-examples-release]
 dependencies = ["assemble"]
 command = "cargo"
-args = ["xbuild", "--examples", "--target", "thumbv4-none-agb.json", "--release"]
+args = ["build", "--examples", "--release"]
 
 [tasks.pack-roms]
-script_runner = "@rust"
+script_runner = "@duckscript"
 script = [
 '''
-fn main() -> std::io::Result<()> {
-  for entry in std::fs::read_dir("examples/")? {
-    let entry = entry?;
-    let mut path = entry.path();
-    if path.is_dir() {
-      continue;
-    } else {
-      path.set_extension("");
-      let name = path.file_name().unwrap().to_str().unwrap();
-      println!("{}", name);
-      std::process::Command::new("arm-none-eabi-objcopy").args(
-        &["-O", "binary",
-        &format!("target/thumbv4-none-agb/release/examples/{}",name),
-        &format!("target/{}.gba",name)])
-        .output().expect("failed to objcopy!");
-    }
-  }
-  Ok(())
-}
+examples = glob_array ./examples/*.rs
+for example in ${examples}
+    example = substring ${example} -3
+    example = basename ${example}
+    exec arm-none-eabi-objcopy -O binary ./target/thumbv4-none-agb/release/examples/${example} ./target/${example}.gba
+end
 '''
 ]
 
-[tasks.test]
+[tasks.test.linux]
 command = "cargo"
-args = ["test", "--lib"]
+args = ["test", "--lib", "--target", "x86_64-unknown-linux-gnu", "-Z", "build-std"]
+
+[tasks.test.windows]
+command = "cargo"
+args = ["test", "--lib", "--target", "x86_64-pc-windows-msvc", "-Z", "build-std"]
+
+[tasks.test.mac]
+command = "cargo"
+args = ["test", "--lib", "--target", "x86_64-apple-darwin", "-Z", "build-std"]
 
 [tasks.justrelease]
 dependencies = ["build-examples-release", "pack-roms"]
