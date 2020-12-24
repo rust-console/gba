@@ -139,7 +139,7 @@ pub const IE: VolAddress<IrqFlags> = unsafe { VolAddress::new(0x400_0200) };
 /// However, if the main interrupt handler in `crt0.s` is changed, then the
 /// handler must write a `1` bit to all bits that are enabled on this register
 /// when it is called.
-pub const IF: VolAddress<IrqFlags> = unsafe { VolAddress::new(0x400_0200) };
+pub const IF: VolAddress<IrqFlags> = unsafe { VolAddress::new(0x400_0202) };
 
 newtype! {
     /// Setting to control whether interrupts are enabled.
