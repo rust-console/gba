@@ -14,6 +14,7 @@ pub mod display;
 pub mod dma;
 pub mod irq;
 pub mod keypad;
+pub mod sio;
 pub mod sound;
 pub mod timers;
 pub mod window;
