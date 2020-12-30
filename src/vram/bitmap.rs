@@ -209,7 +209,7 @@ impl Mode4 {
         .index_unchecked(rounded_down_index)
         .cast::<u16>()
       };
-      if real_index == rounded_down_index {
+      if real_index != rounded_down_index {
         // even byte, change the high bits
         let old_val = address.read();
         address.write((old_val & 0xFF) | ((pal8bpp as u16) << 8));
