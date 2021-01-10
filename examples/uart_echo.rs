@@ -1,5 +1,5 @@
 #![no_std]
-#![no_main]
+#![feature(start)]
 
 //      _      Link Cable Pinout
 //  ___/ \___  1: VCC - 3.3V
@@ -20,8 +20,7 @@ fn panic(_info: &core::panic::PanicInfo) -> ! {
 
 #[start]
 fn main(_argc: isize, _argv: *const *const u8) -> isize {
-  let mut serial = SioSerial;
-  SioSerial::init(BaudRate::Bps115200);
+  let mut serial = SioSerial::init(BaudRate::Bps115200);
 
   loop {
     if let Ok(c) = block!(serial.read()) {
