@@ -124,12 +124,13 @@ newtype_enum! {
 
 /// Empty stuct that implements embedded_hal traits.
 #[cfg(feature = "serial")]
+#[derive(Clone)]
 pub struct SioSerial;
 
 #[cfg(feature = "serial")]
 impl SioSerial {
   /// Initialize SioSerial with provided baud rate and default 8N1 settings.
-  pub fn init(baud: BaudRate) {
+  pub fn init(baud: BaudRate) -> Self {
     RCNT.write(IoControlSetting::new());
     SIOCNT.write(
       // default settings: 8N1
@@ -137,14 +138,18 @@ impl SioSerial {
         .with_baud_rate(baud)
         .with_data_length_8bit(true)
         .with_mode(SioMode::Uart)
+        .with_fifo_enable(true)
         .with_rx_enable(true)
         .with_tx_enable(true),
     );
+
+    SioSerial
   }
 }
 
 /// Serial IO error type.
 #[cfg(feature = "serial")]
+#[derive(Debug)]
 pub enum SioError {
   /// * Error bit in SIOCNT is set
   ErrorBitSet,
