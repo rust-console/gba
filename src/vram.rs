@@ -21,6 +21,8 @@ pub mod affine;
 pub mod bitmap;
 pub mod text;
 
+use text::TextScreenblockEntry;
+
 /// The start of VRAM.
 ///
 /// Depending on what display mode is currently set there's different ways that
