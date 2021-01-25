@@ -15,7 +15,7 @@
 
 pub(crate) use super::*;
 
-use typenum::consts::{U256, U32, U512, U6};
+use typenum::{U1024, consts::{U256, U32, U512, U6}};
 
 pub mod affine;
 pub mod bitmap;
@@ -58,4 +58,8 @@ pub fn get_4bpp_character_block(slot: usize) -> VolBlock<Tile4bpp, U512> {
 /// Gives the specified charblock in 8bpp view.
 pub fn get_8bpp_character_block(slot: usize) -> VolBlock<Tile8bpp, U256> {
   unsafe { VolBlock::new(CHAR_BASE_BLOCKS.index(slot).to_usize()) }
+}
+
+pub fn get_screen_block(slot: usize) -> VolBlock<TextScreenblockEntry, U1024> {
+  unsafe { VolBlock::new(SCREEN_BASE_BLOCKS.index(slot).to_usize()) }
 }

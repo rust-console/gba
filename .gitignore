@@ -12,3 +12,6 @@ Cargo.lock
 # The crt0.o file should, under the currently suggested build scheme, be
 # recompiled every build anyway.
 crt0.o
+
+# Don't track VSCode Workspace settings
+/.vscode
