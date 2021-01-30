@@ -17,7 +17,7 @@
 //! **Do not** use this crate in programs that aren't running on the GBA. If you
 //! do, it's a giant bag of Undefined Behavior.
 
-use core::{cell::Cell, fmt, cmp::Ordering};
+use core::{cell::UnsafeCell, cmp::Ordering, fmt};
 
 pub(crate) use gba_proc_macro::phantom_fields;
 pub(crate) use voladdress::{read_only::ROVolAddress, VolAddress, VolBlock};
@@ -184,7 +184,7 @@ pub unsafe fn divrem_i32_unchecked(numer: i32, denom: i32) -> (i32, i32) {
 }
 
 /// A memory safe type to allow for global mutable static variables.
-/// 
+///
 /// The way it achieves memory safety is similar to [`Cell<T>`]:
 /// It never allows you to transform a `&Static<T>` to a `&T`. That way
 /// you can never have reference invalidation because you can only ever get
@@ -193,51 +193,62 @@ pub unsafe fn divrem_i32_unchecked(numer: i32, denom: i32) -> (i32, i32) {
 /// impossible, so we can safely implement [`Sync`](core::sync::Sync) for this type, whereas
 /// [`Cell<T>`] cannot.
 ///
-/// Under the hood this type uses [`Cell<T>`] so it can't have implementation errors
-/// that lead to unsoundness (unless the core library implementation is wrong).
-///
 /// # Examples
 ///
 /// ```ignore
 /// static IRQ_COUNTER: Static<usize> = Static::new(0);
-/// 
+///
 /// extern "C" fn irq_handler(_: IrqFlags) {
-///   IRQ_COUNTER.set(COUNTER.get() + 1);   
+///   IRQ_COUNTER.set(IRQ_COUNTER.get() + 1);   
 /// }
 ///```
-/// 
+///
 /// This example just counts the number of interrupt requests which normally
 /// you wouldn't be able to without using `unsafe` code.
-/// 
+///
 /// [`Cell<T>`]: core::cell::Cell
 #[repr(transparent)]
 pub struct Static<T: ?Sized> {
-  inner: Cell<T>,
+  inner: UnsafeCell<T>,
 }
 
 impl<T> Static<T> {
   /// Constructs a new `Static<T>` with a given value.
+  #[inline(always)]
   pub const fn new(value: T) -> Self {
-    Self { inner: Cell::new(value) }
+    Self { inner: UnsafeCell::new(value) }
   }
 
   /// Replaces the current value with the given one.
+  #[inline(always)]
   pub fn set(&self, value: T) {
-    self.inner.set(value);
+    self.replace(value);
   }
 
   /// Swaps the two inner values. The advantage over simply using
   /// [`core::mem::swap`] is that you don't need exclusive access to the values.
+  #[inline(always)]
   pub fn swap(&self, other: &Static<T>) {
-    self.inner.swap(&other.inner);
+    // SAFETY: The two `Static<T>` can only overlap if the references point to the same
+    // `Static<T>`, in which case we do nothing. Otherwise we can be sure that they
+    // don't overlap so calling `swap_nonoverlapping` is safe
+    if !core::ptr::eq(self, other) {
+      unsafe { core::ptr::swap_nonoverlapping(self.inner.get(), other.inner.get(), 1) }
+    }
   }
 
   /// Replaces the current value with the given one and returns it.
+  #[inline(always)]
   pub fn replace(&self, value: T) -> T {
-    self.inner.replace(value)
+    unsafe {
+      let t = self.inner.get().read_volatile();
+      self.inner.get().write_volatile(value);
+      t
+    }
   }
 
   /// Consumes the `Static<T>` and returns the current inner value.
+  #[inline(always)]
   pub fn into_inner(self) -> T {
     self.inner.into_inner()
   }
@@ -245,12 +256,14 @@ impl<T> Static<T> {
 
 impl<T: Copy> Static<T> {
   /// Returns a copy of the current inner value.
+  #[inline(always)]
   pub fn get(&self) -> T {
-    self.inner.get()
+    unsafe { self.inner.get().read_volatile() }
   }
 
   /// Updates the inner value using the given function
   /// and returns the new inner value.
+  #[inline(always)]
   pub fn update<F: FnOnce(T) -> T>(&self, f: F) -> T {
     let old = self.get();
     let new = f(old);
@@ -261,14 +274,16 @@ impl<T: Copy> Static<T> {
 
 impl<T: ?Sized> Static<T> {
   /// Returns a pointer to the inner value.
+  #[inline(always)]
   pub const fn as_ptr(&self) -> *mut T {
-    self.inner.as_ptr()
+    self.inner.get()
   }
 
   /// Returns a mutable reference to the inner value.
   /// This is safe, as it requires exclusive access to the `Static<T>`,
   /// so noone else can set the inner value which could lead
   /// to reference invalidation
+  #[inline(always)]
   pub fn get_mut(&mut self) -> &mut T {
     self.inner.get_mut()
   }
@@ -276,15 +291,28 @@ impl<T: ?Sized> Static<T> {
   /// Returns a reference to `Static<T>` from a `&mut T`.
   /// This is safe because during the lifetime of the `&Static<T>`
   /// it has exclusive access to the `&mut T`
+  #[inline(always)]
   pub fn from_mut(t: &mut T) -> &Static<T> {
+    // SAFETY: `Static<T>` is `#[repr(transparent)]`, so it has the same memory layout as `T`
     unsafe { &*(t as *mut T as *const Static<T>) }
   }
 }
 
 impl<T: Default> Static<T> {
   /// Returns the inner value and replaces it with [`<T as Default>::default()`](core::default::Default::default).
+  #[inline(always)]
   pub fn take(&self) -> T {
     self.replace(Default::default())
+  }
+}
+
+impl<T> Static<[T]> {
+  /// Transforms a `&Static<[T]>` into a `&[Static<T>]`
+  ///
+  /// This is safe because `Static<T>` is guaranteed to have the same memory layout as `T`
+  #[inline(always)]
+  pub fn as_slice_of_cells(&self) -> &[Static<T>] {
+    unsafe { &*(self as *const _ as *const _) }
   }
 }
 
@@ -328,15 +356,15 @@ impl<T: PartialOrd + Copy> PartialOrd for Static<T> {
   fn lt(&self, other: &Self) -> bool {
     self.get().lt(&other.get())
   }
-  
+
   fn le(&self, other: &Self) -> bool {
     self.get().le(&other.get())
   }
-  
+
   fn gt(&self, other: &Self) -> bool {
     self.get().gt(&other.get())
   }
-  
+
   fn ge(&self, other: &Self) -> bool {
     self.get().ge(&other.get())
   }
