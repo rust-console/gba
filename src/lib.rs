@@ -17,8 +17,6 @@
 //! **Do not** use this crate in programs that aren't running on the GBA. If you
 //! do, it's a giant bag of Undefined Behavior.
 
-use core::{cell::UnsafeCell, cmp::Ordering, fmt};
-
 pub(crate) use gba_proc_macro::phantom_fields;
 pub(crate) use voladdress::{read_only::ROVolAddress, VolAddress, VolBlock};
 
@@ -45,6 +43,8 @@ pub mod rom;
 pub mod sram;
 
 pub mod mgba;
+
+pub mod static_types;
 
 extern "C" {
   /// This marks the end of the `.data` and `.bss` sections in IWRAM.
@@ -182,197 +182,6 @@ pub unsafe fn divrem_i32_unchecked(numer: i32, denom: i32) -> (i32, i32) {
     (false, false) => (udiv as i32, urem as i32),
   }
 }
-
-/// A memory safe type to allow for global mutable static variables.
-///
-/// The way it achieves memory safety is similar to [`Cell<T>`]:
-/// It never allows you to transform a `&Static<T>` to a `&T`. That way
-/// you can never have reference invalidation because you can only ever get
-/// a reference to the inner value if you have exclusive access to the `Static<T>`.
-/// Additionally, because the GBA doesn't have hardware threads, data races are
-/// impossible, so we can safely implement [`Sync`](core::sync::Sync) for this type, whereas
-/// [`Cell<T>`] cannot.
-///
-/// # Examples
-///
-/// ```ignore
-/// static IRQ_COUNTER: Static<usize> = Static::new(0);
-///
-/// extern "C" fn irq_handler(_: IrqFlags) {
-///   IRQ_COUNTER.set(IRQ_COUNTER.get() + 1);   
-/// }
-///```
-///
-/// This example just counts the number of interrupt requests which normally
-/// you wouldn't be able to without using `unsafe` code.
-///
-/// [`Cell<T>`]: core::cell::Cell
-#[repr(transparent)]
-pub struct Static<T: ?Sized> {
-  inner: UnsafeCell<T>,
-}
-
-impl<T> Static<T> {
-  /// Constructs a new `Static<T>` with a given value.
-  #[inline(always)]
-  pub const fn new(value: T) -> Self {
-    Self { inner: UnsafeCell::new(value) }
-  }
-
-  /// Replaces the current value with the given one.
-  #[inline(always)]
-  pub fn set(&self, value: T) {
-    self.replace(value);
-  }
-
-  /// Swaps the two inner values. The advantage over simply using
-  /// [`core::mem::swap`] is that you don't need exclusive access to the values.
-  #[inline(always)]
-  pub fn swap(&self, other: &Static<T>) {
-    // SAFETY: The two `Static<T>` can only overlap if the references point to the same
-    // `Static<T>`, in which case we do nothing. Otherwise we can be sure that they
-    // don't overlap so calling `swap_nonoverlapping` is safe
-    if !core::ptr::eq(self, other) {
-      unsafe { core::ptr::swap_nonoverlapping(self.inner.get(), other.inner.get(), 1) }
-    }
-  }
-
-  /// Replaces the current value with the given one and returns it.
-  #[inline(always)]
-  pub fn replace(&self, value: T) -> T {
-    unsafe {
-      let t = self.inner.get().read_volatile();
-      self.inner.get().write_volatile(value);
-      t
-    }
-  }
-
-  /// Consumes the `Static<T>` and returns the current inner value.
-  #[inline(always)]
-  pub fn into_inner(self) -> T {
-    self.inner.into_inner()
-  }
-}
-
-impl<T: Copy> Static<T> {
-  /// Returns a copy of the current inner value.
-  #[inline(always)]
-  pub fn get(&self) -> T {
-    unsafe { self.inner.get().read_volatile() }
-  }
-
-  /// Updates the inner value using the given function
-  /// and returns the new inner value.
-  #[inline(always)]
-  pub fn update<F: FnOnce(T) -> T>(&self, f: F) -> T {
-    let old = self.get();
-    let new = f(old);
-    self.set(new);
-    new
-  }
-}
-
-impl<T: ?Sized> Static<T> {
-  /// Returns a pointer to the inner value.
-  #[inline(always)]
-  pub const fn as_ptr(&self) -> *mut T {
-    self.inner.get()
-  }
-
-  /// Returns a mutable reference to the inner value.
-  /// This is safe, as it requires exclusive access to the `Static<T>`,
-  /// so noone else can set the inner value which could lead
-  /// to reference invalidation
-  #[inline(always)]
-  pub fn get_mut(&mut self) -> &mut T {
-    self.inner.get_mut()
-  }
-
-  /// Returns a reference to `Static<T>` from a `&mut T`.
-  /// This is safe because during the lifetime of the `&Static<T>`
-  /// it has exclusive access to the `&mut T`
-  #[inline(always)]
-  pub fn from_mut(t: &mut T) -> &Static<T> {
-    // SAFETY: `Static<T>` is `#[repr(transparent)]`, so it has the same memory layout as `T`
-    unsafe { &*(t as *mut T as *const Static<T>) }
-  }
-}
-
-impl<T: Default> Static<T> {
-  /// Returns the inner value and replaces it with [`<T as Default>::default()`](core::default::Default::default).
-  #[inline(always)]
-  pub fn take(&self) -> T {
-    self.replace(Default::default())
-  }
-}
-
-impl<T> Static<[T]> {
-  /// Transforms a `&Static<[T]>` into a `&[Static<T>]`
-  ///
-  /// This is safe because `Static<T>` is guaranteed to have the same memory layout as `T`
-  #[inline(always)]
-  pub fn as_slice_of_cells(&self) -> &[Static<T>] {
-    unsafe { &*(self as *const _ as *const _) }
-  }
-}
-
-impl<T: fmt::Debug + Copy> fmt::Debug for Static<T> {
-  fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-    f.debug_tuple("Static").field(&self.get()).finish()
-  }
-}
-
-impl<T: Default> Default for Static<T> {
-  fn default() -> Self {
-    Self::new(Default::default())
-  }
-}
-
-impl<T: PartialEq + Copy> PartialEq for Static<T> {
-  fn eq(&self, other: &Self) -> bool {
-    self.get().eq(&other.get())
-  }
-
-  fn ne(&self, other: &Self) -> bool {
-    self.get().ne(&other.get())
-  }
-}
-
-impl<T: Eq + Copy> Eq for Static<T> {
-  fn assert_receiver_is_total_eq(&self) {}
-}
-
-impl<T> From<T> for Static<T> {
-  fn from(value: T) -> Self {
-    Self::new(value)
-  }
-}
-
-impl<T: PartialOrd + Copy> PartialOrd for Static<T> {
-  fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-    self.get().partial_cmp(&other.get())
-  }
-
-  fn lt(&self, other: &Self) -> bool {
-    self.get().lt(&other.get())
-  }
-
-  fn le(&self, other: &Self) -> bool {
-    self.get().le(&other.get())
-  }
-
-  fn gt(&self, other: &Self) -> bool {
-    self.get().gt(&other.get())
-  }
-
-  fn ge(&self, other: &Self) -> bool {
-    self.get().ge(&other.get())
-  }
-}
-
-// SAFETY: Because the GBA doesn't have hardware threads, data races are impossible, so this implementation is sound
-// (Note that it's only sound if it's actually run on a GBA)
-unsafe impl<T> Sync for Static<T> {}
 
 /*
 #[cfg(test)]
