@@ -15,3 +15,7 @@ crt0.o
 
 # Don't track VSCode Workspace settings
 /.vscode
+
+# Don't track IntelliJ Workspaces
+/.idea
+/*.ida
