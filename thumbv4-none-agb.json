@@ -14,7 +14,7 @@
   "emit-debug-gdb-scripts": false,
   "env": "agb",
   "executables": true,
-  "features": "+soft-float,+strict-align",
+  "features": "+soft-float,+strict-align,+thumb-mode",
   "linker": "arm-none-eabi-ld",
   "linker-flavor": "ld",
   "linker-is-gnu": true,
@@ -35,5 +35,6 @@
   "target-c-int-width": "32",
   "target-endian": "little",
   "target-pointer-width": "32",
-  "vendor": "nintendo"
+  "vendor": "nintendo",
+  "has-thumb-interworking": true
 }

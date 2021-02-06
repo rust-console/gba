@@ -380,10 +380,13 @@ impl DMA3 {
       .with_use_32bit(true)
       .with_enabled(true);
     // TODO: destination checking against SRAM
+    crate::sync::volatile_mark_ro(src);
     Self::DMA3SAD.write(src);
     Self::DMA3DAD.write(dest);
     Self::DMA3CNT_L.write(count);
     Self::DMA3CNT_H.write(FILL_CONTROL);
+    crate::sync::volatile_mark_rw(dest);
+
     // Note(Lokathor): Once DMA is set to activate it takes 2 cycles for it to
     // kick in. You can do any non-DMA thing you like before that, but since
     // it's only two cycles we just insert two NOP instructions to ensure that
