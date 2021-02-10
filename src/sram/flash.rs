@@ -3,7 +3,7 @@
 use core::cmp;
 use core::ops::Range;
 use crate::io::timers::*;
-use crate::sync::{RawMutex, RawMutexGuard, Static, InitOnce};
+use crate::sync::{RawMutex, RawMutexGuard, Static, InitOnce, disable_irqs};
 use super::{
     Error, SramAccess, SramType, read_raw_buf, read_raw_byte, write_raw_buf, verify_raw_buf,
 };
@@ -15,7 +15,7 @@ const FLASH_PORT_A: VolAddress<u8> = unsafe { VolAddress::new(0x0E005555) };
 const FLASH_PORT_B: VolAddress<u8> = unsafe { VolAddress::new(0x0E002AAA) };
 const FLASH_DATA: VolBlock<u8, U65536> = unsafe { VolBlock::new(0x0E000000) };
 
-const ATMEL_SECTOR_SHIFT: usize = 9; // 512 bytes
+const ATMEL_SECTOR_SHIFT: usize = 7; // 128 bytes
 const SECTOR_SHIFT: usize = 12; // 4 KiB
 
 const SRAM_BANK_SHIFT: usize = 16; // 64 KiB
@@ -43,6 +43,7 @@ enum Timer {
     T3,
 }
 impl Timer {
+    #[inline(never)]
     fn timer_l(&self) -> VolAddress<u16> {
         match *self {
             Timer::T0 => TM0CNT_L,
@@ -52,6 +53,7 @@ impl Timer {
             _ => unimplemented!(),
         }
     }
+    #[inline(never)]
     fn timer_h(&self) -> VolAddress<TimerControlSetting> {
         match *self {
             Timer::T0 => TM0CNT_H,
@@ -258,6 +260,7 @@ static CHIP_INFO_GENERIC_128K: ChipInfo = ChipInfo {
 
 impl FlashChipType {
     /// Returns the internal info for this chip.
+    #[inline(never)]
     fn chip_info(&self) -> &'static ChipInfo {
         match *self {
             FlashChipType::Sst64K => &CHIP_INFO_SST_64K,
@@ -448,15 +451,37 @@ impl ChipInfo {
         self.read_buffer(offset+start+buf.len(), &mut sector[start+buf.len()..4096])?;
         self.write_4k_sector_raw(offset, &sector, 0)
     }
-    /// Writes an entire 4K sector on non-Atmel devices.
-    fn write_4k_sector(
-        &self, offset: usize, buf: &[u8], start: usize, exact: bool,
+
+    /// Writes an entire 128b sector on Atmel devices.
+    fn write_128b_sector_raw(
+        &self, offset: usize, buf: &[u8],
     ) -> Result<(), Error> {
-        if !exact || (start == 0 && buf.len() == 4096) {
-            self.write_4k_sector_raw(offset, buf, start)
-        } else {
-            self.write_4k_sector_exact(offset, buf, start)
-        }
+        assert_eq!(offset & 0x7F, 0, "Invalid offset passed.");
+        assert_eq!(buf.len(), 128, "Invalid buffer length.");
+
+        disable_irqs(|| {
+            issue_raw_command(0xAA, 0x55, 0xA0);
+            for i in 0..128 {
+                FLASH_DATA.index(offset + i).write(buf[i]);
+            }
+            self.wait_for_timeout(offset + 127, buf[127], self.erase_sector_timeout)
+        })?;
+        Ok(())
+    }
+    /// Writes an entire 128b sector on Atmel devices, copying existing data in
+    /// case of non-sector aligned writes.
+    #[inline(never)]
+    fn write_128b_sector_exact(
+        &self, offset: usize, buf: &[u8], start: usize,
+    ) -> Result<(), Error> {
+        assert_eq!(offset & 0x7F, 0, "Invalid offset passed.");
+        assert!(start + buf.len() <= 128, "Invalid buffer length.");
+
+        let mut sector = [0u8; 128];
+        self.read_buffer(offset, &mut sector[0..start])?;
+        sector[start..start+buf.len()].copy_from_slice(buf);
+        self.read_buffer(offset+start+buf.len(), &mut sector[start+buf.len()..128])?;
+        self.write_128b_sector_raw(offset, &sector)
     }
 
     /// Writes a sector.
@@ -464,9 +489,17 @@ impl ChipInfo {
         &self, offset: usize, buf: &[u8], start: usize, exact: bool,
     ) -> Result<(), Error> {
         if self.is_atmel {
-            unimplemented!()
+            if !exact || (start == 0 && buf.len() == 128) {
+                self.write_128b_sector_raw(offset, buf)
+            } else {
+                self.write_128b_sector_exact(offset, buf, start)
+            }
         } else {
-            self.write_4k_sector(offset, buf, start, exact)
+            if !exact || (start == 0 && buf.len() == 4096) {
+                self.write_4k_sector_raw(offset, buf, start)
+            } else {
+                self.write_4k_sector_exact(offset, buf, start)
+            }
         }
     }
     /// The shift value to use to break buffers up into sectors.
