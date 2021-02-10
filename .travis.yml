@@ -16,35 +16,37 @@ branches:
 rust:
   - nightly
 
-before_script:
-  - rustup component add rust-src
-  - (test -x $HOME/.cargo/bin/cargo-install-update || cargo install cargo-update)
-  - (test -x $HOME/.cargo/bin/cargo-xbuild || cargo install cargo-xbuild)
-  - (test -x $HOME/.cargo/bin/cargo-make || cargo install cargo-make)
-  - (test -x $HOME/.cargo/bin/mdbook || cargo install mdbook)
-  - cargo install-update -a
+before_script: |
+  set -exo pipefail
+  rustup component add rust-src
+  (test -x $HOME/.cargo/bin/cargo-install-update || cargo install cargo-update)
+  (test -x $HOME/.cargo/bin/cargo-xbuild || cargo install cargo-xbuild)
+  (test -x $HOME/.cargo/bin/cargo-make || cargo install cargo-make)
+  (test -x $HOME/.cargo/bin/mdbook || cargo install mdbook)
+  cargo install-update -a
 
-script:
+script: |
+  set -exo pipefail
   # Obtain the devkitPro tools, using `target/` as a temp directory
-  - mkdir -p target
-  - cd target
-  - wget https://github.com/devkitPro/pacman/releases/download/devkitpro-pacman-1.0.1/devkitpro-pacman.deb
-  - sudo dpkg -i devkitpro-pacman.deb
-  - sudo dkp-pacman -Sy
-  - sudo dkp-pacman -Syu
-  - sudo dkp-pacman -S -v --noconfirm gba-tools devkitARM
-  - export PATH="$PATH:/opt/devkitpro/devkitARM/bin"
-  - export PATH="$PATH:/opt/devkitpro/tools/bin"
-  - cd ..
+  mkdir -p target
+  cd target
+  wget https://github.com/devkitPro/pacman/releases/download/v1.0.2/devkitpro-pacman.amd64.deb
+  sudo dpkg -i devkitpro-pacman.amd64.deb
+  sudo dkp-pacman -Sy
+  sudo dkp-pacman -Syu
+  sudo dkp-pacman -S -v --noconfirm gba-tools devkitARM
+  export PATH="$PATH:/opt/devkitpro/devkitARM/bin"
+  export PATH="$PATH:/opt/devkitpro/tools/bin"
+  cd ..
   # Run all verificaions, both debug and release
-  - cargo test --lib
-  - cargo test --lib --release
-  - cargo test --tests
-  - cargo test --tests --release
+  cargo test --lib
+  cargo test --lib --release
+  cargo test --tests
+  cargo test --tests --release
   # Let cargo make take over the rest
-  - cargo make justrelease
+  cargo make justrelease
   # Test a build of the book so that a failed book build kills this run
-  - cd book && mdbook build
+  cd book && mdbook build
 
 deploy:
   provider: pages
