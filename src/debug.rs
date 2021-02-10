@@ -75,6 +75,8 @@ pub fn get_debug_interface() -> Option<&'static dyn DebugInterface> {
             let mut new_value: Option<&'static dyn DebugInterface> = None;
             if mgba::detect() {
                 new_value = Some(&mgba::MGBADebugInterface);
+            } else if nocash::detect() {
+                new_value = Some(&nocash::NoCashDebugInterface);
             }
             if new_value.is_some() {
                 INTERFACE.write(new_value);
