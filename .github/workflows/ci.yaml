@@ -6,44 +6,40 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
-    container: devkitpro/devkitarm:latest
+    runs-on: ubuntu-20.04
     strategy:
       matrix:
         rust:
           - { toolchain: nightly }
     steps:
-      - uses: actions/checkout@v2
-      - name: Add devkitARM bin to PATH
-        run: echo "/opt/devkitpro/devkitARM/bin" >> $GITHUB_PATH
       - name: Install Apt Dependencies
-        run: apt-get update && apt-get install -y --no-install-recommends build-essential libssl-dev
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends build-essential libssl-dev binutils-arm-none-eabi
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
           toolchain: ${{ matrix.rust.toolchain }}
           default: true
-      - uses: Swatinem/rust-cache@v1
       - name: Install Rust Source
         run: rustup component add rust-src
-      - name: Install cargo-xbuild crate
-        uses: actions-rs/install@v0.1
-        with:
-          crate: cargo-xbuild
-          version: latest
-          use-tool-cache: true
       - name: Install cargo-make crate
         uses: actions-rs/install@v0.1
         with:
           crate: cargo-make
           version: latest
           use-tool-cache: true
-      - name: Make Test Linux
+      - name: Install gbafix crate
+        uses: actions-rs/install@v0.1
+        with:
+          crate: gbafix
+          version: latest
+          use-tool-cache: true
+      - uses: actions/checkout@v2
+      - name: Make Test
         uses: actions-rs/cargo@v1
         with:
           toolchain: ${{ matrix.rust.toolchain }}
           command: make
-          args: test linux
+          args: test
       - name: Make Release
         uses: actions-rs/cargo@v1
         with:

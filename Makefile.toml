@@ -1,55 +1,70 @@
 [config]
 skip_core_tasks = true
 
-[tasks.create-target-dir]
+[tasks.verify-toolchain]
 script_runner = "@duckscript"
-script = [ "mkdir ./target/" ]
+script = [
+'''
+channel = get_env CARGO_MAKE_RUST_CHANNEL
+assert_eq ${channel} nightly "Rust toolchain must be set to nightly"
+'''
+]
 
-[tasks.assemble]
-dependencies = ["create-target-dir"]
-command = "arm-none-eabi-as"
-args = ["crt0.s", "-o", "target/crt0.o"]
 
 [tasks.build-examples-debug]
-dependencies = ["assemble"]
+dependencies = ["verify-toolchain"]
 command = "cargo"
-args = ["build", "--examples"]
+args = ["build", "--examples", "--target=thumbv4t-none-eabi", "-Zbuild-std=core"]
 
 [tasks.build-examples-release]
-dependencies = ["assemble"]
+dependencies = ["verify-toolchain"]
 command = "cargo"
-args = ["build", "--examples", "--release"]
+args = ["build", "--examples", "--release", "--target=thumbv4t-none-eabi", "-Zbuild-std=core"]
 
 [tasks.pack-roms]
 script_runner = "@duckscript"
 script = [
 '''
+release_target = get_env RELEASE_TARGET
+examples_path = set ./target/thumbv4t-none-eabi/${release_target}/examples
 examples = glob_array ./examples/*.rs
 for example in ${examples}
     example = substring ${example} -3
     example = basename ${example}
-    exec arm-none-eabi-objcopy -O binary ./target/thumbv4-none-agb/release/examples/${example} ./target/${example}.gba
+    binary_exists = is_path_exists ${examples_path}/${example}
+
+    if ${binary_exists}
+        echo "Packing: ${examples_path}/${example} to ${examples_path}/${example}.gba"
+        exec arm-none-eabi-objcopy -O binary ${examples_path}/${example} ${examples_path}/${example}.gba
+        echo "Fixing headers: ${examples_path}/${example}.gba"
+        exec gbafix ${examples_path}/${example}.gba
+    else
+        echo "Binary does not exist: ${examples_path}/${example}"
+    end
 end
 '''
 ]
 
-[tasks.test.linux]
-command = "cargo"
-args = ["test", "--lib", "--target", "x86_64-unknown-linux-gnu", "-Z", "build-std"]
+[tasks.pack-roms-release]
+dependencies = ["build-examples-release"]
+env = { RELEASE_TARGET = "release" }
+run_task = "pack-roms"
 
-[tasks.test.windows]
-command = "cargo"
-args = ["test", "--lib", "--target", "x86_64-pc-windows-msvc", "-Z", "build-std"]
+[tasks.pack-roms-debug]
+dependencies = ["build-examples-debug"]
+env = { RELEASE_TARGET = "debug" }
+run_task = "pack-roms"
 
-[tasks.test.mac]
+[tasks.test]
+dependencies = ["verify-toolchain"]
 command = "cargo"
-args = ["test", "--lib", "--target", "x86_64-apple-darwin", "-Z", "build-std"]
+args = ["test", "--lib"]
 
 [tasks.justrelease]
-dependencies = ["build-examples-release", "pack-roms"]
+dependencies = ["pack-roms-release"]
 
 [tasks.build-all]
-dependencies = ["build-examples-debug", "build-examples-release", "pack-roms"]
+dependencies = ["pack-roms-debug", "pack-roms-release"]
 
 [tasks.default]
 alias = "build-all"

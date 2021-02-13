@@ -6,7 +6,7 @@
 //! pointer and execution will jump to the user interrupt handler starting at
 //! `0x0300_7FFC`, in ARM mode.
 //!
-//! Currently, the user interrupt handler is defined in `crt0.s`. It is set up
+//! Currently, the user interrupt handler is defined in `rsrt0.S`. It is set up
 //! to execute a user-specified interrupt handler after saving some registers.
 //! This handler is declared as a static function pointer on the Rust side, and
 //! can be set by using [`set_irq_handler`](irq::set_irq_handler).
@@ -27,7 +27,7 @@
 //!   This is done by setting the corresponding IRQ flag on
 //!   [`BIOS_IF`](irq::BIOS_IF) at the end of the interrupt handler.
 //! * You can change the low-level details of the interrupt handler by editing
-//!   the `MainIrqHandler` routine in `crt0.s`. For example, you could declare
+//!   the `MainIrqHandler` routine in `rsrt0.S`. For example, you could declare
 //!   an external static variable in Rust holding a table of interrupt function
 //!   pointers and jump directly into one of them in assembly, without the need
 //!   to write the branching logic in Rust. However, note that the main
@@ -78,7 +78,7 @@
 //!
 //! ## Implementation Details
 //!
-//! This is the setup the provided user interrupt handler in `crt0.s` will do
+//! This is the setup the provided user interrupt handler in `rsrt0.S` will do
 //! when an interrupt is received, in order. It is based on the _Recommended
 //! User Interrupt Handling_ portion of the GBATEK reference.
 //!
@@ -136,7 +136,7 @@ pub const IE: VolAddress<IrqFlags> = unsafe { VolAddress::new(0x400_0200) };
 ///
 /// The main user interrupt handler will acknowledge the interrupt that was set
 /// by writing to this register, so there is usually no need to modify it.
-/// However, if the main interrupt handler in `crt0.s` is changed, then the
+/// However, if the main interrupt handler in `rsrt0.S` is changed, then the
 /// handler must write a `1` bit to all bits that are enabled on this register
 /// when it is called.
 pub const IF: VolAddress<IrqFlags> = unsafe { VolAddress::new(0x400_0202) };
@@ -185,7 +185,7 @@ pub fn set_irq_handler(handler: IrqHandler) {
 
 extern "C" fn default_handler(_flags: IrqFlags) {}
 
-// Inner definition of the interrupt handler. It is referenced in `crt0.s`.
+// Inner definition of the interrupt handler. It is referenced in `rsrt0.S`.
 #[doc(hidden)]
 #[no_mangle]
 static mut __IRQ_HANDLER: IrqHandler = default_handler;
