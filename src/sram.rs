@@ -11,23 +11,26 @@
 //! in official Game Carts:
 //!
 //! * Battery-Backed: The simplest kind of memory, which acts as ordinary
-//!   memory. You can have SRAM up to 256KB, and while there exist a few
+//!   memory. You can have SRAM up to 32KiB, and while there exist a few
 //!   variants this does not matter much for a game developer.
 //! * EEPROM: A kind of SRAM based on very cheap chips and slow chips, which use
 //!   a serial interface based on reading/write bit streams into IO registers.
-//!   This memory comes in 8KB and 512 byte versions, which unfortunately cannot
+//!   This memory comes in 8KiB and 512 byte versions, which unfortunately cannot
 //!   be distinguished at runtime.
 //! * Flash: A kind of memory based on flash memory. This memory can be read
 //!   like ordinary memory, but writing requires sending commands using multiple
-//!   IO register spread across the address space. This memory comes in 512KB
-//!   and 1M variants, which can thankfully be distinguished using a chip ID.
+//!   IO register spread across the address space. This memory comes in 64KiB
+//!   and 128KiB variants, which can thankfully be distinguished using a chip ID.
 //!
 //! As these various memory types cannot be distinguished at runtime, the kind
 //! of SRAM in use must be set manually at either compile-time or runtime.
 
-mod ram_callbacks;
+mod marker_strings;
+mod raw_read;
 
-pub use ram_callbacks::*;
+pub mod battery_backed;
+
+pub use raw_read::*;
 
 /// The error used for
 #[derive(Clone, Debug)]
@@ -42,7 +45,7 @@ pub enum Error {
 }
 
 /// A trait allowing reading and writing memory in SRAM.
-pub trait SramAccess {
+pub trait SramAccess : Sync {
     /// Returns the length of the memory type.
     fn len(&self) -> usize;
 
@@ -75,19 +78,66 @@ pub trait SramAccess {
     fn get_sram_write_ranges(&self, offset: usize, len: usize) -> Result<(usize, usize), Error>;
 }
 
+struct NoSram;
+impl SramAccess for NoSram {
+    fn len(&self) -> usize {
+        0
+    }
+    fn read(&self, offset: usize, buffer: &mut [u8]) -> Result<(), Error> {
+        Err(Error::NoMedia)
+    }
+    fn write(&self, offset: usize, buffer: &[u8], exact: bool) -> Result<(), Error> {
+        Err(Error::NoMedia)
+    }
+    fn get_sram_write_ranges(&self, offset: usize, len: usize) -> Result<(usize, usize), Error> {
+        Err(Error::NoMedia)
+    }
+}
+
+/// A constant containing a SramAccess that contains no SRAM.
+pub static NO_SRAM: &'static dyn SramAccess = &NoSram;
+
 /// A list of basic SRAM types.
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Debug)]
 pub enum SramType {
-    /// Battery-Backed SRAM or FRAM
+    /// 32KiB Battery-Backed SRAM or FRAM
     BatteryBacked,
     /// 8KiB EEPROM
     Eeprom8K,
     /// 512B EEPROM
     Eeprom512B,
-    /// 1M flash chip
-    Flash1M,
-    /// 512K flash chip
-    Flash512K,
+    /// 64KiB flash chip
+    Flash64K,
+    /// 128KiB flash chip
+    Flash128K,
     /// A custom SRAM type defined by the user
     Custom(&'static str),
+}
+
+/// Contains the current SRAM accessor.
+static mut SRAM_ACCESS: &'static dyn SramAccess = NO_SRAM;
+
+/// Sets the SRAM accessor in use, and returns the current one.
+pub fn set_accessor(access: &'static dyn SramAccess) -> &'static dyn SramAccess {
+    // TODO: Use a proper setter that prevents tearing
+    unsafe {
+        let current = SRAM_ACCESS;
+        SRAM_ACCESS = access;
+        current
+    }
+}
+
+/// Gets the SRAM accessor in use.
+pub fn get_accessor() -> &'static dyn SramAccess {
+    unsafe { SRAM_ACCESS }
+}
+
+/// Declares that the ROM uses battery backed SRAM/FRAM.
+///
+/// This creates a marker in the ROM that allows emulators to understand what
+/// save type the Game Pak uses, and sets the accessor to one approprate for
+/// memory type.
+pub fn use_battery_backed_sram() {
+    marker_strings::emit_sram_marker();
+    set_accessor(battery_backed::ACCESS);
 }

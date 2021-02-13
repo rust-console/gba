@@ -6,7 +6,7 @@
 global_asm!(include_str!("asm_read_buf.s"));
 global_asm!(include_str!("asm_read_byte.s"));
 extern "C" {
-    fn SramReadBuf(dst: *mut u8, src: *const u8, count_16: usize, skip: usize);
+    fn SramReadBuf(src: *mut u8, dst: *const u8, count_16: usize, skip: usize);
     fn SramReadByte(src: *const u8) -> u8;
 }
 
@@ -15,18 +15,29 @@ fn as_ptr<T>(ptr: &T) -> usize {
     ptr as *const _ as _
 }
 
+const BLOCK_SIZE: usize = 8;
+unsafe fn sram_xfer_buf(src: usize, dst: usize, len: usize) {
+    if len != 0 {
+        let rem = len & (BLOCK_SIZE - 1);
+        let blkct = (len + (BLOCK_SIZE - 1)) / BLOCK_SIZE;
+        SramReadBuf((src - rem) as _, (dst - rem) as _, blkct, rem);
+    }
+}
+
 /// Read data from SRAM into a buffer.
 ///
 /// This should be used to access any data found in Flash or battery-backed
 /// SRAM, as you must read those from code found in WRAM.
 pub unsafe fn read_raw_buf(dst: &mut [u8], src: usize) {
-    let len = dst.len();
-    if len != 0 {
-        let rem = len & 7;
-        let dst_ptr = dst.as_mut_ptr().offset(-(rem as isize));
-        let blkct = (len + 7) / 8;
-        SramReadBuf(dst_ptr, (src - rem) as _, blkct, rem);
-    }
+    sram_xfer_buf(src, dst.as_mut_ptr() as _, dst.len())
+}
+
+/// Write data into SRAM from a buffer.
+///
+/// This is not strictly needed to write into SRAM, but reuses the optimized
+/// loop used in `read_raw_buf`.
+pub unsafe fn write_raw_buf(dst: usize, src: &[u8]) {
+    sram_xfer_buf(dst, src.as_ptr() as _, src.len())
 }
 
 /// Reads a byte from SRAM at a given offset.
