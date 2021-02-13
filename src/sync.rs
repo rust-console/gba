@@ -10,13 +10,15 @@ mod statics;
 pub use locks::*;
 pub use statics::*;
 
-/// Marks that a given pointer is read by volatile means.
+/// Marks that a given pointer is read by volatile means without actually
+/// reading it.
 #[inline(always)]
 pub fn volatile_mark_ro<T>(val: *const T) {
     unsafe { asm!("/* {0} */", in(reg) val, options(readonly, nostack)) }
 }
 
-/// Marks that a given pointer is read or written by volatile means.
+/// Marks that a given pointer is read or written by volatile means without
+/// actually reading or writing it.
 #[inline(always)]
 pub fn volatile_mark_rw<T>(val: *mut T) {
     unsafe { asm!("/* {0} */", in(reg) val, options(nostack)) }

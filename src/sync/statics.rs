@@ -1,12 +1,15 @@
+#![cfg_attr(not(all(target_vendor = "nintendo", target_env = "agb")), allow(unused_variables))]
+
 use core::cell::UnsafeCell;
 use core::mem;
 use core::mem::MaybeUninit;
 use core::ptr;
-use super::disable_irqs;
+use super::*;
 
 /// The internal function for replacing a `Copy` (really `!Drop`) value in a
 /// [`Static`]. This uses assembly to use an `stmia` instruction to ensure
 /// an IRQ cannot occur during the write operation.
+#[cfg(all(target_vendor = "nintendo", target_env = "agb"))]
 unsafe fn transfer<T: Copy>(dst: *mut T, src: *const T) {
     let align = mem::align_of::<T>();
     let size = mem::size_of::<T>();
@@ -37,6 +40,8 @@ unsafe fn transfer<T: Copy>(dst: *mut T, src: *const T) {
         disable_irqs(|| ptr::write_volatile(dst, ptr::read_volatile(src)));
     }
 }
+
+#[cfg(all(target_vendor = "nintendo", target_env = "agb"))]
 #[allow(unused_assignments)]
 unsafe fn transfer_align4_thumb<T: Copy>(mut dst: *mut T, mut src: *const T) {
     let size = mem::size_of::<T>();
@@ -75,6 +80,8 @@ unsafe fn transfer_align4_thumb<T: Copy>(mut dst: *mut T, mut src: *const T) {
         unimplemented!("This should be done via transfer_arm.");
     }
 }
+
+#[cfg(all(target_vendor = "nintendo", target_env = "agb"))]
 #[instruction_set(arm::a32)]
 #[allow(unused_assignments)]
 unsafe fn transfer_align4_arm<T: Copy>(mut dst: *mut T, mut src: *const T) {
@@ -128,6 +135,7 @@ unsafe fn transfer_align4_arm<T: Copy>(mut dst: *mut T, mut src: *const T) {
 
 /// The internal function for swapping the current value of a [`Static`] with
 /// another value.
+#[cfg(all(target_vendor = "nintendo", target_env = "agb"))]
 unsafe fn exchange<T>(dst: *mut T, src: *const T) -> T {
     let align = mem::align_of::<T>();
     let size = mem::size_of::<T>();
@@ -154,12 +162,15 @@ unsafe fn exchange<T>(dst: *mut T, src: *const T) -> T {
     }
 }
 
+#[cfg(all(target_vendor = "nintendo", target_env = "agb"))]
 #[instruction_set(arm::a32)]
 unsafe fn exchange_align4_arm<T>(dst: *mut T, i: u32) -> u32 {
     let out;
     asm!("swp {2}, {1}, [{0}]", in(reg) dst, in(reg) i, lateout(reg) out);
     out
 }
+
+#[cfg(all(target_vendor = "nintendo", target_env = "agb"))]
 #[instruction_set(arm::a32)]
 unsafe fn exchange_align1_arm<T>(dst: *mut T, i: u8) -> u8 {
     let out;
@@ -167,10 +178,21 @@ unsafe fn exchange_align1_arm<T>(dst: *mut T, i: u8) -> u8 {
     out
 }
 
+#[cfg(not(all(target_vendor = "nintendo", target_env = "agb")))]
+unsafe fn exchange<T>(dst: *mut T, src: *const T) -> T {
+    unimplemented!()
+}
+
+#[cfg(not(all(target_vendor = "nintendo", target_env = "agb")))]
+unsafe fn transfer<T: Copy>(dst: *mut T, src: *const T) {
+    unimplemented!()
+}
+
 /// A helper that implements static variables.
 ///
 /// It ensures that even if you use the same static variable in both an IRQ
-/// and normal code, the IRQ will never observe an invalid value of the IRQ
+/// and normal code, the IRQ will never observe an invalid value of the
+/// variable.
 ///
 /// This type only works with owned values. If you need to work with borrows,
 /// consider using [`Mutex`] instead.

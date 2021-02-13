@@ -3,7 +3,7 @@ use core::mem::MaybeUninit;
 use core::ops::{Deref, DerefMut};
 use core::ptr;
 use core::sync::atomic::{compiler_fence, Ordering};
-use super::{disable_irqs, Static};
+use super::*;
 
 #[inline(never)]
 fn already_locked() -> ! {
@@ -128,20 +128,17 @@ impl <'a, T> DerefMut for MutexGuard<'a, T> {
 enum Void { }
 
 /// A helper type that ensures a particular value is only initialized once.
-pub struct InitOnce<T>(UnsafeCell<InitOnceState<T>>);
-struct InitOnceState<T> {
-    lock: RawMutex,
-    is_initialized: bool,
-    value: MaybeUninit<T>,
+pub struct InitOnce<T> {
+    state: Static<u8>,
+    value: UnsafeCell<MaybeUninit<T>>,
 }
 impl <T> InitOnce<T> {
     /// Creates a new uninitialized object.
     pub const fn new() -> Self {
-        InitOnce(UnsafeCell::new(InitOnceState {
-            lock: RawMutex::new(),
-            is_initialized: false,
-            value: MaybeUninit::uninit(),
-        }))
+        InitOnce {
+            state: Static::new(0),
+            value: UnsafeCell::new(MaybeUninit::uninit()),
+        }
     }
 
     /// Gets the contents of this state, or initializes it if it has not already
@@ -171,30 +168,32 @@ impl <T> InitOnce<T> {
     /// being initialized by user code, this function will panic.
     pub fn try_get<E>(&self, initializer: impl FnOnce() -> Result<T, E>) -> Result<&T, E> {
         unsafe {
-            let ptr = self.0.get();
-            if (*ptr).is_initialized {
-                Ok(&*(*ptr).value.as_ptr())
-            } else {
+            if self.state.read() != 2 {
                 // Locks the initializer
-                let _lock = (*ptr).lock.lock();
+                if self.state.replace(1) != 0 {
+                    panic!("Attempt to initialize `InitOnce` that is already in initialization.");
+                }
 
                 // Initialize the actual value.
-                let init = initializer()?;
-                ptr::write_volatile((*ptr).value.as_mut_ptr(), init);
-                ptr::write_volatile(&mut (*ptr).is_initialized, true);
-
-                // return the value properly
-                Ok(&*(*ptr).value.as_ptr())
+                let init = match initializer() {
+                    Ok(v) => v,
+                    Err(e) => {
+                        assert_eq!(self.state.replace(0), 1);
+                        return Err(e);
+                    }
+                };
+                ptr::write_volatile((*self.value.get()).as_mut_ptr(), init);
+                assert_eq!(self.state.replace(2), 1);
             }
+            Ok(&*(*self.value.get()).as_mut_ptr())
         }
     }
 }
 impl <T> Drop for InitOnce<T> {
     fn drop(&mut self) {
-        let ptr = self.0.get_mut();
-        if ptr.is_initialized {
+        if self.state.read() == 2 {
             // drop the value inside the `MaybeUninit`
-            unsafe { ptr::read(ptr.value.as_ptr()); }
+            unsafe { ptr::read((*self.value.get()).as_ptr()); }
         }
     }
 }
