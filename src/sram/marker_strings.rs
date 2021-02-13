@@ -4,8 +4,8 @@
 //! This takes advantage of the LLVM's usual dead code elimination. The
 //! functions that generate the markers use `volatile_mark_read` to force the
 //! LLVM to assume the statics used. Therefore, as long as one of these
-//! functions is called, the corresponding static is emitted with no actual
-//! code generated.
+//! functions is called, the corresponding static is emitted with very little
+//! code actually generated.
 
 #[repr(align(4))]
 struct Align<T>(T);
