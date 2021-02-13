@@ -55,7 +55,7 @@ fn do_write(mut pat: Pattern, shift: usize) -> Result<(), Error> {
         for j in 0..(1 << shift) {
             buffer[j] = pat.next();
         }
-        access.write(i << shift, &buffer[0..(1 << shift)], true, true)?;
+        access.write(i << shift, &buffer[0..(1 << shift)])?;
     }
 
     Ok(())
@@ -91,8 +91,8 @@ fn main(_argc: isize, _argv: *const *const u8) -> isize {
     set_screen_color(31, 31, 0);
 
     // set the sram type
-    use_flash_128k();
-    flash::set_timer_id(3);
+    use_eeprom_512b();
+    set_timer_for_timeout(3);
 
     // check some metainfo on the sram type
     let access = get_accessor();

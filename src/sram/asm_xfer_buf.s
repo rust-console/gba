@@ -20,8 +20,6 @@ SramXferBufInner:
     ldrb r3, [r0,r2]
     strb r3, [r1,r2]
     bne SramXferBufInner
-
-    @ Returns from the function
     mov pc, lr
 
     .section .text
