@@ -3,8 +3,8 @@
 //! performed via code in WRAM and cannot be accessed by DMA.
 
 #![cfg_attr(
-    not(all(target_vendor = "nintendo", target_env = "agb")),
-    allow(unused_variables, non_snake_case)
+  not(all(target_vendor = "nintendo", target_env = "agb")),
+  allow(unused_variables, non_snake_case)
 )]
 
 #[cfg(all(target_vendor = "nintendo", target_env = "agb"))]
@@ -12,19 +12,25 @@ global_asm!(include_str!("asm_routines.s"));
 
 #[cfg(all(target_vendor = "nintendo", target_env = "agb"))]
 extern "C" {
-    fn WramXferBuf(src: *const u8, dst: *mut u8, count: usize);
-    fn WramReadByte(src: *const u8) -> u8;
-    fn WramVerifyBuf(buf1: *const u8, buf2: *const u8, count: usize) -> bool;
+  fn WramXferBuf(src: *const u8, dst: *mut u8, count: usize);
+  fn WramReadByte(src: *const u8) -> u8;
+  fn WramVerifyBuf(buf1: *const u8, buf2: *const u8, count: usize) -> bool;
 }
 
 #[cfg(not(all(target_vendor = "nintendo", target_env = "agb")))]
-fn WramXferBuf(src: *const u8, dst: *mut u8, count: usize) { unimplemented!() }
+fn WramXferBuf(src: *const u8, dst: *mut u8, count: usize) {
+  unimplemented!()
+}
 
 #[cfg(not(all(target_vendor = "nintendo", target_env = "agb")))]
-fn WramReadByte(src: *const u8) -> u8 { unimplemented!() }
+fn WramReadByte(src: *const u8) -> u8 {
+  unimplemented!()
+}
 
 #[cfg(not(all(target_vendor = "nintendo", target_env = "agb")))]
-fn WramVerifyBuf(buf1: *const u8, buf2: *const u8, count: usize) -> bool { unimplemented!() }
+fn WramVerifyBuf(buf1: *const u8, buf2: *const u8, count: usize) -> bool {
+  unimplemented!()
+}
 
 /// Copies data from a given memory address into a buffer.
 ///
@@ -35,9 +41,9 @@ fn WramVerifyBuf(buf1: *const u8, buf2: *const u8, count: usize) -> bool { unimp
 /// This uses raw addresses into the memory space. Use with care.
 #[inline(always)]
 pub unsafe fn read_raw_buf(dst: &mut [u8], src: usize) {
-    if dst.len() != 0 {
-        WramXferBuf(src as _, dst.as_mut_ptr(), dst.len());
-    }
+  if dst.len() != 0 {
+    WramXferBuf(src as _, dst.as_mut_ptr(), dst.len());
+  }
 }
 
 /// Copies data from a buffer into a given memory address.
@@ -48,9 +54,9 @@ pub unsafe fn read_raw_buf(dst: &mut [u8], src: usize) {
 /// This uses raw addresses into the memory space. Use with care.
 #[inline(always)]
 pub unsafe fn write_raw_buf(dst: usize, src: &[u8]) {
-    if src.len() != 0 {
-        WramXferBuf(src.as_ptr(), dst as _, src.len());
-    }
+  if src.len() != 0 {
+    WramXferBuf(src.as_ptr(), dst as _, src.len());
+  }
 }
 
 /// Verifies that the data in a buffer matches that in a given memory address.
@@ -62,11 +68,11 @@ pub unsafe fn write_raw_buf(dst: usize, src: &[u8]) {
 /// This uses raw addresses into the memory space. Use with care.
 #[inline(always)]
 pub unsafe fn verify_raw_buf(buf1: &[u8], buf2: usize) -> bool {
-    if buf1.len() != 0 {
-        WramVerifyBuf(buf1.as_ptr(), buf2 as _, buf1.len() - 1)
-    } else {
-        true
-    }
+  if buf1.len() != 0 {
+    WramVerifyBuf(buf1.as_ptr(), buf2 as _, buf1.len() - 1)
+  } else {
+    true
+  }
 }
 
 /// Reads a byte from a given memory address.
@@ -77,5 +83,5 @@ pub unsafe fn verify_raw_buf(buf1: &[u8], buf2: usize) -> bool {
 /// This uses raw addresses into the memory space. Use with care.
 #[inline(always)]
 pub unsafe fn read_raw_byte(src: usize) -> u8 {
-    WramReadByte(src as _)
+  WramReadByte(src as _)
 }

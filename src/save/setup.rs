@@ -19,19 +19,19 @@ static FLASH1M: Align<[u8; 16]> = Align(*b"FLASH1M_Vnnn\0\0\0\0");
 
 #[inline(always)]
 fn emit_eeprom_marker() {
-    crate::sync::volatile_mark_ro(&EEPROM);
+  crate::sync::volatile_mark_ro(&EEPROM);
 }
 #[inline(always)]
 fn emit_sram_marker() {
-    crate::sync::volatile_mark_ro(&SRAM);
+  crate::sync::volatile_mark_ro(&SRAM);
 }
 #[inline(always)]
 fn emit_flash_512k_marker() {
-    crate::sync::volatile_mark_ro(&FLASH512K);
+  crate::sync::volatile_mark_ro(&FLASH512K);
 }
 #[inline(always)]
 fn emit_flash_1m_marker() {
-    crate::sync::volatile_mark_ro(&FLASH1M);
+  crate::sync::volatile_mark_ro(&FLASH1M);
 }
 
 /// Declares that the ROM uses battery backed SRAM/FRAM.
@@ -43,8 +43,8 @@ fn emit_flash_1m_marker() {
 /// Battery Backed SRAM is generally very fast, but limited in size compared
 /// to flash chips.
 pub fn use_battery_backed_sram() {
-    emit_sram_marker();
-    set_save_implementation(Some(&sram::BatteryBackedAccess));
+  emit_sram_marker();
+  set_save_implementation(Some(&sram::BatteryBackedAccess));
 }
 
 /// Declares that the ROM uses 64KiB flash memory.
@@ -56,8 +56,8 @@ pub fn use_battery_backed_sram() {
 /// Flash save media is generally very slow to write to and relatively fast
 /// to read from. It is the only real option if you need larger save data.
 pub fn use_flash_64k() {
-    emit_flash_512k_marker();
-    set_save_implementation(Some(&flash::FlashAccess));
+  emit_flash_512k_marker();
+  set_save_implementation(Some(&flash::FlashAccess));
 }
 
 /// Declares that the ROM uses 128KiB flash memory.
@@ -69,8 +69,8 @@ pub fn use_flash_64k() {
 /// Flash save media is generally very slow to write to and relatively fast
 /// to read from. It is the only real option if you need larger save data.
 pub fn use_flash_128k() {
-    emit_flash_1m_marker();
-    set_save_implementation(Some(&flash::FlashAccess));
+  emit_flash_1m_marker();
+  set_save_implementation(Some(&flash::FlashAccess));
 }
 
 /// Declares that the ROM uses 512 bytes EEPROM memory.
@@ -82,8 +82,8 @@ pub fn use_flash_128k() {
 /// EEPROM is generally pretty slow and also very small. It's mainly used in
 /// Game Paks because it's cheap.
 pub fn use_eeprom_512b() {
-    emit_eeprom_marker();
-    set_save_implementation(Some(&eeprom::Eeprom512B));
+  emit_eeprom_marker();
+  set_save_implementation(Some(&eeprom::Eeprom512B));
 }
 
 /// Declares that the ROM uses 8 KiB EEPROM memory.
@@ -95,6 +95,6 @@ pub fn use_eeprom_512b() {
 /// EEPROM is generally pretty slow and also very small. It's mainly used in
 /// Game Paks because it's cheap.
 pub fn use_eeprom_8k() {
-    emit_eeprom_marker();
-    set_save_implementation(Some(&eeprom::Eeprom8K));
+  emit_eeprom_marker();
+  set_save_implementation(Some(&eeprom::Eeprom8K));
 }
