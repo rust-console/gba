@@ -1,191 +1,188 @@
 #![cfg_attr(not(all(target_vendor = "nintendo", target_env = "agb")), allow(unused_variables))]
 
-use core::cell::UnsafeCell;
-use core::mem;
-use core::mem::MaybeUninit;
-use core::ptr;
 use super::*;
+use core::{cell::UnsafeCell, mem, mem::MaybeUninit, ptr};
 
 /// The internal function for replacing a `Copy` (really `!Drop`) value in a
 /// [`Static`]. This uses assembly to use an `stmia` instruction to ensure
 /// an IRQ cannot occur during the write operation.
 #[cfg(all(target_vendor = "nintendo", target_env = "agb"))]
 unsafe fn transfer<T: Copy>(dst: *mut T, src: *const T) {
-    let align = mem::align_of::<T>();
-    let size = mem::size_of::<T>();
-    if size == 0 {
-        // Do nothing with ZSTs. Obviously.
-    } else if size <= 16 && align % 4 == 0 {
-        // We can do an 4-byte aligned transfer up to 16 bytes.
-        transfer_align4_thumb(dst, src);
-    } else if size <= 36 && align % 4 == 0 {
-        // We can do the same up to 36 bytes, but we need to switch to ARM.
-        transfer_align4_arm(dst, src);
-    } else if size <= 2 && align % 2 == 0 {
-        // We can do a 2-byte aligned transfer up to 2 bytes.
-        asm!(
-            "ldrh {2},[{0}]",
-            "strh {2},[{1}]",
-            in(reg) src, in(reg) dst, out(reg) _,
-        )
-    } else if size == 1 {
-        // We can do a simple byte copy.
-        asm!(
-            "ldrb {2},[{0}]",
-            "strb {2},[{1}]",
-            in(reg) src, in(reg) dst, out(reg) _,
-        )
-    } else {
-        // When we don't have an optimized path, we just disable IRQs.
-        disable_irqs(|| ptr::write_volatile(dst, ptr::read_volatile(src)));
-    }
+  let align = mem::align_of::<T>();
+  let size = mem::size_of::<T>();
+  if size == 0 {
+    // Do nothing with ZSTs. Obviously.
+  } else if size <= 16 && align % 4 == 0 {
+    // We can do an 4-byte aligned transfer up to 16 bytes.
+    transfer_align4_thumb(dst, src);
+  } else if size <= 36 && align % 4 == 0 {
+    // We can do the same up to 36 bytes, but we need to switch to ARM.
+    transfer_align4_arm(dst, src);
+  } else if size <= 2 && align % 2 == 0 {
+    // We can do a 2-byte aligned transfer up to 2 bytes.
+    asm!(
+      "ldrh {2},[{0}]",
+      "strh {2},[{1}]",
+      in(reg) src, in(reg) dst, out(reg) _,
+    )
+  } else if size == 1 {
+    // We can do a simple byte copy.
+    asm!(
+      "ldrb {2},[{0}]",
+      "strb {2},[{1}]",
+      in(reg) src, in(reg) dst, out(reg) _,
+    )
+  } else {
+    // When we don't have an optimized path, we just disable IRQs.
+    disable_irqs(|| ptr::write_volatile(dst, ptr::read_volatile(src)));
+  }
 }
 
 #[cfg(all(target_vendor = "nintendo", target_env = "agb"))]
 #[allow(unused_assignments)]
 unsafe fn transfer_align4_thumb<T: Copy>(mut dst: *mut T, mut src: *const T) {
-    let size = mem::size_of::<T>();
-    if size <= 4 {
-        // We use assembly here regardless to just do the word aligned copy. This
-        // ensures it's done with a single ldr/str instruction.
-        asm!(
-            "ldr {2},[{0}]",
-            "str {2},[{1}]",
-            inout(reg) src, in(reg) dst, out(reg) _,
-        )
-    } else if size <= 8 {
-        // Starting at size == 5, we begin using ldmia/stmia to load/save multiple
-        // words in one instruction, avoiding IRQs from interrupting our operation.
-        asm!(
-            "ldmia {0}!, {{r2-r3}}",
-            "stmia {1}!, {{r2-r3}}",
-            inout(reg) src, inout(reg) dst,
-            out("r2") _, out("r3") _,
-        )
-    } else if size <= 12 {
-        asm!(
-            "ldmia {0}!, {{r2-r4}}",
-            "stmia {1}!, {{r2-r4}}",
-            inout(reg) src, inout(reg) dst,
-            out("r2") _, out("r3") _, out("r4") _,
-        )
-    } else if size <= 16 {
-        asm!(
-            "ldmia {0}!, {{r2-r5}}",
-            "stmia {1}!, {{r2-r5}}",
-            inout(reg) src, inout(reg) dst,
-            out("r2") _, out("r3") _, out("r4") _, out("r5") _,
-        )
-    } else {
-        unimplemented!("This should be done via transfer_arm.");
-    }
+  let size = mem::size_of::<T>();
+  if size <= 4 {
+    // We use assembly here regardless to just do the word aligned copy. This
+    // ensures it's done with a single ldr/str instruction.
+    asm!(
+      "ldr {2},[{0}]",
+      "str {2},[{1}]",
+      inout(reg) src, in(reg) dst, out(reg) _,
+    )
+  } else if size <= 8 {
+    // Starting at size == 5, we begin using ldmia/stmia to load/save multiple
+    // words in one instruction, avoiding IRQs from interrupting our operation.
+    asm!(
+      "ldmia {0}!, {{r2-r3}}",
+      "stmia {1}!, {{r2-r3}}",
+      inout(reg) src, inout(reg) dst,
+      out("r2") _, out("r3") _,
+    )
+  } else if size <= 12 {
+    asm!(
+      "ldmia {0}!, {{r2-r4}}",
+      "stmia {1}!, {{r2-r4}}",
+      inout(reg) src, inout(reg) dst,
+      out("r2") _, out("r3") _, out("r4") _,
+    )
+  } else if size <= 16 {
+    asm!(
+      "ldmia {0}!, {{r2-r5}}",
+      "stmia {1}!, {{r2-r5}}",
+      inout(reg) src, inout(reg) dst,
+      out("r2") _, out("r3") _, out("r4") _, out("r5") _,
+    )
+  } else {
+    unimplemented!("This should be done via transfer_arm.");
+  }
 }
 
 #[cfg(all(target_vendor = "nintendo", target_env = "agb"))]
 #[instruction_set(arm::a32)]
 #[allow(unused_assignments)]
 unsafe fn transfer_align4_arm<T: Copy>(mut dst: *mut T, mut src: *const T) {
-    let size = mem::size_of::<T>();
-    if size <= 16 {
-        unimplemented!("This should be done via transfer_thumb.");
-    } else if size <= 20 {
-        // Starting at size == 20, we have to switch to ARM due to lack of
-        // accessible registers in THUMB mode.
-        asm!(
-        "ldmia {0}!, {{r2-r5,r8}}",
-        "stmia {1}!, {{r2-r5,r8}}",
-        inout(reg) src, inout(reg) dst,
-        out("r2") _, out("r3") _, out("r4") _, out("r5") _, out("r8") _,
-        )
-    } else if size <= 24 {
-        asm!(
-        "ldmia {0}!, {{r2-r5,r8-r9}}",
-        "stmia {1}!, {{r2-r5,r8-r9}}",
-        inout(reg) src, inout(reg) dst,
-        out("r2") _, out("r3") _, out("r4") _, out("r5") _, out("r8") _, out("r9") _,
-        )
-    } else if size <= 28 {
-        asm!(
-        "ldmia {0}!, {{r2-r5,r8-r10}}",
-        "stmia {1}!, {{r2-r5,r8-r10}}",
-        inout(reg) src, inout(reg) dst,
-        out("r2") _, out("r3") _, out("r4") _, out("r5") _, out("r8") _, out("r9") _,
-        out("r10") _,
-        )
-    } else if size <= 32 {
-        asm!(
-        "ldmia {0}!, {{r2-r5,r8-r11}}",
-        "stmia {1}!, {{r2-r5,r8-r11}}",
-        inout(reg) src, inout(reg) dst,
-        out("r2") _, out("r3") _, out("r4") _, out("r5") _, out("r8") _, out("r9") _,
-        out("r10") _, out("r11") _,
-        )
-    } else if size <= 36 {
-        asm!(
-        "ldmia {0}!, {{r2-r5,r8-r12}}",
-        "stmia {1}!, {{r2-r5,r8-r12}}",
-        inout(reg) src, inout(reg) dst,
-        out("r2") _, out("r3") _, out("r4") _, out("r5") _, out("r8") _, out("r9") _,
-        out("r10") _, out("r11") _, out("r12") _,
-        )
-    } else {
-        unimplemented!("Copy too large for use of ldmia/stmia.");
-    }
+  let size = mem::size_of::<T>();
+  if size <= 16 {
+    unimplemented!("This should be done via transfer_thumb.");
+  } else if size <= 20 {
+    // Starting at size == 20, we have to switch to ARM due to lack of
+    // accessible registers in THUMB mode.
+    asm!(
+      "ldmia {0}!, {{r2-r5,r8}}",
+      "stmia {1}!, {{r2-r5,r8}}",
+      inout(reg) src, inout(reg) dst,
+      out("r2") _, out("r3") _, out("r4") _, out("r5") _, out("r8") _,
+    )
+  } else if size <= 24 {
+    asm!(
+      "ldmia {0}!, {{r2-r5,r8-r9}}",
+      "stmia {1}!, {{r2-r5,r8-r9}}",
+      inout(reg) src, inout(reg) dst,
+      out("r2") _, out("r3") _, out("r4") _, out("r5") _, out("r8") _, out("r9") _,
+    )
+  } else if size <= 28 {
+    asm!(
+      "ldmia {0}!, {{r2-r5,r8-r10}}",
+      "stmia {1}!, {{r2-r5,r8-r10}}",
+      inout(reg) src, inout(reg) dst,
+      out("r2") _, out("r3") _, out("r4") _, out("r5") _, out("r8") _, out("r9") _,
+      out("r10") _,
+    )
+  } else if size <= 32 {
+    asm!(
+      "ldmia {0}!, {{r2-r5,r8-r11}}",
+      "stmia {1}!, {{r2-r5,r8-r11}}",
+      inout(reg) src, inout(reg) dst,
+      out("r2") _, out("r3") _, out("r4") _, out("r5") _, out("r8") _, out("r9") _,
+      out("r10") _, out("r11") _,
+    )
+  } else if size <= 36 {
+    asm!(
+      "ldmia {0}!, {{r2-r5,r8-r12}}",
+      "stmia {1}!, {{r2-r5,r8-r12}}",
+      inout(reg) src, inout(reg) dst,
+      out("r2") _, out("r3") _, out("r4") _, out("r5") _, out("r8") _, out("r9") _,
+      out("r10") _, out("r11") _, out("r12") _,
+    )
+  } else {
+    unimplemented!("Copy too large for use of ldmia/stmia.");
+  }
 }
 
 /// The internal function for swapping the current value of a [`Static`] with
 /// another value.
 #[cfg(all(target_vendor = "nintendo", target_env = "agb"))]
 unsafe fn exchange<T>(dst: *mut T, src: *const T) -> T {
-    let align = mem::align_of::<T>();
-    let size = mem::size_of::<T>();
-    if size == 0 {
-        // Do nothing with ZSTs.
-        ptr::read(dst)
-    } else if size <= 4 && align % 4 == 0 {
-        // Swap a single word with the SWP instruction.
-        let val = ptr::read(src as *const u32);
-        let new_val = exchange_align4_arm(dst, val);
-        ptr::read(&new_val as *const _ as *const T)
-    } else if size == 1 {
-        // Swap a byte with the SWPB instruction.
-        let val = ptr::read(src as *const u8);
-        let new_val = exchange_align1_arm(dst, val);
-        ptr::read(&new_val as *const _ as *const T)
-    } else {
-        // fallback
-        disable_irqs(|| {
-            let cur = ptr::read_volatile(dst);
-            ptr::write_volatile(dst, ptr::read_volatile(src));
-            cur
-        })
-    }
+  let align = mem::align_of::<T>();
+  let size = mem::size_of::<T>();
+  if size == 0 {
+    // Do nothing with ZSTs.
+    ptr::read(dst)
+  } else if size <= 4 && align % 4 == 0 {
+    // Swap a single word with the SWP instruction.
+    let val = ptr::read(src as *const u32);
+    let new_val = exchange_align4_arm(dst, val);
+    ptr::read(&new_val as *const _ as *const T)
+  } else if size == 1 {
+    // Swap a byte with the SWPB instruction.
+    let val = ptr::read(src as *const u8);
+    let new_val = exchange_align1_arm(dst, val);
+    ptr::read(&new_val as *const _ as *const T)
+  } else {
+    // fallback
+    disable_irqs(|| {
+      let cur = ptr::read_volatile(dst);
+      ptr::write_volatile(dst, ptr::read_volatile(src));
+      cur
+    })
+  }
 }
 
 #[cfg(all(target_vendor = "nintendo", target_env = "agb"))]
 #[instruction_set(arm::a32)]
 unsafe fn exchange_align4_arm<T>(dst: *mut T, i: u32) -> u32 {
-    let out;
-    asm!("swp {2}, {1}, [{0}]", in(reg) dst, in(reg) i, lateout(reg) out);
-    out
+  let out;
+  asm!("swp {2}, {1}, [{0}]", in(reg) dst, in(reg) i, lateout(reg) out);
+  out
 }
 
 #[cfg(all(target_vendor = "nintendo", target_env = "agb"))]
 #[instruction_set(arm::a32)]
 unsafe fn exchange_align1_arm<T>(dst: *mut T, i: u8) -> u8 {
-    let out;
-    asm!("swpb {2}, {1}, [{0}]", in(reg) dst, in(reg) i, lateout(reg) out);
-    out
+  let out;
+  asm!("swpb {2}, {1}, [{0}]", in(reg) dst, in(reg) i, lateout(reg) out);
+  out
 }
 
 #[cfg(not(all(target_vendor = "nintendo", target_env = "agb")))]
 unsafe fn exchange<T>(dst: *mut T, src: *const T) -> T {
-    unimplemented!()
+  unimplemented!()
 }
 
 #[cfg(not(all(target_vendor = "nintendo", target_env = "agb")))]
 unsafe fn transfer<T: Copy>(dst: *mut T, src: *const T) {
-    unimplemented!()
+  unimplemented!()
 }
 
 /// A helper that implements static variables.
@@ -221,46 +218,44 @@ unsafe fn transfer<T: Copy>(dst: *mut T, src: *const T) {
 /// operations that would cause IRQs to be disabled. Also consider using
 /// `#[repr(align(4))]` to force proper alignment for your type.
 pub struct Static<T> {
-    data: UnsafeCell<T>,
+  data: UnsafeCell<T>,
 }
-impl <T> Static<T> {
-    /// Creates a new static variable.
-    pub const fn new(val: T) -> Self {
-        Static {
-            data: UnsafeCell::new(val),
-        }
-    }
+impl<T> Static<T> {
+  /// Creates a new static variable.
+  pub const fn new(val: T) -> Self {
+    Static { data: UnsafeCell::new(val) }
+  }
 
-    /// Replaces the current value of the static variable with another, and
-    /// returns the old value.
-    pub fn replace(&self, val: T) -> T {
-        unsafe { exchange(self.data.get(), &val) }
-    }
+  /// Replaces the current value of the static variable with another, and
+  /// returns the old value.
+  pub fn replace(&self, val: T) -> T {
+    unsafe { exchange(self.data.get(), &val) }
+  }
 
-    /// Extracts the interior value of the static variable.
-    pub fn into_inner(self) -> T {
-        self.data.into_inner()
-    }
+  /// Extracts the interior value of the static variable.
+  pub fn into_inner(self) -> T {
+    self.data.into_inner()
+  }
 }
-impl <T: Copy> Static<T> {
-    /// Writes a new value into this static variable.
-    pub fn write(&self, val: T) {
-        unsafe { transfer(self.data.get(), &val) }
-    }
+impl<T: Copy> Static<T> {
+  /// Writes a new value into this static variable.
+  pub fn write(&self, val: T) {
+    unsafe { transfer(self.data.get(), &val) }
+  }
 
-    /// Reads a value from this static variable.
-    pub fn read(&self) -> T {
-        unsafe {
-            let mut out: MaybeUninit<T> = MaybeUninit::uninit();
-            transfer(out.as_mut_ptr(), self.data.get());
-            out.assume_init()
-        }
+  /// Reads a value from this static variable.
+  pub fn read(&self) -> T {
+    unsafe {
+      let mut out: MaybeUninit<T> = MaybeUninit::uninit();
+      transfer(out.as_mut_ptr(), self.data.get());
+      out.assume_init()
     }
+  }
 }
-impl <T: Default> Default for Static<T> {
-    fn default() -> Self {
-        Static::new(T::default())
-    }
+impl<T: Default> Default for Static<T> {
+  fn default() -> Self {
+    Static::new(T::default())
+  }
 }
-unsafe impl <T> Send for Static<T> {}
-unsafe impl <T> Sync for Static<T> {}
+unsafe impl<T> Send for Static<T> {}
+unsafe impl<T> Sync for Static<T> {}

@@ -2,7 +2,7 @@
 
 #![cfg_attr(not(all(target_vendor = "nintendo", target_env = "agb")), allow(unused_variables))]
 
-use crate::io::irq::{IME, IrqEnableSetting};
+use crate::io::irq::{IrqEnableSetting, IME};
 
 mod locks;
 mod statics;
@@ -14,14 +14,14 @@ pub use statics::*;
 /// reading it.
 #[inline(always)]
 pub fn volatile_mark_ro<T>(val: *const T) {
-    unsafe { asm!("/* {0} */", in(reg) val, options(readonly, nostack)) }
+  unsafe { asm!("/* {0} */", in(reg) val, options(readonly, nostack)) }
 }
 
 /// Marks that a given pointer is read or written by volatile means without
 /// actually reading or writing it.
 #[inline(always)]
 pub fn volatile_mark_rw<T>(val: *mut T) {
-    unsafe { asm!("/* {0} */", in(reg) val, options(nostack)) }
+  unsafe { asm!("/* {0} */", in(reg) val, options(nostack)) }
 }
 
 /// An internal function used as a temporary hack to get `compiler_fence`
@@ -37,24 +37,23 @@ pub fn volatile_mark_rw<T>(val: *mut T) {
 #[allow(dead_code)]
 #[no_mangle]
 #[inline(always)]
-pub unsafe extern "C" fn __sync_synchronize() { }
+pub unsafe extern "C" fn __sync_synchronize() {}
 
 /// Runs a function with IRQs disabled.
 ///
 /// This should not be done without good reason, as IRQs are usually important
 /// for game functionality.
 pub fn disable_irqs<T>(mut func: impl FnOnce() -> T) -> T {
-    let current_ime = IME.read();
-    IME.write(IrqEnableSetting::IRQ_NO);
-    // prevents the contents of the function from being reordered before IME is disabled.
-    volatile_mark_rw(&mut func);
+  let current_ime = IME.read();
+  IME.write(IrqEnableSetting::IRQ_NO);
+  // prevents the contents of the function from being reordered before IME is disabled.
+  volatile_mark_rw(&mut func);
 
-    let mut result = func();
+  let mut result = func();
 
-    // prevents the contents of the function from being reordered after IME is reenabled.
-    volatile_mark_rw(&mut result);
-    IME.write(current_ime);
+  // prevents the contents of the function from being reordered after IME is reenabled.
+  volatile_mark_rw(&mut result);
+  IME.write(current_ime);
 
-    result
+  result
 }
-
