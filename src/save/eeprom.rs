@@ -217,7 +217,8 @@ impl EepromProperties {
     while buf.len() != 0 {
       let start = offset & SECTOR_MASK;
       let end_len = cmp::min(SECTOR_LEN - start, buf.len());
-      buf[..end_len].copy_from_slice(&self.read_sector(offset >> SECTOR_SHIFT));
+      let sector = self.read_sector(offset >> SECTOR_SHIFT);
+      buf[..end_len].copy_from_slice(&sector[start..start+end_len]);
       buf = &mut buf[end_len..];
       offset += end_len;
     }

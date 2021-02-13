@@ -42,7 +42,7 @@ fn emit_flash_1m_marker() {
 ///
 /// Battery Backed SRAM is generally very fast, but limited in size compared
 /// to flash chips.
-pub fn use_battery_backed_sram() {
+pub fn use_sram() {
   emit_sram_marker();
   set_save_implementation(Some(&sram::BatteryBackedAccess));
 }

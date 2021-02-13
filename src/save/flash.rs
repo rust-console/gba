@@ -344,9 +344,9 @@ impl ChipInfo {
   /// Erases a sector to Flash.
   fn erase_sector(&self, sector: usize) -> Result<(), Error> {
     let offset = sector << self.info.sector_shift;
+    self.set_bank(offset >> SRAM_BANK_SHIFT)?;
     issue_flash_command(CMD_ERASE_SECTOR_BEGIN);
     start_flash_command();
-    self.set_bank(offset >> SRAM_BANK_SHIFT)?;
     FLASH_DATA.index(offset & SRAM_BANK_MASK).write(CMD_ERASE_SECTOR_CONFIRM);
     self.wait_for_timeout(offset & SRAM_BANK_MASK, 0xFF, self.erase_sector_timeout)
   }
@@ -369,10 +369,11 @@ impl ChipInfo {
   fn write_buffer(&self, offset: usize, buf: &[u8]) -> Result<(), Error> {
     self.set_bank(offset >> SRAM_BANK_SHIFT)?;
     for i in 0..buf.len() {
-      if (i & SRAM_BANK_MASK) == 0 {
-        self.set_bank(offset >> SRAM_BANK_SHIFT)?;
+      let byte_off = offset + i;
+      if (byte_off & SRAM_BANK_MASK) == 0 {
+        self.set_bank(byte_off >> SRAM_BANK_SHIFT)?;
       }
-      self.write_byte((offset + i) & SRAM_BANK_MASK, buf[i])?;
+      self.write_byte(byte_off & SRAM_BANK_MASK, buf[i])?;
     }
     Ok(())
   }
@@ -459,8 +460,6 @@ impl RawSaveAccess for FlashAccess {
 
     let _lock = lock_media()?;
     if chip.uses_atmel_api {
-      // FIXME: This is really slow if the user code is making small writes.
-      //        Atmel chips suck...
       while buf.len() != 0 {
         let start = offset & 127;
         let end_len = cmp::min(128 - start, buf.len());
