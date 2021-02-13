@@ -106,20 +106,26 @@ pub fn is_debugging_disabled() -> bool {
 /// This is used to implement fatal errors outside of mGBA.
 #[inline(never)]
 pub fn crash() -> ! {
-  IME.write(IrqEnableSetting::IRQ_NO);
-  unsafe {
-    // Stop all ongoing DMAs just in case.
-    DMA0::set_control(DMAControlSetting::new());
-    DMA1::set_control(DMAControlSetting::new());
-    DMA2::set_control(DMAControlSetting::new());
-    DMA3::set_control(DMAControlSetting::new());
+  #[cfg(all(target_vendor = "nintendo", target_env = "agb"))]
+  {
+    IME.write(IrqEnableSetting::IRQ_NO);
+    unsafe {
+      // Stop all ongoing DMAs just in case.
+      DMA0::set_control(DMAControlSetting::new());
+      DMA1::set_control(DMAControlSetting::new());
+      DMA2::set_control(DMAControlSetting::new());
+      DMA3::set_control(DMAControlSetting::new());
 
-    // Writes the halt call back to memory
-    //
-    // we use an infinite loop in RAM just to make sure removing the
-    // Game Pak doesn't break this crash loop.
-    let target = VolAddress::<u16>::new(0x03000000);
-    target.write(0xe7fe); // assembly instruction: `loop: b loop`
-    core::mem::transmute::<_, extern "C" fn() -> !>(0x03000001)()
+      // Writes the halt call back to memory
+      //
+      // we use an infinite loop in RAM just to make sure removing the
+      // Game Pak doesn't break this crash loop.
+      let target = VolAddress::<u16>::new(0x03000000);
+      target.write(0xe7fe); // assembly instruction: `loop: b loop`
+      core::mem::transmute::<_, extern "C" fn() -> !>(0x03000001)()
+    }
   }
+
+  #[cfg(not(all(target_vendor = "nintendo", target_env = "agb")))]
+  loop { }
 }
