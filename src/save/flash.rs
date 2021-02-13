@@ -1,9 +1,7 @@
-//! Module for Flash save media support.
+//! Module for flash save media support.
 //!
 //! Flash may be read with ordinary read commands, but writing requires
-//! sending structured commands to the Flash chip.
-//!
-//!
+//! sending structured commands to the flash chip.
 
 use super::{
   lock_media, read_raw_buf, read_raw_byte, verify_raw_buf, Error, MediaInfo, MediaType,
@@ -14,16 +12,16 @@ use core::cmp;
 use typenum::consts::U65536;
 use voladdress::{VolAddress, VolBlock};
 
-// Volatile address ports for Flash
+// Volatile address ports for flash
 const FLASH_PORT_BANK: VolAddress<u8> = unsafe { VolAddress::new(0x0E000000) };
 const FLASH_PORT_A: VolAddress<u8> = unsafe { VolAddress::new(0x0E005555) };
 const FLASH_PORT_B: VolAddress<u8> = unsafe { VolAddress::new(0x0E002AAA) };
 const FLASH_DATA: VolBlock<u8, U65536> = unsafe { VolBlock::new(0x0E000000) };
 
 // Various constants related to sector sizes
-const SRAM_BANK_SHIFT: usize = 16; // 64 KiB
-const SRAM_BANK_LEN: usize = 1 << SRAM_BANK_SHIFT;
-const SRAM_BANK_MASK: usize = SRAM_BANK_LEN - 1;
+const BANK_SHIFT: usize = 16; // 64 KiB
+const BANK_LEN: usize = 1 << BANK_SHIFT;
+const BANK_MASK: usize = BANK_LEN - 1;
 
 // Constants relating to flash commands.
 const CMD_SET_BANK: u8 = 0xB0;
@@ -82,7 +80,7 @@ pub enum FlashChipType {
   Unknown,
 }
 impl FlashChipType {
-  /// Returns the type of the SRAM chip currently in use.
+  /// Returns the type of the flash chip currently in use.
   pub fn detect() -> Result<Self, Error> {
     Ok(Self::from_id(detect_chip_id()?))
   }
@@ -114,7 +112,7 @@ impl FlashChipType {
   }
 }
 
-/// Determines the raw ID of the SRAM chip currently in use.
+/// Determines the raw ID of the flash chip currently in use.
 pub fn detect_chip_id() -> Result<u16, Error> {
   let _lock = lock_media()?;
   issue_flash_command(CMD_READ_CHIP_ID);
@@ -125,7 +123,7 @@ pub fn detect_chip_id() -> Result<u16, Error> {
   Ok(id)
 }
 
-/// Information relating to a particular Flash chip that could be found in a
+/// Information relating to a particular flash chip that could be found in a
 /// Game Pak.
 struct ChipInfo {
   /// The wait state required to read from the chip.
@@ -294,12 +292,12 @@ impl ChipInfo {
     }
   }
 
-  /// Reads a buffer from SRAM into memory.
+  /// Reads a buffer from save media into memory.
   fn read_buffer(&self, mut offset: usize, mut buf: &mut [u8]) -> Result<(), Error> {
     while buf.len() != 0 {
-      self.set_bank(offset >> SRAM_BANK_SHIFT)?;
-      let start = offset & SRAM_BANK_MASK;
-      let end_len = cmp::min(SRAM_BANK_LEN - start, buf.len());
+      self.set_bank(offset >> BANK_SHIFT)?;
+      let start = offset & BANK_MASK;
+      let end_len = cmp::min(BANK_LEN - start, buf.len());
       unsafe {
         read_raw_buf(&mut buf[..end_len], 0x0E000000 + offset);
       }
@@ -309,12 +307,12 @@ impl ChipInfo {
     Ok(())
   }
 
-  /// Verifies that a buffer was properly stored into SRAM.
+  /// Verifies that a buffer was properly stored into save media.
   fn verify_buffer(&self, mut offset: usize, mut buf: &[u8]) -> Result<bool, Error> {
     while buf.len() != 0 {
-      self.set_bank(offset >> SRAM_BANK_SHIFT)?;
-      let start = offset & SRAM_BANK_MASK;
-      let end_len = cmp::min(SRAM_BANK_LEN - start, buf.len());
+      self.set_bank(offset >> BANK_SHIFT)?;
+      let start = offset & BANK_MASK;
+      let end_len = cmp::min(BANK_LEN - start, buf.len());
       if !unsafe { verify_raw_buf(&buf[..end_len], 0x0E000000 + offset) } {
         return Ok(false);
       }
@@ -341,14 +339,14 @@ impl ChipInfo {
     Ok(())
   }
 
-  /// Erases a sector to Flash.
+  /// Erases a sector to flash.
   fn erase_sector(&self, sector: usize) -> Result<(), Error> {
     let offset = sector << self.info.sector_shift;
-    self.set_bank(offset >> SRAM_BANK_SHIFT)?;
+    self.set_bank(offset >> BANK_SHIFT)?;
     issue_flash_command(CMD_ERASE_SECTOR_BEGIN);
     start_flash_command();
-    FLASH_DATA.index(offset & SRAM_BANK_MASK).write(CMD_ERASE_SECTOR_CONFIRM);
-    self.wait_for_timeout(offset & SRAM_BANK_MASK, 0xFF, self.erase_sector_timeout)
+    FLASH_DATA.index(offset & BANK_MASK).write(CMD_ERASE_SECTOR_CONFIRM);
+    self.wait_for_timeout(offset & BANK_MASK, 0xFF, self.erase_sector_timeout)
   }
 
   /// Erases the entire chip.
@@ -367,13 +365,13 @@ impl ChipInfo {
 
   /// Writes an entire buffer to the save media.
   fn write_buffer(&self, offset: usize, buf: &[u8]) -> Result<(), Error> {
-    self.set_bank(offset >> SRAM_BANK_SHIFT)?;
+    self.set_bank(offset >> BANK_SHIFT)?;
     for i in 0..buf.len() {
       let byte_off = offset + i;
-      if (byte_off & SRAM_BANK_MASK) == 0 {
-        self.set_bank(byte_off >> SRAM_BANK_SHIFT)?;
+      if (byte_off & BANK_MASK) == 0 {
+        self.set_bank(byte_off >> BANK_SHIFT)?;
       }
-      self.write_byte(byte_off & SRAM_BANK_MASK, buf[i])?;
+      self.write_byte(byte_off & BANK_MASK, buf[i])?;
     }
     Ok(())
   }
@@ -414,7 +412,7 @@ impl ChipInfo {
   }
 }
 
-/// The [`SaveAccess`] used for Flash SRAM.
+/// The [`RawSaveAccess`] used for flash save media.
 pub struct FlashAccess;
 impl RawSaveAccess for FlashAccess {
   fn info(&self) -> Result<&'static MediaInfo, Error> {

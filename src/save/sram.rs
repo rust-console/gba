@@ -16,7 +16,7 @@ fn check_bounds(offset: usize, len: usize) -> Result<(), Error> {
   Ok(())
 }
 
-/// The [`SaveAccess`] used for battery backed SRAM.
+/// The [`RawSaveAccess`] used for battery backed SRAM.
 pub struct BatteryBackedAccess;
 impl RawSaveAccess for BatteryBackedAccess {
   fn info(&self) -> Result<&'static MediaInfo, Error> {

@@ -29,7 +29,7 @@
 //! To use save media in your game, you must set which type to use. This is done
 //! by calling one of the following functions at startup:
 //!
-//! * For 32 KiB battery-backed SRAM, call [`use_battery_backed_sram`].
+//! * For 32 KiB battery-backed SRAM, call [`use_sram`].
 //! * For 64 KiB flash memory, call [`use_flash_64k`].
 //! * For 128 KiB flash memory, call [`use_flash_128k`].
 //! * For 512 byte EEPROM, call [`use_eeprom_512b`].
@@ -38,7 +38,7 @@
 //! Then, call [`set_timer_for_timeout`] to set the timer you intend to use to
 //! track the timeout that prevents errors with the save media from hanging your
 //! game. For more information on GBA timers, see the
-//! [`timer`](`crate::io::timer`) module's documentation.
+//! [`timers`](`crate::io::timers`) module's documentation.
 //!
 //! ```rust
 //! # use gba::save;
@@ -90,7 +90,7 @@ pub enum Error {
   NoMedia,
   /// Failed to write the data to save media.
   WriteError,
-  /// An operation on SRAM timed out.
+  /// An operation on save media timed out.
   OperationTimedOut,
   /// An attempt was made to access save media at an invalid offset.
   OutOfBounds,
@@ -120,7 +120,7 @@ pub struct MediaInfo {
 /// A trait allowing low-level saving and writing to save media.
 ///
 /// It exposes an interface mostly based around the requirements of reading and
-/// writing Flash memory, as those are the most restrictive.
+/// writing flash memory, as those are the most restrictive.
 ///
 /// This interface treats memory as a continuous block of bytes for purposes of
 /// reading, and as an array of sectors .
@@ -164,8 +164,7 @@ pub fn get_save_implementation() -> Option<&'static dyn RawSaveAccess> {
   CURRENT_SAVE_ACCESS.read()
 }
 
-/// A wrapper around [`RawSaveAccess`] allowing high-level saving and writing to
-/// save media.
+/// Allows reading and writing of save media.
 #[derive(Copy, Clone)]
 pub struct SaveAccess {
   access: &'static dyn RawSaveAccess,
@@ -234,16 +233,16 @@ impl SaveAccess {
 
   /// Writes a given buffer into the save media.
   ///
-  /// You must call [`prepare_write`] on the range you intend to write for this
-  /// to function correctly.
+  /// You must call [`prepare_write`](`SaveAccess::prepare_write`) on the range
+  /// you intend to write for this to function correctly.
   pub fn write(&self, offset: usize, buffer: &[u8]) -> Result<(), Error> {
     self.access.write(offset, buffer)
   }
 
   /// Writes and validates a given buffer into the save media.
   ///
-  /// You must call [`prepare_write`] on the range you intend to write for this
-  /// to function correctly.
+  /// You must call [`prepare_write`](`SaveAccess::prepare_write`) on the range
+  /// you intend to write for this to function correctly.
   ///
   /// This function will verify that the write has completed successfully, and
   /// return an error if it has not done so.

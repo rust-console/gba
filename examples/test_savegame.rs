@@ -176,6 +176,5 @@ fn main(_argc: isize, _argv: *const *const u8) -> isize {
 
   // show a pattern so we know it worked
   set_screen_color(0, 31, 0);
-
-  0
+  loop { }
 }

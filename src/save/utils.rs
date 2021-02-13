@@ -1,4 +1,4 @@
-//! A package containing useful utilities for writing SRAM accessors. This is
+//! A package containing useful utilities for writing save accessors. This is
 //! mainly used internally, although the types inside are exposed publically.
 
 use super::Error;
@@ -19,12 +19,13 @@ enum TimerId {
   T3,
 }
 
-/// Stores the timer ID used for SRAM timeouts.
+/// Stores the timer ID used for timeouts created by save accessors.
 static TIMER_ID: Static<TimerId> = Static::new(TimerId::None);
 
 /// Sets the timer to use to implement timeouts for operations that may hang.
 ///
-/// This timer may be used by any SRAM operation.
+/// At any point where you call functions in a save accessor, this timer may be
+/// reset to a different value.
 pub fn set_timer_for_timeout(id: u8) {
   if id >= 4 {
     panic!("Timer ID must be 0-3.");
@@ -38,7 +39,8 @@ pub fn disable_timeout() {
   TIMER_ID.write(TimerId::None);
 }
 
-/// A timeout type used to prevent errors with SRAM from hanging the game.
+/// A timeout type used to prevent hardware errors in save media from hanging
+/// the game.
 pub struct Timeout {
   _lock_guard: RawMutexGuard<'static>,
   active: bool,
@@ -97,10 +99,9 @@ impl Timeout {
   }
 }
 
-/// Tries to obtain a lock on the global lock for SRAM operations.
+/// Tries to obtain a lock on the global lock for save operations.
 ///
-/// This is used to prevent operations on SRAM types that have complex state
-/// from interfering with each other.
+/// This is used to prevent problems with stateful save media.
 pub fn lock_media() -> Result<RawMutexGuard<'static>, Error> {
   static LOCK: RawMutex = RawMutex::new();
   match LOCK.try_lock() {

@@ -34,7 +34,7 @@ fn WramVerifyBuf(buf1: *const u8, buf2: *const u8, count: usize) -> bool {
 
 /// Copies data from a given memory address into a buffer.
 ///
-/// This should be used to access any data found in Flash or battery-backed
+/// This should be used to access any data found in flash or battery-backed
 /// SRAM, as you must read those one byte at a time and from code stored
 /// in WRAM.
 ///
@@ -61,7 +61,7 @@ pub unsafe fn write_raw_buf(dst: usize, src: &[u8]) {
 
 /// Verifies that the data in a buffer matches that in a given memory address.
 ///
-/// This should be used to access any data found in Flash or battery-backed
+/// This should be used to access any data found in flash or battery-backed
 /// SRAM, as you must read those one byte at a time and from code stored
 /// in WRAM.
 ///
@@ -77,7 +77,7 @@ pub unsafe fn verify_raw_buf(buf1: &[u8], buf2: usize) -> bool {
 
 /// Reads a byte from a given memory address.
 ///
-/// This should be used to access any data found in Flash or battery-backed
+/// This should be used to access any data found in flash or battery-backed
 /// SRAM, as you must read those from code found in WRAM.
 ///
 /// This uses raw addresses into the memory space. Use with care.

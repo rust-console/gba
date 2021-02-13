@@ -130,7 +130,7 @@ struct EepromProperties {
   byte_len: usize,
 }
 impl EepromProperties {
-  /// Reads a block from SRAM.
+  /// Reads a block from the save media.
   fn read_sector(&self, word: usize) -> [u8; 8] {
     // Set address command. The command is two one bits, followed by the
     // address, followed by a zero bit.
@@ -258,7 +258,7 @@ impl EepromProperties {
 const PROPS_512B: EepromProperties = EepromProperties { addr_bits: 6, byte_len: 512 };
 const PROPS_8K: EepromProperties = EepromProperties { addr_bits: 14, byte_len: 8 * 1024 };
 
-/// The [`SaveAccess`] used for 512 byte EEPROM.
+/// The [`RawSaveAccess`] used for 512 byte EEPROM.
 pub struct Eeprom512B;
 impl RawSaveAccess for Eeprom512B {
   fn info(&self) -> Result<&'static MediaInfo, Error> {
@@ -278,7 +278,7 @@ impl RawSaveAccess for Eeprom512B {
   }
 }
 
-/// The [`SaveAccess`] used for 8 KiB EEPROM.
+/// The [`RawSaveAccess`] used for 8 KiB EEPROM.
 pub struct Eeprom8K;
 impl RawSaveAccess for Eeprom8K {
   fn info(&self) -> Result<&'static MediaInfo, Error> {
