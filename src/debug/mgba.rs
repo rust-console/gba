@@ -4,9 +4,9 @@
 //! you've got some older version of things there might be any number of
 //! differences or problems.
 
-use core::fmt::{Arguments, Write};
+use super::{DebugInterface, DebugLevel};
 use crate::sync::InitOnce;
-use super::{DebugLevel, DebugInterface};
+use core::fmt::{Arguments, Write};
 use voladdress::VolAddress;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
