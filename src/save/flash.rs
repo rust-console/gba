@@ -299,7 +299,7 @@ impl ChipInfo {
       let start = offset & BANK_MASK;
       let end_len = cmp::min(BANK_LEN - start, buf.len());
       unsafe {
-        read_raw_buf(&mut buf[..end_len], 0x0E000000 + offset);
+        read_raw_buf(&mut buf[..end_len], 0x0E000000 + start);
       }
       buf = &mut buf[end_len..];
       offset += end_len;
@@ -313,7 +313,7 @@ impl ChipInfo {
       self.set_bank(offset >> BANK_SHIFT)?;
       let start = offset & BANK_MASK;
       let end_len = cmp::min(BANK_LEN - start, buf.len());
-      if !unsafe { verify_raw_buf(&buf[..end_len], 0x0E000000 + offset) } {
+      if !unsafe { verify_raw_buf(&buf[..end_len], 0x0E000000 + start) } {
         return Ok(false);
       }
       buf = &buf[end_len..];
