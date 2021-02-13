@@ -143,7 +143,8 @@ impl DMA0 {
   ///
   /// The source pointer must be aligned and valid to read from.
   pub unsafe fn set_source(src: *const u32) {
-    Self::DMA0SAD.write(src)
+    crate::sync::volatile_mark_ro(src);
+    Self::DMA0SAD.write(src);
   }
 
   /// Assigns the destination register.
@@ -154,7 +155,8 @@ impl DMA0 {
   ///
   /// The source pointer must be aligned and valid to write to.
   pub unsafe fn set_dest(dest: *mut u32) {
-    Self::DMA0DAD.write(dest)
+    Self::DMA0DAD.write(dest);
+    crate::sync::volatile_mark_rw(dest);
   }
 
   /// Assigns the count register.
@@ -204,7 +206,8 @@ impl DMA1 {
   ///
   /// The source pointer must be aligned and valid to read from.
   pub unsafe fn set_source(src: *const u32) {
-    Self::DMA1SAD.write(src)
+    crate::sync::volatile_mark_ro(src);
+    Self::DMA1SAD.write(src);
   }
 
   /// Assigns the destination register.
@@ -215,7 +218,8 @@ impl DMA1 {
   ///
   /// The source pointer must be aligned and valid to write to.
   pub unsafe fn set_dest(dest: *mut u32) {
-    Self::DMA1DAD.write(dest)
+    Self::DMA1DAD.write(dest);
+    crate::sync::volatile_mark_rw(dest);
   }
 
   /// Assigns the count register.
@@ -265,7 +269,8 @@ impl DMA2 {
   ///
   /// The source pointer must be aligned and valid to read from.
   pub unsafe fn set_source(src: *const u32) {
-    Self::DMA2SAD.write(src)
+    crate::sync::volatile_mark_ro(src);
+    Self::DMA2SAD.write(src);
   }
 
   /// Assigns the destination register.
@@ -276,7 +281,8 @@ impl DMA2 {
   ///
   /// The source pointer must be aligned and valid to write to.
   pub unsafe fn set_dest(dest: *mut u32) {
-    Self::DMA2DAD.write(dest)
+    Self::DMA2DAD.write(dest);
+    crate::sync::volatile_mark_rw(dest);
   }
 
   /// Assigns the count register.
@@ -327,7 +333,8 @@ impl DMA3 {
   ///
   /// The source pointer must be aligned and valid to read from.
   pub unsafe fn set_source(src: *const u32) {
-    Self::DMA3SAD.write(src)
+    crate::sync::volatile_mark_ro(src);
+    Self::DMA3SAD.write(src);
   }
 
   /// Assigns the destination register.
@@ -338,7 +345,8 @@ impl DMA3 {
   ///
   /// The source pointer must be aligned and valid to write to.
   pub unsafe fn set_dest(dest: *mut u32) {
-    Self::DMA3DAD.write(dest)
+    Self::DMA3DAD.write(dest);
+    crate::sync::volatile_mark_rw(dest);
   }
 
   /// Assigns the count register.
