@@ -40,7 +40,7 @@ pub mod oam;
 
 pub mod rom;
 
-pub mod sram;
+pub mod save;
 
 pub mod mgba;
 
