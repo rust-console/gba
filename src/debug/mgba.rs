@@ -94,7 +94,7 @@ impl core::fmt::Write for MGBADebug {
           None => return Ok(()),
         }
       }
-      Err(core::fmt::Error)
+      Ok(())
     }
   }
 }
