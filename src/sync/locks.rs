@@ -127,13 +127,16 @@ enum Void {}
 
 /// A helper type that ensures a particular value is only initialized once.
 pub struct InitOnce<T> {
-  state: Static<u8>,
+  is_initialized: Static<bool>,
   value: UnsafeCell<MaybeUninit<T>>,
 }
 impl<T> InitOnce<T> {
   /// Creates a new uninitialized object.
   pub const fn new() -> Self {
-    InitOnce { state: Static::new(0), value: UnsafeCell::new(MaybeUninit::uninit()) }
+    InitOnce {
+      is_initialized: Static::new(false),
+      value: UnsafeCell::new(MaybeUninit::uninit()),
+    }
   }
 
   /// Gets the contents of this state, or initializes it if it has not already
@@ -141,9 +144,10 @@ impl<T> InitOnce<T> {
   ///
   /// The initializer function is guaranteed to only be called once.
   ///
-  /// Take care when sharing an `InitOnce` object between an IRQ and normal
-  /// code. If this function is called in an IRQ when it is already currently
-  /// being initialized by user code, this function will panic.
+  /// This function disables IRQs while it is initializing the inner value.
+  /// While this can cause audio skipping and other similar issues, it is
+  /// not normally a problem as interrupts will only be disabled once per
+  /// `InitOnce` during the life cycle of the program.
   pub fn get(&self, initializer: impl FnOnce() -> T) -> &T {
     match self.try_get(|| -> Result<T, Void> { Ok(initializer()) }) {
       Ok(v) => v,
@@ -158,28 +162,25 @@ impl<T> InitOnce<T> {
   /// returns `Ok`. If it returns `Err`, it will be called again in the
   /// future until an attempt at initialization succeeds.
   ///
-  /// Take care when sharing an `InitOnce` object between an IRQ and normal
-  /// code. If this function is called in an IRQ when it is already currently
-  /// being initialized by user code, this function will panic.
+  /// This function disables IRQs while it is initializing the inner value.
+  /// While this can cause audio skipping and other similar issues, it is
+  /// not normally a problem as interrupts will only be disabled once per
+  /// `InitOnce` during the life cycle of the program.
   pub fn try_get<E>(&self, initializer: impl FnOnce() -> Result<T, E>) -> Result<&T, E> {
     unsafe {
-      if self.state.read() != 2 {
-        // Locks the initializer
-        if self.state.replace(1) != 0 {
-          panic!("Attempt to initialize `InitOnce` that is already in initialization.");
-        }
-
-        // Initialize the actual value.
-        let init = match initializer() {
-          Ok(v) => v,
-          Err(e) => {
-            assert_eq!(self.state.replace(0), 1);
-            return Err(e);
+      if !self.is_initialized.read() {
+        // We disable interrupts during this function, since this is likely to
+        // only occur once in a program anyway.
+        with_irqs_disabled(|| -> Result<(), E> {
+          // We check again to make sure an interrupt didn't occur between
+          // disabling interrupts and when the initialization happens.
+          if !self.is_initialized.read() {
+            // Do the actual initialization.
+            ptr::write_volatile((*self.value.get()).as_mut_ptr(), initializer()?);
+            self.is_initialized.write(true);
           }
-        };
-        ptr::write_volatile((*self.value.get()).as_mut_ptr(), init);
-        compiler_fence(Ordering::Release);
-        assert_eq!(self.state.replace(2), 1);
+          Ok(())
+        })?;
       }
       compiler_fence(Ordering::Acquire);
       Ok(&*(*self.value.get()).as_mut_ptr())
@@ -188,7 +189,7 @@ impl<T> InitOnce<T> {
 }
 impl<T> Drop for InitOnce<T> {
   fn drop(&mut self) {
-    if self.state.read() == 2 {
+    if self.is_initialized.read() {
       // drop the value inside the `MaybeUninit`
       unsafe {
         ptr::read((*self.value.get()).as_ptr());
