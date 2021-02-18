@@ -34,7 +34,7 @@ unsafe fn transfer<T: Copy>(dst: *mut T, src: *const T) {
     )
   } else {
     // When we don't have an optimized path, we just disable IRQs.
-    disable_irqs(|| ptr::write_volatile(dst, ptr::read_volatile(src)));
+    with_irqs_disabled(|| ptr::write_volatile(dst, ptr::read_volatile(src)));
   }
 }
 
@@ -151,7 +151,7 @@ unsafe fn exchange<T>(dst: *mut T, src: *const T) -> T {
     ptr::read(&new_val as *const _ as *const T)
   } else {
     // fallback
-    disable_irqs(|| {
+    with_irqs_disabled(|| {
       let cur = ptr::read_volatile(dst);
       ptr::write_volatile(dst, ptr::read_volatile(src));
       cur

@@ -143,7 +143,7 @@ impl DMA0 {
   ///
   /// The source pointer must be aligned and valid to read from.
   pub unsafe fn set_source(src: *const u32) {
-    crate::sync::volatile_mark_ro(src);
+    crate::sync::memory_read_hint(src);
     Self::DMA0SAD.write(src);
   }
 
@@ -156,7 +156,7 @@ impl DMA0 {
   /// The source pointer must be aligned and valid to write to.
   pub unsafe fn set_dest(dest: *mut u32) {
     Self::DMA0DAD.write(dest);
-    crate::sync::volatile_mark_rw(dest);
+    crate::sync::memory_write_hint(dest);
   }
 
   /// Assigns the count register.
@@ -206,7 +206,7 @@ impl DMA1 {
   ///
   /// The source pointer must be aligned and valid to read from.
   pub unsafe fn set_source(src: *const u32) {
-    crate::sync::volatile_mark_ro(src);
+    crate::sync::memory_read_hint(src);
     Self::DMA1SAD.write(src);
   }
 
@@ -219,7 +219,7 @@ impl DMA1 {
   /// The source pointer must be aligned and valid to write to.
   pub unsafe fn set_dest(dest: *mut u32) {
     Self::DMA1DAD.write(dest);
-    crate::sync::volatile_mark_rw(dest);
+    crate::sync::memory_write_hint(dest);
   }
 
   /// Assigns the count register.
@@ -269,7 +269,7 @@ impl DMA2 {
   ///
   /// The source pointer must be aligned and valid to read from.
   pub unsafe fn set_source(src: *const u32) {
-    crate::sync::volatile_mark_ro(src);
+    crate::sync::memory_read_hint(src);
     Self::DMA2SAD.write(src);
   }
 
@@ -282,7 +282,7 @@ impl DMA2 {
   /// The source pointer must be aligned and valid to write to.
   pub unsafe fn set_dest(dest: *mut u32) {
     Self::DMA2DAD.write(dest);
-    crate::sync::volatile_mark_rw(dest);
+    crate::sync::memory_write_hint(dest);
   }
 
   /// Assigns the count register.
@@ -333,7 +333,7 @@ impl DMA3 {
   ///
   /// The source pointer must be aligned and valid to read from.
   pub unsafe fn set_source(src: *const u32) {
-    crate::sync::volatile_mark_ro(src);
+    crate::sync::memory_read_hint(src);
     Self::DMA3SAD.write(src);
   }
 
@@ -346,7 +346,7 @@ impl DMA3 {
   /// The source pointer must be aligned and valid to write to.
   pub unsafe fn set_dest(dest: *mut u32) {
     Self::DMA3DAD.write(dest);
-    crate::sync::volatile_mark_rw(dest);
+    crate::sync::memory_write_hint(dest);
   }
 
   /// Assigns the count register.
@@ -388,12 +388,12 @@ impl DMA3 {
       .with_use_32bit(true)
       .with_enabled(true);
     // TODO: destination checking against SRAM
-    crate::sync::volatile_mark_ro(src);
+    crate::sync::memory_read_hint(src);
     Self::DMA3SAD.write(src);
     Self::DMA3DAD.write(dest);
     Self::DMA3CNT_L.write(count);
     Self::DMA3CNT_H.write(FILL_CONTROL);
-    crate::sync::volatile_mark_rw(dest);
+    crate::sync::memory_write_hint(dest);
 
     // Note(Lokathor): Once DMA is set to activate it takes 2 cycles for it to
     // kick in. You can do any non-DMA thing you like before that, but since

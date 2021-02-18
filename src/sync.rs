@@ -10,17 +10,23 @@ mod statics;
 pub use locks::*;
 pub use statics::*;
 
-/// Marks that a given pointer is read by volatile means without actually
-/// reading it.
+/// Marks that a pointer is read without actually reading from this.
+///
+/// This uses an [`asm!`] instruction that marks the parameter as being read,
+/// requiring the compiler to treat this function as if anything could be
+/// done to it.
 #[inline(always)]
-pub fn volatile_mark_ro<T>(val: *const T) {
+pub fn memory_read_hint<T>(val: *const T) {
   unsafe { asm!("/* {0} */", in(reg) val, options(readonly, nostack)) }
 }
 
-/// Marks that a given pointer is read or written by volatile means without
-/// actually reading or writing it.
+/// Marks that a pointer is read or written to without actually writing to it.
+///
+/// This uses an [`asm!`] instruction that marks the parameter as being read
+/// and written, requiring the compiler to treat this function as if anything
+/// could be done to it.
 #[inline(always)]
-pub fn volatile_mark_rw<T>(val: *mut T) {
+pub fn memory_write_hint<T>(val: *mut T) {
   unsafe { asm!("/* {0} */", in(reg) val, options(nostack)) }
 }
 
@@ -43,16 +49,16 @@ pub unsafe extern "C" fn __sync_synchronize() {}
 ///
 /// This should not be done without good reason, as IRQs are usually important
 /// for game functionality.
-pub fn disable_irqs<T>(mut func: impl FnOnce() -> T) -> T {
+pub fn with_irqs_disabled<T>(mut func: impl FnOnce() -> T) -> T {
   let current_ime = IME.read();
   IME.write(IrqEnableSetting::IRQ_NO);
   // prevents the contents of the function from being reordered before IME is disabled.
-  volatile_mark_rw(&mut func);
+  memory_write_hint(&mut func);
 
   let mut result = func();
 
   // prevents the contents of the function from being reordered after IME is reenabled.
-  volatile_mark_rw(&mut result);
+  memory_write_hint(&mut result);
   IME.write(current_ime);
 
   result
