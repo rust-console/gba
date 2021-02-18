@@ -7,7 +7,7 @@ use super::{
   lock_media, read_raw_buf, read_raw_byte, verify_raw_buf, Error, MediaInfo, MediaType,
   RawSaveAccess,
 };
-use crate::sync::{disable_irqs, InitOnce, Static};
+use crate::sync::{with_irqs_disabled, InitOnce, Static};
 use core::cmp;
 use typenum::consts::U65536;
 use voladdress::{VolAddress, VolBlock};
@@ -378,7 +378,7 @@ impl ChipInfo {
 
   /// Erases and writes an entire 128b sector on Atmel devices.
   fn write_atmel_sector_raw(&self, offset: usize, buf: &[u8]) -> Result<(), Error> {
-    disable_irqs(|| {
+    with_irqs_disabled(|| {
       issue_flash_command(CMD_WRITE);
       for i in 0..128 {
         FLASH_DATA.index(offset + i).write(buf[i]);

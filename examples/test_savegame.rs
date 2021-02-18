@@ -76,7 +76,7 @@ fn setup_timers() {
 // I'm fully aware how slow this is. But this is just example code, so, eh.
 fn get_timer_secs() -> f32 {
   let raw_timer = (TM1CNT_L.read() as u32) << 16 | TM0CNT_L.read() as u32;
-  ((raw_timer as f32 * 1024.0) / ((1 << 24) as f32))
+  (raw_timer as f32 * 1024.0) / ((1 << 24) as f32)
 }
 macro_rules! output {
     ($($args:tt)*) => {

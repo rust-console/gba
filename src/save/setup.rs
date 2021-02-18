@@ -19,19 +19,19 @@ static FLASH1M: Align<[u8; 16]> = Align(*b"FLASH1M_Vnnn\0\0\0\0");
 
 #[inline(always)]
 fn emit_eeprom_marker() {
-  crate::sync::volatile_mark_ro(&EEPROM);
+  crate::sync::memory_read_hint(&EEPROM);
 }
 #[inline(always)]
 fn emit_sram_marker() {
-  crate::sync::volatile_mark_ro(&SRAM);
+  crate::sync::memory_read_hint(&SRAM);
 }
 #[inline(always)]
 fn emit_flash_512k_marker() {
-  crate::sync::volatile_mark_ro(&FLASH512K);
+  crate::sync::memory_read_hint(&FLASH512K);
 }
 #[inline(always)]
 fn emit_flash_1m_marker() {
-  crate::sync::volatile_mark_ro(&FLASH1M);
+  crate::sync::memory_read_hint(&FLASH1M);
 }
 
 /// Declares that the ROM uses battery backed SRAM/FRAM.

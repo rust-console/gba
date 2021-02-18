@@ -6,7 +6,7 @@ use super::{Error, MediaType, RawSaveAccess};
 use crate::{
   io::dma::*,
   save::{lock_media, MediaInfo, Timeout},
-  sync::disable_irqs,
+  sync::with_irqs_disabled,
 };
 use core::cmp;
 use voladdress::VolAddress;
@@ -18,7 +18,7 @@ const SECTOR_MASK: usize = SECTOR_LEN - 1;
 
 /// Disable IRQs and DMAs during each read block.
 fn disable_dmas(func: impl FnOnce()) {
-  disable_irqs(|| unsafe {
+  with_irqs_disabled(|| unsafe {
     // Disable other DMAs. This avoids our read/write from being interrupted
     // by a higher priority DMA channel.
     let dma0_ctl = DMA0::control();

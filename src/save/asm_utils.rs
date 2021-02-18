@@ -2,32 +2,29 @@
 //! WRAM. Both flash media and battery-backed SRAM require reads to be
 //! performed via code in WRAM and cannot be accessed by DMA.
 
-#![cfg_attr(
-  not(all(target_vendor = "nintendo", target_env = "agb")),
-  allow(unused_variables, non_snake_case)
-)]
+#![cfg_attr(not(target_arch = "arm"), allow(unused_variables, non_snake_case))]
 
-#[cfg(all(target_vendor = "nintendo", target_env = "agb"))]
+#[cfg(target_arch = "arm")]
 global_asm!(include_str!("asm_routines.s"));
 
-#[cfg(all(target_vendor = "nintendo", target_env = "agb"))]
+#[cfg(target_arch = "arm")]
 extern "C" {
   fn WramXferBuf(src: *const u8, dst: *mut u8, count: usize);
   fn WramReadByte(src: *const u8) -> u8;
   fn WramVerifyBuf(buf1: *const u8, buf2: *const u8, count: usize) -> bool;
 }
 
-#[cfg(not(all(target_vendor = "nintendo", target_env = "agb")))]
+#[cfg(not(target_arch = "arm"))]
 fn WramXferBuf(src: *const u8, dst: *mut u8, count: usize) {
   unimplemented!()
 }
 
-#[cfg(not(all(target_vendor = "nintendo", target_env = "agb")))]
+#[cfg(not(target_arch = "arm"))]
 fn WramReadByte(src: *const u8) -> u8 {
   unimplemented!()
 }
 
-#[cfg(not(all(target_vendor = "nintendo", target_env = "agb")))]
+#[cfg(not(target_arch = "arm"))]
 fn WramVerifyBuf(buf1: *const u8, buf2: *const u8, count: usize) -> bool {
   unimplemented!()
 }
