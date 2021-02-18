@@ -40,7 +40,7 @@ impl RawMutex {
   fn raw_unlock(&self) {
     compiler_fence(Ordering::Release);
     if !self.0.replace(false) {
-      already_locked()
+      panic!("Internal error: Attempt to unlock a `RawMutex` which is not locked.")
     }
   }
 
@@ -178,8 +178,10 @@ impl<T> InitOnce<T> {
           }
         };
         ptr::write_volatile((*self.value.get()).as_mut_ptr(), init);
+        compiler_fence(Ordering::Release);
         assert_eq!(self.state.replace(2), 1);
       }
+      compiler_fence(Ordering::Acquire);
       Ok(&*(*self.value.get()).as_mut_ptr())
     }
   }
