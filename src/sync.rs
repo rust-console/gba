@@ -34,8 +34,8 @@ pub fn memory_write_hint<T>(val: *mut T) {
 /// working. While this call is not properly inlined, working is better than
 /// not working at all.
 ///
-/// Ideally we should figure out why this causes any code to be emitted at all
-/// (probably some problem with our target JSON?) and fix it.
+/// This seems to be a problem caused by Rust issue #62256:
+/// <https://github.com/rust-lang/rust/issues/62256>
 ///
 /// Not public API, obviously.
 #[doc(hidden)]
