@@ -169,11 +169,12 @@ impl<T> InitOnce<T> {
   pub fn try_get<E>(&self, initializer: impl FnOnce() -> Result<T, E>) -> Result<&T, E> {
     unsafe {
       if !self.is_initialized.read() {
-        // We disable interrupts during this function, since this is likely to
+        // We disable interrupts to make this simpler, since this is likely to
         // only occur once in a program anyway.
         with_irqs_disabled(|| -> Result<(), E> {
-          // We check again to make sure an interrupt didn't occur between
-          // disabling interrupts and when the initialization happens.
+          // We check again to make sure this function wasn't called in an
+          // interrupt between the first check and when interrupts were
+          // actually disabled.
           if !self.is_initialized.read() {
             // Do the actual initialization.
             ptr::write_volatile((*self.value.get()).as_mut_ptr(), initializer()?);
