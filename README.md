@@ -41,6 +41,9 @@ Install arm build tools
   ```shell
   brew install --cask gcc-arm-embedded
   ```
+* Windows
+  * Download the [GNU Arm Embedded Toolchain](https://developer.arm.com/tools-and-software/open-source-software/developer-tools/gnu-toolchain/gnu-rm/downloads)
+  * Install the toolchain, make sure to select "Add path to environment variable" during install
 
 ## First Time Setup
 
