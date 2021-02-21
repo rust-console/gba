@@ -8,7 +8,7 @@
 //! whatever value is necessary for that function). Some functions also perform
 //! necessary checks to save you from yourself, such as not dividing by zero.
 
-#![cfg_attr(not(all(target_vendor = "nintendo", target_env = "agb")), allow(unused_variables))]
+#![cfg_attr(not(target_arch = "arm"), allow(unused_variables))]
 
 use core::mem;
 use super::*;
@@ -55,11 +55,11 @@ use io::irq::IrqFlags;
 /// perform UB, but such a scenario might exist.
 #[inline(always)]
 pub unsafe fn soft_reset() -> ! {
-  #[cfg(not(all(target_vendor = "nintendo", target_env = "agb")))]
+  #[cfg(not(target_arch = "arm"))]
   {
-    unimplemented!()
+    unimplemented!("This function is not supported on this target.")
   }
-  #[cfg(all(target_vendor = "nintendo", target_env = "agb"))]
+  #[cfg(target_arch = "arm")]
   {
     asm!("swi 0x00", options(noreturn))
   }
@@ -92,11 +92,11 @@ pub unsafe fn soft_reset() -> ! {
 /// that. If you do then you return to nothing and have a bad time.
 #[inline(always)]
 pub unsafe fn register_ram_reset(flags: RegisterRAMResetFlags) {
-  #[cfg(not(all(target_vendor = "nintendo", target_env = "agb")))]
+  #[cfg(not(target_arch = "arm"))]
   {
-    unimplemented!()
+    unimplemented!("This function is not supported on this target.")
   }
-  #[cfg(all(target_vendor = "nintendo", target_env = "agb"))]
+  #[cfg(target_arch = "arm")]
   {
     asm!("swi 0x01", in("r0") flags.0);
   }
@@ -126,11 +126,11 @@ impl RegisterRAMResetFlags {
 /// any enabled interrupt triggers.
 #[inline(always)]
 pub fn halt() {
-  #[cfg(not(all(target_vendor = "nintendo", target_env = "agb")))]
+  #[cfg(not(target_arch = "arm"))]
   {
-    unimplemented!()
+    unimplemented!("This function is not supported on this target.")
   }
-  #[cfg(all(target_vendor = "nintendo", target_env = "agb"))]
+  #[cfg(target_arch = "arm")]
   {
     unsafe {
       asm!("swi 0x02");
@@ -148,11 +148,11 @@ pub fn halt() {
 /// optional externals such as rumble and infra-red.
 #[inline(always)]
 pub fn stop() {
-  #[cfg(not(all(target_vendor = "nintendo", target_env = "agb")))]
+  #[cfg(not(target_arch = "arm"))]
   {
-    unimplemented!()
+    unimplemented!("This function is not supported on this target.")
   }
-  #[cfg(all(target_vendor = "nintendo", target_env = "agb"))]
+  #[cfg(target_arch = "arm")]
   {
     unsafe {
       asm!("swi 0x03");
@@ -175,11 +175,11 @@ pub fn stop() {
 /// the usual interrupt acknowledgement.
 #[inline(always)]
 pub fn interrupt_wait(ignore_current_flags: bool, target_flags: IrqFlags) {
-  #[cfg(not(all(target_vendor = "nintendo", target_env = "agb")))]
+  #[cfg(not(target_arch = "arm"))]
   {
-    unimplemented!()
+    unimplemented!("This function is not supported on this target.")
   }
-  #[cfg(all(target_vendor = "nintendo", target_env = "agb"))]
+  #[cfg(target_arch = "arm")]
   {
     unsafe {
       asm!(
@@ -198,11 +198,11 @@ pub fn interrupt_wait(ignore_current_flags: bool, target_flags: IrqFlags) {
 /// [`interrupt_wait`](interrupt_wait) outlines.
 #[inline(always)]
 pub fn vblank_interrupt_wait() {
-  #[cfg(not(all(target_vendor = "nintendo", target_env = "agb")))]
+  #[cfg(not(target_arch = "arm"))]
   {
-    unimplemented!()
+    unimplemented!("This function is not supported on this target.")
   }
-  #[cfg(all(target_vendor = "nintendo", target_env = "agb"))]
+  #[cfg(target_arch = "arm")]
   {
     unsafe {
       asm!(
@@ -222,11 +222,11 @@ pub fn vblank_interrupt_wait() {
 #[inline(always)]
 pub fn div_rem(numerator: i32, denominator: i32) -> (i32, i32) {
   assert!(denominator != 0);
-  #[cfg(not(all(target_vendor = "nintendo", target_env = "agb")))]
+  #[cfg(not(target_arch = "arm"))]
   {
     (numerator / denominator, numerator % denominator)
   }
-  #[cfg(all(target_vendor = "nintendo", target_env = "agb"))]
+  #[cfg(target_arch = "arm")]
   {
     let div_out: i32;
     let rem_out: i32;
@@ -265,11 +265,11 @@ pub fn rem(numerator: i32, denominator: i32) -> i32 {
 /// by `2n` bits to get `n` more bits of fractional precision in your output.
 #[inline(always)]
 pub fn sqrt(val: u32) -> u16 {
-  #[cfg(not(all(target_vendor = "nintendo", target_env = "agb")))]
+  #[cfg(not(target_arch = "arm"))]
   {
     0 // TODO: simulate this properly when not on GBA
   }
-  #[cfg(all(target_vendor = "nintendo", target_env = "agb"))]
+  #[cfg(target_arch = "arm")]
   {
     let out: u32;
     unsafe {
@@ -293,11 +293,11 @@ pub fn sqrt(val: u32) -> u16 {
 /// Accuracy suffers if `theta` is less than `-pi/4` or greater than `pi/4`.
 #[inline(always)]
 pub fn atan(theta: i16) -> i16 {
-  #[cfg(not(all(target_vendor = "nintendo", target_env = "agb")))]
+  #[cfg(not(target_arch = "arm"))]
   {
     0 // TODO: simulate this properly when not on GBA
   }
-  #[cfg(all(target_vendor = "nintendo", target_env = "agb"))]
+  #[cfg(target_arch = "arm")]
   {
     let out: i16;
     unsafe {
@@ -322,11 +322,11 @@ pub fn atan(theta: i16) -> i16 {
 /// integral, 14 bits for fractional.
 #[inline(always)]
 pub fn atan2(y: i16, x: i16) -> u16 {
-  #[cfg(not(all(target_vendor = "nintendo", target_env = "agb")))]
+  #[cfg(not(target_arch = "arm"))]
   {
     0 // TODO: simulate this properly when not on GBA
   }
-  #[cfg(all(target_vendor = "nintendo", target_env = "agb"))]
+  #[cfg(target_arch = "arm")]
   {
     let out: u16;
     unsafe {
@@ -353,11 +353,11 @@ pub fn atan2(y: i16, x: i16) -> u16 {
 /// * Both pointers must be aligned
 #[inline(always)]
 pub unsafe fn cpu_set16(src: *const u16, dest: *mut u16, count: u32, fixed_source: bool) {
-  #[cfg(not(all(target_vendor = "nintendo", target_env = "agb")))]
+  #[cfg(not(target_arch = "arm"))]
   {
-    unimplemented!()
+    unimplemented!("This function is not supported on this target.")
   }
-  #[cfg(all(target_vendor = "nintendo", target_env = "agb"))]
+  #[cfg(target_arch = "arm")]
   {
     let control = count + ((fixed_source as u32) << 24);
     asm!(
@@ -380,11 +380,11 @@ pub unsafe fn cpu_set16(src: *const u16, dest: *mut u16, count: u32, fixed_sourc
 /// * Both pointers must be aligned
 #[inline(always)]
 pub unsafe fn cpu_set32(src: *const u32, dest: *mut u32, count: u32, fixed_source: bool) {
-  #[cfg(not(all(target_vendor = "nintendo", target_env = "agb")))]
+  #[cfg(not(target_arch = "arm"))]
   {
-    unimplemented!()
+    unimplemented!("This function is not supported on this target.")
   }
-  #[cfg(all(target_vendor = "nintendo", target_env = "agb"))]
+  #[cfg(target_arch = "arm")]
   {
     let control = count + ((fixed_source as u32) << 24) + (1 << 26);
     asm!(
@@ -408,11 +408,11 @@ pub unsafe fn cpu_set32(src: *const u32, dest: *mut u32, count: u32, fixed_sourc
 /// * Both pointers must be aligned
 #[inline(always)]
 pub unsafe fn cpu_fast_set(src: *const u32, dest: *mut u32, count: u32, fixed_source: bool) {
-  #[cfg(not(all(target_vendor = "nintendo", target_env = "agb")))]
+  #[cfg(not(target_arch = "arm"))]
   {
-    unimplemented!()
+    unimplemented!("This function is not supported on this target.")
   }
-  #[cfg(all(target_vendor = "nintendo", target_env = "agb"))]
+  #[cfg(target_arch = "arm")]
   {
     let control = count + ((fixed_source as u32) << 24);
     asm!(
@@ -434,11 +434,11 @@ pub unsafe fn cpu_fast_set(src: *const u32, dest: *mut u32, count: u32, fixed_so
 /// some other value I guess you're probably running on an emulator that just
 /// broke the fourth wall.
 pub fn get_bios_checksum() -> u32 {
-  #[cfg(not(all(target_vendor = "nintendo", target_env = "agb")))]
+  #[cfg(not(target_arch = "arm"))]
   {
-    unimplemented!()
+    unimplemented!("This function is not supported on this target.")
   }
-  #[cfg(all(target_vendor = "nintendo", target_env = "agb"))]
+  #[cfg(target_arch = "arm")]
   {
     let out: u32;
     unsafe {
@@ -473,11 +473,11 @@ pub fn get_bios_checksum() -> u32 {
 ///
 /// The final sound level setting will be `level` * `0x200`.
 pub fn sound_bias(level: u32) {
-  #[cfg(not(all(target_vendor = "nintendo", target_env = "agb")))]
+  #[cfg(not(target_arch = "arm"))]
   {
-    unimplemented!()
+    unimplemented!("This function is not supported on this target.")
   }
-  #[cfg(all(target_vendor = "nintendo", target_env = "agb"))]
+  #[cfg(target_arch = "arm")]
   {
     unsafe {
       asm!("swi 0x19", in("r0") level);
@@ -513,11 +513,11 @@ pub fn sound_bias(level: u32) {
 /// * 10: 40137
 /// * 11: 42048
 pub fn sound_driver_mode(mode: u32) {
-  #[cfg(not(all(target_vendor = "nintendo", target_env = "agb")))]
+  #[cfg(not(target_arch = "arm"))]
   {
-    unimplemented!()
+    unimplemented!("This function is not supported on this target.")
   }
-  #[cfg(all(target_vendor = "nintendo", target_env = "agb"))]
+  #[cfg(target_arch = "arm")]
   {
     unsafe {
       asm!("swi 0x1B", in("r0") mode);
@@ -535,11 +535,11 @@ pub fn sound_driver_mode(mode: u32) {
 /// executed." --what?
 #[inline(always)]
 pub fn sound_driver_main() {
-  #[cfg(not(all(target_vendor = "nintendo", target_env = "agb")))]
+  #[cfg(not(target_arch = "arm"))]
   {
-    unimplemented!()
+    unimplemented!("This function is not supported on this target.")
   }
-  #[cfg(all(target_vendor = "nintendo", target_env = "agb"))]
+  #[cfg(target_arch = "arm")]
   {
     unsafe {
       asm!("swi 0x1C");
@@ -553,11 +553,11 @@ pub fn sound_driver_main() {
 /// vblank interrupt (every 1/60th of a second).
 #[inline(always)]
 pub fn sound_driver_vsync() {
-  #[cfg(not(all(target_vendor = "nintendo", target_env = "agb")))]
+  #[cfg(not(target_arch = "arm"))]
   {
-    unimplemented!()
+    unimplemented!("This function is not supported on this target.")
   }
-  #[cfg(all(target_vendor = "nintendo", target_env = "agb"))]
+  #[cfg(target_arch = "arm")]
   {
     unsafe {
       asm!("swi 0x1D");
@@ -573,11 +573,11 @@ pub fn sound_driver_vsync() {
 /// --what?
 #[inline(always)]
 pub fn sound_channel_clear() {
-  #[cfg(not(all(target_vendor = "nintendo", target_env = "agb")))]
+  #[cfg(not(target_arch = "arm"))]
   {
-    unimplemented!()
+    unimplemented!("This function is not supported on this target.")
   }
-  #[cfg(all(target_vendor = "nintendo", target_env = "agb"))]
+  #[cfg(target_arch = "arm")]
   {
     unsafe {
       asm!("swi 0x1E");
@@ -596,11 +596,11 @@ pub fn sound_channel_clear() {
 /// noise.
 #[inline(always)]
 pub fn sound_driver_vsync_off() {
-  #[cfg(not(all(target_vendor = "nintendo", target_env = "agb")))]
+  #[cfg(not(target_arch = "arm"))]
   {
-    unimplemented!()
+    unimplemented!("This function is not supported on this target.")
   }
-  #[cfg(all(target_vendor = "nintendo", target_env = "agb"))]
+  #[cfg(target_arch = "arm")]
   {
     unsafe {
       asm!("swi 0x28");
@@ -615,11 +615,11 @@ pub fn sound_driver_vsync_off() {
 /// interrupt followed by a `sound_driver_vsync` within 2/60th of a second.
 #[inline(always)]
 pub fn sound_driver_vsync_on() {
-  #[cfg(not(all(target_vendor = "nintendo", target_env = "agb")))]
+  #[cfg(not(target_arch = "arm"))]
   {
-    unimplemented!()
+    unimplemented!("This function is not supported on this target.")
   }
-  #[cfg(all(target_vendor = "nintendo", target_env = "agb"))]
+  #[cfg(target_arch = "arm")]
   {
     unsafe {
       asm!("swi 0x29");

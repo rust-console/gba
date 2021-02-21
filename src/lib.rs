@@ -1,5 +1,5 @@
 #![cfg_attr(not(test), no_std)]
-#![feature(asm)]
+#![feature(asm, isa_attribute)]
 #![allow(clippy::cast_lossless)]
 #![deny(clippy::float_arithmetic)]
 #![warn(missing_docs)]
@@ -43,6 +43,8 @@ pub mod rom;
 pub mod sram;
 
 pub mod mgba;
+
+pub mod sync;
 
 extern "C" {
   /// This marks the end of the `.data` and `.bss` sections in IWRAM.
