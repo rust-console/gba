@@ -1,7 +1,5 @@
 //! A module containing functions and utilities useful for synchronizing state.
 
-#![cfg_attr(not(all(target_vendor = "nintendo", target_env = "agb")), allow(unused_variables))]
-
 use crate::io::irq::{IrqEnableSetting, IME};
 
 mod locks;

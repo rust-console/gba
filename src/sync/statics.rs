@@ -1,4 +1,4 @@
-#![cfg_attr(not(all(target_vendor = "nintendo", target_env = "agb")), allow(unused_variables))]
+#![cfg_attr(not(all(target_arch = "arm")), allow(unused_variables))]
 
 use super::*;
 use core::{cell::UnsafeCell, mem, mem::MaybeUninit, ptr};
@@ -6,7 +6,7 @@ use core::{cell::UnsafeCell, mem, mem::MaybeUninit, ptr};
 /// The internal function for replacing a `Copy` (really `!Drop`) value in a
 /// [`Static`]. This uses assembly to use an `stmia` instruction to ensure
 /// an IRQ cannot occur during the write operation.
-#[cfg(all(target_vendor = "nintendo", target_env = "agb"))]
+#[cfg(all(target_arch = "arm"))]
 unsafe fn transfer<T: Copy>(dst: *mut T, src: *const T) {
   let align = mem::align_of::<T>();
   let size = mem::size_of::<T>();
@@ -38,7 +38,7 @@ unsafe fn transfer<T: Copy>(dst: *mut T, src: *const T) {
   }
 }
 
-#[cfg(all(target_vendor = "nintendo", target_env = "agb"))]
+#[cfg(all(target_arch = "arm"))]
 #[allow(unused_assignments)]
 unsafe fn transfer_align4_thumb<T: Copy>(mut dst: *mut T, mut src: *const T) {
   let size = mem::size_of::<T>();
@@ -78,7 +78,7 @@ unsafe fn transfer_align4_thumb<T: Copy>(mut dst: *mut T, mut src: *const T) {
   }
 }
 
-#[cfg(all(target_vendor = "nintendo", target_env = "agb"))]
+#[cfg(all(target_arch = "arm"))]
 #[instruction_set(arm::a32)]
 #[allow(unused_assignments)]
 unsafe fn transfer_align4_arm<T: Copy>(mut dst: *mut T, mut src: *const T) {
@@ -132,7 +132,7 @@ unsafe fn transfer_align4_arm<T: Copy>(mut dst: *mut T, mut src: *const T) {
 
 /// The internal function for swapping the current value of a [`Static`] with
 /// another value.
-#[cfg(all(target_vendor = "nintendo", target_env = "agb"))]
+#[cfg(all(target_arch = "arm"))]
 unsafe fn exchange<T>(dst: *mut T, src: *const T) -> T {
   let align = mem::align_of::<T>();
   let size = mem::size_of::<T>();
@@ -159,7 +159,7 @@ unsafe fn exchange<T>(dst: *mut T, src: *const T) -> T {
   }
 }
 
-#[cfg(all(target_vendor = "nintendo", target_env = "agb"))]
+#[cfg(all(target_arch = "arm"))]
 #[instruction_set(arm::a32)]
 unsafe fn exchange_align4_arm<T>(dst: *mut T, i: u32) -> u32 {
   let out;
@@ -167,7 +167,7 @@ unsafe fn exchange_align4_arm<T>(dst: *mut T, i: u32) -> u32 {
   out
 }
 
-#[cfg(all(target_vendor = "nintendo", target_env = "agb"))]
+#[cfg(all(target_arch = "arm"))]
 #[instruction_set(arm::a32)]
 unsafe fn exchange_align1_arm<T>(dst: *mut T, i: u8) -> u8 {
   let out;
@@ -175,14 +175,14 @@ unsafe fn exchange_align1_arm<T>(dst: *mut T, i: u8) -> u8 {
   out
 }
 
-#[cfg(not(all(target_vendor = "nintendo", target_env = "agb")))]
+#[cfg(not(all(target_arch = "arm")))]
 unsafe fn exchange<T>(dst: *mut T, src: *const T) -> T {
-  unimplemented!()
+  unimplemented!("This function is not supported on this target.")
 }
 
-#[cfg(not(all(target_vendor = "nintendo", target_env = "agb")))]
+#[cfg(not(all(target_arch = "arm")))]
 unsafe fn transfer<T: Copy>(dst: *mut T, src: *const T) {
-  unimplemented!()
+  unimplemented!("This function is not supported on this target.")
 }
 
 /// A helper that implements static variables.
