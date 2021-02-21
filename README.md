@@ -1,5 +1,5 @@
 [![License:Apache2](https://img.shields.io/badge/License-Apache2-green.svg)](https://www.apache.org/licenses/LICENSE-2.0)
-[![travis.ci](https://travis-ci.org/rust-console/gba.svg?branch=master)](https://travis-ci.org/rust-console/gba)
+[![ci](https://github.com/rust-console/gba/workflows/ci/badge.svg?branch=master)](https://github.com/rust-console/gba/actions?query=workflow%3Aci)
 [![crates.io](https://img.shields.io/crates/v/gba.svg)](https://crates.io/crates/gba)
 [![docs.rs](https://docs.rs/gba/badge.svg)](https://docs.rs/gba/latest/gba/)
 
@@ -21,6 +21,29 @@ The following major GBA features are still missing from the crate:
 * Affine Graphics
 * Interrupt Handling
 * Serial Communication
+
+## Build Dependencies
+
+Install required cargo packages
+```sh
+rustup install nightly
+rustup +nightly component add rust-src
+cargo install cargo-make
+cargo install gbafix
+```
+
+Install arm build tools
+* Ubuntu
+  ```shell
+  sudo apt-get install binutils-arm-none-eabi
+  ```
+* OSX
+  ```shell
+  brew install --cask gcc-arm-embedded
+  ```
+* Windows
+  * Download the [GNU Arm Embedded Toolchain](https://developer.arm.com/tools-and-software/open-source-software/developer-tools/gnu-toolchain/gnu-rm/downloads)
+  * Install the toolchain, make sure to select "Add path to environment variable" during install
 
 ## First Time Setup
 
