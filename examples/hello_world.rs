@@ -14,11 +14,10 @@ use gba::{
 
 #[panic_handler]
 fn panic(info: &core::panic::PanicInfo) -> ! {
-  // This kills the emulation with a message if we're running within mGBA.
+  // This kills the emulation with a message if we're running inside an
+  // emulator we support (mGBA or NO$GBA), or just crashes the game if we
+  // aren't.
   fatal!("{}", info);
-  // If we're _not_ running within mGBA then we still need to not return, so
-  // loop forever doing nothing.
-  loop {}
 }
 
 /// Performs a busy loop until VBlank starts.

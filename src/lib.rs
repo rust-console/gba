@@ -42,9 +42,9 @@ pub mod rom;
 
 pub mod sram;
 
-pub mod mgba;
-
 pub mod sync;
+
+pub mod debug;
 
 extern "C" {
   /// This marks the end of the `.data` and `.bss` sections in IWRAM.
