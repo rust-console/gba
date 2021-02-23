@@ -33,6 +33,18 @@ __start:
     addne r2, #0x04000000
     swine 0xb0000
 
+    @ copy .iwram section to IWRAM
+    ldr r0, =__iwram_lma     @ source address
+    ldr r1, =__iwram_start   @ destination address
+    ldr r2, =__iwram_end
+    subs r2, r1             @ length
+    @ these instructions are only executed if r2 is nonzero
+    @ (i.e. don't bother copying an empty .iwram section)
+    addne r2, #3
+    asrne r2, #2
+    addne r2, #0x04000000
+    swine 0xb0000
+
     @ jump to user code
     ldr r0, =main
     bx r0

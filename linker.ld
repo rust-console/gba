@@ -32,6 +32,14 @@ SECTIONS {
         __bss_end = ABSOLUTE(.);
     } >iwram
 
+    __iwram_lma = .;
+    .iwram : {
+        __iwram_start = ABSOLUTE(.);
+        *(.iwram .iwram.*);
+        . = ALIGN(4);
+        __iwram_end = ABSOLUTE(.);
+    } >iwram
+
     /* debugging sections */
     /* Stabs */
     .stab            0 : { *(.stab) }
