@@ -7,7 +7,7 @@ repository = "https://github.com/rust-console/gba"
 readme = "README.md"
 keywords = ["gba"]
 edition = "2018"
-license = "Apache-2.0"
+license = "Zlib OR Apache-2.0 OR MIT"
 
 publish = false
 
