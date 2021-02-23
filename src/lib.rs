@@ -1,5 +1,5 @@
 #![cfg_attr(not(test), no_std)]
-#![feature(asm, isa_attribute)]
+#![feature(asm, global_asm, isa_attribute)]
 #![allow(clippy::cast_lossless)]
 #![deny(clippy::float_arithmetic)]
 #![warn(missing_docs)]
@@ -40,7 +40,7 @@ pub mod oam;
 
 pub mod rom;
 
-pub mod sram;
+pub mod save;
 
 pub mod sync;
 
