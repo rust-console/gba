@@ -46,20 +46,20 @@ jobs:
           toolchain: ${{ matrix.rust.toolchain }}
           command: make
           args: justrelease
-  build-book:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: stable
-          default: true
-      - name: Install mdbook crate
-        uses: actions-rs/install@v0.1
-        with:
-          crate: mdbook
-          version: latest
-          use-tool-cache: true
-      - uses: actions/checkout@v2
-      - name: Build the book
-        run: cd book && mdbook build
+  #build-book:
+  #  runs-on: ubuntu-latest
+  #  steps:
+  #    - uses: actions-rs/toolchain@v1
+  #      with:
+  #        profile: minimal
+  #        toolchain: stable
+  #        default: true
+  #    - name: Install mdbook crate
+  #      uses: actions-rs/install@v0.1
+  #      with:
+  #        crate: mdbook
+  #        version: latest
+  #        use-tool-cache: true
+  #    - uses: actions/checkout@v2
+  #    - name: Build the book
+  #      run: cd book && mdbook build
