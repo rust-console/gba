@@ -48,7 +48,69 @@
 //!
 //! ## Using save media
 //!
+//! To access save media, use the [`SaveAccess::new`] method to create a new
+//! [`SaveAccess`] object. Its methods are used to read or write save media.
 //!
+//! Reading data from the savegame is simple. Use [`read`](`SaveAccess::read`)
+//! to copy data from an offset in the savegame into a buffer in memory.
+//!
+//! ```rust
+//! # use gba::{info, save::SaveAccess};
+//! let mut buf = [0; 1000];
+//! SaveAccess::new()?.read(1000, &mut buf)?;
+//! info!("Memory result: {:?}", buf);
+//! ```
+//!
+//! Writing to save media requires you to prepare the area for writing by calling
+//! the [`prepare_write`](`SaveAccess::prepare_write`) method before doing the
+//! actual write commands with the [`write`](`SaveAccess::write`) method.
+//!
+//! ```rust
+//! # use gba::{info, save::SaveAccess};
+//! let access = SaveAccess::new()?;
+//! access.prepare_write(500..600)?;
+//! access.write(500, &[10; 25])?;
+//! access.write(525, &[20; 25])?;
+//! access.write(550, &[30; 25])?;
+//! access.write(575, &[40; 25])?;
+//! ```
+//!
+//! The `prepare_write` method leaves everything in a sector that overlaps the
+//! range passed to it in an implementation defined state. On some devices it may
+//! do nothing, and on others, it may clear the entire range to `0xFF`.
+//!
+//! Because writes can only be prepared on a per-sector basis, a clear on a range
+//! of `4000..5000` on a device with 4096 byte sectors will actually clear a range
+//! of `0..8192`. Use [`sector_size`](`SaveAccess::sector_size`) to find the
+//! sector size, or [`align_range`](`SaveAccess::align_range`) to directly
+//! calculate the range of memory that will be affected by the clear.
+//!
+//! ## Performance and Other Details
+//!
+//! Because `prepare_write` does nothing on non-flash chips, it would not cause
+//! correctness issues to ignore it. Even so, it is recommend to write code to
+//! use the `prepare_write` function regardless of the save media, as it has
+//! minimal runtime cost on other save media types. If needed, you can check if
+//! `prepare_write` is required by calling the
+//! (`requires_prepare_write`)(`SaveAccess::requires_prepare_write`) method.
+//!
+//! Some memory types have a `sector_size` above `1`, but do not use
+//! `prepare_write`. This indicates that the media type has sectors that must
+//! be rewritten all at once, instead of supporting the separate erase/write
+//! cycles that flash media does. Writing non-sector aligned memory will be
+//! slower on such save media, as the implementation needs to read the old
+//! contents into a buffer before writing to avoid data loss.
+//!
+//! To summarize, for all supported media types:
+//!
+//! * SRAM does not require `prepare_write` and has no sectors to align to. Reads
+//!   and writes at any alignment are efficient. Furthermore, it does not require
+//!   a timer to be set with [`set_timer_for_timeout`].
+//! * Non-Atmel flash chips requires `prepare_write`, and have sectors of 4096
+//!   bytes. Atmel flash chips instead do not require `prepare_write`, and instead
+//!   have sectors of 128 bytes. You should generally try to use `prepare_write`
+//!   regardless, and write in blocks of 128 bytes if at all possible.
+//! * EEPROM does not require `prepare_write` and has sectors of 8 bytes.
 
 use crate::sync::Static;
 use core::ops::Range;
@@ -115,6 +177,10 @@ pub struct MediaInfo {
   pub sector_shift: usize,
   /// The size of the save media, in sectors.
   pub sector_count: usize,
+  /// Whether the save media type requires the use of the
+  /// [`prepare_write`](`SaveAccess::prepare_write`) function before a block of
+  /// memory can be overwritten.
+  pub requires_prepare_write: bool,
 }
 
 /// A trait allowing low-level saving and writing to save media.
@@ -210,6 +276,11 @@ impl SaveAccess {
     self.access.verify(offset, buffer)
   }
 
+  /// Returns whether this save media requires the use of [`prepare_write`].
+  pub fn requires_prepare_write(&self) -> bool {
+    self.info.requires_prepare_write
+  }
+
   /// Returns a range that contains all sectors the input range overlaps.
   ///
   /// This can be used to calculate which blocks would be erased by a call
@@ -226,23 +297,31 @@ impl SaveAccess {
   /// calculate which offset ranges would be affected, use the
   /// [`align_range`](`SaveAccess::align_range`) function.
   pub fn prepare_write(&self, range: Range<usize>) -> Result<(), Error> {
-    let range = self.align_range(range);
-    let shift = self.info.sector_shift;
-    self.access.prepare_write(range.start >> shift, range.len() >> shift)
+    if self.info.requires_prepare_write {
+      let range = self.align_range(range);
+      let shift = self.info.sector_shift;
+      self.access.prepare_write(range.start >> shift, range.len() >> shift)
+    } else {
+      Ok(())
+    }
   }
 
   /// Writes a given buffer into the save media.
   ///
-  /// You must call [`prepare_write`](`SaveAccess::prepare_write`) on the range
-  /// you intend to write for this to function correctly.
+  /// If [`requires_prepare_write`](`SaveAccess::requires_prepare_write`) returns
+  /// `true`, you must call [`prepare_write`](`SaveAccess::prepare_write`) on the
+  /// range you intend to write for this to function correctly. The contents of
+  /// the save media are unpredictable if you do not.
   pub fn write(&self, offset: usize, buffer: &[u8]) -> Result<(), Error> {
     self.access.write(offset, buffer)
   }
 
   /// Writes and validates a given buffer into the save media.
   ///
-  /// You must call [`prepare_write`](`SaveAccess::prepare_write`) on the range
-  /// you intend to write for this to function correctly.
+  /// If [`requires_prepare_write`](`SaveAccess::requires_prepare_write`) returns
+  /// `true`, you must call [`prepare_write`](`SaveAccess::prepare_write`) on the
+  /// range you intend to write for this to function correctly. The contents of
+  /// the save media will be unpredictable if you do not.
   ///
   /// This function will verify that the write has completed successfully, and
   /// return an error if it has not done so.
