@@ -262,7 +262,12 @@ const PROPS_8K: EepromProperties = EepromProperties { addr_bits: 14, byte_len: 8
 pub struct Eeprom512B;
 impl RawSaveAccess for Eeprom512B {
   fn info(&self) -> Result<&'static MediaInfo, Error> {
-    Ok(&MediaInfo { media_type: MediaType::Eeprom512B, sector_shift: 3, sector_count: 64 })
+    Ok(&MediaInfo {
+      media_type: MediaType::Eeprom512B,
+      sector_shift: 3,
+      sector_count: 64,
+      requires_prepare_write: false,
+    })
   }
   fn read(&self, offset: usize, buffer: &mut [u8]) -> Result<(), Error> {
     PROPS_512B.read(offset, buffer)
@@ -282,7 +287,12 @@ impl RawSaveAccess for Eeprom512B {
 pub struct Eeprom8K;
 impl RawSaveAccess for Eeprom8K {
   fn info(&self) -> Result<&'static MediaInfo, Error> {
-    Ok(&MediaInfo { media_type: MediaType::Eeprom8K, sector_shift: 3, sector_count: 1024 })
+    Ok(&MediaInfo {
+      media_type: MediaType::Eeprom8K,
+      sector_shift: 3,
+      sector_count: 1024,
+      requires_prepare_write: false,
+    })
   }
   fn read(&self, offset: usize, buffer: &mut [u8]) -> Result<(), Error> {
     PROPS_8K.read(offset, buffer)

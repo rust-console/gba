@@ -20,7 +20,12 @@ fn check_bounds(offset: usize, len: usize) -> Result<(), Error> {
 pub struct BatteryBackedAccess;
 impl RawSaveAccess for BatteryBackedAccess {
   fn info(&self) -> Result<&'static MediaInfo, Error> {
-    Ok(&MediaInfo { media_type: MediaType::Sram32K, sector_shift: 0, sector_count: SRAM_SIZE })
+    Ok(&MediaInfo {
+      media_type: MediaType::Sram32K,
+      sector_shift: 0,
+      sector_count: SRAM_SIZE,
+      requires_prepare_write: false,
+    })
   }
 
   fn read(&self, offset: usize, buffer: &mut [u8]) -> Result<(), Error> {

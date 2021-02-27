@@ -155,16 +155,19 @@ static INFO_64K: MediaInfo = MediaInfo {
   media_type: MediaType::Flash64K,
   sector_shift: 12, // 4 KiB
   sector_count: 16, // 4 KiB * 16 = 64 KiB
+  requires_prepare_write: true,
 };
 static INFO_64K_ATMEL: MediaInfo = MediaInfo {
   media_type: MediaType::Flash64K,
   sector_shift: 7,   // 128 bytes
-  sector_count: 512, // 128 bytes * 512 = 64 KIB
+  sector_count: 512, // 128 bytes * 512 = 64 KiB
+  requires_prepare_write: false,
 };
 static INFO_128K: MediaInfo = MediaInfo {
   media_type: MediaType::Flash128K,
   sector_shift: 12,
   sector_count: 32, // 4 KiB * 32 = 128 KiB
+  requires_prepare_write: true,
 };
 
 // Chip info for the various chipsets.
