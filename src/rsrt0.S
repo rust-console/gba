@@ -21,19 +21,7 @@ __start:
     msr CPSR_c, r0
     ldr sp, =0x3007f00
 
-    @ copy .data section to IWRAM
-    ldr r0, =__data_lma     @ source address
-    ldr r1, =__data_start   @ destination address
-    ldr r2, =__data_end
-    subs r2, r1             @ length
-    @ these instructions are only executed if r2 is nonzero
-    @ (i.e. don't bother copying an empty .data section)
-    addne r2, #3
-    asrne r2, #2
-    addne r2, #0x04000000
-    swine 0xb0000
-
-    @ copy .iwram section to IWRAM
+    @ copy .data and .text_iwram section to IWRAM
     ldr r0, =__iwram_lma     @ source address
     ldr r1, =__iwram_start   @ destination address
     ldr r2, =__iwram_end

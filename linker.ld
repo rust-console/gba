@@ -18,26 +18,27 @@ SECTIONS {
         . = ALIGN(4);
     } >rom = 0xff
 
-    __data_lma = .;
-    .data : {
+    __iwram_lma = .;
+    .iwram : {
+        __iwram_start = ABSOLUTE(.);
+        
         __data_start = ABSOLUTE(.);
         *(.data .data.*);
         . = ALIGN(4);
         __data_end = ABSOLUTE(.);
+        
+        __text_iwram_start = ABSOLUTE(.);
+        *(.text_iwram .text_iwram.*);
+        . = ALIGN(4);
+        __text_iwram_end = ABSOLUTE(.);
+        
+        __iwram_end = ABSOLUTE(.);
     } >iwram AT>rom = 0xff
 
     .bss : {
         *(.bss .bss.*);
         . = ALIGN(4);
         __bss_end = ABSOLUTE(.);
-    } >iwram
-
-    __iwram_lma = .;
-    .iwram : {
-        __iwram_start = ABSOLUTE(.);
-        *(.iwram .iwram.*);
-        . = ALIGN(4);
-        __iwram_end = ABSOLUTE(.);
     } >iwram
 
     /* debugging sections */
