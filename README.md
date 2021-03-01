@@ -1,4 +1,7 @@
+[![License:Zlib](https://img.shields.io/badge/License-Zlib-green.svg)](https://opensource.org/licenses/Zlib)
 [![License:Apache2](https://img.shields.io/badge/License-Apache2-green.svg)](https://www.apache.org/licenses/LICENSE-2.0)
+[![License:MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
+
 [![ci](https://github.com/rust-console/gba/workflows/ci/badge.svg?branch=master)](https://github.com/rust-console/gba/actions?query=workflow%3Aci)
 [![crates.io](https://img.shields.io/crates/v/gba.svg)](https://crates.io/crates/gba)
 [![docs.rs](https://docs.rs/gba/badge.svg)](https://docs.rs/gba/latest/gba/)
