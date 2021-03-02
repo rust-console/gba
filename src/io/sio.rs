@@ -3,13 +3,14 @@
 use super::*;
 
 /// Serial IO Control. Read/Write.
-pub const SIOCNT: VolAddress<SioControlSetting> = unsafe { VolAddress::new(0x400_0128) };
+pub const SIOCNT: VolAddress<SioControlSetting, Safe, Safe> =
+  unsafe { VolAddress::new(0x400_0128) };
 
 /// Serial IO Data. Read/Write.
-pub const SIODATA8: VolAddress<u16> = unsafe { VolAddress::new(0x400_012A) };
+pub const SIODATA8: VolAddress<u16, Safe, Safe> = unsafe { VolAddress::new(0x400_012A) };
 
 /// General IO Control. Read/Write.
-pub const RCNT: VolAddress<IoControlSetting> = unsafe { VolAddress::new(0x400_0134) };
+pub const RCNT: VolAddress<IoControlSetting, Safe, Safe> = unsafe { VolAddress::new(0x400_0134) };
 
 newtype!(
   /// Setting for the serial IO control register.
@@ -122,7 +123,7 @@ newtype_enum! {
     JoyBus = 3,
 }
 
-/// Empty stuct that implements embedded_hal traits.
+/// Empty struct that implements embedded_hal traits.
 #[cfg(feature = "serial")]
 #[derive(Clone)]
 pub struct SioSerial;

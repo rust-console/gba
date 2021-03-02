@@ -44,7 +44,7 @@ fn main(_argc: isize, _argv: *const *const u8) -> isize {
   irq::set_irq_handler(irq_handler);
 
   // Enable all interrupts that are set in the IE register.
-  IME.write(IrqEnableSetting::IRQ_YES);
+  unsafe { IME.write(IrqEnableSetting::IRQ_YES) };
 
   // Request that VBlank, HBlank and VCount will generate IRQs.
   const DISPLAY_SETTINGS: DisplayStatusSetting = DisplayStatusSetting::new()
@@ -78,7 +78,7 @@ fn main(_argc: isize, _argv: *const *const u8) -> isize {
       flags = flags.with_timer1(true);
     }
 
-    IE.write(flags);
+    unsafe { IE.write(flags) };
 
     // Puts the CPU into low power mode until a VBlank IRQ is received. This
     // will yield considerably better power efficiency as opposed to spin
@@ -119,29 +119,29 @@ fn vblank_handler() {
 
   // When using `interrupt_wait()` or `vblank_interrupt_wait()`, IRQ handlers must acknowledge
   // the IRQ on the BIOS Interrupt Flags register.
-  BIOS_IF.write(BIOS_IF.read().with_vblank(true));
+  unsafe { BIOS_IF.write(BIOS_IF.read().with_vblank(true)) };
 }
 
 fn hblank_handler() {
   write_pixel(GREEN);
 
-  BIOS_IF.write(BIOS_IF.read().with_hblank(true));
+  unsafe { BIOS_IF.write(BIOS_IF.read().with_hblank(true)) };
 }
 
 fn vcounter_handler() {
   write_pixel(RED);
 
-  BIOS_IF.write(BIOS_IF.read().with_vcounter(true));
+  unsafe { BIOS_IF.write(BIOS_IF.read().with_vcounter(true)) };
 }
 
 fn timer0_handler() {
   write_pixel(YELLOW);
 
-  BIOS_IF.write(BIOS_IF.read().with_timer0(true));
+  unsafe { BIOS_IF.write(BIOS_IF.read().with_timer0(true)) };
 }
 
 fn timer1_handler() {
   write_pixel(PINK);
 
-  BIOS_IF.write(BIOS_IF.read().with_timer1(true));
+  unsafe { BIOS_IF.write(BIOS_IF.read().with_timer1(true)) };
 }

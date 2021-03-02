@@ -1,7 +1,6 @@
 #![cfg_attr(not(target_arch = "arm"), allow(unused_variables))]
 
-use super::*;
-use core::{cell::UnsafeCell, mem, mem::MaybeUninit, ptr};
+use core::{cell::UnsafeCell, mem::MaybeUninit};
 
 /// The internal function for replacing a `Copy` (really `!Drop`) value in a
 /// [`Static`]. This uses assembly to use an `stmia` instruction to ensure

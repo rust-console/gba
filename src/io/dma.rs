@@ -127,13 +127,14 @@ pub enum DMAStartTiming {
 pub struct DMA0;
 impl DMA0 {
   /// DMA 0 Source Address, read only.
-  const DMA0SAD: VolAddress<*const u32> = unsafe { VolAddress::new(0x400_00B0) };
+  const DMA0SAD: VolAddress<*const u32, Safe, Unsafe> = unsafe { VolAddress::new(0x400_00B0) };
   /// DMA 0 Destination Address, read only.
-  const DMA0DAD: VolAddress<*mut u32> = unsafe { VolAddress::new(0x400_00B4) };
+  const DMA0DAD: VolAddress<*mut u32, Safe, Unsafe> = unsafe { VolAddress::new(0x400_00B4) };
   /// DMA 0 Word Count, read only.
-  const DMA0CNT_L: VolAddress<u16> = unsafe { VolAddress::new(0x400_00B8) };
+  const DMA0CNT_L: VolAddress<u16, Safe, Unsafe> = unsafe { VolAddress::new(0x400_00B8) };
   /// DMA 0 Control, read/write.
-  const DMA0CNT_H: VolAddress<DMAControlSetting> = unsafe { VolAddress::new(0x400_00BA) };
+  const DMA0CNT_H: VolAddress<DMAControlSetting, Safe, Unsafe> =
+    unsafe { VolAddress::new(0x400_00BA) };
 
   /// Assigns the source register.
   ///
@@ -190,13 +191,14 @@ impl DMA0 {
 pub struct DMA1;
 impl DMA1 {
   /// DMA 1 Source Address, read only.
-  const DMA1SAD: VolAddress<*const u32> = unsafe { VolAddress::new(0x400_00BC) };
+  const DMA1SAD: VolAddress<*const u32, Safe, Unsafe> = unsafe { VolAddress::new(0x400_00BC) };
   /// DMA 1 Destination Address, read only.
-  const DMA1DAD: VolAddress<*mut u32> = unsafe { VolAddress::new(0x400_00C0) };
+  const DMA1DAD: VolAddress<*mut u32, Safe, Unsafe> = unsafe { VolAddress::new(0x400_00C0) };
   /// DMA 1 Word Count, read only.
-  const DMA1CNT_L: VolAddress<u16> = unsafe { VolAddress::new(0x400_00C4) };
+  const DMA1CNT_L: VolAddress<u16, Safe, Unsafe> = unsafe { VolAddress::new(0x400_00C4) };
   /// DMA 1 Control, read/write.
-  const DMA1CNT_H: VolAddress<DMAControlSetting> = unsafe { VolAddress::new(0x400_00C6) };
+  const DMA1CNT_H: VolAddress<DMAControlSetting, Safe, Unsafe> =
+    unsafe { VolAddress::new(0x400_00C6) };
 
   /// Assigns the source register.
   ///
@@ -253,13 +255,14 @@ impl DMA1 {
 pub struct DMA2;
 impl DMA2 {
   /// DMA 2 Source Address, read only.
-  const DMA2SAD: VolAddress<*const u32> = unsafe { VolAddress::new(0x400_00C8) };
+  const DMA2SAD: VolAddress<*const u32, Safe, Unsafe> = unsafe { VolAddress::new(0x400_00C8) };
   /// DMA 2 Destination Address, read only.
-  const DMA2DAD: VolAddress<*mut u32> = unsafe { VolAddress::new(0x400_00CC) };
+  const DMA2DAD: VolAddress<*mut u32, Safe, Unsafe> = unsafe { VolAddress::new(0x400_00CC) };
   /// DMA 2 Word Count, read only.
-  const DMA2CNT_L: VolAddress<u16> = unsafe { VolAddress::new(0x400_00D0) };
+  const DMA2CNT_L: VolAddress<u16, Safe, Unsafe> = unsafe { VolAddress::new(0x400_00D0) };
   /// DMA 2 Control, read/write.
-  const DMA2CNT_H: VolAddress<DMAControlSetting> = unsafe { VolAddress::new(0x400_00D2) };
+  const DMA2CNT_H: VolAddress<DMAControlSetting, Safe, Unsafe> =
+    unsafe { VolAddress::new(0x400_00D2) };
 
   /// Assigns the source register.
   ///
@@ -317,13 +320,14 @@ impl DMA2 {
 pub struct DMA3;
 impl DMA3 {
   /// DMA 3 Source Address, read only.
-  const DMA3SAD: VolAddress<*const u32> = unsafe { VolAddress::new(0x400_00D4) };
+  const DMA3SAD: VolAddress<*const u32, Safe, Unsafe> = unsafe { VolAddress::new(0x400_00D4) };
   /// DMA 3 Destination Address, read only.
-  const DMA3DAD: VolAddress<*mut u32> = unsafe { VolAddress::new(0x400_00D8) };
+  const DMA3DAD: VolAddress<*mut u32, Safe, Unsafe> = unsafe { VolAddress::new(0x400_00D8) };
   /// DMA 3 Word Count, read only.
-  const DMA3CNT_L: VolAddress<u16> = unsafe { VolAddress::new(0x400_00DC) };
+  const DMA3CNT_L: VolAddress<u16, Safe, Unsafe> = unsafe { VolAddress::new(0x400_00DC) };
   /// DMA 3 Control, read/write.
-  const DMA3CNT_H: VolAddress<DMAControlSetting> = unsafe { VolAddress::new(0x400_00DE) };
+  const DMA3CNT_H: VolAddress<DMAControlSetting, Safe, Unsafe> =
+    unsafe { VolAddress::new(0x400_00DE) };
 
   /// Assigns the source register.
   ///

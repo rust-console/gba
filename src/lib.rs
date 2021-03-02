@@ -2,7 +2,7 @@
 #![feature(asm, global_asm, isa_attribute)]
 #![allow(clippy::cast_lossless)]
 #![deny(clippy::float_arithmetic)]
-#![warn(missing_docs)]
+//#![warn(missing_docs)]
 
 //! This crate helps you write GBA ROMs.
 //!
@@ -18,11 +18,10 @@
 //! do, it's a giant bag of Undefined Behavior.
 
 pub(crate) use gba_proc_macro::phantom_fields;
-pub(crate) use voladdress::{read_only::ROVolAddress, VolAddress, VolBlock};
+
+use voladdress::*;
 
 pub mod macros;
-
-pub mod base;
 
 pub mod bios;
 

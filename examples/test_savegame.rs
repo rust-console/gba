@@ -4,14 +4,14 @@
 
 use core::cmp;
 use gba::{
-  fatal, warn,
+  fatal,
   io::{
     display::{DisplayControlSetting, DisplayMode, DISPCNT},
     timers::{TimerControlSetting, TimerTickRate, TM0CNT_H, TM0CNT_L, TM1CNT_H, TM1CNT_L},
   },
   save::*,
   vram::bitmap::Mode3,
-  Color,
+  warn, Color,
 };
 
 fn set_screen_color(r: u16, g: u16, b: u16) {
@@ -34,7 +34,6 @@ fn set_screen_progress(cur: usize, max: usize) {
 fn panic(info: &core::panic::PanicInfo) -> ! {
   set_screen_color(31, 0, 0);
   fatal!("{}", info);
-  loop {}
 }
 
 #[derive(Clone)]
@@ -90,7 +89,7 @@ fn do_test(seed: Rng, offset: usize, len: usize, block_size: usize) -> Result<()
   let mut buffer = [0; MAX_BLOCK_SIZE];
 
   output!(" - Clearing media...");
-  access.prepare_write(offset..offset+len)?;
+  access.prepare_write(offset..offset + len)?;
 
   output!(" - Writing media...");
   let mut rng = seed.clone();
@@ -168,7 +167,9 @@ fn main(_argc: isize, _argv: *const *const u8) -> isize {
 
     output!(
       "[ Partial, offset = 0x{:06x}, len = {}, bs = {}]",
-      rand_offset, rand_length, block_size,
+      rand_offset,
+      rand_length,
+      block_size,
     );
     check_status(do_test(Rng(i * 10000), rand_offset, rand_length, block_size));
     set_screen_progress(3 + i as usize, 10);
@@ -176,5 +177,5 @@ fn main(_argc: isize, _argv: *const *const u8) -> isize {
 
   // show a pattern so we know it worked
   set_screen_color(0, 31, 0);
-  loop { }
+  loop {}
 }

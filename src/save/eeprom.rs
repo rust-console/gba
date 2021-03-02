@@ -9,9 +9,9 @@ use crate::{
   sync::with_irqs_disabled,
 };
 use core::cmp;
-use voladdress::VolAddress;
+use voladdress::*;
 
-const PORT: VolAddress<u16> = unsafe { VolAddress::new(0x0DFFFF00) };
+const PORT: VolAddress<u16, Safe, Safe> = unsafe { VolAddress::new(0x0DFFFF00) };
 const SECTOR_SHIFT: usize = 3;
 const SECTOR_LEN: usize = 1 << SECTOR_SHIFT;
 const SECTOR_MASK: usize = SECTOR_LEN - 1;
@@ -156,32 +156,30 @@ impl EepromProperties {
 
   /// Writes a sector directly.
   fn write_sector_raw(&self, word: usize, block: &[u8]) -> Result<(), Error> {
-    unsafe {
-      // Write sector command. The command is a one bit, followed by a
-      // zero bit, followed by the address, followed by 64 bits of data.
-      //
-      // 512B Command: [1 0|n n n n n n|v v v v ...]
-      // 8KiB Command: [1 0|n n n n n n n n n n n n n n|v v v v ...]
-      let mut buf = BufferData::new();
-      buf.write_bit(1);
-      buf.write_bit(0);
-      buf.write_num(self.addr_bits, word as u32);
-      for i in 0..8 {
-        buf.write_num(8, block[i] as u32);
-      }
-      buf.write_bit(0);
-      buf.submit();
-
-      // Wait for the sector to be written for 10 milliseconds.
-      let timeout = Timeout::new()?;
-      timeout.start();
-      while PORT.read() & 1 != 1 {
-        if timeout.is_timeout_met(10) {
-          return Err(Error::OperationTimedOut);
-        }
-      }
-      Ok(())
+    // Write sector command. The command is a one bit, followed by a
+    // zero bit, followed by the address, followed by 64 bits of data.
+    //
+    // 512B Command: [1 0|n n n n n n|v v v v ...]
+    // 8KiB Command: [1 0|n n n n n n n n n n n n n n|v v v v ...]
+    let mut buf = BufferData::new();
+    buf.write_bit(1);
+    buf.write_bit(0);
+    buf.write_num(self.addr_bits, word as u32);
+    for i in 0..8 {
+      buf.write_num(8, block[i] as u32);
     }
+    buf.write_bit(0);
+    buf.submit();
+
+    // Wait for the sector to be written for 10 milliseconds.
+    let timeout = Timeout::new()?;
+    timeout.start();
+    while PORT.read() & 1 != 1 {
+      if timeout.is_timeout_met(10) {
+        return Err(Error::OperationTimedOut);
+      }
+    }
+    Ok(())
   }
 
   /// Writes a sector to the EEPROM, keeping any current contents outside the
@@ -218,7 +216,7 @@ impl EepromProperties {
       let start = offset & SECTOR_MASK;
       let end_len = cmp::min(SECTOR_LEN - start, buf.len());
       let sector = self.read_sector(offset >> SECTOR_SHIFT);
-      buf[..end_len].copy_from_slice(&sector[start..start+end_len]);
+      buf[..end_len].copy_from_slice(&sector[start..start + end_len]);
       buf = &mut buf[end_len..];
       offset += end_len;
     }

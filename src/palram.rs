@@ -25,42 +25,36 @@
 
 use super::*;
 
-use typenum::consts::U256;
-
 // TODO: PalIndex newtypes?
 
 /// The `PALRAM` for background colors, 256 slot view.
-pub const PALRAM_BG: VolBlock<Color, U256> = unsafe { VolBlock::new(0x500_0000) };
+pub const PALRAM_BG: VolBlock<Color, Safe, Safe, 256> = unsafe { VolBlock::new(0x500_0000) };
 
 /// The `PALRAM` for object colors, 256 slot view.
-pub const PALRAM_OBJ: VolBlock<Color, U256> = unsafe { VolBlock::new(0x500_0200) };
+pub const PALRAM_OBJ: VolBlock<Color, Safe, Safe, 256> = unsafe { VolBlock::new(0x500_0200) };
 
 /// Obtains the address of the specified 8bpp background palette slot.
-pub const fn index_palram_bg_8bpp(slot: u8) -> VolAddress<Color> {
-  // Note(Lokathor): because of the `u8` limit we can't go out of bounds here.
-  unsafe { PALRAM_BG.index_unchecked(slot as usize) }
+pub const fn index_palram_bg_8bpp(slot: u8) -> VolAddress<Color, Safe, Safe> {
+  PALRAM_BG.index(slot as usize)
 }
 
 /// Obtains the address of the specified 8bpp object palette slot.
-pub const fn index_palram_obj_8bpp(slot: u8) -> VolAddress<Color> {
-  // Note(Lokathor): because of the `u8` limit we can't go out of bounds here.
-  unsafe { PALRAM_OBJ.index_unchecked(slot as usize) }
+pub const fn index_palram_obj_8bpp(slot: u8) -> VolAddress<Color, Safe, Safe> {
+  PALRAM_OBJ.index(slot as usize)
 }
 
 /// Obtains the address of the specified 4bpp background palbank and palslot.
 ///
 /// Accesses `palbank * 16 + palslot`, if this is out of bounds the computation
 /// will wrap.
-pub const fn index_palram_bg_4bpp(palbank: u8, palslot: u8) -> VolAddress<Color> {
-  // Note(Lokathor): because of the `u8` limit we can't go out of bounds here.
-  unsafe { PALRAM_BG.index_unchecked(palbank.wrapping_mul(16).wrapping_add(palslot) as usize) }
+pub const fn index_palram_bg_4bpp(palbank: u8, palslot: u8) -> VolAddress<Color, Safe, Safe> {
+  PALRAM_BG.index(palbank.wrapping_mul(16).wrapping_add(palslot) as usize)
 }
 
 /// Obtains the address of the specified 4bpp object palbank and palslot.
 ///
 /// Accesses `palbank * 16 + palslot`, if this is out of bounds the computation
 /// will wrap.
-pub const fn index_palram_obj_4bpp(palbank: u8, palslot: u8) -> VolAddress<Color> {
-  // Note(Lokathor): because of the `u8` limit we can't go out of bounds here.
-  unsafe { PALRAM_OBJ.index_unchecked(palbank.wrapping_mul(16).wrapping_add(palslot) as usize) }
+pub const fn index_palram_obj_4bpp(palbank: u8, palslot: u8) -> VolAddress<Color, Safe, Safe> {
+  PALRAM_OBJ.index(palbank.wrapping_mul(16).wrapping_add(palslot) as usize)
 }

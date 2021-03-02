@@ -130,7 +130,7 @@ impl IrqFlags {
 ///
 /// After setting up interrupt handlers, set the flags on this register type corresponding to the
 /// IRQs you want to handle.
-pub const IE: VolAddress<IrqFlags> = unsafe { VolAddress::new(0x400_0200) };
+pub const IE: VolAddress<IrqFlags, Safe, Unsafe> = unsafe { VolAddress::new(0x400_0200) };
 
 /// Interrupt Request Flags / IRQ Acknowledge. Read/Write.
 ///
@@ -139,7 +139,7 @@ pub const IE: VolAddress<IrqFlags> = unsafe { VolAddress::new(0x400_0200) };
 /// However, if the main interrupt handler in `rsrt0.S` is changed, then the
 /// handler must write a `1` bit to all bits that are enabled on this register
 /// when it is called.
-pub const IF: VolAddress<IrqFlags> = unsafe { VolAddress::new(0x400_0202) };
+pub const IF: VolAddress<IrqFlags, Safe, Unsafe> = unsafe { VolAddress::new(0x400_0202) };
 
 newtype! {
     /// Setting to control whether interrupts are enabled.
@@ -161,7 +161,7 @@ impl IrqEnableSetting {
 }
 
 /// Interrupt Master Enable Register. Read/Write.
-pub const IME: VolAddress<IrqEnableSetting> = unsafe { VolAddress::new(0x400_0208) };
+pub const IME: VolAddress<IrqEnableSetting, Safe, Unsafe> = unsafe { VolAddress::new(0x400_0208) };
 
 /// BIOS Interrupt Flags. Read/Write.
 ///
@@ -169,7 +169,7 @@ pub const IME: VolAddress<IrqEnableSetting> = unsafe { VolAddress::new(0x400_020
 /// [`vblank_interrupt_wait`](bios::vblank_interrupt_wait), the corresponding
 /// interrupt handler MUST set the flag of the interrupt it has handled on this
 /// register in addition to the usual interrupt acknowledgement.
-pub const BIOS_IF: VolAddress<IrqFlags> = unsafe { VolAddress::new(0x0300_7FF8) };
+pub const BIOS_IF: VolAddress<IrqFlags, Safe, Unsafe> = unsafe { VolAddress::new(0x0300_7FF8) };
 
 /// A function pointer for use as an interrupt handler.
 pub type IrqHandler = extern "C" fn(IrqFlags);

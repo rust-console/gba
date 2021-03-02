@@ -10,7 +10,6 @@
 
 #![cfg_attr(not(target_arch = "arm"), allow(unused_variables))]
 
-use core::mem;
 use super::*;
 use io::irq::IrqFlags;
 

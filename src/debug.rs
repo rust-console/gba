@@ -3,15 +3,8 @@
 //! This is the underlying implementation behind the various print macros in
 //! the gba crate. It currently supports the latest versions of mGBA and NO$GBA.
 
-use crate::{
-  io::{
-    dma::{DMAControlSetting, DMA0, DMA1, DMA2, DMA3},
-    irq::{IrqEnableSetting, IME},
-  },
-  sync::{InitOnce, RawMutex, Static},
-};
+use crate::sync::{InitOnce, RawMutex, Static};
 use core::fmt::{Arguments, Error};
-use voladdress::VolAddress;
 
 pub mod mgba;
 pub mod nocash;
@@ -127,5 +120,5 @@ pub fn crash() -> ! {
   }
 
   #[cfg(not(all(target_vendor = "nintendo", target_env = "agb")))]
-  loop { }
+  loop {}
 }

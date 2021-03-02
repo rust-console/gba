@@ -3,13 +3,17 @@
 use super::*;
 
 /// BG0 Control. Read/Write. Display Mode 0/1 only.
-pub const BG0CNT: VolAddress<BackgroundControlSetting> = unsafe { VolAddress::new(0x400_0008) };
+pub const BG0CNT: VolAddress<BackgroundControlSetting, Safe, Safe> =
+  unsafe { VolAddress::new(0x400_0008) };
 /// BG1 Control. Read/Write. Display Mode 0/1 only.
-pub const BG1CNT: VolAddress<BackgroundControlSetting> = unsafe { VolAddress::new(0x400_000A) };
+pub const BG1CNT: VolAddress<BackgroundControlSetting, Safe, Safe> =
+  unsafe { VolAddress::new(0x400_000A) };
 /// BG2 Control. Read/Write. Display Mode 0/1/2 only.
-pub const BG2CNT: VolAddress<BackgroundControlSetting> = unsafe { VolAddress::new(0x400_000C) };
+pub const BG2CNT: VolAddress<BackgroundControlSetting, Safe, Safe> =
+  unsafe { VolAddress::new(0x400_000C) };
 /// BG3 Control. Read/Write.  Display Mode 0/2 only.
-pub const BG3CNT: VolAddress<BackgroundControlSetting> = unsafe { VolAddress::new(0x400_000E) };
+pub const BG3CNT: VolAddress<BackgroundControlSetting, Safe, Safe> =
+  unsafe { VolAddress::new(0x400_000E) };
 
 newtype! {
   /// Allows configuration of a background layer.
@@ -66,24 +70,24 @@ pub enum BGSize {
 }
 
 /// BG0 X-Offset. Write only. Text mode only. 9 bits.
-pub const BG0HOFS: VolAddress<u16> = unsafe { VolAddress::new(0x400_0010) };
+pub const BG0HOFS: VolAddress<u16, Safe, Safe> = unsafe { VolAddress::new(0x400_0010) };
 /// BG0 Y-Offset. Write only. Text mode only. 9 bits.
-pub const BG0VOFS: VolAddress<u16> = unsafe { VolAddress::new(0x400_0012) };
+pub const BG0VOFS: VolAddress<u16, Safe, Safe> = unsafe { VolAddress::new(0x400_0012) };
 
 /// BG1 X-Offset. Write only. Text mode only. 9 bits.
-pub const BG1HOFS: VolAddress<u16> = unsafe { VolAddress::new(0x400_0014) };
+pub const BG1HOFS: VolAddress<u16, Safe, Safe> = unsafe { VolAddress::new(0x400_0014) };
 /// BG1 Y-Offset. Write only. Text mode only. 9 bits.
-pub const BG1VOFS: VolAddress<u16> = unsafe { VolAddress::new(0x400_0016) };
+pub const BG1VOFS: VolAddress<u16, Safe, Safe> = unsafe { VolAddress::new(0x400_0016) };
 
 /// BG2 X-Offset. Write only. Text mode only. 9 bits.
-pub const BG2HOFS: VolAddress<u16> = unsafe { VolAddress::new(0x400_0018) };
+pub const BG2HOFS: VolAddress<u16, Safe, Safe> = unsafe { VolAddress::new(0x400_0018) };
 /// BG2 Y-Offset. Write only. Text mode only. 9 bits.
-pub const BG2VOFS: VolAddress<u16> = unsafe { VolAddress::new(0x400_001A) };
+pub const BG2VOFS: VolAddress<u16, Safe, Safe> = unsafe { VolAddress::new(0x400_001A) };
 
 /// BG3 X-Offset. Write only. Text mode only. 9 bits.
-pub const BG3HOFS: VolAddress<u16> = unsafe { VolAddress::new(0x400_001C) };
+pub const BG3HOFS: VolAddress<u16, Safe, Safe> = unsafe { VolAddress::new(0x400_001C) };
 /// BG3 Y-Offset. Write only. Text mode only. 9 bits.
-pub const BG3VOFS: VolAddress<u16> = unsafe { VolAddress::new(0x400_001E) };
+pub const BG3VOFS: VolAddress<u16, Safe, Safe> = unsafe { VolAddress::new(0x400_001E) };
 
 // TODO: affine backgrounds
 // BG2X_L
