@@ -1,14 +1,19 @@
 #![cfg_attr(not(target_arch = "arm"), allow(unused_variables))]
 
-use core::{cell::UnsafeCell, mem::MaybeUninit};
+use crate::sync::with_irqs_disabled;
+use core::{
+  cell::UnsafeCell,
+  mem::{align_of, size_of, MaybeUninit},
+  ptr,
+};
 
 /// The internal function for replacing a `Copy` (really `!Drop`) value in a
 /// [`Static`]. This uses assembly to use an `stmia` instruction to ensure
 /// an IRQ cannot occur during the write operation.
 #[cfg(target_arch = "arm")]
 unsafe fn transfer<T: Copy>(dst: *mut T, src: *const T) {
-  let align = mem::align_of::<T>();
-  let size = mem::size_of::<T>();
+  let align = align_of::<T>();
+  let size = size_of::<T>();
   if size == 0 {
     // Do nothing with ZSTs. Obviously.
   } else if size <= 16 && align % 4 == 0 {
@@ -40,7 +45,7 @@ unsafe fn transfer<T: Copy>(dst: *mut T, src: *const T) {
 #[cfg(target_arch = "arm")]
 #[allow(unused_assignments)]
 unsafe fn transfer_align4_thumb<T: Copy>(mut dst: *mut T, mut src: *const T) {
-  let size = mem::size_of::<T>();
+  let size = size_of::<T>();
   if size <= 4 {
     // We use assembly here regardless to just do the word aligned copy. This
     // ensures it's done with a single ldr/str instruction.
@@ -81,7 +86,7 @@ unsafe fn transfer_align4_thumb<T: Copy>(mut dst: *mut T, mut src: *const T) {
 #[instruction_set(arm::a32)]
 #[allow(unused_assignments)]
 unsafe fn transfer_align4_arm<T: Copy>(mut dst: *mut T, mut src: *const T) {
-  let size = mem::size_of::<T>();
+  let size = size_of::<T>();
   if size <= 16 {
     unimplemented!("This should be done via transfer_thumb.");
   } else if size <= 20 {
@@ -133,8 +138,8 @@ unsafe fn transfer_align4_arm<T: Copy>(mut dst: *mut T, mut src: *const T) {
 /// another value.
 #[cfg(target_arch = "arm")]
 unsafe fn exchange<T>(dst: *mut T, src: *const T) -> T {
-  let align = mem::align_of::<T>();
-  let size = mem::size_of::<T>();
+  let align = align_of::<T>();
+  let size = size_of::<T>();
   if size == 0 {
     // Do nothing with ZSTs.
     ptr::read(dst)

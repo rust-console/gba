@@ -103,7 +103,7 @@ use super::*;
 newtype!(
   /// A newtype over all interrupt flags.
   IrqFlags,
-  u16
+  pub(crate) u16
 );
 
 impl IrqFlags {

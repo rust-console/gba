@@ -1,7 +1,6 @@
 #![cfg_attr(not(test), no_std)]
 #![feature(asm, global_asm, isa_attribute)]
-#![allow(clippy::cast_lossless)]
-#![deny(clippy::float_arithmetic)]
+#![allow(unused_imports)]
 //#![warn(missing_docs)]
 
 //! This crate helps you write GBA ROMs.
