@@ -13,6 +13,9 @@
 
 A crate to make GBA programming easy.
 
+Currently we don't have as much documentation as we'd like.
+If you check out the [awesome-gbadev](https://github.com/gbdev/awesome-gbadev) repository they have many resources, though most are oriented towards C.
+
 ## First Time Setup
 
 Building for the GBA requires Nightly rust, and also uses the `build-std` feature, so you'll need the rust source available.
