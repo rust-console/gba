@@ -1,4 +1,7 @@
 #![allow(non_camel_case_types)]
+// Note(Lokathor): NOT CURRENTLY USED.
+//
+// If we want this in the future we can convert it to const generics.
 
 //! Module for fixed point math types and operations.
 

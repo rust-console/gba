@@ -28,28 +28,32 @@ use super::*;
 // TODO: striding blocks?
 
 /// Timer 0 Counter/Reload. Special (see module).
-pub const TM0CNT_L: VolAddress<u16> = unsafe { VolAddress::new(0x400_0100) };
+pub const TM0CNT_L: VolAddress<u16, Safe, Safe> = unsafe { VolAddress::new(0x400_0100) };
 
 /// Timer 1 Counter/Reload. Special (see module).
-pub const TM1CNT_L: VolAddress<u16> = unsafe { VolAddress::new(0x400_0104) };
+pub const TM1CNT_L: VolAddress<u16, Safe, Safe> = unsafe { VolAddress::new(0x400_0104) };
 
 /// Timer 2 Counter/Reload. Special (see module).
-pub const TM2CNT_L: VolAddress<u16> = unsafe { VolAddress::new(0x400_0108) };
+pub const TM2CNT_L: VolAddress<u16, Safe, Safe> = unsafe { VolAddress::new(0x400_0108) };
 
 /// Timer 3 Counter/Reload. Special (see module).
-pub const TM3CNT_L: VolAddress<u16> = unsafe { VolAddress::new(0x400_010C) };
+pub const TM3CNT_L: VolAddress<u16, Safe, Safe> = unsafe { VolAddress::new(0x400_010C) };
 
 /// Timer 0 Control. Read/Write.
-pub const TM0CNT_H: VolAddress<TimerControlSetting> = unsafe { VolAddress::new(0x400_0102) };
+pub const TM0CNT_H: VolAddress<TimerControlSetting, Safe, Safe> =
+  unsafe { VolAddress::new(0x400_0102) };
 
 /// Timer 1 Control. Read/Write.
-pub const TM1CNT_H: VolAddress<TimerControlSetting> = unsafe { VolAddress::new(0x400_0106) };
+pub const TM1CNT_H: VolAddress<TimerControlSetting, Safe, Safe> =
+  unsafe { VolAddress::new(0x400_0106) };
 
 /// Timer 2 Control. Read/Write.
-pub const TM2CNT_H: VolAddress<TimerControlSetting> = unsafe { VolAddress::new(0x400_010A) };
+pub const TM2CNT_H: VolAddress<TimerControlSetting, Safe, Safe> =
+  unsafe { VolAddress::new(0x400_010A) };
 
 /// Timer 3 Control. Read/Write.
-pub const TM3CNT_H: VolAddress<TimerControlSetting> = unsafe { VolAddress::new(0x400_010E) };
+pub const TM3CNT_H: VolAddress<TimerControlSetting, Safe, Safe> =
+  unsafe { VolAddress::new(0x400_010E) };
 
 newtype! {
   /// Allows control of a timer unit.

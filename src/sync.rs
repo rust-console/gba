@@ -29,13 +29,19 @@ pub fn memory_write_hint<T>(val: *mut T) {
 }
 
 /// An internal function used as a temporary hack to get `compiler_fence`
-/// working. While this call is not properly inlined, working is better than
-/// not working at all.
+/// working. While this call is not properly inlined, working is better than not
+/// working at all.
 ///
 /// This seems to be a problem caused by Rust issue #62256:
 /// <https://github.com/rust-lang/rust/issues/62256>
 ///
 /// Not public API, obviously.
+///
+/// NOTE TO ANYONE WHO FINDS THIS: THIS FUNCTION SHOULD NOT NORMALLY BE BLANK.
+/// Having a blank version of this function is *only* correct because the GBA is
+/// so old that it doesn't actually have atomics to sync to begin with (just a
+/// main thread + interrupts). On any modern CPU, having this function be blank
+/// is extremely likely to be incorrect.
 #[doc(hidden)]
 #[deprecated]
 #[allow(dead_code)]
@@ -49,15 +55,15 @@ pub unsafe extern "C" fn __sync_synchronize() {}
 /// for game functionality.
 pub fn with_irqs_disabled<T>(mut func: impl FnOnce() -> T) -> T {
   let current_ime = IME.read();
-  IME.write(IrqEnableSetting::IRQ_NO);
+  unsafe { IME.write(IrqEnableSetting::IRQ_NO) };
   // prevents the contents of the function from being reordered before IME is disabled.
   memory_write_hint(&mut func);
 
   let mut result = func();
 
-  // prevents the contents of the function from being reordered after IME is reenabled.
+  // prevents the contents of the function from being reordered after IME is re-enabled.
   memory_write_hint(&mut result);
-  IME.write(current_ime);
+  unsafe { IME.write(current_ime) };
 
   result
 }

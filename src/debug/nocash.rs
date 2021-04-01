@@ -9,11 +9,10 @@ use crate::{
   sync::InitOnce,
 };
 use core::fmt::{Arguments, Write};
-use typenum::consts::U16;
-use voladdress::{VolAddress, VolBlock};
+use voladdress::*;
 
-const CHAR_OUT: VolAddress<u8> = unsafe { VolAddress::new(0x04FFFA1C) };
-const SIGNATURE_ADDR: VolBlock<u8, U16> = unsafe { VolBlock::new(0x04FFFA00) };
+const CHAR_OUT: VolAddress<u8, Safe, Safe> = unsafe { VolAddress::new(0x04FFFA1C) };
+const SIGNATURE_ADDR: VolBlock<u8, Safe, Safe, 16> = unsafe { VolBlock::new(0x04FFFA00) };
 
 const SIGNATURE: [u8; 7] = *b"no$gba ";
 static NO_CASH_DEBUGGING: InitOnce<bool> = InitOnce::new();

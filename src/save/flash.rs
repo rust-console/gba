@@ -9,14 +9,13 @@ use super::{
 };
 use crate::sync::{with_irqs_disabled, InitOnce, Static};
 use core::cmp;
-use typenum::consts::U65536;
-use voladdress::{VolAddress, VolBlock};
+use voladdress::*;
 
 // Volatile address ports for flash
-const FLASH_PORT_BANK: VolAddress<u8> = unsafe { VolAddress::new(0x0E000000) };
-const FLASH_PORT_A: VolAddress<u8> = unsafe { VolAddress::new(0x0E005555) };
-const FLASH_PORT_B: VolAddress<u8> = unsafe { VolAddress::new(0x0E002AAA) };
-const FLASH_DATA: VolBlock<u8, U65536> = unsafe { VolBlock::new(0x0E000000) };
+const FLASH_PORT_BANK: VolAddress<u8, Safe, Safe> = unsafe { VolAddress::new(0x0E000000) };
+const FLASH_PORT_A: VolAddress<u8, Safe, Safe> = unsafe { VolAddress::new(0x0E005555) };
+const FLASH_PORT_B: VolAddress<u8, Safe, Safe> = unsafe { VolAddress::new(0x0E002AAA) };
+const FLASH_DATA: VolBlock<u8, Safe, Safe, 65536> = unsafe { VolBlock::new(0x0E000000) };
 
 // Various constants related to sector sizes
 const BANK_SHIFT: usize = 16; // 64 KiB
@@ -133,7 +132,7 @@ struct ChipInfo {
 
   /// The timeout in milliseconds for writes to this chip.
   write_timeout: u16,
-  /// The timeout in mililseconds for erasing a sector in this chip.
+  /// The timeout in milliseconds for erasing a sector in this chip.
   erase_sector_timeout: u16,
   /// The timeout in milliseconds for erasing the entire chip.
   erase_chip_timeout: u16,

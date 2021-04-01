@@ -1,12 +1,12 @@
 //! A package containing useful utilities for writing save accessors. This is
-//! mainly used internally, although the types inside are exposed publically.
+//! mainly used internally, although the types inside are exposed publicly.
 
 use super::Error;
 use crate::{
   io::timers::*,
   sync::{RawMutex, RawMutexGuard, Static},
 };
-use voladdress::VolAddress;
+use voladdress::*;
 
 /// Internal representation for our active timer.
 #[derive(Copy, Clone, PartialEq)]
@@ -44,8 +44,8 @@ pub fn disable_timeout() {
 pub struct Timeout {
   _lock_guard: RawMutexGuard<'static>,
   active: bool,
-  timer_l: VolAddress<u16>,
-  timer_h: VolAddress<TimerControlSetting>,
+  timer_l: VolAddress<u16, Safe, Safe>,
+  timer_h: VolAddress<TimerControlSetting, Safe, Safe>,
 }
 impl Timeout {
   /// Creates a new timeout from the timer passed to [`set_timer_for_timeout`].

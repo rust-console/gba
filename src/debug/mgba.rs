@@ -7,7 +7,7 @@
 use super::{DebugInterface, DebugLevel};
 use crate::sync::InitOnce;
 use core::fmt::{Arguments, Write};
-use voladdress::VolAddress;
+use voladdress::*;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(u16)]
@@ -22,13 +22,13 @@ pub enum MGBADebugLevel {
 }
 
 // MGBADebug related addresses.
-const ENABLE_ADDRESS: VolAddress<u16> = unsafe { VolAddress::new(0x4fff780) };
+const ENABLE_ADDRESS: VolAddress<u16, Safe, Safe> = unsafe { VolAddress::new(0x4fff780) };
 const ENABLE_ADDRESS_INPUT: u16 = 0xC0DE;
 const ENABLE_ADDRESS_OUTPUT: u16 = 0x1DEA;
 
-const OUTPUT_BASE: VolAddress<u8> = unsafe { VolAddress::new(0x4fff600) };
+const OUTPUT_BLOCK: VolBlock<u8, Safe, Safe, 256> = unsafe { VolBlock::new(0x4fff600) };
 
-const SEND_ADDRESS: VolAddress<u16> = unsafe { VolAddress::new(0x4fff700) };
+const SEND_ADDRESS: VolAddress<u16, Safe, Safe> = unsafe { VolAddress::new(0x4fff700) };
 const SEND_FLAG: u16 = 0x100;
 
 // Only enable MGBA debugging once.
@@ -82,7 +82,7 @@ impl MGBADebug {
 impl core::fmt::Write for MGBADebug {
   fn write_str(&mut self, s: &str) -> Result<(), core::fmt::Error> {
     unsafe {
-      let mut current = OUTPUT_BASE.offset(self.bytes_written as isize);
+      let mut current = OUTPUT_BLOCK.index(self.bytes_written as usize);
       let mut str_iter = s.bytes();
       while self.bytes_written < 255 {
         match str_iter.next() {
