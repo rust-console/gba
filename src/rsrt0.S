@@ -14,12 +14,12 @@ __start:
     @ set IRQ stack pointer
     mov r0, #0x12
     msr CPSR_c, r0
-    ldr sp, =0x3007fa0
+    ldr sp, =0x03007FA0
 
     @ set user stack pointer
     mov r0, #0x1f
     msr CPSR_c, r0
-    ldr sp, =0x3007f00
+    ldr sp, =0x03007F00
 
     @ copy .data and .text_iwram section to IWRAM
     ldr r0, =__iwram_lma     @ source address
@@ -31,7 +31,7 @@ __start:
     addne r2, #3
     asrne r2, #2
     addne r2, #0x04000000
-    swine 0xb0000
+    swine 0xB0000
 
     @ jump to user code
     ldr r0, =main

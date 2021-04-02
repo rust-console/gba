@@ -1,7 +1,5 @@
-#![cfg_attr(not(test), no_std)]
+#![no_std]
 #![feature(asm, global_asm, isa_attribute)]
-#![allow(unused_imports)]
-//#![warn(missing_docs)]
 
 //! This crate helps you write GBA ROMs.
 //!
@@ -16,32 +14,21 @@
 //! **Do not** use this crate in programs that aren't running on the GBA. If you
 //! do, it's a giant bag of Undefined Behavior.
 
-pub(crate) use gba_proc_macro::phantom_fields;
+pub mod mmio_types;
 
-use voladdress::*;
+//#[cfg(target_arch = "arch")]
+pub mod mmio_addresses;
 
+/*
 pub mod macros;
-
 pub mod bios;
-
 pub mod iwram;
-
 pub mod ewram;
-
 pub mod io;
-
 pub mod palram;
-
-pub mod vram;
-
-pub mod oam;
-
 pub mod rom;
-
 pub mod save;
-
 pub mod sync;
-
 pub mod debug;
 
 extern "C" {
@@ -231,4 +218,5 @@ mod tests {
     }
   }
 }
+*/
 */

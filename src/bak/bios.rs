@@ -64,6 +64,7 @@ pub unsafe fn soft_reset() -> ! {
   }
 }
 
+/*
 /// (`swi 0x01`) RegisterRamReset.
 ///
 /// Clears the portions of memory given by the `flags` value, sets the Display
@@ -118,6 +119,7 @@ impl RegisterRAMResetFlags {
     other_io: 7,
   }
 }
+*/
 
 /// (`swi 0x02`) Halts the CPU until an interrupt occurs.
 ///

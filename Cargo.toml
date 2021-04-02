@@ -17,7 +17,6 @@ serial = ["embedded-hal", "nb"]
 
 [dependencies]
 voladdress = { version = "0.4" }
-gba-proc-macro = "0.5"
 embedded-hal = { version = "0.2.4", optional = true }
 nb = { version = "1.0.0", optional = true }
 
