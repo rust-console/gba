@@ -4,6 +4,7 @@ use super::*;
 #[repr(transparent)]
 pub struct DisplayStatus(u16);
 impl DisplayStatus {
+  const_new!();
   bitfield_bool!(u16; 0, is_vblank, with_is_vblank, set_is_vblank);
   bitfield_bool!(u16; 1, is_hblank, with_is_hblank, set_is_hblank);
   bitfield_bool!(u16; 2, is_vcounter, with_is_vcounter, set_is_vcounter);

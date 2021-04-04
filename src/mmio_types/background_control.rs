@@ -4,6 +4,7 @@ use super::*;
 #[repr(transparent)]
 pub struct BackgroundControl(u16);
 impl BackgroundControl {
+  const_new!();
   bitfield_int!(u16; 0..=1: u8, priority, with_priority, set_priority);
   bitfield_int!(u16; 2..=3: u8, char_base_block, with_char_base_block, set_char_base_block);
   bitfield_bool!(u16; 6, mosaic, with_mosaic, set_mosaic);

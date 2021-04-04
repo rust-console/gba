@@ -112,4 +112,23 @@ pub const MOSAIC_BG: VolAddress<MosaicSize, (), Safe> = unsafe { VolAddress::new
 /// [MOSAIC](https://problemkaputt.de/gbatek.htm#lcdiomosaicfunction)
 pub const MOSAIC_OBJ: VolAddress<MosaicSize, (), Safe> = unsafe { VolAddress::new(0x0400_004D) };
 
-// TODO NEXT: BLDCNT
+/// [BLDCNT](https://problemkaputt.de/gbatek.htm#lcdiocolorspecialeffects)
+pub const BLDCNT: VolAddress<BlendControl, Safe, Safe> = unsafe { VolAddress::new(0x0400_0050) };
+
+/// [BLDALPHA](https://problemkaputt.de/gbatek.htm#lcdiocolorspecialeffects)
+pub const BLDALPHA_A: VolAddress<u8, Safe, Safe> = unsafe { VolAddress::new(0x0400_0052) };
+
+/// [BLDALPHA](https://problemkaputt.de/gbatek.htm#lcdiocolorspecialeffects)
+pub const BLDALPHA_B: VolAddress<u8, Safe, Safe> = unsafe { VolAddress::new(0x0400_0053) };
+
+/// [BLDY](https://problemkaputt.de/gbatek.htm#lcdiocolorspecialeffects)
+pub const BLDY: VolAddress<u8, Safe, Safe> = unsafe { VolAddress::new(0x0400_0054) };
+
+// todo: mode 0
+// todo: mode 1
+// todo: mode 2
+// todo: mode 4
+// todo: mode 5
+
+pub const MODE3_BITMAP: VolBlock<Color, Safe, Safe, { 240 * 160 }> =
+  unsafe { VolBlock::new(0x0600_0000) };

@@ -1,4 +1,6 @@
-    .arm
+.arm
+.global __start
+
 __start:
     b .Linit
 

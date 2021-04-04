@@ -14,9 +14,16 @@
 //! **Do not** use this crate in programs that aren't running on the GBA. If you
 //! do, it's a giant bag of Undefined Behavior.
 
+pub mod prelude {
+  pub use crate::mmio_types::*;
+
+  #[cfg(target_arch = "arm")]
+  pub use crate::mmio_addresses::*;
+}
+
 pub mod mmio_types;
 
-//#[cfg(target_arch = "arch")]
+#[cfg(target_arch = "arm")]
 pub mod mmio_addresses;
 
 /*

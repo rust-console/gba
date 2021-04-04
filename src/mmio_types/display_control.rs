@@ -4,6 +4,7 @@ use super::*;
 #[repr(transparent)]
 pub struct DisplayControl(u16);
 impl DisplayControl {
+  const_new!();
   bitfield_enum!(u16; 0..=2: DisplayMode, display_mode, with_display_mode, set_display_mode);
   bitfield_bool!(u16; 4, display_frame1, with_display_frame1, set_display_frame1);
   bitfield_bool!(u16; 5, hblank_interval_free, with_hblank_interval_free, set_hblank_interval_free);

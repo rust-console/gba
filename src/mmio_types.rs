@@ -1,5 +1,15 @@
 #![allow(unused)]
 
+/// Sets up a constant new constructor for a zeroed value.
+macro_rules! const_new {
+  () => {
+    pub const fn new() -> Self {
+      Self(0)
+    }
+  };
+}
+pub(crate) use const_new;
+
 /// Sets up a bitfield integer
 macro_rules! bitfield_int {
   ($inner:ty; $low:literal ..= $high:literal : $nt:ident, $get:ident, $with:ident, $set:ident) => {
@@ -85,3 +95,9 @@ pub use window_enable::*;
 
 mod mosaic_size;
 pub use mosaic_size::*;
+
+mod blend_control;
+pub use blend_control::*;
+
+mod color;
+pub use color::*;
