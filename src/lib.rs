@@ -26,6 +26,9 @@ pub mod mmio_types;
 #[cfg(target_arch = "arm")]
 pub mod mmio_addresses;
 
+#[cfg(target_arch = "arm")]
+pub mod bios;
+
 /*
 extern "C" {
   /// This marks the end of the `.data` and `.bss` sections in IWRAM.
