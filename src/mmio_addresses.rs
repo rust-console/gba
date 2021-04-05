@@ -128,6 +128,8 @@ pub const BLDY: VolAddress<u8, Safe, Safe> = unsafe { VolAddress::new(0x0400_005
 
 // TODO: sound controls
 
+// TODO: timers
+
 /// [DMA](https://problemkaputt.de/gbatek.htm#gbadmatransfers) 0 Source Address (W) (internal memory)
 pub const DMA0SAD: VolAddress<usize, (), Unsafe> = unsafe { VolAddress::new(0x0400_00B0) };
 
