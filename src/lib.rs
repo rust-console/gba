@@ -39,25 +39,7 @@ extern "C" {
   pub static __bss_end: u8;
 }
 
-newtype! {
-  /// A color on the GBA is an RGB 5.5.5 within a `u16`
-  #[derive(PartialOrd, Ord, Hash)]
-  Color, pub u16
-}
-
-impl Color {
-  /// Constructs a color from the channel values provided (should be 0..=31).
-  ///
-  /// No actual checks are performed, so illegal channel values can overflow
-  /// into each other and produce an unintended color.
-  pub const fn from_rgb(r: u16, g: u16, b: u16) -> Color {
-    Color(b << 10 | g << 5 | r)
-  }
-}
-
-//
-// After here is totally unsorted nonsense
-//
+TODO: math module for math functions you probably want on the GBA
 
 /// Performs unsigned divide and remainder, gives None if dividing by 0.
 pub fn divrem_u32(numer: u32, denom: u32) -> Option<(u32, u32)> {
@@ -163,56 +145,4 @@ pub unsafe fn divrem_i32_unchecked(numer: i32, denom: i32) -> (i32, i32) {
     (false, false) => (udiv as i32, urem as i32),
   }
 }
-
-/*
-#[cfg(test)]
-mod tests {
-  use super::*;
-  use quickcheck::quickcheck;
-
-  // We have an explicit property on the non_restoring division
-  quickcheck! {
-    fn divrem_u32_non_restoring_prop(num: u32, denom: u32) -> bool {
-      if denom > 0 {
-        divrem_u32_non_restoring(num, denom) == (num / denom, num % denom)
-      } else {
-        true
-      }
-    }
-  }
-
-  // We have an explicit property on the simple division
-  quickcheck! {
-    fn divrem_u32_simple_prop(num: u32, denom: u32) -> bool {
-      if denom > 0 {
-        divrem_u32_simple(num, denom) == (num / denom, num % denom)
-      } else {
-        true
-      }
-    }
-  }
-
-  // Test the u32 wrapper
-  quickcheck! {
-    fn divrem_u32_prop(num: u32, denom: u32) -> bool {
-      if denom > 0 {
-        divrem_u32(num, denom).unwrap() == (num / denom, num % denom)
-      } else {
-        divrem_u32(num, denom).is_none()
-      }
-    }
-  }
-
-  // test the i32 wrapper
-  quickcheck! {
-    fn divrem_i32_prop(num: i32, denom: i32) -> bool {
-      if denom == 0 || num == core::i32::MIN && denom == -1 {
-        divrem_i32(num, denom).is_none()
-      } else {
-        divrem_i32(num, denom).unwrap() == (num / denom, num % denom)
-      }
-    }
-  }
-}
-*/
 */
