@@ -22,7 +22,7 @@ pub fn dma3_clear_to(color: Color) {
   unsafe {
     DMA3SAD.write(&wide_color as *const _ as usize);
     DMA3DAD.write(0x0600_0000);
-    const MODE3_WORD_COUNT: u16 = (240 * 160 * 2 / 4_usize) as u16;
+    const MODE3_WORD_COUNT: u16 = (WIDTH * HEIGHT * 2 / 4_usize) as u16;
     DMA3CNT_L.write(MODE3_WORD_COUNT);
     const CTRL: DmaControl = DmaControl::new()
       .with_dest_addr(DestAddrControl::Increment)

@@ -79,8 +79,6 @@ pub const BG3X: VolAddress<i32, (), Safe> = unsafe { VolAddress::new(0x0400_0038
 /// [BG3Y](https://problemkaputt.de/gbatek.htm#lcdiobgrotationscaling)
 pub const BG3Y: VolAddress<i32, (), Safe> = unsafe { VolAddress::new(0x0400_003C) };
 
-// Question: should we combine these or is it fine to have a bunch of u8?
-
 /// [WIN0H](https://problemkaputt.de/gbatek.htm#lcdiowindowfeature)
 pub const WIN0H_RIGHT: VolAddress<u8, (), Safe> = unsafe { VolAddress::new(0x0400_0040) };
 /// [WIN0H](https://problemkaputt.de/gbatek.htm#lcdiowindowfeature)
@@ -190,6 +188,7 @@ pub const DMA3CNT_H: VolAddress<DmaControl, Safe, Unsafe> = unsafe { VolAddress:
 pub const KEYINPUT: VolAddress<KeysLowActive, Safe, ()> = unsafe { VolAddress::new(0x0400_0130) };
 
 /// [KEYCNT](https://problemkaputt.de/gbatek.htm#gbakeypadinput)
-pub const KEYCNT: VolAddress<KeysLowActive, Safe, Safe> = unsafe { VolAddress::new(0x0400_0130) };
+pub const KEYCNT: VolAddress<KeyInterruptControl, Safe, Safe> =
+  unsafe { VolAddress::new(0x0400_0130) };
 
 // TODO: Interrupt stuff

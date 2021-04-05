@@ -107,3 +107,6 @@ pub use keys::*;
 
 mod dma_control;
 pub use dma_control::*;
+
+mod key_interrupt_control;
+pub use key_interrupt_control::*;
