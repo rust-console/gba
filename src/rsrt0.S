@@ -9,9 +9,9 @@ __start:
 
 .Linit:
     @ Set address of user IRQ handler
-    ldr r0, =MainIrqHandler
-    ldr r1, =0x03FFFFFC
-    str r0, [r1]
+    @ldr r0, =MainIrqHandler
+    @ldr r1, =0x03FFFFFC
+    @str r0, [r1]
 
     @ set IRQ stack pointer
     mov r0, #0x12
@@ -38,7 +38,10 @@ __start:
     @ jump to user code
     ldr r0, =main
     bx r0
+    @ main should be `fn() -> !`, but it doesn't hurt to guard
+    1: b 1b
 
+/*
     .arm
     .global MainIrqHandler
     .align 4, 0
@@ -91,3 +94,4 @@ MainIrqHandler:
     @ Return to BIOS IRQ handler
     bx lr
     .pool
+*/

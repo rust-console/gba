@@ -101,3 +101,9 @@ pub use blend_control::*;
 
 mod color;
 pub use color::*;
+
+mod keys;
+pub use keys::*;
+
+mod dma_control;
+pub use dma_control::*;

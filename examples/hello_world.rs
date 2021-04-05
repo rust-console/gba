@@ -16,13 +16,6 @@ fn panic(info: &core::panic::PanicInfo) -> ! {
   }
 }
 
-// TODO: change to using an instruction_set trampoline
-#[no_mangle]
-#[allow(bad_style)]
-pub extern "C" fn __IRQ_HANDLER() {
-  //
-}
-
 /// Performs a busy loop until VBlank starts.
 ///
 /// This is very inefficient, and please keep following the lessons until we
@@ -45,40 +38,41 @@ pub fn main() -> ! {
     DisplayControl::new().with_display_mode(DisplayMode::_3).with_display_bg2(true);
   DISPCNT.write(SETTING);
 
-  //let mut px = Mode3::WIDTH / 2;
-  //let mut py = Mode3::HEIGHT / 2;
-  //let mut color = Color::from_rgb(31, 0, 0);
+  let mut px = mode3::WIDTH / 2;
+  let mut py = mode3::HEIGHT / 2;
+  let mut color = Color::from_rgb(31, 3, 1);
 
   loop {
     // read our keys for this frame
-    //let this_frame_keys = read_key_input();
+    let keys: Keys = KEYINPUT.read().into();
 
     // adjust game state and wait for vblank
-    //px = px.wrapping_add((2 * this_frame_keys.x_tribool() as i32) as usize);
-    //py = py.wrapping_add((2 * this_frame_keys.y_tribool() as i32) as usize);
-    //if this_frame_keys.l() {
-    //  color = Color(color.0.rotate_left(5));
-    //}
-    //if this_frame_keys.r() {
-    //  color = Color(color.0.rotate_right(5));
-    //}
+    px = px.wrapping_add((2 * keys.x_signum()) as usize);
+    py = py.wrapping_add((2 * keys.y_signum()) as usize);
+    if keys.l() {
+      color = Color(color.0.rotate_left(5));
+    }
+    if keys.r() {
+      color = Color(color.0.rotate_right(5));
+    }
 
     // now we wait
     spin_until_vblank();
 
     // draw the new game and wait until the next frame starts.
-    //if px >= Mode3::WIDTH || py >= Mode3::HEIGHT {
-    //  // out of bounds, reset the screen and position.
-    //  Mode3::dma_clear_to(Color::from_rgb(0, 0, 0));
-    //  px = Mode3::WIDTH / 2;
-    //  py = Mode3::HEIGHT / 2;
-    //} else {
-    //  // draw the new part of the line
-    //  Mode3::write(px, py, color);
-    //  Mode3::write(px, py + 1, color);
-    //  Mode3::write(px + 1, py, color);
-    //  Mode3::write(px + 1, py + 1, color);
-    //}
+    if (px + 1) >= mode3::WIDTH || (py + 1) >= mode3::HEIGHT {
+      // out of bounds, reset the screen and position.
+      mode3::dma3_clear_to(Color::from_rgb(0, 0, 0));
+      px = mode3::WIDTH / 2;
+      py = mode3::HEIGHT / 2;
+      color = Color(color.0.rotate_left(7));
+    } else {
+      // draw the new part of the line
+      mode3::bitmap_xy(px, py).write(color);
+      mode3::bitmap_xy(px, py + 1).write(color);
+      mode3::bitmap_xy(px + 1, py).write(color);
+      mode3::bitmap_xy(px + 1, py + 1).write(color);
+    }
 
     // now we wait again
     spin_until_vdraw();

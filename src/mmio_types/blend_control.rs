@@ -23,8 +23,8 @@ impl BlendControl {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(u16)]
 pub enum ColorSpecialEffect {
-  NoEffect = 0b00_000000,
-  AlphaBlend = 0b01_000000,
-  BrightnessIncrease = 0b10_000000,
-  BrightnessDecrease = 0b11_000000,
+  NoEffect = 0 << 6,
+  AlphaBlend = 1 << 6,
+  BrightnessIncrease = 2 << 6,
+  BrightnessDecrease = 3 << 6,
 }

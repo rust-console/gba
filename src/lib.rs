@@ -27,17 +27,6 @@ pub mod mmio_types;
 pub mod mmio_addresses;
 
 /*
-pub mod macros;
-pub mod bios;
-pub mod iwram;
-pub mod ewram;
-pub mod io;
-pub mod palram;
-pub mod rom;
-pub mod save;
-pub mod sync;
-pub mod debug;
-
 extern "C" {
   /// This marks the end of the `.data` and `.bss` sections in IWRAM.
   ///
