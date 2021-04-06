@@ -110,3 +110,9 @@ pub use dma_control::*;
 
 mod key_interrupt_control;
 pub use key_interrupt_control::*;
+
+mod register_ram_reset_control;
+pub use register_ram_reset_control::*;
+
+mod interrupt_flags;
+pub use interrupt_flags::*;

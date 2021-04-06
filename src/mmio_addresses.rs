@@ -1,4 +1,4 @@
-use crate::mmio_types::*;
+use crate::prelude::*;
 
 use voladdress::*;
 
@@ -193,4 +193,49 @@ pub const KEYINPUT: VolAddress<KeysLowActive, Safe, ()> = unsafe { VolAddress::n
 pub const KEYCNT: VolAddress<KeyInterruptControl, Safe, Safe> =
   unsafe { VolAddress::new(0x0400_0130) };
 
-// TODO: Interrupt stuff
+/// Points to the (A32) user interrupt handler function.
+pub const USER_IRQ_HANDLER: VolAddress<Option<unsafe fn()>, Safe, Unsafe> =
+  unsafe { VolAddress::new(0x0300_7FFC) };
+
+/// "Interrupt Master Enable", [IME](https://problemkaputt.de/gbatek.htm#gbainterruptcontrol)
+pub const IME: VolAddress<bool, Safe, Unsafe> = unsafe { VolAddress::new(0x0400_0208) };
+
+/// "Interrupts Enabled", [IE](https://problemkaputt.de/gbatek.htm#gbainterruptcontrol)
+pub const IE: VolAddress<InterruptFlags, Safe, Safe> = unsafe { VolAddress::new(0x0400_0200) };
+
+/// Shows which interrupts are pending.
+///
+/// [IF](https://problemkaputt.de/gbatek.htm#gbainterruptcontrol) (reading)
+pub const IRQ_PENDING: VolAddress<InterruptFlags, Safe, ()> =
+  unsafe { VolAddress::new(0x0400_0202) };
+
+/// Acknowledges an interrupt as having been handled.
+///
+/// [IF](https://problemkaputt.de/gbatek.htm#gbainterruptcontrol) (writing)
+pub const IRQ_ACKNOWLEDGE: VolAddress<InterruptFlags, (), Safe> =
+  unsafe { VolAddress::new(0x0400_0202) };
+
+/// Use this during [`IntrWait`] and [`VBlankIntrWait`] interrupt handling.
+///
+/// You should:
+/// * read the current value
+/// * set any additional interrupt bits that you wish to mark as handled (do not
+///   clear any currently set bits!)
+/// * write the new value back to this register
+///
+/// ```no_run
+/// # use crate::prelude::*;
+/// // to acknowledge a vblank interrupt
+/// let current = INTR_WAIT_ACKNOWLEDGE.read();
+/// unsafe { INTR_WAIT_ACKNOWLEDGE.write(current.with_vblank(true)) };
+/// ```
+///
+/// [GBATEK: IntrWait](https://problemkaputt.de/gbatek.htm#bioshaltfunctions)
+pub const INTR_WAIT_ACKNOWLEDGE: VolAddress<InterruptFlags, Safe, Unsafe> = unsafe {
+  // Note(Lokathor): This uses a mirrored location that's closer to the main IO
+  // Control memory region so that LLVM has a better chance of being able to
+  // just do an offset read/write from an address that's already in a register.
+  // The "base" address of this location is 0x0300_7FF8, so some documents may
+  // refer to that value instead.
+  VolAddress::new(0x0300_FFF8)
+};

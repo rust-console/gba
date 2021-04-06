@@ -53,6 +53,7 @@ impl Keys {
     }
   }
 }
+// TODO: bit ops for keys
 
 impl From<KeysLowActive> for Keys {
   fn from(low_active: KeysLowActive) -> Self {

@@ -3,22 +3,32 @@
 
 //! This crate helps you write GBA ROMs.
 //!
-//! ## SAFETY POLICY
+//! ## Safety
 //!
-//! Some parts of this crate are safe wrappers around unsafe operations. This is
-//! good, and what you'd expect from a Rust crate.
+//! This crate takes *minimal* precautions to avoid GBA specific code from being
+//! run on a standard desktop by accident by using `#[cfg(target_arch = "arm")]`
+//! in appropriate places. However, there are obviously many other ARM devices
+//! in the world. If you actually run the GBA specific code on something that
+//! isn't a GBA, then that's your fault.
 //!
-//! However, the safe wrappers all assume that you will _only_ attempt to
-//! execute this crate on a GBA or in a GBA Emulator.
+//! ## Docs.rs
 //!
-//! **Do not** use this crate in programs that aren't running on the GBA. If you
-//! do, it's a giant bag of Undefined Behavior.
+//! The docs on docs.rs are generated for the `thumbv6m-none-eabi` target
+//! because the docs.rs docker image isn't currently able to use the
+//! `-Zbuild-std=core` ability of cargo. Instead, we have it just build using a
+//! "close enough" Tier 2 target.
+//!
+//! When building your actual GBA games you should of course use the
+//! `thumbv4t-none-eabi` target.
 
 pub mod prelude {
   pub use crate::mmio_types::*;
 
   #[cfg(target_arch = "arm")]
   pub use crate::mmio_addresses::*;
+
+  #[cfg(target_arch = "arm")]
+  pub use crate::bios::*;
 }
 
 pub mod mmio_types;

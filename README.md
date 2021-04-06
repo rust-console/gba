@@ -11,23 +11,11 @@
 
 # gba
 
-_Eventually_ there will be a full [Tutorial
-Book](https://rust-console.github.io/gba/) that goes along with this crate.
-However, currently the development focus is leaning towards having minimal
-coverage of all the parts of the GBA. Until that's done, unfortunately the book
-will be in a rather messy state.
-
-## What's Missing
-
-The following major GBA features are still missing from the crate:
-
-* Affine Graphics
-* Interrupt Handling
-* Serial Communication
+This is a crate to make it easy to write a GBA game in rust.
 
 ## Build Dependencies
 
-Install required cargo packages
+Install some stuff from rustup and cargo:
 ```sh
 rustup install nightly
 rustup +nightly component add rust-src
@@ -61,6 +49,17 @@ project started quickly we got you covered:
 ```sh
 curl https://raw.githubusercontent.com/rust-console/gba/master/init.sh -sSf | bash -s APP_NAME
 ```
+
+## Building
+
+When building, you'll have to:
+* use Nightly (if you don't already use it by default)
+* use the `-Zbuild-std=core` cargo flag.
+* have `-Clink-arg=-Tlinker.ld` as part of your `RUSTFLAGS` environment variable.
+* build with `--target thumbv4t-none-eabi`
+
+If you copy the `.cargo/config.toml` file provided in this repository into your
+own project then cargo will see it and set all the right values automatically.
 
 # Contribution
 
