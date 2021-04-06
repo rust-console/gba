@@ -1,7 +1,0 @@
-[book]
-title = "Rust GBA Guide"
-authors = ["Lokathor"]
-
-[build]
-build-dir = "../target/book-output"
-create-missing = true

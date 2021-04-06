@@ -11,43 +11,45 @@
 
 # gba
 
-_Eventually_ there will be a full [Tutorial
-Book](https://rust-console.github.io/gba/) that goes along with this crate.
-However, currently the development focus is leaning towards having minimal
-coverage of all the parts of the GBA. Until that's done, unfortunately the book
-will be in a rather messy state.
+A crate to make GBA programming easy.
 
-## What's Missing
+Currently we don't have as much documentation as we'd like.
+If you check out the [awesome-gbadev](https://github.com/gbdev/awesome-gbadev) repository they have many resources, though most are oriented towards C.
 
-The following major GBA features are still missing from the crate:
+## First Time Setup
 
-* Affine Graphics
-* Interrupt Handling
-* Serial Communication
+Building for the GBA requires Nightly rust, and also uses the `build-std` feature, so you'll need the rust source available.
 
-## Build Dependencies
-
-Install required cargo packages
 ```sh
 rustup install nightly
 rustup +nightly component add rust-src
+```
+
+You'll also need the ARM binutils so that you can have the assembler and linker for the ARMv4T architecture.
+The way to get them varies by platform:
+* Ubuntu and other debian-like linux distros will usually have them in the package manager.
+  ```shell
+  sudo apt-get install binutils-arm-none-eabi
+  ```
+* With OSX you can get them via homebrew.
+  ```shell
+  brew install --cask gcc-arm-embedded
+  ```
+* On Windows you can get the installer from ARM's website and run that.
+  * Download the [GNU Arm Embedded Toolchain](https://developer.arm.com/tools-and-software/open-source-software/developer-tools/gnu-toolchain/gnu-rm/downloads)
+  * When installing the toolchain, make sure to select "Add path to environment variable" during install.
+  * You'll have to restart any open command prompts after you so run the installer so that they see the new PATH value.
+
+Finally, rustc itself is only able to make ELF format files. These can be run in emulators, but aren't able to be played on actual hardware.
+You'll need to convert the ELF file into a GBA rom. There's a `cargo-make` file in this repository to do this, and it relies on a tool called `gbafix`
+to assign the right header data to the ROM when packing it.
+
+```sh
 cargo install cargo-make
 cargo install gbafix
 ```
 
-Install arm build tools
-* Ubuntu
-  ```shell
-  sudo apt-get install binutils-arm-none-eabi
-  ```
-* OSX
-  ```shell
-  brew install --cask gcc-arm-embedded
-  ```
-* Windows
-  * Download the [GNU Arm Embedded Toolchain](https://developer.arm.com/tools-and-software/open-source-software/developer-tools/gnu-toolchain/gnu-rm/downloads)
-  * Install the toolchain, make sure to select "Add path to environment variable" during install
-
+<!--
 ## First Time Setup
 
 Writing a Rust program for the GBA requires a fair amount of special setup. All
@@ -61,8 +63,9 @@ project started quickly we got you covered:
 ```sh
 curl https://raw.githubusercontent.com/rust-console/gba/master/init.sh -sSf | bash -s APP_NAME
 ```
+-->
 
 # Contribution
 
-This crate is Apache2 licensed and any contributions you submit must also be
-Apache2 licensed.
+This crate is tri-licensed under Zlib / Apache-2.0 / MIT.
+Any contributions you submit must be licensed the same.
