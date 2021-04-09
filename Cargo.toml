@@ -26,9 +26,9 @@ panic = "abort"
 [profile.release]
 panic = "abort"
 
-[[example]]
-name = "uart_echo"
-required-features = ["serial"]
+#[[example]]
+#name = "uart_echo"
+#required-features = ["serial"]
 
 [package.metadata.docs.rs]
 default-target = "thumbv6m-none-eabi"

@@ -1,31 +1,20 @@
 #![no_std]
-#![feature(start)]
-#![forbid(unsafe_code)]
+#![no_main]
 
 use core::cmp;
-use gba::{
-  fatal,
-  io::{
-    display::{DisplayControlSetting, DisplayMode, DISPCNT},
-    timers::{TimerControlSetting, TimerTickRate, TM0CNT_H, TM0CNT_L, TM1CNT_H, TM1CNT_L},
-  },
-  save::*,
-  vram::bitmap::Mode3,
-  warn, Color,
-};
+use gba::{fatal, prelude::*, save::*, warn};
 
-fn set_screen_color(r: u16, g: u16, b: u16) {
-  const SETTING: DisplayControlSetting =
-    DisplayControlSetting::new().with_mode(DisplayMode::Mode3).with_bg2(true);
+fn set_screen_color(r: u8, g: u8, b: u8) {
+  const SETTING: DisplayControl = DisplayControl::new().with_display_mode(3).with_display_bg2(true);
   DISPCNT.write(SETTING);
-  Mode3::dma_clear_to(Color::from_rgb(r, g, b));
+  mode3::dma3_clear_to(Color::from_rgb(r, g, b));
 }
 fn set_screen_progress(cur: usize, max: usize) {
-  let lines = cur * (Mode3::WIDTH / max);
+  let lines = cur * (mode3::WIDTH / max);
   let color = Color::from_rgb(0, 31, 0);
   for x in 0..lines {
-    for y in 0..Mode3::HEIGHT {
-      Mode3::write(x, y, color);
+    for y in 0..mode3::HEIGHT {
+      mode3::bitmap_xy(x, y).write(color);
     }
   }
 }
@@ -33,7 +22,7 @@ fn set_screen_progress(cur: usize, max: usize) {
 #[panic_handler]
 fn panic(info: &core::panic::PanicInfo) -> ! {
   set_screen_color(31, 0, 0);
-  fatal!("{}", info);
+  fatal!("{}", info)
 }
 
 #[derive(Clone)]
@@ -63,25 +52,25 @@ fn check_status<T>(r: Result<T, Error>) -> T {
 }
 
 fn setup_timers() {
-  TM0CNT_L.write(0);
-  TM1CNT_L.write(0);
+  TIMER0_RELOAD.write(0);
+  TIMER1_RELOAD.write(0);
 
-  let ctl = TimerControlSetting::new().with_tick_rate(TimerTickRate::CPU1024).with_enabled(true);
-  TM0CNT_H.write(ctl);
-  let ctl = TimerControlSetting::new().with_tick_rate(TimerTickRate::Cascade).with_enabled(true);
-  TM1CNT_H.write(ctl);
+  let ctl = TimerControl::new().with_prescaler_selection(3).with_enabled(true);
+  TIMER0_CONTROL.write(ctl);
+  let ctl = TimerControl::new().with_chained_counting(true).with_enabled(true);
+  TIMER1_CONTROL.write(ctl);
 }
 
 // I'm fully aware how slow this is. But this is just example code, so, eh.
 fn get_timer_secs() -> f32 {
-  let raw_timer = (TM1CNT_L.read() as u32) << 16 | TM0CNT_L.read() as u32;
+  let raw_timer = (TIMER1_COUNTER.read() as u32) << 16 | TIMER0_COUNTER.read() as u32;
   (raw_timer as f32 * 1024.0) / ((1 << 24) as f32)
 }
 macro_rules! output {
-    ($($args:tt)*) => {
-      // we use warn so it shows by default on mGBA, nothing more.
-      warn!("{:7.3}\t{}", get_timer_secs(), format_args!($($args)*))
-    };
+  ($($args:tt)*) => {
+    // we use warn so it shows by default on mGBA, nothing more.
+    warn!("{:7.3}\t{}", get_timer_secs(), format_args!($($args)*))
+  };
 }
 
 fn do_test(seed: Rng, offset: usize, len: usize, block_size: usize) -> Result<(), Error> {
@@ -128,8 +117,8 @@ fn do_test(seed: Rng, offset: usize, len: usize, block_size: usize) -> Result<()
   Ok(())
 }
 
-#[start]
-fn main(_argc: isize, _argv: *const *const u8) -> isize {
+#[no_mangle]
+fn main() -> ! {
   // set a pattern to show that the ROM is working at all.
   set_screen_color(31, 31, 0);
 

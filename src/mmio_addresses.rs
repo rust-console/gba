@@ -247,9 +247,8 @@ pub const KEYCNT: VolAddress<KeyInterruptControl, Safe, Safe> =
   unsafe { VolAddress::new(0x0400_0130) };
 
 /// Points to the (A32) user interrupt handler function.
-pub const USER_IRQ_HANDLER: VolAddress<Option<unsafe fn()>, Safe, Unsafe> =
+pub const USER_IRQ_HANDLER: VolAddress<Option<unsafe extern "C" fn()>, Safe, Unsafe> =
   unsafe { VolAddress::new(0x0300_7FFC) };
-
 /// "Interrupt Master Enable", [IME](https://problemkaputt.de/gbatek.htm#gbainterruptcontrol)
 pub const IME: VolAddress<bool, Safe, Unsafe> = unsafe { VolAddress::new(0x0400_0208) };
 /// "Interrupts Enabled", [IE](https://problemkaputt.de/gbatek.htm#gbainterruptcontrol)
@@ -264,7 +263,6 @@ pub const IRQ_PENDING: VolAddress<InterruptFlags, Safe, ()> =
 /// [IF](https://problemkaputt.de/gbatek.htm#gbainterruptcontrol) (writing)
 pub const IRQ_ACKNOWLEDGE: VolAddress<InterruptFlags, (), Safe> =
   unsafe { VolAddress::new(0x0400_0202) };
-
 /// Use this during [`IntrWait`] and [`VBlankIntrWait`] interrupt handling.
 ///
 /// You should:
