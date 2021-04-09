@@ -10,8 +10,8 @@ __start:
 .Linit:
     @ Set address of user IRQ handler
     @ldr r0, =MainIrqHandler
-    @ldr r1, =0x03FFFFFC
-    @str r0, [r1]
+    @mov r1, #0x04000000
+    @str r0, [r1, #-4]
 
     @ set IRQ stack pointer
     mov r0, #0x12
