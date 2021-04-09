@@ -1,6 +1,6 @@
 //! A module containing functions and utilities useful for synchronizing state.
 
-use crate::io::irq::{IrqEnableSetting, IME};
+use crate::prelude::*;
 
 mod locks;
 mod statics;
@@ -55,7 +55,7 @@ pub unsafe extern "C" fn __sync_synchronize() {}
 /// for game functionality.
 pub fn with_irqs_disabled<T>(mut func: impl FnOnce() -> T) -> T {
   let current_ime = IME.read();
-  unsafe { IME.write(IrqEnableSetting::IRQ_NO) };
+  unsafe { IME.write(false) };
   // prevents the contents of the function from being reordered before IME is disabled.
   memory_write_hint(&mut func);
 

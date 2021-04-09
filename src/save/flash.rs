@@ -124,6 +124,7 @@ pub fn detect_chip_id() -> Result<u16, Error> {
 
 /// Information relating to a particular flash chip that could be found in a
 /// Game Pak.
+#[allow(dead_code)]
 struct ChipInfo {
   /// The wait state required to read from the chip.
   read_wait: u8,

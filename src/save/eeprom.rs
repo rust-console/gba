@@ -4,7 +4,7 @@
 
 use super::{Error, MediaType, RawSaveAccess};
 use crate::{
-  io::dma::*,
+  prelude::*,
   save::{lock_media, MediaInfo, Timeout},
   sync::with_irqs_disabled,
 };
@@ -21,48 +21,50 @@ fn disable_dmas(func: impl FnOnce()) {
   with_irqs_disabled(|| unsafe {
     // Disable other DMAs. This avoids our read/write from being interrupted
     // by a higher priority DMA channel.
-    let dma0_ctl = DMA0::control();
-    let dma1_ctl = DMA1::control();
-    let dma2_ctl = DMA2::control();
-    DMA0::set_control(dma0_ctl.with_enabled(false));
-    DMA1::set_control(dma1_ctl.with_enabled(false));
-    DMA2::set_control(dma2_ctl.with_enabled(false));
+    let dma0_ctl = DMA0CNT_H.read();
+    let dma1_ctl = DMA1CNT_H.read();
+    let dma2_ctl = DMA2CNT_H.read();
+    DMA0CNT_H.write(dma0_ctl.with_enabled(false));
+    DMA1CNT_H.write(dma1_ctl.with_enabled(false));
+    DMA2CNT_H.write(dma2_ctl.with_enabled(false));
 
     // Executes the body of the function with DMAs and IRQs disabled.
     func();
 
     // Continues higher priority DMAs if they were enabled before.
-    DMA0::set_control(dma0_ctl);
-    DMA1::set_control(dma1_ctl);
-    DMA2::set_control(dma2_ctl);
+    DMA0CNT_H.write(dma0_ctl);
+    DMA1CNT_H.write(dma1_ctl);
+    DMA2CNT_H.write(dma2_ctl);
   });
 }
 
 /// Sends a DMA command to EEPROM.
 fn dma_send(source: &[u32], ct: u16) {
   disable_dmas(|| unsafe {
-    DMA3::set_source(source.as_ptr());
-    DMA3::set_dest(0x0DFFFF00 as *mut _);
-    DMA3::set_count(ct);
-    let dma3_ctl = DMAControlSetting::new()
-      .with_dest_address_control(DMADestAddressControl::Increment)
-      .with_source_address_control(DMASrcAddressControl::Increment)
+    core::sync::atomic::compiler_fence(core::sync::atomic::Ordering::SeqCst);
+    DMA3SAD.write(source.as_ptr() as usize);
+    DMA3DAD.write(0x0DFFFF00);
+    DMA3CNT_L.write(ct);
+    let dma3_ctl = DmaControl::new()
+      .with_dest_addr(DestAddrControl::Increment)
+      .with_src_addr(SrcAddrControl::Increment)
       .with_enabled(true);
-    DMA3::set_control(dma3_ctl);
+    DMA3CNT_H.write(dma3_ctl);
   });
 }
 
 /// Receives a DMA packet from EEPROM.
 fn dma_receive(source: &mut [u32], ct: u16) {
   disable_dmas(|| unsafe {
-    DMA3::set_source(0x0DFFFF00 as *const _);
-    DMA3::set_dest(source.as_ptr() as *mut _);
-    DMA3::set_count(ct);
-    let dma3_ctl = DMAControlSetting::new()
-      .with_dest_address_control(DMADestAddressControl::Increment)
-      .with_source_address_control(DMASrcAddressControl::Increment)
+    DMA3SAD.write(0x0DFFFF00);
+    DMA3DAD.write(source.as_mut_ptr() as usize);
+    DMA3CNT_L.write(ct);
+    let dma3_ctl = DmaControl::new()
+      .with_dest_addr(DestAddrControl::Increment)
+      .with_src_addr(SrcAddrControl::Increment)
       .with_enabled(true);
-    DMA3::set_control(dma3_ctl);
+    DMA3CNT_H.write(dma3_ctl);
+    core::sync::atomic::compiler_fence(core::sync::atomic::Ordering::SeqCst);
   });
 }
 

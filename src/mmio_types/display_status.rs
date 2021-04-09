@@ -11,5 +11,5 @@ impl DisplayStatus {
   bitfield_bool!(u16; 3, vblank_irq_enabled, with_vblank_irq_enabled, set_vblank_irq_enabled);
   bitfield_bool!(u16; 4, hblank_irq_enabled, with_hblank_irq_enabled, set_hblank_irq_enabled);
   bitfield_bool!(u16; 5, vcounter_irq_enabled, with_vcounter_irq_enabled, set_vcounter_irq_enabled);
-  bitfield_int!(u16; 8..=15: u8, vcount, with_vcount, set_vcount);
+  bitfield_int!(u16; 8..=15: u16, vcount, with_vcount, set_vcount);
 }

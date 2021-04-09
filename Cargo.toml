@@ -12,7 +12,7 @@ license = "Zlib OR Apache-2.0 OR MIT"
 publish = false
 
 [features]
-default = []
+default = ["serial"]
 serial = ["embedded-hal", "nb"]
 
 [dependencies]

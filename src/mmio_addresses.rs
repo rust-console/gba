@@ -202,8 +202,6 @@ pub const DMA3CNT_L: VolAddress<u16, (), Unsafe> = unsafe { VolAddress::new(0x04
 /// [DMA](https://problemkaputt.de/gbatek.htm#gbadmatransfers) 3 Control (R/W)
 pub const DMA3CNT_H: VolAddress<DmaControl, Safe, Unsafe> = unsafe { VolAddress::new(0x0400_00DE) };
 
-// TODO: sio
-
 /// [TM0CNT_L](https://problemkaputt.de/gbatek.htm#gbatimers)
 pub const TIMER0_COUNTER: VolAddress<u16, Safe, ()> = unsafe { VolAddress::new(0x0400_0100) };
 /// [TM1CNT_L](https://problemkaputt.de/gbatek.htm#gbatimers)
@@ -235,9 +233,15 @@ pub const TIMER2_CONTROL: VolAddress<TimerControl, Safe, Safe> =
 pub const TIMER3_CONTROL: VolAddress<TimerControl, Safe, Safe> =
   unsafe { VolAddress::new(0x0400_010E) };
 
+/// [SIOCNT](https://problemkaputt.de/gbatek.htm#gbacommunicationports)
+pub const SIOCNT: VolAddress<u16, Safe, Safe> = unsafe { VolAddress::new(0x400_0128) };
+/// [SIODATA8](https://problemkaputt.de/gbatek.htm#gbacommunicationports)
+pub const SIODATA8: VolAddress<u8, Safe, Safe> = unsafe { VolAddress::new(0x400_012A) };
+/// [RCNT](https://problemkaputt.de/gbatek.htm#gbacommunicationports)
+pub const RCNT: VolAddress<u16, Safe, Safe> = unsafe { VolAddress::new(0x0400_0134) };
+
 /// [KEYINPUT](https://problemkaputt.de/gbatek.htm#gbakeypadinput)
 pub const KEYINPUT: VolAddress<KeysLowActive, Safe, ()> = unsafe { VolAddress::new(0x0400_0130) };
-
 /// [KEYCNT](https://problemkaputt.de/gbatek.htm#gbakeypadinput)
 pub const KEYCNT: VolAddress<KeyInterruptControl, Safe, Safe> =
   unsafe { VolAddress::new(0x0400_0130) };
@@ -248,16 +252,13 @@ pub const USER_IRQ_HANDLER: VolAddress<Option<unsafe fn()>, Safe, Unsafe> =
 
 /// "Interrupt Master Enable", [IME](https://problemkaputt.de/gbatek.htm#gbainterruptcontrol)
 pub const IME: VolAddress<bool, Safe, Unsafe> = unsafe { VolAddress::new(0x0400_0208) };
-
 /// "Interrupts Enabled", [IE](https://problemkaputt.de/gbatek.htm#gbainterruptcontrol)
 pub const IE: VolAddress<InterruptFlags, Safe, Unsafe> = unsafe { VolAddress::new(0x0400_0200) };
-
 /// Shows which interrupts are pending.
 ///
 /// [IF](https://problemkaputt.de/gbatek.htm#gbainterruptcontrol) (reading)
 pub const IRQ_PENDING: VolAddress<InterruptFlags, Safe, ()> =
   unsafe { VolAddress::new(0x0400_0202) };
-
 /// Acknowledges an interrupt as having been handled.
 ///
 /// [IF](https://problemkaputt.de/gbatek.htm#gbainterruptcontrol) (writing)

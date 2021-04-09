@@ -41,6 +41,15 @@ pub mod bios;
 
 pub mod art;
 
+#[cfg(target_arch = "arm")]
+pub mod sync;
+
+#[cfg(target_arch = "arm")]
+pub mod save;
+
+#[cfg(target_arch = "arm")]
+pub mod debug;
+
 /*
 extern "C" {
   /// This marks the end of the `.data` and `.bss` sections in IWRAM.
