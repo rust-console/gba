@@ -13,53 +13,27 @@ jobs:
           - { toolchain: nightly }
     steps:
       - name: Install Apt Dependencies
-        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends build-essential libssl-dev binutils-arm-none-eabi
+        run: sudo apt-get update && sudo apt-get install binutils-arm-none-eabi
+
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
           toolchain: ${{ matrix.rust.toolchain }}
           default: true
+
       - name: Install Rust Source
         run: rustup component add rust-src
-      - name: Install cargo-make crate
-        uses: actions-rs/install@v0.1
-        with:
-          crate: cargo-make
-          version: latest
-          use-tool-cache: true
-      - name: Install gbafix crate
-        uses: actions-rs/install@v0.1
-        with:
-          crate: gbafix
-          version: latest
-          use-tool-cache: true
-      - uses: actions/checkout@v2
-      - name: Make Test
+
+      - name: Build The Examples
         uses: actions-rs/cargo@v1
         with:
           toolchain: ${{ matrix.rust.toolchain }}
-          command: make
-          args: test
-      - name: Make Release
+          command: build
+          args: --examples
+
+      - name: Check That Docs Compile
         uses: actions-rs/cargo@v1
         with:
           toolchain: ${{ matrix.rust.toolchain }}
-          command: make
-          args: justrelease
-  #build-book:
-  #  runs-on: ubuntu-latest
-  #  steps:
-  #    - uses: actions-rs/toolchain@v1
-  #      with:
-  #        profile: minimal
-  #        toolchain: stable
-  #        default: true
-  #    - name: Install mdbook crate
-  #      uses: actions-rs/install@v0.1
-  #      with:
-  #        crate: mdbook
-  #        version: latest
-  #        use-tool-cache: true
-  #    - uses: actions/checkout@v2
-  #    - name: Build the book
-  #      run: cd book && mdbook build
+          command: test
+          args: --doc
