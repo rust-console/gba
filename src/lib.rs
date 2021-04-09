@@ -39,6 +39,8 @@ pub mod mmio_addresses;
 #[cfg(target_arch = "arm")]
 pub mod bios;
 
+pub mod art;
+
 /*
 extern "C" {
   /// This marks the end of the `.data` and `.bss` sections in IWRAM.
