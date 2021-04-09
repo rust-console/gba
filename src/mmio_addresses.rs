@@ -194,13 +194,13 @@ pub const TIMER1_RELOAD: VolAddress<u16, (), Safe> = unsafe { VolAddress::new(0x
 pub const TIMER2_RELOAD: VolAddress<u16, (), Safe> = unsafe { VolAddress::new(0x0400_0108) };
 pub const TIMER3_RELOAD: VolAddress<u16, (), Safe> = unsafe { VolAddress::new(0x0400_010C) };
 
-pub const TIMER0_CONTROL: VolAddress<TimerControl, (), Safe> =
+pub const TIMER0_CONTROL: VolAddress<TimerControl, Safe, Safe> =
   unsafe { VolAddress::new(0x0400_0102) };
-pub const TIMER1_CONTROL: VolAddress<TimerControl, (), Safe> =
+pub const TIMER1_CONTROL: VolAddress<TimerControl, Safe, Safe> =
   unsafe { VolAddress::new(0x0400_0106) };
-pub const TIMER2_CONTROL: VolAddress<TimerControl, (), Safe> =
+pub const TIMER2_CONTROL: VolAddress<TimerControl, Safe, Safe> =
   unsafe { VolAddress::new(0x0400_010A) };
-pub const TIMER3_CONTROL: VolAddress<TimerControl, (), Safe> =
+pub const TIMER3_CONTROL: VolAddress<TimerControl, Safe, Safe> =
   unsafe { VolAddress::new(0x0400_010E) };
 
 /// [KEYINPUT](https://problemkaputt.de/gbatek.htm#gbakeypadinput)
