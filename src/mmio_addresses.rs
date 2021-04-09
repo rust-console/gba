@@ -184,22 +184,34 @@ pub const DMA3CNT_H: VolAddress<DmaControl, Safe, Unsafe> = unsafe { VolAddress:
 
 // TODO: sio
 
+/// [TM0CNT_L](https://problemkaputt.de/gbatek.htm#gbatimers)
 pub const TIMER0_COUNTER: VolAddress<u16, Safe, ()> = unsafe { VolAddress::new(0x0400_0100) };
+/// [TM1CNT_L](https://problemkaputt.de/gbatek.htm#gbatimers)
 pub const TIMER1_COUNTER: VolAddress<u16, Safe, ()> = unsafe { VolAddress::new(0x0400_0104) };
+/// [TM2CNT_L](https://problemkaputt.de/gbatek.htm#gbatimers)
 pub const TIMER2_COUNTER: VolAddress<u16, Safe, ()> = unsafe { VolAddress::new(0x0400_0108) };
+/// [TM3CNT_L](https://problemkaputt.de/gbatek.htm#gbatimers)
 pub const TIMER3_COUNTER: VolAddress<u16, Safe, ()> = unsafe { VolAddress::new(0x0400_010C) };
 
+/// [TM0CNT_L](https://problemkaputt.de/gbatek.htm#gbatimers)
 pub const TIMER0_RELOAD: VolAddress<u16, (), Safe> = unsafe { VolAddress::new(0x0400_0100) };
+/// [TM1CNT_L](https://problemkaputt.de/gbatek.htm#gbatimers)
 pub const TIMER1_RELOAD: VolAddress<u16, (), Safe> = unsafe { VolAddress::new(0x0400_0104) };
+/// [TM2CNT_L](https://problemkaputt.de/gbatek.htm#gbatimers)
 pub const TIMER2_RELOAD: VolAddress<u16, (), Safe> = unsafe { VolAddress::new(0x0400_0108) };
+/// [TM3CNT_L](https://problemkaputt.de/gbatek.htm#gbatimers)
 pub const TIMER3_RELOAD: VolAddress<u16, (), Safe> = unsafe { VolAddress::new(0x0400_010C) };
 
+/// [TM0CNT_H](https://problemkaputt.de/gbatek.htm#gbatimers)
 pub const TIMER0_CONTROL: VolAddress<TimerControl, Safe, Safe> =
   unsafe { VolAddress::new(0x0400_0102) };
+/// [TM1CNT_H](https://problemkaputt.de/gbatek.htm#gbatimers)
 pub const TIMER1_CONTROL: VolAddress<TimerControl, Safe, Safe> =
   unsafe { VolAddress::new(0x0400_0106) };
+/// [TM2CNT_H](https://problemkaputt.de/gbatek.htm#gbatimers)
 pub const TIMER2_CONTROL: VolAddress<TimerControl, Safe, Safe> =
   unsafe { VolAddress::new(0x0400_010A) };
+/// [TM3CNT_H](https://problemkaputt.de/gbatek.htm#gbatimers)
 pub const TIMER3_CONTROL: VolAddress<TimerControl, Safe, Safe> =
   unsafe { VolAddress::new(0x0400_010E) };
 
