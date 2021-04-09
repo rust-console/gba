@@ -128,8 +128,6 @@ pub const BLDY: VolAddress<u8, Safe, Safe> = unsafe { VolAddress::new(0x0400_005
 
 // TODO: sound controls
 
-// TODO: timers
-
 /// [DMA](https://problemkaputt.de/gbatek.htm#gbadmatransfers) 0 Source Address (W) (internal memory)
 pub const DMA0SAD: VolAddress<usize, (), Unsafe> = unsafe { VolAddress::new(0x0400_00B0) };
 
@@ -186,6 +184,25 @@ pub const DMA3CNT_H: VolAddress<DmaControl, Safe, Unsafe> = unsafe { VolAddress:
 
 // TODO: sio
 
+pub const TIMER0_COUNTER: VolAddress<u16, Safe, ()> = unsafe { VolAddress::new(0x0400_0100) };
+pub const TIMER1_COUNTER: VolAddress<u16, Safe, ()> = unsafe { VolAddress::new(0x0400_0104) };
+pub const TIMER2_COUNTER: VolAddress<u16, Safe, ()> = unsafe { VolAddress::new(0x0400_0108) };
+pub const TIMER3_COUNTER: VolAddress<u16, Safe, ()> = unsafe { VolAddress::new(0x0400_010C) };
+
+pub const TIMER0_RELOAD: VolAddress<u16, (), Safe> = unsafe { VolAddress::new(0x0400_0100) };
+pub const TIMER1_RELOAD: VolAddress<u16, (), Safe> = unsafe { VolAddress::new(0x0400_0104) };
+pub const TIMER2_RELOAD: VolAddress<u16, (), Safe> = unsafe { VolAddress::new(0x0400_0108) };
+pub const TIMER3_RELOAD: VolAddress<u16, (), Safe> = unsafe { VolAddress::new(0x0400_010C) };
+
+pub const TIMER0_CONTROL: VolAddress<TimerControl, (), Safe> =
+  unsafe { VolAddress::new(0x0400_0102) };
+pub const TIMER1_CONTROL: VolAddress<TimerControl, (), Safe> =
+  unsafe { VolAddress::new(0x0400_0106) };
+pub const TIMER2_CONTROL: VolAddress<TimerControl, (), Safe> =
+  unsafe { VolAddress::new(0x0400_010A) };
+pub const TIMER3_CONTROL: VolAddress<TimerControl, (), Safe> =
+  unsafe { VolAddress::new(0x0400_010E) };
+
 /// [KEYINPUT](https://problemkaputt.de/gbatek.htm#gbakeypadinput)
 pub const KEYINPUT: VolAddress<KeysLowActive, Safe, ()> = unsafe { VolAddress::new(0x0400_0130) };
 
@@ -201,7 +218,7 @@ pub const USER_IRQ_HANDLER: VolAddress<Option<unsafe fn()>, Safe, Unsafe> =
 pub const IME: VolAddress<bool, Safe, Unsafe> = unsafe { VolAddress::new(0x0400_0208) };
 
 /// "Interrupts Enabled", [IE](https://problemkaputt.de/gbatek.htm#gbainterruptcontrol)
-pub const IE: VolAddress<InterruptFlags, Safe, Safe> = unsafe { VolAddress::new(0x0400_0200) };
+pub const IE: VolAddress<InterruptFlags, Safe, Unsafe> = unsafe { VolAddress::new(0x0400_0200) };
 
 /// Shows which interrupts are pending.
 ///

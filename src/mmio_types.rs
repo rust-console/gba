@@ -116,3 +116,6 @@ pub use register_ram_reset_control::*;
 
 mod interrupt_flags;
 pub use interrupt_flags::*;
+
+mod timer_control;
+pub use timer_control::*;
