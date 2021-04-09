@@ -1,4 +1,4 @@
-/// The CGA [Code Page 437][cp437] type face.
+/// The CGA [Code Page 437][cp437] type face, with thick lines.
 ///
 /// There's 256 tiles, packed down to 1bpp. To decompress this easily you can
 /// call [`BitUnPack`] as follows:
