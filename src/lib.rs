@@ -1,49 +1,56 @@
-#![cfg_attr(not(test), no_std)]
+#![no_std]
 #![feature(asm, global_asm, isa_attribute)]
-#![allow(unused_imports)]
-//#![warn(missing_docs)]
 
 //! This crate helps you write GBA ROMs.
 //!
-//! ## SAFETY POLICY
+//! ## Safety
 //!
-//! Some parts of this crate are safe wrappers around unsafe operations. This is
-//! good, and what you'd expect from a Rust crate.
+//! This crate takes *minimal* precautions to avoid GBA specific code from being
+//! run on a standard desktop by accident by using `#[cfg(target_arch = "arm")]`
+//! in appropriate places. However, there are obviously many other ARM devices
+//! in the world. If you actually run the GBA specific code on something that
+//! isn't a GBA, then that's your fault.
 //!
-//! However, the safe wrappers all assume that you will _only_ attempt to
-//! execute this crate on a GBA or in a GBA Emulator.
+//! ## Docs.rs
 //!
-//! **Do not** use this crate in programs that aren't running on the GBA. If you
-//! do, it's a giant bag of Undefined Behavior.
+//! The docs on docs.rs are generated for the `thumbv6m-none-eabi` target
+//! because the docs.rs docker image isn't currently able to use the
+//! `-Zbuild-std=core` ability of cargo. Instead, we have it just build using a
+//! "close enough" Tier 2 target.
+//!
+//! When building your actual GBA games you should of course use the
+//! `thumbv4t-none-eabi` target.
 
-pub(crate) use gba_proc_macro::phantom_fields;
+pub mod prelude {
+  pub use crate::mmio_types::*;
 
-use voladdress::*;
+  #[cfg(target_arch = "arm")]
+  pub use crate::mmio_addresses::*;
 
-pub mod macros;
+  #[cfg(target_arch = "arm")]
+  pub use crate::bios::*;
+}
 
+pub mod mmio_types;
+
+#[cfg(target_arch = "arm")]
+pub mod mmio_addresses;
+
+#[cfg(target_arch = "arm")]
 pub mod bios;
 
-pub mod iwram;
+pub mod art;
 
-pub mod ewram;
-
-pub mod io;
-
-pub mod palram;
-
-pub mod vram;
-
-pub mod oam;
-
-pub mod rom;
-
-pub mod save;
-
+#[cfg(target_arch = "arm")]
 pub mod sync;
 
+#[cfg(target_arch = "arm")]
+pub mod save;
+
+#[cfg(target_arch = "arm")]
 pub mod debug;
 
+/*
 extern "C" {
   /// This marks the end of the `.data` and `.bss` sections in IWRAM.
   ///
@@ -56,25 +63,7 @@ extern "C" {
   pub static __bss_end: u8;
 }
 
-newtype! {
-  /// A color on the GBA is an RGB 5.5.5 within a `u16`
-  #[derive(PartialOrd, Ord, Hash)]
-  Color, pub u16
-}
-
-impl Color {
-  /// Constructs a color from the channel values provided (should be 0..=31).
-  ///
-  /// No actual checks are performed, so illegal channel values can overflow
-  /// into each other and produce an unintended color.
-  pub const fn from_rgb(r: u16, g: u16, b: u16) -> Color {
-    Color(b << 10 | g << 5 | r)
-  }
-}
-
-//
-// After here is totally unsorted nonsense
-//
+TODO: math module for math functions you probably want on the GBA
 
 /// Performs unsigned divide and remainder, gives None if dividing by 0.
 pub fn divrem_u32(numer: u32, denom: u32) -> Option<(u32, u32)> {
@@ -178,57 +167,6 @@ pub unsafe fn divrem_i32_unchecked(numer: i32, denom: i32) -> (i32, i32) {
     (true, false) => (-(udiv as i32), urem as i32),
     (false, true) => (udiv as i32, -(urem as i32)),
     (false, false) => (udiv as i32, urem as i32),
-  }
-}
-
-/*
-#[cfg(test)]
-mod tests {
-  use super::*;
-  use quickcheck::quickcheck;
-
-  // We have an explicit property on the non_restoring division
-  quickcheck! {
-    fn divrem_u32_non_restoring_prop(num: u32, denom: u32) -> bool {
-      if denom > 0 {
-        divrem_u32_non_restoring(num, denom) == (num / denom, num % denom)
-      } else {
-        true
-      }
-    }
-  }
-
-  // We have an explicit property on the simple division
-  quickcheck! {
-    fn divrem_u32_simple_prop(num: u32, denom: u32) -> bool {
-      if denom > 0 {
-        divrem_u32_simple(num, denom) == (num / denom, num % denom)
-      } else {
-        true
-      }
-    }
-  }
-
-  // Test the u32 wrapper
-  quickcheck! {
-    fn divrem_u32_prop(num: u32, denom: u32) -> bool {
-      if denom > 0 {
-        divrem_u32(num, denom).unwrap() == (num / denom, num % denom)
-      } else {
-        divrem_u32(num, denom).is_none()
-      }
-    }
-  }
-
-  // test the i32 wrapper
-  quickcheck! {
-    fn divrem_i32_prop(num: i32, denom: i32) -> bool {
-      if denom == 0 || num == core::i32::MIN && denom == -1 {
-        divrem_i32(num, denom).is_none()
-      } else {
-        divrem_i32(num, denom).unwrap() == (num / denom, num % denom)
-      }
-    }
   }
 }
 */

@@ -1,4 +1,6 @@
-    .arm
+.arm
+.global __start
+
 __start:
     b .Linit
 
@@ -7,19 +9,19 @@ __start:
 
 .Linit:
     @ Set address of user IRQ handler
-    ldr r0, =MainIrqHandler
-    ldr r1, =0x03FFFFFC
-    str r0, [r1]
+    @ldr r0, =MainIrqHandler
+    @ldr r1, =0x03FFFFFC
+    @str r0, [r1]
 
     @ set IRQ stack pointer
     mov r0, #0x12
     msr CPSR_c, r0
-    ldr sp, =0x3007fa0
+    ldr sp, =0x03007FA0
 
     @ set user stack pointer
     mov r0, #0x1f
     msr CPSR_c, r0
-    ldr sp, =0x3007f00
+    ldr sp, =0x03007F00
 
     @ copy .data and .text_iwram section to IWRAM
     ldr r0, =__iwram_lma     @ source address
@@ -31,12 +33,15 @@ __start:
     addne r2, #3
     asrne r2, #2
     addne r2, #0x04000000
-    swine 0xb0000
+    swine 0xB0000
 
     @ jump to user code
     ldr r0, =main
     bx r0
+    @ main should be `fn() -> !`, but it doesn't hurt to guard
+    1: b 1b
 
+/*
     .arm
     .global MainIrqHandler
     .align 4, 0
@@ -89,3 +94,4 @@ MainIrqHandler:
     @ Return to BIOS IRQ handler
     bx lr
     .pool
+*/

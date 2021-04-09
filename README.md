@@ -16,7 +16,9 @@ A crate to make GBA programming easy.
 Currently we don't have as much documentation as we'd like.
 If you check out the [awesome-gbadev](https://github.com/gbdev/awesome-gbadev) repository they have many resources, though most are oriented towards C.
 
-## First Time Setup
+## System Setup
+
+There's a few extra things to install that you just need to do once per system.
 
 Building for the GBA requires Nightly rust, and also uses the `build-std` feature, so you'll need the rust source available.
 
@@ -49,21 +51,28 @@ cargo install cargo-make
 cargo install gbafix
 ```
 
-<!--
-## First Time Setup
+## Project Setup
 
-Writing a Rust program for the GBA requires a fair amount of special setup. All
-of the steps are detailed for you in the [Development
-Setup](https://rust-console.github.io/gba/development-setup.html) part at the
-start of the book.
+To build a GBA project, you'll want to copy the `.cargo/config.toml` file from this repo into your own project.
 
-If you've done the described global setup once before and just want to get a new
-project started quickly we got you covered:
+Then use one of the examples as a guide to get started.
 
-```sh
-curl https://raw.githubusercontent.com/rust-console/gba/master/init.sh -sSf | bash -s APP_NAME
+When you build your project, cargo will put outputs in the `target/thumbv4t-none-eabi/` directory.
+This includes the `debug/` and `release/` sub-directories.
+Your binary will be in there, but it'll be in ELF format.
+You can run this directly in an emulator such as [mGBA](https://mgba.io/) if you'd like.
+
+When you're ready to convert your program into a "proper" GBA rom you'll need to run an `objcopy`
+to extract just the raw binary data:
 ```
--->
+arm-none-eabi-objcopy -O binary [RUST_BINARY_NAME] [ROM_NAME].gba
+```
+
+Then you'll need to patch the header data with `gbafix`
+```
+gbafix [ROM_NAME].gba
+```
+And you'll be all done!
 
 # Contribution
 

@@ -3,11 +3,97 @@
 //! This is the underlying implementation behind the various print macros in
 //! the gba crate. It currently supports the latest versions of mGBA and NO$GBA.
 
-use crate::sync::{InitOnce, RawMutex, Static};
+use crate::{
+  prelude::*,
+  sync::{InitOnce, RawMutex, Static},
+};
 use core::fmt::{Arguments, Error};
+use voladdress::*;
 
 pub mod mgba;
 pub mod nocash;
+
+/// Delivers a fatal message to the emulator debug output, and crashes
+/// the the game.
+///
+/// This works basically like `println`. You should avoid null ASCII values.
+/// Furthermore on mGBA, there is a maximum length of 255 bytes per message.
+///
+/// This has no effect outside of a supported emulator.
+#[macro_export]
+macro_rules! fatal {
+  ($($arg:tt)*) => {{
+    use $crate::debug;
+    if !debug::is_debugging_disabled() {
+      debug::debug_print(debug::DebugLevel::Fatal, &format_args!($($arg)*)).ok();
+    }
+    debug::crash()
+  }};
+}
+
+/// Delivers a error message to the emulator debug output.
+///
+/// This works basically like `println`. You should avoid null ASCII values.
+/// Furthermore on mGBA, there is a maximum length of 255 bytes per message.
+///
+/// This has no effect outside of a supported emulator.
+#[macro_export]
+macro_rules! error {
+  ($($arg:tt)*) => {{
+    use $crate::debug;
+    if !debug::is_debugging_disabled() {
+      debug::debug_print(debug::DebugLevel::Error, &format_args!($($arg)*)).ok();
+    }
+  }};
+}
+
+/// Delivers a warning message to the emulator debug output.
+///
+/// This works basically like `println`. You should avoid null ASCII values.
+/// Furthermore on mGBA, there is a maximum length of 255 bytes per message.
+///
+/// This has no effect outside of a supported emulator.
+#[macro_export]
+macro_rules! warn {
+  ($($arg:tt)*) => {{
+    use $crate::debug;
+    if !debug::is_debugging_disabled() {
+      debug::debug_print(debug::DebugLevel::Warning, &format_args!($($arg)*)).ok();
+    }
+  }};
+}
+
+/// Delivers an info message to the emulator debug output.
+///
+/// This works basically like `println`. You should avoid null ASCII values.
+/// Furthermore on mGBA, there is a maximum length of 255 bytes per message.
+///
+/// This has no effect outside of a supported emulator.
+#[macro_export]
+macro_rules! info {
+  ($($arg:tt)*) => {{
+    use $crate::debug;
+    if !debug::is_debugging_disabled() {
+      debug::debug_print(debug::DebugLevel::Info, &format_args!($($arg)*)).ok();
+    }
+  }};
+}
+
+/// Delivers a debug message to the emulator debug output.
+///
+/// This works basically like `println`. You should avoid null ASCII values.
+/// Furthermore on mGBA, there is a maximum length of 255 bytes per message.
+///
+/// This has no effect outside of a supported emulator.
+#[macro_export]
+macro_rules! debug {
+  ($($arg:tt)*) => {{
+    use $crate::debug;
+    if !debug::is_debugging_disabled() {
+      debug::debug_print(debug::DebugLevel::Debug, &format_args!($($arg)*)).ok();
+    }
+  }};
+}
 
 /// A cross-emulator debug level.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -99,26 +185,20 @@ pub fn is_debugging_disabled() -> bool {
 /// This is used to implement fatal errors outside of mGBA.
 #[inline(never)]
 pub fn crash() -> ! {
-  #[cfg(all(target_vendor = "nintendo", target_env = "agb"))]
-  {
-    IME.write(IrqEnableSetting::IRQ_NO);
-    unsafe {
-      // Stop all ongoing DMAs just in case.
-      DMA0::set_control(DMAControlSetting::new());
-      DMA1::set_control(DMAControlSetting::new());
-      DMA2::set_control(DMAControlSetting::new());
-      DMA3::set_control(DMAControlSetting::new());
+  unsafe {
+    IME.write(false);
+    // Stop all ongoing DMAs just in case.
+    DMA0CNT_H.write(DmaControl::new());
+    DMA1CNT_H.write(DmaControl::new());
+    DMA2CNT_H.write(DmaControl::new());
+    DMA3CNT_H.write(DmaControl::new());
 
-      // Writes the halt call back to memory
-      //
-      // we use an infinite loop in RAM just to make sure removing the
-      // Game Pak doesn't break this crash loop.
-      let target = VolAddress::<u16>::new(0x03000000);
-      target.write(0xe7fe); // assembly instruction: `loop: b loop`
-      core::mem::transmute::<_, extern "C" fn() -> !>(0x03000001)()
-    }
+    // Writes the halt call back to memory
+    //
+    // we use an infinite loop in RAM just to make sure removing the
+    // Game Pak doesn't break this crash loop.
+    let target = VolAddress::<u16, Unsafe, Unsafe>::new(0x03000000);
+    target.write(0xE7FE); // thumb assembly instruction: `loop: b loop`
+    core::mem::transmute::<_, extern "C" fn() -> !>(0x03000001)()
   }
-
-  #[cfg(not(all(target_vendor = "nintendo", target_env = "agb")))]
-  loop {}
 }

@@ -95,6 +95,17 @@ newtype!(
   u16
 );
 
+newtype_enum! {
+    /// General IO modes.
+    IoMode = u16,
+    /// * IO disabled
+    Disabled = 0,
+    /// * General Purpose IO
+    GPIO = 2,
+    /// * JoyBus mode
+    JoyBus = 3,
+}
+
 #[allow(missing_docs)]
 impl IoControlSetting {
   phantom_fields! {
@@ -110,17 +121,6 @@ impl IoControlSetting {
       si_irq_enable: 8,
       mode: 14-15=IoMode<Disabled,GPIO,JoyBus>,
   }
-}
-
-newtype_enum! {
-    /// General IO modes.
-    IoMode = u16,
-    /// * IO disabled
-    Disabled = 0,
-    /// * General Purpose IO
-    GPIO = 2,
-    /// * JoyBus mode
-    JoyBus = 3,
 }
 
 /// Empty struct that implements embedded_hal traits.

@@ -3,7 +3,7 @@
 
 use super::Error;
 use crate::{
-  io::timers::*,
+  prelude::*,
   sync::{RawMutex, RawMutexGuard, Static},
 };
 use voladdress::*;
@@ -45,7 +45,7 @@ pub struct Timeout {
   _lock_guard: RawMutexGuard<'static>,
   active: bool,
   timer_l: VolAddress<u16, Safe, Safe>,
-  timer_h: VolAddress<TimerControlSetting, Safe, Safe>,
+  timer_h: VolAddress<TimerControl, Safe, Safe>,
 }
 impl Timeout {
   /// Creates a new timeout from the timer passed to [`set_timer_for_timeout`].
@@ -66,17 +66,17 @@ impl Timeout {
       active: id != TimerId::None,
       timer_l: match id {
         TimerId::None => unsafe { VolAddress::new(0) },
-        TimerId::T0 => TM0CNT_L,
-        TimerId::T1 => TM1CNT_L,
-        TimerId::T2 => TM2CNT_L,
-        TimerId::T3 => TM3CNT_L,
+        TimerId::T0 => unsafe { VolAddress::new(TIMER0_COUNTER.as_usize()) },
+        TimerId::T1 => unsafe { VolAddress::new(TIMER1_COUNTER.as_usize()) },
+        TimerId::T2 => unsafe { VolAddress::new(TIMER2_COUNTER.as_usize()) },
+        TimerId::T3 => unsafe { VolAddress::new(TIMER3_COUNTER.as_usize()) },
       },
       timer_h: match id {
         TimerId::None => unsafe { VolAddress::new(0) },
-        TimerId::T0 => TM0CNT_H,
-        TimerId::T1 => TM1CNT_H,
-        TimerId::T2 => TM2CNT_H,
-        TimerId::T3 => TM3CNT_H,
+        TimerId::T0 => TIMER0_CONTROL,
+        TimerId::T1 => TIMER1_CONTROL,
+        TimerId::T2 => TIMER2_CONTROL,
+        TimerId::T3 => TIMER3_CONTROL,
       },
     })
   }
@@ -85,9 +85,8 @@ impl Timeout {
   pub fn start(&self) {
     if self.active {
       self.timer_l.write(0);
-      let timer_ctl =
-        TimerControlSetting::new().with_tick_rate(TimerTickRate::CPU1024).with_enabled(true);
-      self.timer_h.write(TimerControlSetting::new());
+      let timer_ctl = TimerControl::new().with_prescaler_selection(3).with_enabled(true);
+      self.timer_h.write(TimerControl::new());
       self.timer_h.write(timer_ctl);
     }
   }
