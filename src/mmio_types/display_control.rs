@@ -5,7 +5,7 @@ use super::*;
 pub struct DisplayControl(u16);
 impl DisplayControl {
   const_new!();
-  bitfield_enum!(u16; 0..=2: DisplayMode, display_mode, with_display_mode, set_display_mode);
+  bitfield_int!(u16; 0..=2: u16, display_mode, with_display_mode, set_display_mode);
   bitfield_bool!(u16; 4, display_frame1, with_display_frame1, set_display_frame1);
   bitfield_bool!(u16; 5, hblank_interval_free, with_hblank_interval_free, set_hblank_interval_free);
   bitfield_bool!(u16; 6, obj_vram_1d, with_obj_vram_1d, set_obj_vram_1d);
@@ -20,6 +20,7 @@ impl DisplayControl {
   bitfield_bool!(u16; 15, display_obj_win, with_display_obj_win, set_display_obj_win);
 }
 
+/*
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(u16)]
 pub enum DisplayMode {
@@ -32,3 +33,4 @@ pub enum DisplayMode {
   _6 = 6,
   _7 = 7,
 }
+*/
