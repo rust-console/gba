@@ -45,7 +45,7 @@ pub unsafe fn RegisterRamReset(flags: crate::mmio_types::ResetFlags) {
     inlateout("r0") flags.0 => _,
     out("r1") _,
     out("r3") _,
-    options(nomem, nostack)
+    options(nomem, nostack, preserves_flags)
   )
 }
 
@@ -64,7 +64,7 @@ pub unsafe fn Halt() {
     out("r0") _,
     out("r1") _,
     out("r3") _,
-    options(nomem, nostack)
+    options(nomem, nostack, preserves_flags)
   )
 }
 
@@ -85,7 +85,7 @@ pub unsafe fn Stop() {
     out("r0") _,
     out("r1") _,
     out("r3") _,
-    options(nomem, nostack)
+    options(nomem, nostack, preserves_flags)
   )
 }
 
@@ -108,6 +108,8 @@ pub unsafe fn Stop() {
 #[inline]
 #[instruction_set(arm::t32)]
 pub unsafe fn IntrWait(discard_current_flags: bool, flags: crate::mmio_types::InterruptFlags) {
+  // Note(Lokathor): we don't mark this preserves_flags because the user's IRQ
+  // handler gets called which might end up trashing the flags.
   asm!("swi 0x03",
     inlateout("r0") discard_current_flags as u8 => _,
     inlateout("r1") flags.0 => _,
@@ -132,6 +134,8 @@ pub unsafe fn IntrWait(discard_current_flags: bool, flags: crate::mmio_types::In
 #[inline]
 #[instruction_set(arm::t32)]
 pub unsafe fn VBlankIntrWait() {
+  // Note(Lokathor): we don't mark this preserves_flags because the user's IRQ
+  // handler gets called which might end up trashing the flags.
   asm!(
     "swi 0x05",
     out("r0") _,
@@ -156,7 +160,7 @@ pub fn Div(number: i32, denominator: core::num::NonZeroI32) -> (i32, i32, u32) {
       inlateout("r0") number => d,
       inlateout("r1") denominator.get() => m,
       lateout("r3") abs_d,
-      options(pure, nomem, nostack),
+      options(pure, nomem, nostack, preserves_flags),
     )
   }
   (d, m, abs_d)
@@ -177,7 +181,7 @@ pub fn Sqrt(number: u32) -> u16 {
       inlateout("r0") number => output,
       out("r1") _,
       out("r3") _,
-      options(pure, nomem, nostack),
+      options(pure, nomem, nostack, preserves_flags),
     )
   }
   output as u16
@@ -195,7 +199,7 @@ pub fn ArcTan(tan: i16) -> i16 {
       inlateout("r0") tan => output,
       out("r1") _,
       out("r3") _,
-      options(pure, nomem, nostack),
+      options(pure, nomem, nostack, preserves_flags),
     )
   }
   output
@@ -214,7 +218,7 @@ pub fn ArcTan2(x: i16, y: i16) -> u16 {
       inlateout("r0") x => output,
       in("r1") y,
       out("r3") _,
-      options(pure, nomem, nostack),
+      options(pure, nomem, nostack, preserves_flags),
     )
   }
   output
@@ -239,7 +243,7 @@ pub unsafe fn CpuSet(src: *const core::ffi::c_void, dst: *mut core::ffi::c_void,
     in("r1") dst,
     in("r2") len_mode,
     out("r3") _,
-    options(nostack),
+    options(nostack, preserves_flags),
   )
 }
 
@@ -260,7 +264,7 @@ pub unsafe fn CpuFastSet(src: *const u32, dst: *mut u32, len_mode: u32) {
     in("r1") dst,
     in("r2") len_mode,
     out("r3") _,
-    options(nostack),
+    options(nostack, preserves_flags),
   )
 }
 
@@ -304,7 +308,7 @@ pub unsafe fn BgAffineSet(src: *const BgAffineSetSrc, dst: *mut BgAffineSetDst, 
     in("r1") dst,
     in("r2") count,
     out("r3") _,
-    options(nostack),
+    options(nostack, preserves_flags),
   )
 }
 
@@ -345,7 +349,7 @@ pub unsafe fn ObjAffineSet(
     in("r1") dst,
     in("r2") count,
     in("r3") out_param_offset,
-    options(nostack),
+    options(nostack, preserves_flags),
   )
 }
 
@@ -377,7 +381,7 @@ pub unsafe fn BitUnPack(src: *const u8, dst: *mut u32, info: &UnpackInfo) {
     in("r1") dst,
     in("r2") info,
     out("r3") _,
-    options(nostack),
+    options(nostack, preserves_flags),
   )
 }
 
@@ -412,7 +416,7 @@ pub unsafe fn LZ77UnCompReadNormalWrite8bit(src: *const u32, dst: *mut u8) {
     in("r0") src,
     in("r1") dst,
     out("r3") _,
-    options(nostack),
+    options(nostack, preserves_flags),
   )
 }
 
@@ -431,7 +435,7 @@ pub unsafe fn LZ77UnCompReadNormalWrite16bit(src: *const u32, dst: *mut u16) {
     in("r0") src,
     in("r1") dst,
     out("r3") _,
-    options(nostack),
+    options(nostack, preserves_flags),
   )
 }
 
@@ -465,7 +469,7 @@ pub unsafe fn HuffUnCompReadNormal(src: *const u32, dst: *mut u32) {
     in("r0") src,
     in("r1") dst,
     out("r3") _,
-    options(nostack),
+    options(nostack, preserves_flags),
   )
 }
 
@@ -488,7 +492,7 @@ pub unsafe fn RLUnCompReadNormalWrite8bit(src: *const u32, dst: *mut u8) {
     in("r0") src,
     in("r1") dst,
     out("r3") _,
-    options(nostack),
+    options(nostack, preserves_flags),
   )
 }
 
@@ -505,7 +509,7 @@ pub unsafe fn RLUnCompReadNormalWrite16bit(src: *const u32, dst: *mut u16) {
     in("r0") src,
     in("r1") dst,
     out("r3") _,
-    options(nostack),
+    options(nostack, preserves_flags),
   )
 }
 
@@ -541,7 +545,7 @@ pub unsafe fn Diff8bitUnFilterWrite8bit(src: *const u8, dst: *mut u32) {
     in("r0") src,
     in("r1") dst,
     out("r3") _,
-    options(nostack),
+    options(nostack, preserves_flags),
   )
 }
 
@@ -571,7 +575,7 @@ pub unsafe fn Diff8bitUnFilterWrite16bit(src: *const u8, dst: *mut u16) {
     in("r0") src,
     in("r1") dst,
     out("r3") _,
-    options(nostack),
+    options(nostack, preserves_flags),
   )
 }
 
@@ -600,7 +604,7 @@ pub unsafe fn Diff16bitUnFilter(src: *const u16, dst: *mut u16) {
     in("r0") src,
     in("r1") dst,
     out("r3") _,
-    options(nostack),
+    options(nostack, preserves_flags),
   )
 }
 
