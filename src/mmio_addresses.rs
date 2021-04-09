@@ -126,59 +126,79 @@ pub const BLDALPHA_B: VolAddress<u8, Safe, Safe> = unsafe { VolAddress::new(0x04
 /// [BLDY](https://problemkaputt.de/gbatek.htm#lcdiocolorspecialeffects)
 pub const BLDY: VolAddress<u8, Safe, Safe> = unsafe { VolAddress::new(0x0400_0054) };
 
-// TODO: sound controls
+/// [SOUND1CNT_L](https://problemkaputt.de/gbatek.htm#gbasoundchannel1tonesweep)
+pub const TONE1_SWEEP: VolAddress<ToneSweep, Safe, Safe> = unsafe { VolAddress::new(0x0400_0060) };
+/// [SOUND1CNT_H](https://problemkaputt.de/gbatek.htm#gbasoundchannel1tonesweep)
+pub const TONE1_DUTY_LEN_ENV: VolAddress<ToneDutyLenEnv, Safe, Safe> =
+  unsafe { VolAddress::new(0x0400_0062) };
+/// [SOUND1CNT_X](https://problemkaputt.de/gbatek.htm#gbasoundchannel1tonesweep)
+pub const TONE1_FREQ_CNT: VolAddress<ToneFrequencyControl, Safe, Safe> =
+  unsafe { VolAddress::new(0x0400_0064) };
+
+/// [SOUND2CNT_L](https://problemkaputt.de/gbatek.htm#gbasoundchannel2tone)
+pub const TONE2_DUTY_LEN_ENV: VolAddress<ToneDutyLenEnv, Safe, Safe> =
+  unsafe { VolAddress::new(0x0400_0068) };
+/// [SOUND2CNT_H](https://problemkaputt.de/gbatek.htm#gbasoundchannel2tone)
+pub const TONE2_FREQ_CNT: VolAddress<ToneFrequencyControl, Safe, Safe> =
+  unsafe { VolAddress::new(0x0400_006C) };
+
+/// [SOUND3CNT_L](https://problemkaputt.de/gbatek.htm#gbasoundchannel3waveoutput)
+pub const WAVE_CONTROL: VolAddress<WaveControl, Safe, Safe> =
+  unsafe { VolAddress::new(0x0400_0070) };
+/// [SOUND3CNT_H](https://problemkaputt.de/gbatek.htm#gbasoundchannel3waveoutput)
+pub const WAVE_LEN_VOLUME: VolAddress<WaveLenVolume, Safe, Safe> =
+  unsafe { VolAddress::new(0x0400_0072) };
+/// [SOUND3CNT_X](https://problemkaputt.de/gbatek.htm#gbasoundchannel3waveoutput)
+pub const WAVE_FREQ_CNT: VolAddress<WaveFrequencyControl, Safe, Safe> =
+  unsafe { VolAddress::new(0x0400_0074) };
+/// [WAVE_RAM](https://problemkaputt.de/gbatek.htm#gbasoundchannel3waveoutput)
+pub const WAVE_RAM: VolBlock<u32, Safe, Safe, 4> = unsafe { VolBlock::new(0x0400_0090) };
+
+/// [SOUND4CNT_L](https://problemkaputt.de/gbatek.htm#gbasoundchannel4noise)
+pub const NOISE_LEN_ENV: VolAddress<NoiseLenEnv, Safe, Safe> =
+  unsafe { VolAddress::new(0x0400_0078) };
+/// [SOUND4CNT_H](https://problemkaputt.de/gbatek.htm#gbasoundchannel4noise)
+pub const NOISE_FREQ_CNT: VolAddress<NoiseFrequencyControl, Safe, Safe> =
+  unsafe { VolAddress::new(0x0400_007C) };
+
+/// [FIFO_A](https://problemkaputt.de/gbatek.htm#gbasoundchannelaandbdmasound)
+pub const FIFO_A: VolAddress<u32, (), Safe> = unsafe { VolAddress::new(0x0400_00A0) };
+/// [FIFO_B](https://problemkaputt.de/gbatek.htm#gbasoundchannelaandbdmasound)
+pub const FIFO_B: VolAddress<u32, (), Safe> = unsafe { VolAddress::new(0x0400_00A4) };
 
 /// [DMA](https://problemkaputt.de/gbatek.htm#gbadmatransfers) 0 Source Address (W) (internal memory)
 pub const DMA0SAD: VolAddress<usize, (), Unsafe> = unsafe { VolAddress::new(0x0400_00B0) };
-
 /// [DMA](https://problemkaputt.de/gbatek.htm#gbadmatransfers) 0 Destination Address (W) (internal memory)
 pub const DMA0DAD: VolAddress<usize, (), Unsafe> = unsafe { VolAddress::new(0x0400_00B4) };
-
 /// [DMA](https://problemkaputt.de/gbatek.htm#gbadmatransfers) 0 Word Count (W) (14 bit, 1..4000h)
 pub const DMA0CNT_L: VolAddress<u16, (), Unsafe> = unsafe { VolAddress::new(0x0400_00B8) };
-
 /// [DMA](https://problemkaputt.de/gbatek.htm#gbadmatransfers) 0 Control (R/W)
 pub const DMA0CNT_H: VolAddress<DmaControl, Safe, Unsafe> = unsafe { VolAddress::new(0x0400_00BA) };
 
-//
-
 /// [DMA](https://problemkaputt.de/gbatek.htm#gbadmatransfers) 1 Source Address (W) (any memory)
 pub const DMA1SAD: VolAddress<usize, (), Unsafe> = unsafe { VolAddress::new(0x0400_00BC) };
-
 /// [DMA](https://problemkaputt.de/gbatek.htm#gbadmatransfers) 1 Destination Address (W) (internal memory)
 pub const DMA1DAD: VolAddress<usize, (), Unsafe> = unsafe { VolAddress::new(0x0400_00C0) };
-
 /// [DMA](https://problemkaputt.de/gbatek.htm#gbadmatransfers) 1 Word Count (W) (14 bit, 1..4000h)
 pub const DMA1CNT_L: VolAddress<u16, (), Unsafe> = unsafe { VolAddress::new(0x0400_00C4) };
-
 /// [DMA](https://problemkaputt.de/gbatek.htm#gbadmatransfers) 1 Control (R/W)
 pub const DMA1CNT_H: VolAddress<DmaControl, Safe, Unsafe> = unsafe { VolAddress::new(0x0400_00C6) };
 
-//
-
 /// [DMA](https://problemkaputt.de/gbatek.htm#gbadmatransfers) 2 Source Address (W) (any memory)
 pub const DMA2SAD: VolAddress<usize, (), Unsafe> = unsafe { VolAddress::new(0x0400_00C8) };
-
 /// [DMA](https://problemkaputt.de/gbatek.htm#gbadmatransfers) 2 Destination Address (W) (internal memory)
 pub const DMA2DAD: VolAddress<usize, (), Unsafe> = unsafe { VolAddress::new(0x0400_00CC) };
-
 /// [DMA](https://problemkaputt.de/gbatek.htm#gbadmatransfers) 2 Word Count (W) (14 bit, 1..4000h)
 pub const DMA2CNT_L: VolAddress<u16, (), Unsafe> = unsafe { VolAddress::new(0x0400_00D0) };
-
 /// [DMA](https://problemkaputt.de/gbatek.htm#gbadmatransfers) 2 Control (R/W)
 pub const DMA2CNT_H: VolAddress<DmaControl, Safe, Unsafe> = unsafe { VolAddress::new(0x0400_00D2) };
 
-//
-
 /// [DMA](https://problemkaputt.de/gbatek.htm#gbadmatransfers) 3 Source Address (W) (any memory)
 pub const DMA3SAD: VolAddress<usize, (), Unsafe> = unsafe { VolAddress::new(0x0400_00D4) };
-
 /// [DMA](https://problemkaputt.de/gbatek.htm#gbadmatransfers) 3 Destination Address (W) (any memory)
 pub const DMA3DAD: VolAddress<usize, (), Unsafe> = unsafe { VolAddress::new(0x0400_00D8) };
-
 /// [DMA](https://problemkaputt.de/gbatek.htm#gbadmatransfers) 3 Word Count (W) (16 bit, 1..10000h)
 pub const DMA3CNT_L: VolAddress<u16, (), Unsafe> = unsafe { VolAddress::new(0x0400_00DC) };
-
 /// [DMA](https://problemkaputt.de/gbatek.htm#gbadmatransfers) 3 Control (R/W)
 pub const DMA3CNT_H: VolAddress<DmaControl, Safe, Unsafe> = unsafe { VolAddress::new(0x0400_00DE) };
 

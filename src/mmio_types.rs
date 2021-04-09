@@ -119,3 +119,27 @@ pub use interrupt_flags::*;
 
 mod timer_control;
 pub use timer_control::*;
+
+mod tone_duty_len_env;
+pub use tone_duty_len_env::*;
+
+mod tone_frequency_control;
+pub use tone_frequency_control::*;
+
+mod tone_sweep;
+pub use tone_sweep::*;
+
+mod wave_control;
+pub use wave_control::*;
+
+mod wave_len_volume;
+pub use wave_len_volume::*;
+
+mod wave_frequency_control;
+pub use wave_frequency_control::*;
+
+mod noise_len_env;
+pub use noise_len_env::*;
+
+mod noise_frequency_control;
+pub use noise_frequency_control::*;
