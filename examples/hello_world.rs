@@ -34,8 +34,7 @@ pub fn spin_until_vdraw() {
 
 #[no_mangle]
 pub fn main() -> ! {
-  const SETTING: DisplayControl =
-    DisplayControl::new().with_display_mode(DisplayMode::_3).with_display_bg2(true);
+  const SETTING: DisplayControl = DisplayControl::new().with_display_mode(3).with_display_bg2(true);
   DISPCNT.write(SETTING);
 
   let mut px = mode3::WIDTH / 2;
