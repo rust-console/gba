@@ -14,6 +14,6 @@ impl Color {
     let r = red as u16;
     let g = green as u16;
     let b = blue as u16;
-    Self(b << 10 | g << 15 | r)
+    Self(b << 10 | g << 5 | r)
   }
 }
