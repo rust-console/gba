@@ -2,7 +2,7 @@
 #![no_main]
 #![feature(isa_attribute)]
 
-use gba::prelude::*;
+use gba::{prelude::*, warn};
 
 const BLACK: Color = Color::from_rgb(0, 0, 0);
 const RED: Color = Color::from_rgb(31, 0, 0);
@@ -70,6 +70,7 @@ fn main() -> ! {
       flags = flags.with_timer1(true);
     }
 
+    warn!("IM = {:?}", flags);
     unsafe { IE.write(flags) };
 
     // Puts the CPU into low power mode until a VBlank IRQ is received. This
@@ -98,53 +99,65 @@ extern "C" fn irq_handler_a32() {
 }
 
 fn irq_handler_t32() {
-  let flags = IRQ_PENDING.read();
+  // disable Interrupt Master Enable to prevent an interrupt during the handler
+  unsafe { IME.write(false) };
 
-  if flags.vblank() {
+  // read which interrupts are pending, and "filter" the selection by which are
+  // supposed to be enabled.
+  let which_interrupts_to_handle = IRQ_PENDING.read() & IE.read();
+
+  // read the current IntrWait value. It sorta works like a running total, so
+  // any interrupts we process we'll enable in this value, which we write back
+  // at the end.
+  let mut intr_wait_flags = INTR_WAIT_ACKNOWLEDGE.read();
+
+  if which_interrupts_to_handle.vblank() {
     vblank_handler();
+    intr_wait_flags.set_vblank(true);
   }
-  if flags.hblank() {
+  if which_interrupts_to_handle.hblank() {
     hblank_handler();
+    intr_wait_flags.set_hblank(true);
   }
-  if flags.vcount() {
+  if which_interrupts_to_handle.vcount() {
     vcount_handler();
+    intr_wait_flags.set_vcount(true);
   }
-  if flags.timer0() {
+  if which_interrupts_to_handle.timer0() {
     timer0_handler();
+    intr_wait_flags.set_timer0(true);
   }
-  if flags.timer1() {
+  if which_interrupts_to_handle.timer1() {
     timer1_handler();
+    intr_wait_flags.set_timer1(true);
   }
+
+  // acknowledge that we did stuff.
+  IRQ_ACKNOWLEDGE.write(which_interrupts_to_handle);
+
+  // write out any IntrWait changes.
+  unsafe { INTR_WAIT_ACKNOWLEDGE.write(intr_wait_flags) };
+
+  // re-enable as we go out.
+  unsafe { IME.write(true) };
 }
 
 fn vblank_handler() {
   write_pixel(BLUE);
-
-  // When using `interrupt_wait()` or `vblank_interrupt_wait()`, IRQ handlers must acknowledge
-  // the IRQ on the BIOS Interrupt Flags register.
-  unsafe { INTR_WAIT_ACKNOWLEDGE.write(INTR_WAIT_ACKNOWLEDGE.read().with_vblank(true)) };
 }
 
 fn hblank_handler() {
   write_pixel(GREEN);
-
-  unsafe { INTR_WAIT_ACKNOWLEDGE.write(INTR_WAIT_ACKNOWLEDGE.read().with_hblank(true)) };
 }
 
 fn vcount_handler() {
   write_pixel(RED);
-
-  unsafe { INTR_WAIT_ACKNOWLEDGE.write(INTR_WAIT_ACKNOWLEDGE.read().with_vcount(true)) };
 }
 
 fn timer0_handler() {
   write_pixel(YELLOW);
-
-  unsafe { INTR_WAIT_ACKNOWLEDGE.write(INTR_WAIT_ACKNOWLEDGE.read().with_timer0(true)) };
 }
 
 fn timer1_handler() {
   write_pixel(PINK);
-
-  unsafe { INTR_WAIT_ACKNOWLEDGE.write(INTR_WAIT_ACKNOWLEDGE.read().with_timer1(true)) };
 }

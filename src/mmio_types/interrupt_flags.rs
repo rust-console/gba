@@ -1,6 +1,6 @@
 use super::*;
 
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+#[derive(Clone, Copy, Default, PartialEq, Eq)]
 #[repr(transparent)]
 pub struct InterruptFlags(pub(crate) u16);
 impl InterruptFlags {
@@ -20,4 +20,53 @@ impl InterruptFlags {
   bitfield_bool!(u16; 12, keypad, with_keypad, set_keypad);
   bitfield_bool!(u16; 13, gamepak, with_gamepak, set_gamepak);
 }
-// TODO: bit ops for interrupt flags
+impl_bitwise_ops!(InterruptFlags);
+impl core::fmt::Debug for InterruptFlags {
+  #[inline(never)]
+  fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+    write!(f, "InterruptFlags {{")?;
+    if self.vblank() {
+      write!(f, "vblank,")?;
+    }
+    if self.hblank() {
+      write!(f, "hblank,")?;
+    }
+    if self.vcount() {
+      write!(f, "vcount,")?;
+    }
+    if self.timer0() {
+      write!(f, "timer0,")?;
+    }
+    if self.timer1() {
+      write!(f, "timer1,")?;
+    }
+    if self.timer2() {
+      write!(f, "timer2,")?;
+    }
+    if self.timer3() {
+      write!(f, "timer3,")?;
+    }
+    if self.serial() {
+      write!(f, "serial,")?;
+    }
+    if self.dma0() {
+      write!(f, "dma0,")?;
+    }
+    if self.dma1() {
+      write!(f, "dma1,")?;
+    }
+    if self.dma2() {
+      write!(f, "dma2,")?;
+    }
+    if self.dma3() {
+      write!(f, "dma3,")?;
+    }
+    if self.keypad() {
+      write!(f, "keypad,")?;
+    }
+    if self.gamepak() {
+      write!(f, "gamepak,")?;
+    }
+    write!(f, "}}")
+  }
+}

@@ -93,6 +93,60 @@ macro_rules! bitfield_bool {
 }
 pub(crate) use bitfield_bool;
 
+/// Adds bitwise ops for this type
+macro_rules! impl_bitwise_ops {
+  ($outer:ty) => {
+    impl core::ops::Not for $outer {
+      type Output = Self;
+      #[inline]
+      fn not(self) -> Self {
+        Self(!self.0)
+      }
+    }
+    impl core::ops::BitAnd for $outer {
+      type Output = $outer;
+      #[inline]
+      fn bitand(self, rhs: Self) -> Self {
+        Self(self.0 & rhs.0)
+      }
+    }
+    impl core::ops::BitOr for $outer {
+      type Output = $outer;
+      #[inline]
+      fn bitor(self, rhs: Self) -> Self {
+        Self(self.0 | rhs.0)
+      }
+    }
+    impl core::ops::BitXor for $outer {
+      type Output = $outer;
+      #[inline]
+      fn bitxor(self, rhs: Self) -> Self {
+        Self(self.0 ^ rhs.0)
+      }
+    }
+    // // // // //
+    impl core::ops::BitAndAssign for $outer {
+      #[inline]
+      fn bitand_assign(&mut self, rhs: Self) {
+        self.0 &= rhs.0
+      }
+    }
+    impl core::ops::BitOrAssign for $outer {
+      #[inline]
+      fn bitor_assign(&mut self, rhs: Self) {
+        self.0 |= rhs.0
+      }
+    }
+    impl core::ops::BitXorAssign for $outer {
+      #[inline]
+      fn bitxor_assign(&mut self, rhs: Self) {
+        self.0 ^= rhs.0
+      }
+    }
+  };
+}
+pub(crate) use impl_bitwise_ops;
+
 mod display_control;
 pub use display_control::*;
 
