@@ -1,6 +1,11 @@
 #![no_std]
 #![no_main]
 
+// Note(Lokathor): this demo must be run in release mode or it'll just be way
+// too slow. When testing is running the screen fills from yellow to green. If
+// there's a panic you should see red. If all tests complete the screen turns
+// blue at the end.
+
 use core::cmp;
 use gba::{fatal, prelude::*, save::*, warn};
 
@@ -29,7 +34,7 @@ fn panic(info: &core::panic::PanicInfo) -> ! {
 struct Rng(u32);
 impl Rng {
   fn iter(&mut self) {
-    self.0 = self.0 * 2891336453 + 100001;
+    self.0 = self.0.wrapping_mul(2891336453).wrapping_add(100001);
   }
   fn next_u8(&mut self) -> u8 {
     self.iter();
@@ -165,6 +170,7 @@ fn main() -> ! {
   }
 
   // show a pattern so we know it worked
-  set_screen_color(0, 31, 0);
+  set_screen_color(0, 29, 29);
+  output!("All tests complete!");
   loop {}
 }
