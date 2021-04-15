@@ -209,3 +209,12 @@ pub use noise_len_env::*;
 
 mod noise_frequency_control;
 pub use noise_frequency_control::*;
+
+mod obj_attr0;
+pub use obj_attr0::*;
+
+mod obj_attr1;
+pub use obj_attr1::*;
+
+mod obj_attr2;
+pub use obj_attr2::*;
