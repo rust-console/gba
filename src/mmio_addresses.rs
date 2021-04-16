@@ -287,3 +287,21 @@ pub const INTR_WAIT_ACKNOWLEDGE: VolAddress<InterruptFlags, Safe, Unsafe> = unsa
   // refer to that value instead.
   VolAddress::new(0x0300_FFF8)
 };
+
+pub const BACKDROP_COLOR: VolAddress<Color, Safe, Safe> = unsafe { VolAddress::new(0x0500_0000) };
+
+pub const BG_PALETTE: VolBlock<Color, Safe, Safe, 256> = unsafe { VolBlock::new(0x0500_0000) };
+
+pub const OBJ_PALETTE: VolBlock<Color, Safe, Safe, 256> = unsafe { VolBlock::new(0x0500_0200) };
+
+pub const OAM_ATTR0: VolSeries<ObjAttr0, Safe, Safe, 128, 8> =
+  unsafe { VolSeries::new(0x0700_0000) };
+pub const OAM_ATTR1: VolSeries<ObjAttr1, Safe, Safe, 128, 8> =
+  unsafe { VolSeries::new(0x0700_0002) };
+pub const OAM_ATTR2: VolSeries<ObjAttr2, Safe, Safe, 128, 8> =
+  unsafe { VolSeries::new(0x0700_0004) };
+
+pub const OAM_PA: VolSeries<i16, Safe, Safe, 32, 0x20> = unsafe { VolSeries::new(0x0700_0006) };
+pub const OAM_PB: VolSeries<i16, Safe, Safe, 32, 0x20> = unsafe { VolSeries::new(0x0700_000E) };
+pub const OAM_PC: VolSeries<i16, Safe, Safe, 32, 0x20> = unsafe { VolSeries::new(0x0700_0016) };
+pub const OAM_PD: VolSeries<i16, Safe, Safe, 32, 0x20> = unsafe { VolSeries::new(0x0700_001E) };
