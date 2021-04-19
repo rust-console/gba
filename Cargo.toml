@@ -9,8 +9,6 @@ keywords = ["gba"]
 edition = "2018"
 license = "Zlib OR Apache-2.0 OR MIT"
 
-publish = false
-
 [features]
 default = ["serial"]
 serial = ["embedded-hal", "nb"]
