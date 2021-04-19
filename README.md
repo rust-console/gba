@@ -6,7 +6,6 @@
 [![crates.io](https://img.shields.io/crates/v/gba.svg)](https://crates.io/crates/gba)
 [![docs.rs](https://docs.rs/gba/badge.svg)](https://docs.rs/gba/latest/gba/)
 
-* [![Built with cargo-make](https://sagiegurari.github.io/cargo-make/assets/badges/cargo-make.svg)](https://sagiegurari.github.io/cargo-make)
 * ![Stability:None](https://img.shields.io/badge/Stability-None-red.svg)
 
 # gba
