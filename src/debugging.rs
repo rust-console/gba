@@ -1,3 +1,5 @@
+#![allow(unused_macros)]
+
 //! Special utilities for debugging ROMs on various emulators.
 //!
 //! This is the underlying implementation behind the various print macros in
@@ -20,7 +22,6 @@ pub mod nocash;
 /// Furthermore on mGBA, there is a maximum length of 255 bytes per message.
 ///
 /// This has no effect outside of a supported emulator.
-#[macro_export]
 macro_rules! fatal {
   ($($arg:tt)*) => {{
     use $crate::debug;
@@ -30,6 +31,7 @@ macro_rules! fatal {
     debug::crash()
   }};
 }
+pub(crate) use fatal;
 
 /// Delivers a error message to the emulator debug output.
 ///
@@ -37,7 +39,6 @@ macro_rules! fatal {
 /// Furthermore on mGBA, there is a maximum length of 255 bytes per message.
 ///
 /// This has no effect outside of a supported emulator.
-#[macro_export]
 macro_rules! error {
   ($($arg:tt)*) => {{
     use $crate::debug;
@@ -46,6 +47,7 @@ macro_rules! error {
     }
   }};
 }
+pub(crate) use error;
 
 /// Delivers a warning message to the emulator debug output.
 ///
@@ -53,8 +55,7 @@ macro_rules! error {
 /// Furthermore on mGBA, there is a maximum length of 255 bytes per message.
 ///
 /// This has no effect outside of a supported emulator.
-#[macro_export]
-macro_rules! warn {
+pub macro_rules! warning {
   ($($arg:tt)*) => {{
     use $crate::debug;
     if !debug::is_debugging_disabled() {
@@ -62,6 +63,7 @@ macro_rules! warn {
     }
   }};
 }
+//pub(crate) use warning;
 
 /// Delivers an info message to the emulator debug output.
 ///
@@ -69,7 +71,6 @@ macro_rules! warn {
 /// Furthermore on mGBA, there is a maximum length of 255 bytes per message.
 ///
 /// This has no effect outside of a supported emulator.
-#[macro_export]
 macro_rules! info {
   ($($arg:tt)*) => {{
     use $crate::debug;
@@ -78,6 +79,7 @@ macro_rules! info {
     }
   }};
 }
+pub(crate) use info;
 
 /// Delivers a debug message to the emulator debug output.
 ///
@@ -85,7 +87,6 @@ macro_rules! info {
 /// Furthermore on mGBA, there is a maximum length of 255 bytes per message.
 ///
 /// This has no effect outside of a supported emulator.
-#[macro_export]
 macro_rules! debug {
   ($($arg:tt)*) => {{
     use $crate::debug;
@@ -94,6 +95,7 @@ macro_rules! debug {
     }
   }};
 }
+pub(crate) use debug;
 
 /// A cross-emulator debug level.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

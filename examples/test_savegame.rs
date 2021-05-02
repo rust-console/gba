@@ -7,7 +7,7 @@
 // blue at the end.
 
 use core::cmp;
-use gba::{fatal, prelude::*, save::*, warn};
+use gba::prelude::*;
 
 fn set_screen_color(r: u8, g: u8, b: u8) {
   const SETTING: DisplayControl = DisplayControl::new().with_display_mode(3).with_display_bg2(true);
@@ -74,7 +74,7 @@ fn get_timer_secs() -> f32 {
 macro_rules! output {
   ($($args:tt)*) => {
     // we use warn so it shows by default on mGBA, nothing more.
-    warn!("{:7.3}\t{}", get_timer_secs(), format_args!($($args)*))
+    warning!("{:7.3}\t{}", get_timer_secs(), format_args!($($args)*))
   };
 }
 

@@ -1,5 +1,5 @@
 #![no_std]
-#![feature(asm, global_asm, isa_attribute)]
+#![feature(asm, global_asm, pub_macro_rules, isa_attribute)]
 
 //! This crate helps you write GBA ROMs.
 //!
@@ -25,10 +25,17 @@ pub mod prelude {
   pub use crate::mmio_types::*;
 
   #[cfg(target_arch = "arm")]
-  pub use crate::mmio_addresses::*;
-
-  #[cfg(target_arch = "arm")]
   pub use crate::bios::*;
+  #[cfg(target_arch = "arm")]
+  pub use crate::debugging::warning;
+  #[cfg(target_arch = "arm")]
+  pub use crate::debugging::*;
+  #[cfg(target_arch = "arm")]
+  pub use crate::mmio_addresses::*;
+  #[cfg(target_arch = "arm")]
+  pub use crate::save::*;
+  #[cfg(target_arch = "arm")]
+  pub use crate::sync::*;
 }
 
 pub mod mmio_types;
@@ -48,7 +55,7 @@ pub mod sync;
 pub mod save;
 
 #[cfg(target_arch = "arm")]
-pub mod debug;
+pub mod debugging;
 
 /*
 extern "C" {

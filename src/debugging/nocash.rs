@@ -4,10 +4,8 @@
 //! you've got some older version of things there might be any number of
 //! differences or problems.
 
-use crate::{
-  debug::{DebugInterface, DebugLevel},
-  sync::InitOnce,
-};
+use super::{DebugInterface, DebugLevel};
+use crate::prelude::InitOnce;
 use core::fmt::{Arguments, Write};
 use voladdress::*;
 

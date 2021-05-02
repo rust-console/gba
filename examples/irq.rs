@@ -2,7 +2,7 @@
 #![no_main]
 #![feature(isa_attribute)]
 
-use gba::{prelude::*, warn};
+use gba::prelude::*;
 
 const BLACK: Color = Color::from_rgb(0, 0, 0);
 const RED: Color = Color::from_rgb(31, 0, 0);
@@ -70,7 +70,6 @@ fn main() -> ! {
       flags = flags.with_timer1(true);
     }
 
-    warn!("IM = {:?}", flags);
     unsafe { IE.write(flags) };
 
     // Puts the CPU into low power mode until a VBlank IRQ is received. This

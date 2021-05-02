@@ -10,11 +10,12 @@ edition = "2018"
 license = "Zlib OR Apache-2.0 OR MIT"
 
 [features]
-default = ["serial"]
+default = []
 serial = ["embedded-hal", "nb"]
 
 [dependencies]
 voladdress = { version = "0.4" }
+#
 embedded-hal = { version = "0.2.4", optional = true }
 nb = { version = "1", optional = true }
 
