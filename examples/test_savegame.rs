@@ -7,7 +7,7 @@
 // blue at the end.
 
 use core::cmp;
-use gba::prelude::*;
+use gba::{fatal, prelude::*, warning};
 
 fn set_screen_color(r: u8, g: u8, b: u8) {
   const SETTING: DisplayControl = DisplayControl::new().with_display_mode(3).with_display_bg2(true);
