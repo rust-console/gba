@@ -35,4 +35,3 @@ mod bounded_rand;
 pub use bounded_rand::*;
 
 mod algorithms;
-pub use algorithms::*;
