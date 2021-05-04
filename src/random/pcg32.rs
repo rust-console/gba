@@ -1,5 +1,5 @@
-use crate::*;
-use crate::random::*;
+use super::algorithms::*;
+use super::Gen32;
 
 /// A default seed for any PCG.
 ///
@@ -49,7 +49,7 @@ impl RNG {
   #[inline]
   pub fn next_u32(&mut self) -> u32 {
     // LLVM do the instruction-level parallelism plz ;_;
-    let out = rxs_m_xs_u32_to_u32!(self.state);
+    let out = pcg_rxs_m_xs_u32_to_u32!(self.state);
     self.state = pcg_core_state32!(self.state, self.inc);
     out
   }
