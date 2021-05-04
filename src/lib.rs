@@ -34,6 +34,8 @@ pub mod prelude {
   pub use crate::save::*;
   #[cfg(target_arch = "arm")]
   pub use crate::sync::*;
+  #[cfg(target_arch = "arm")]
+  pub use crate::random::*;
 }
 
 pub mod mmio_types;
@@ -58,6 +60,8 @@ pub mod save;
 #[cfg(target_arch = "arm")]
 pub mod debugging;
 
+#[cfg(target_arch = "arm")]
+pub mod random;
 /*
 extern "C" {
   /// This marks the end of the `.data` and `.bss` sections in IWRAM.
