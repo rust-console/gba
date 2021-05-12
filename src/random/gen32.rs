@@ -36,63 +36,63 @@ pub trait Gen32 {
   /// ## Panics
   /// * If the input is 0.
   #[inline]
-  fn next_bounded(&mut self, b: u32) -> u32 {
+  fn next_bounded(&mut self, b: u16) -> u16 {
     assert!(b != 0, "Gen32::next_bounded> Bound must be non-zero.");
-    let mut x = self.next_u32() as u64;
-    let mut mul = (b as u64).wrapping_mul(x);
-    let mut low = mul as u32;
+    let mut x = self.next_u16() as u32;
+    let mut mul = (b as u32).wrapping_mul(x);
+    let mut low = mul as u16;
     if low < b {
       let threshold = b.wrapping_neg() % b;
       while low < threshold {
-        x = self.next_u32() as u64;
-        mul = (b as u64).wrapping_mul(x);
-        low = mul as u32;
+        x = self.next_u32() as u32;
+        mul = (b as u32).wrapping_mul(x);
+        low = mul as u16;
       }
     }
-    let high = (mul >> 32) as u32;
+    let high = (mul >> 16) as u16;
     high
   }
 
   /// Gets a value out of the slice given (by copy).
   ///
-  /// * The default impl will not pick past index `u32::MAX`.
+  /// * The default impl will not pick past index `u16::MAX`.
   #[inline(always)]
   fn pick<T>(&mut self, buf: &[T]) -> T
   where
     Self: Sized,
     T: Copy,
   {
-    let end: u32 = saturating_usize_as_u32(buf.len());
+    let end: u16 = saturating_usize_as_u16(buf.len());
     buf[usize::try_from(self.next_bounded(end)).unwrap()]
   }
 
   /// Gets a value out of the slice given (by shared ref).
   ///
-  /// * The default impl will not pick past index `u32::MAX`.
+  /// * The default impl will not pick past index `u16::MAX`.
   #[inline(always)]
   fn pick_ref<'b, T>(&mut self, buf: &'b [T]) -> &'b T
   where
     Self: Sized,
   {
-    let end: u32 = saturating_usize_as_u32(buf.len());
+    let end: u16 = saturating_usize_as_u16(buf.len());
     &buf[usize::try_from(self.next_bounded(end)).unwrap()]
   }
 
   /// Gets a value out of the slice given (by unique ref).
   ///
-  /// * The default impl will not pick past index `u32::MAX`.
+  /// * The default impl will not pick past index `u16::MAX`.
   #[inline(always)]
   fn pick_mut<'b, T>(&mut self, buf: &'b mut [T]) -> &'b mut T
   where
     Self: Sized,
   {
-    let end: u32 = saturating_usize_as_u32(buf.len());
+    let end: u16 = saturating_usize_as_u16(buf.len());
     &mut buf[usize::try_from(self.next_bounded(end)).unwrap()]
   }
 
   /// Shuffles a slice in `O(len)` time.
   ///
-  /// * The default impl shuffles only the first `u32::MAX` elements.
+  /// * The default impl shuffles only the first `u16::MAX` elements.
   #[inline]
   fn shuffle<T>(&mut self, buf: &mut [T])
   where
@@ -102,7 +102,7 @@ pub trait Gen32 {
     // the end of the slice, but this version allows us to access memory forward
     // from the start to the end, so that we play more nicely with the
     // fetch-ahead of most modern CPUs.
-    let mut possibility_count: u32 = buf.len().try_into().unwrap_or(u32::max_value());
+    let mut possibility_count: u16 = buf.len().try_into().unwrap_or(u16::max_value());
     let mut this_index: usize = 0;
     let end = buf.len() - 1;
     while this_index < end {
@@ -117,23 +117,12 @@ pub trait Gen32 {
 // Asserts that `Gen32` is an object-safe trait.
 const _: [&mut dyn Gen32; 0] = [];
 
-/// Converts the `usize` into a `u32`, or gives `u32::MAX` if that wouldn't fit.
+/// Converts the `usize` into a `u16`, or gives `u16::MAX` if that wouldn't fit.
 #[inline(always)]
-const fn saturating_usize_as_u32(val: usize) -> u32 {
-  #[cfg(target_pointer_width = "16")]
-  {
-    val as u32
-  }
-  #[cfg(target_pointer_width = "32")]
-  {
-    val as u32
-  }
-  #[cfg(target_pointer_width = "64")]
-  {
-    if val <= core::u32::MAX as usize {
-      val as u32
-    } else {
-      core::u32::MAX
-    }
+const fn saturating_usize_as_u16(val: usize) -> u16 {
+  if val <= u16::MAX as usize {
+    val as u16
+  } else {
+    u16::MAX
   }
 }
