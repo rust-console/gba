@@ -1,5 +1,19 @@
 
 
+//! Module for random number generation  
+//! 
+//! This module provides functions and utilites for randomly generated values
+//! # Usage
+//! ```rust
+//! use gba::random::RNG;
+//!
+//! let mut rng = RNG::seed(123, 321);
+//! let x = rng.next_u32();
+//! ```
+//! 
+//! 
+//! 
+
 macro_rules! make_jump_lcgX {
   ($(#[$attr:meta])* $f:ident, $u:ty) => {
     $(#[$attr])*

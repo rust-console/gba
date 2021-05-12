@@ -27,14 +27,19 @@ make_jump_lcgX!(jump_lcg32, u32);
 ///   impls to convert the generator into and from a `[u32; 2]`.
 /// * The methods on this type are quite minimal. You're expected to use the
 ///   [`Gen32`] trait to provide most of the useful operations.
+///
+/// Full list of methods can be found in the [`Gen32`] trait
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct RNG {
+  /// 32 bit state, which is used to generate the ouput
   state: u32,
+  /// `inc` used when advancing the state forward
   inc: u32,
 }
 
 impl RNG {
   /// Seed a new generator.
+  /// Used to create a new random number generator.
   pub const fn seed(seed: u32, inc: u32) -> Self {
     let inc = (inc << 1) | 1;
     let mut state = pcg_core_state32!(0_u32, inc);
@@ -51,7 +56,7 @@ impl RNG {
     self.state = pcg_core_state32!(self.state, self.inc);
     out
   }
-  /// Gets the next 16-bits of output
+  /// Gets the next 16-bits of output.
   #[inline]
   pub fn next_u16(&mut self) -> u16 {
     let out = pcg_xsh_rs_u32_to_u16!(self.state);
@@ -66,6 +71,18 @@ impl RNG {
   #[inline]
   pub fn jump(&mut self, delta: u32) {
     self.state = jump_lcg32(delta, self.state, PCG_MULTIPLIER_32, self.inc);
+  }
+}
+
+impl Gen32 for RNG {
+  #[inline(always)]
+  fn next_u32(&mut self) -> u32 {
+    RNG::next_u32(self)
+  }
+
+  #[inline(always)]
+  fn next_u16(&mut self) -> u16 {
+    RNG::next_u16(self)
   }
 }
 
@@ -88,13 +105,4 @@ impl From<RNG> for [u32; 2] {
   }
 }
 
-impl Gen32 for RNG {
-  #[inline(always)]
-  fn next_u32(&mut self) -> u32 {
-    RNG::next_u32(self)
-  }
-  #[inline(always)]
-  fn next_u16(&mut self) -> u16 {
-    RNG::next_u16(self)
-  }
-}
+

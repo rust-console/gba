@@ -30,7 +30,7 @@ pub trait Gen32 {
   /// Gives a value within `0 .. B`
   ///
   /// This is often more efficient than making a
-  /// [`BoundedRandU32`](crate::BoundedRandU32) if you don't need to use a
+  /// [`BoundedRandU32`](crate::random::BoundedRandU32) if you don't need to use a
   /// specific bound value more than once.
   ///
   /// ## Panics
