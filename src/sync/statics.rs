@@ -196,7 +196,7 @@ unsafe fn transfer<T: Copy>(dst: *mut T, src: *const T) {
 /// variable.
 ///
 /// This type only works with owned values. If you need to work with borrows,
-/// consider using [`Mutex`] instead.
+/// consider using [`super::Mutex`] instead.
 ///
 /// ## Performance
 ///
@@ -218,7 +218,7 @@ unsafe fn transfer<T: Copy>(dst: *mut T, src: *const T) {
 /// dangerous as disabling IRQs can cause your program to miss out on important
 /// interrupts such as V-Blank.
 ///
-/// Consider using [`Mutex`] instead if you need to use a large amount of
+/// Consider using [`super::Mutex`] instead if you need to use a large amount of
 /// operations that would cause IRQs to be disabled. Also consider using
 /// `#[repr(align(4))]` to force proper alignment for your type.
 pub struct Static<T> {

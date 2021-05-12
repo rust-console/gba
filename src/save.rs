@@ -38,7 +38,7 @@
 //! Then, call [`set_timer_for_timeout`] to set the timer you intend to use to
 //! track the timeout that prevents errors with the save media from hanging your
 //! game. For more information on GBA timers, see the
-//! [`timers`](`crate::io::timers`) module's documentation.
+//! [`timers`](`crate::mmio_types::TimerControl`) module's documentation.
 //!
 //! ```rust
 //! # use gba::save;
@@ -276,7 +276,7 @@ impl SaveAccess {
     self.access.verify(offset, buffer)
   }
 
-  /// Returns whether this save media requires the use of [`prepare_write`].
+  /// Returns whether this save media requires the use of [`SaveAccess::prepare_write`].
   pub fn requires_prepare_write(&self) -> bool {
     self.info.requires_prepare_write
   }
