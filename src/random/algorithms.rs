@@ -15,12 +15,13 @@ macro_rules! pcg_rxs_m_xs_u32_to_u32 {
 }
 pub(crate) use pcg_rxs_m_xs_u32_to_u32;
 
-macro_rules! pcg_xsh_rr_u32_to_u16 {
-    ($state: expr) => {
-        ((($state ^ ($state >> 18)) >> 11) as u16).rotate_right($state >> 27) as u16 
-    };
-}
-pub(crate) use pcg_xsh_rr_u32_to_u16;
+// Alternative for u32 to u16
+// macro_rules! pcg_xsh_rr_u32_to_u16 {
+//     ($state: expr) => {
+//         ((($state ^ ($state >> 18)) >> 11) as u16).rotate_right($state >> 27) as u16 
+//     };
+// }
+// pub(crate) use pcg_xsh_rr_u32_to_u16;
 
 macro_rules! pcg_xsh_rs_u32_to_u16 {
     ($state: expr) => {
