@@ -3,10 +3,11 @@
 
 use gba::prelude::*;
 
+// Color mask to clear 16th bit
 const COLOR_MASK: u16 = 0b01111111111111111;
-
+/// Generate random color from RNG
 fn random_color(rng: &mut RNG) -> Color {
-    Color(rng.next_u16() & COLOR_MASK)
+  Color(rng.next_u16() & COLOR_MASK)
 }
 
 #[panic_handler]
@@ -42,22 +43,24 @@ pub fn spin_until_vdraw() {
 pub fn main() -> ! {
   const SETTING: DisplayControl = DisplayControl::new().with_display_mode(3).with_display_bg2(true);
   DISPCNT.write(SETTING);
-  
-  let mut rng = RNG::seed(0, 0);
-
+  // Create default RNG
+  let mut rng = RNG::default();
 
   let mut px: usize = 0;
   let mut py: usize = 0;
   let mut color;
 
   loop {
+    // Generate color from RNG
     color = random_color(&mut rng);
     // now we wait
     spin_until_vblank();
+    // Draw pixels to screen
     mode3::bitmap_xy(px, py).write(color);
     mode3::bitmap_xy(px, py + 1).write(color);
     mode3::bitmap_xy(px + 1, py).write(color);
     mode3::bitmap_xy(px + 1, py + 1).write(color);
+    // Increment x and y, wrap as needed
     px += 2;
     if px >= mode3::WIDTH {
       px = 0;
@@ -66,8 +69,8 @@ pub fn main() -> ! {
         py = 0;
       }
     }
-    
+
     // now we wait again
-    spin_until_vblank();
+    spin_until_vdraw();
   }
 }
