@@ -1,5 +1,4 @@
-use super::algorithms::*;
-use super::Gen32;
+use super::{algorithms::*, Gen32};
 
 /// A default seed for any PCG.
 ///
@@ -10,7 +9,6 @@ pub const DEFAULT_PCG_SEED: u128 = 201526561274146932589719779721328219291;
 ///
 /// Truncate to fit, as necessary.
 pub const DEFAULT_PCG_INC: u128 = 34172814569070222299;
-
 
 // Other multipliers: 0xffffffff0e703b65 0xf2fc5985
 const PCG_MULTIPLIER_32: u32 = 0xf13283ad;
@@ -91,9 +89,11 @@ impl From<RNG> for [u32; 2] {
 }
 
 impl Gen32 for RNG {
+  #[inline(always)]
   fn next_u32(&mut self) -> u32 {
     RNG::next_u32(self)
   }
+  #[inline(always)]
   fn next_u16(&mut self) -> u16 {
     RNG::next_u16(self)
   }

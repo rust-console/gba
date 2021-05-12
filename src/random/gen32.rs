@@ -7,7 +7,6 @@ pub trait Gen32 {
   /// Generates the next 16-bits of output
   fn next_u16(&mut self) -> u16;
 
-
   /// Produce a `bool`
   #[inline(always)]
   fn next_bool(&mut self) -> bool {
@@ -19,7 +18,7 @@ pub trait Gen32 {
   fn next_u8(&mut self) -> u8 {
     (self.next_u16() >> 8) as u8
   }
-  
+
   /// Produce a `u64`
   #[inline(always)]
   fn next_u64(&mut self) -> u64 {
