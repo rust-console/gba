@@ -1,12 +1,18 @@
 use core::convert::{TryFrom, TryInto};
 
+use crate::mmio_types::Color;
+
 /// A Generator with 32 bits of output per step.
 pub trait Gen32 {
   /// Generates the next 32 bits of output.
   fn next_u32(&mut self) -> u32;
   /// Generates the next 16-bits of output
   fn next_u16(&mut self) -> u16;
-
+  
+  /// Produces a `Color`
+  fn next_color(&mut self) -> Color {
+    Color(self.next_u16() & 0b0111111111111111)
+  }
   /// Produce a `bool`
   #[inline(always)]
   fn next_bool(&mut self) -> bool {

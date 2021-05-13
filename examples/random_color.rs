@@ -3,13 +3,6 @@
 
 use gba::prelude::*;
 
-// Color mask to clear 16th bit
-const COLOR_MASK: u16 = 0b01111111111111111;
-/// Generate random color from RNG
-fn random_color(rng: &mut RNG) -> Color {
-  Color(rng.next_u16() & COLOR_MASK)
-}
-
 #[panic_handler]
 #[allow(unused)]
 fn panic(info: &core::panic::PanicInfo) -> ! {
@@ -52,7 +45,7 @@ pub fn main() -> ! {
 
   loop {
     // Generate color from RNG
-    color = random_color(&mut rng);
+    color = rng.next_color();
     // now we wait
     spin_until_vblank();
     // Draw pixels to screen
