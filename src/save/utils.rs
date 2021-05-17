@@ -92,7 +92,7 @@ impl Timeout {
   }
 
   /// Returns whether a number of milliseconds has passed since the last call
-  /// to [`start`].
+  /// to [`Timeout::start()`].
   pub fn is_timeout_met(&self, check_ms: u16) -> bool {
     self.active && check_ms * 17 < self.timer_l.read()
   }
