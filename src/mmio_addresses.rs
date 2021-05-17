@@ -161,6 +161,25 @@ pub const NOISE_LEN_ENV: VolAddress<NoiseLenEnv, Safe, Safe> =
 pub const NOISE_FREQ_CNT: VolAddress<NoiseFrequencyControl, Safe, Safe> =
   unsafe { VolAddress::new(0x0400_007C) };
 
+/// [SOUNDCNT_L](https://problemkaputt.de/gbatek.htm#gbasoundcontrolregisters)
+pub const SOUND_CHANNEL_CNT: VolAddress<SoundControl, Safe, Safe> =
+  unsafe { VolAddress::new(0x0400_0080) };
+/// [SOUNDCNT_X](https://problemkaputt.de/gbatek.htm#gbasoundcontrolregisters) (status fields)
+pub const SOUND_STATUS: VolAddress<SoundStatus, Safe, ()> =
+  unsafe { VolAddress::new(0x0400_0084) };
+/// [SOUNDBIAS](https://problemkaputt.de/gbatek.htm#gbasoundcontrolregisters)
+pub const SOUND_BIAS: VolAddress<SoundBias, Safe, Safe> =
+  unsafe { VolAddress::new(0x0400_0088) };
+
+/// [SOUNDCNT_H](https://problemkaputt.de/gbatek.htm#gbasoundcontrolregisters) (R/W fields)
+pub const FIFO_CONTROL: VolAddress<FifoControl, Safe, Safe> =
+  unsafe { VolAddress::new(0x0400_0082) };
+/// [SOUNDCNT_H](https://problemkaputt.de/gbatek.htm#gbasoundcontrolregisters) (write-only fields)
+pub const FIFO_RESET: VolAddress<FifoReset, (), Safe> =
+  unsafe { VolAddress::new(0x0400_0082) };
+/// [SOUNDCNT_X](https://problemkaputt.de/gbatek.htm#gbasoundcontrolregisters) (fifo enable)
+pub const FIFO_ENABLE: VolAddress<FifoEnable, Safe, Safe> =
+  unsafe { VolAddress::new(0x0400_0084) };
 /// [FIFO_A](https://problemkaputt.de/gbatek.htm#gbasoundchannelaandbdmasound)
 pub const FIFO_A: VolAddress<u32, (), Safe> = unsafe { VolAddress::new(0x0400_00A0) };
 /// [FIFO_B](https://problemkaputt.de/gbatek.htm#gbasoundchannelaandbdmasound)
