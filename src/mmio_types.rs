@@ -186,9 +186,6 @@ pub use interrupt_flags::*;
 mod fifo_control;
 pub use fifo_control::*;
 
-mod fifo_enable;
-pub use fifo_enable::*;
-
 mod fifo_reset;
 pub use fifo_reset::*;
 
