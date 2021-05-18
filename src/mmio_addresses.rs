@@ -162,7 +162,7 @@ pub const NOISE_FREQ_CNT: VolAddress<NoiseFrequencyControl, Safe, Safe> =
   unsafe { VolAddress::new(0x0400_007C) };
 
 /// [SOUNDCNT_L](https://problemkaputt.de/gbatek.htm#gbasoundcontrolregisters)
-pub const SOUND_CHANNEL_CNT: VolAddress<SoundControl, Safe, Safe> =
+pub const SOUND_CONTROL: VolAddress<SoundControl, Safe, Safe> =
   unsafe { VolAddress::new(0x0400_0080) };
 /// [SOUNDCNT_X](https://problemkaputt.de/gbatek.htm#gbasoundcontrolregisters)
 pub const SOUND_STATUS: VolAddress<SoundStatus, Safe, Safe> =
