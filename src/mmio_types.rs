@@ -183,6 +183,21 @@ pub use register_ram_reset_control::*;
 mod interrupt_flags;
 pub use interrupt_flags::*;
 
+mod fifo_control;
+pub use fifo_control::*;
+
+mod fifo_reset;
+pub use fifo_reset::*;
+
+mod sound_control;
+pub use sound_control::*;
+
+mod sound_status;
+pub use sound_status::*;
+
+mod sound_bias;
+pub use sound_bias::*;
+
 mod timer_control;
 pub use timer_control::*;
 
