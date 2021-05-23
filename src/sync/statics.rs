@@ -100,33 +100,41 @@ unsafe fn transfer_align4_arm<T: Copy>(mut dst: *mut T, mut src: *const T) {
     )
   } else if size <= 24 {
     asm!(
+      "push {{r9}}",
       "ldmia {0}!, {{r2-r5,r8-r9}}",
       "stmia {1}!, {{r2-r5,r8-r9}}",
+      "pop {{r9}}",
       inout(reg) src, inout(reg) dst,
-      out("r2") _, out("r3") _, out("r4") _, out("r5") _, out("r8") _, out("r9") _,
+      out("r2") _, out("r3") _, out("r4") _, out("r5") _, out("r8") _,
     )
   } else if size <= 28 {
     asm!(
+      "push {{r9}}",
       "ldmia {0}!, {{r2-r5,r8-r10}}",
       "stmia {1}!, {{r2-r5,r8-r10}}",
+      "pop {{r9}}",
       inout(reg) src, inout(reg) dst,
-      out("r2") _, out("r3") _, out("r4") _, out("r5") _, out("r8") _, out("r9") _,
+      out("r2") _, out("r3") _, out("r4") _, out("r5") _, out("r8") _,
       out("r10") _,
     )
   } else if size <= 32 {
     asm!(
+      "push {{r9}}",
       "ldmia {0}!, {{r2-r5,r8-r10,r12}}",
       "stmia {1}!, {{r2-r5,r8-r10,r12}}",
+      "pop {{r9}}",
       inout(reg) src, inout(reg) dst,
-      out("r2") _, out("r3") _, out("r4") _, out("r5") _, out("r8") _, out("r9") _,
+      out("r2") _, out("r3") _, out("r4") _, out("r5") _, out("r8") _,
       out("r10") _, out("r12") _,
     )
   } else if size <= 36 {
     asm!(
+      "push {{r9}}",
       "ldmia {0}!, {{r2-r5,r8-r10,r12,r14}}",
       "stmia {1}!, {{r2-r5,r8-r10,r12,r14}}",
+      "pop {{r9}}",
       inout(reg) src, inout(reg) dst,
-      out("r2") _, out("r3") _, out("r4") _, out("r5") _, out("r8") _, out("r9") _,
+      out("r2") _, out("r3") _, out("r4") _, out("r5") _, out("r8") _,
       out("r10") _, out("r12") _, out("r14") _,
     )
   } else {
