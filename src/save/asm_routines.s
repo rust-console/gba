@@ -32,7 +32,7 @@ WramReadByteInner:
     .thumb_func
     .align 2
 WramVerifyBuf:
-    push {r4-r5, lr}
+    push {{r4-r5, lr}}
     movs r5, r0     @ set up r5 to be r0, so we can use it immediately for the return result
     movs r0, #0     @ set up r0 so the default return result is false
     ldr r4, =WramVerifyBufInner
@@ -55,7 +55,7 @@ WramVerifyBufInner:
     @ Returns from the function successfully
     movs r0, #1
 0:  @ Jumps to here return the function unsuccessfully, because r0 contains 0 at this point
-    pop {r4-r5, pc}
+    pop {{r4-r5, pc}}
 
     .section .text
 
