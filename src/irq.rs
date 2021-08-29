@@ -1,3 +1,62 @@
+//! Interrupt handling.
+//!
+//! Set an interrupt handler by calling
+//! [`irq::set_handler()`](crate::irq::set_handler()) for each interrupt you
+//! want to respond to, then call
+//! [`irq::set_master_enabled()`](crate::irq::set_master_enabled()) to allow
+//! interrupts to be raised. All handler functions *must* be compiled as Thumb
+//! code by annotating them with `#[instruction_set(arm::t32)]`.
+//!
+//! Beneath the hood, a top-level "switchboard" interrupt handler written in
+//! assembly takes care of dispatching to each user-defined handler function.
+//! This top-level handler also allows for nested interrupts. When a
+//! user-defined interrupt handler is about to be called, the main handler will
+//! first clear the [`IE`] register and save the state of the [`IE`],
+//! [`IF`](crate::mmio_addresses::IRQ_PENDING) and [`IME`] registers. To handle
+//! nested interrupts, write the [`InterruptFlags`] for the interrupt kinds you
+//! want to the [`IE`] register from within the appropriate handler function.
+//!
+//! # Example
+//!
+//! ```rust
+//! #![no_std]
+//! #![no_main]
+//! #![feature(isa_attribute)]
+//!
+//! use gba::{prelude::*, info};
+//!
+//! #[panic_handler]
+//! fn panic(_info: &core::panic::PanicInfo) -> ! {
+//!   loop {}
+//! }
+//!
+//! #[no_mangle]
+//! fn main() -> ! {
+//!     irq::set_handler(IrqKind::VBlank, Some(vblank_handler));
+//!     irq::set_handler(IrqKind::HBlank, Some(hblank_handler));
+//!     irq::enable(IrqKind::VBlank);
+//!     irq::enable(IrqKind::HBlank);
+//!     irq::set_master_enabled(true);
+//!
+//!     loop {
+//!         unsafe { VBlankIntrWait() };
+//!     }
+//! }
+//!
+//! #[instruction_set(arm::t32)]
+//! extern "C" fn vblank_handler() {
+//!     info!("VBlank received.");
+//!
+//!     // Allow nested HBlank IRQs.
+//!     unsafe { IE.write(IE.read().with_hblank(true)); }
+//! }
+//!
+//! #[instruction_set(arm::t32)]
+//! extern "C" fn hblank_handler() {
+//!     info!("HBlank received.");
+//! }
+//! ```
+
 use crate::{__IRQ_HANDLERS, IrqHandler};
 use crate::mmio_types::InterruptFlags;
 use crate::mmio_addresses::{IME, IE};
@@ -46,10 +105,12 @@ static OFFSETS: [IrqOffsets; 14] = [
     IrqOffsets { base: 0x0000, mask: 0x0000 }, // Gamepak (none)
 ];
 
+const MMIO_BASE_ADDRESS: usize = 0x0400_0000;
+
 #[inline]
 unsafe fn set_irq_flag(kind: IrqKind) {
     let offset = &OFFSETS[kind as usize];
-    let addr: *mut u16 = core::mem::transmute(REG_BASE + offset.base);
+    let addr: *mut u16 = core::mem::transmute(MMIO_BASE_ADDRESS + offset.base);
     *addr |= offset.mask;
     IE.write(InterruptFlags(IE.read().0 | (1 << (kind as u8))))
 }
@@ -57,7 +118,7 @@ unsafe fn set_irq_flag(kind: IrqKind) {
 #[inline]
 unsafe fn unset_irq_flag(kind: IrqKind) {
     let offset = &OFFSETS[kind as usize];
-    let addr: *mut u16 = core::mem::transmute(REG_BASE + offset.base);
+    let addr: *mut u16 = core::mem::transmute(MMIO_BASE_ADDRESS + offset.base);
     *addr &= !offset.mask;
     IE.write(InterruptFlags(IE.read().0 & !(1 << (kind as u8))))
 }
@@ -74,8 +135,6 @@ macro_rules! with_no_irqs {
       unsafe { IME.write(ime); }
   }};
 }
-
-const REG_BASE: usize = 0x0400_0000;
 
 /// Sets the Interrupt Master Enable flag. This must be set to `true` in order
 /// for any interrupts to be triggered.
@@ -95,7 +154,8 @@ pub fn clear_all_handlers() {
 /// Registers a function to handle the specified interrupt kind. To unset the
 /// handler for the interrupt, pass `None` instead.
 ///
-/// **Note:** The function *must* be compiled as Thumb code by annotating it with
+/// **Note:** The function *must* be compiled as Thumb code by annotating it
+/// with `#[instruction_set(arm::t32)]`.
 pub fn set_handler(kind: IrqKind, handler: Option<IrqHandler>) {
     with_no_irqs! {
         unsafe {

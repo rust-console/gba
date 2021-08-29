@@ -98,11 +98,10 @@ fn write_pixel(color: Color) {
 // All interrupt handlers *must* be compiled as Thumb code by annotating them
 // with `#[instruction_set(arm::t32)]`.
 //
-// To allow nested interrupts to be handled, write the appropriate
-// `InterruptFlags` to the `IE` register from within each interrupt handler.
-// `IE` will be cleared before each user-defined interrupt handler is jumped to
-// from the main "switchboard" interrupt handler, and will be restored
-// afterwards.
+// To handle nested interrupts, write the appropriate `InterruptFlags` to the
+// `IE` register from the appropriate handler function. `IE` will be cleared
+// before each user-defined interrupt handler is jumped to from the main
+// "switchboard" interrupt handler, and will be restored afterwards.
 
 #[instruction_set(arm::t32)]
 extern "C" fn vblank_handler() {
