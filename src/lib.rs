@@ -29,7 +29,7 @@ pub mod prelude {
   #[cfg(target_arch = "arm")]
   pub use crate::debugging::*;
   #[cfg(target_arch = "arm")]
-  pub use crate::interrupts::*;
+  pub use crate::irq::{self, *};
   #[cfg(target_arch = "arm")]
   pub use crate::mmio_addresses::*;
   #[cfg(target_arch = "arm")]
@@ -63,10 +63,22 @@ pub mod save;
 pub mod debugging;
 
 #[cfg(target_arch = "arm")]
-pub mod interrupts;
+pub mod irq;
 
 #[cfg(target_arch = "arm")]
 pub mod random;
+
+/// A function pointer for use as an interrupt handler.
+pub type IrqHandler = extern "C" fn();
+
+/// Table of user-defined interrupt handlers.
+///
+/// These are called by a "switchboard" interrupt handler provided by this
+/// crate, depending on which interrupt needs to be handled.
+#[doc(hidden)]
+#[no_mangle]
+static mut __IRQ_HANDLERS: [Option<IrqHandler>; 14] = [None; 14];
+
 /*
 extern "C" {
   /// This marks the end of the `.data` and `.bss` sections in IWRAM.

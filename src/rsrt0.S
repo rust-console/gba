@@ -52,51 +52,84 @@ __start:
     .global MainIrqHandler
     .align 4, 0
 MainIrqHandler:
-    @ Load base I/O register address
-    mov r2, #0x04000000
-    add r2, r2, #0x200
+    mov r3, #0x04000000             @ &REG_BASE
+    ldr r2, [r3, #0x200]!           @ r3 = &REG_IE, r2 = REG_IE/REG_IF
+    and r2, r2, r2, lsr #16         @ irq_curr = REG_IE & REG_IF (bit of interrupt)
 
-    @ Save IRQ stack pointer and IME
-    mrs r0, spsr
-    ldrh r1, [r2, #8]
-    stmdb sp!, {r0-r2,lr}
+    @ REG_IFBIOS |= irq_curr
+    ldr r1, [r3, #-0x208]
+    orr r1, r1, r2
+    str r1, [r3, #-0x208]
 
-    @ Disable all interrupts by writing to IME
-    @ r2 (0x4000200) can be used as we only care about bit 0 being unset
-    strh r2, [r2, #8]
+    @ Check if corresponding IRQ handler is set
+    ldr r0, =__IRQ_HANDLERS
+    mov r12, r2
 
-    @ Acknowledge all received interrupts that were enabled in IE
-    ldr r3, [r2, #0]
-    and r0, r3, r3, lsr #16
-    strh r0, [r2, #2]
+.Lirq_loop:
+    @ Loop to IRQ handler array index of bit position
+    add r0, #4
+    lsr r12, #1
+    cmp r12, #0
+    bne .Lirq_loop
 
-    @ Switch from IRQ mode to system mode
-    @ cpsr_c = 0b000_10010u8 | 0b000_01101u8
-    mrs r2, cpsr
-    orr r2, r2, #0xD
-    msr cpsr_c, r2
+.Lirq_check:
+    @ Check if function pointer is null
+    ldr r0, [r0, #-4]
+    cmp r0, #0
+    bne .Lirq_found
 
-    @ Switch to thumb mode and jump to user specified IRQ handler
-    ldr r2, =__IRQ_HANDLER
-    ldr r1, [r2]
-    stmdb sp!, {lr}
-    adr lr, .Lreturn
-    bx r1
-.Lreturn:
-    ldmia sp!, {lr}
-
-    @ Switch from ??? mode to IRQ mode, disable IRQ
-    @ cpsr_c = ( !0b000_01101u8 & cpsr_c ) | 0b100_10010u8
-    mrs r2, cpsr
-    bic r2, r2, #0xD
-    orr r2, r2, #0x92
-    msr cpsr_c, r2
-
-    @ Restore IRQ stack pointer and IME
-    ldmia sp!, {r0-r2,lr}
-    strh r1, [r2, #8]
-    msr spsr_cf, r0
-
-    @ Return to BIOS IRQ handler
+.Lirq_none:
+    @ No IRQ handler; acknowledge interrupt and return
+    strh r2, [r3, #2]    @ REG_IF=irq_curr
     bx lr
-    .pool
+
+.Lirq_found:
+    @ Save IE and IF to r2 (REG_IE|(irq_flag<<16))
+    ldrh r2, [r3]
+    lsl r1, #16
+    orr r2, r2, r1
+
+    @ Set IE to 0, acknowledge IRQ
+    mov r12, r1
+    strh r12, [r3]
+
+    @ Push IE, IF, and flags
+    mrs r12, spsr
+    stmfd sp!, {r2, r12, lr}  @ sp_irq,{ieif, spsr, lr_irq}
+
+    @ Disable interrupts
+    str r3, [r3, #8]    @ REG_IME=0
+
+    @ Set CPU to SYS-mode, re-enable IRQ
+    mrs r2, cpsr
+    bic r2, r2, #0xDF
+    orr r2, r2, #0x1F
+    msr cpsr, r2
+
+    @ Enable interrupts and jump to handler (Thumb)
+    stmfd sp!, {r3, lr}   @ sp_sys, {&REG_IE, lr_sys}
+    mov r2, #1
+    str r2, [r3, #8]    @ REG_IME=1
+    adr lr, .Lpost_isr
+    bx  r0
+
+.Lpost_isr:
+    @ Disable interrupts
+    ldmfd sp!, {r3, lr}   @ sp_sys, {&REG_IE, lr_sys}
+    ldr r0, [r3, #8]
+    str r3, [r3, #8]    @ REG_IME=0
+
+    @ Restore CPU to IRQ-mode, disable IRQ
+    mrs r2, cpsr
+    bic r2, r2, #0xDF
+    orr r2, r2, #0x92
+    msr cpsr, r2
+
+    @ Pop IE, IF and flags
+    ldmfd sp!, {r2, r12, lr}  @ sp_irq,{ieif, spsr, lr_irq}
+    msr spsr, r12
+
+    @ Restore state and return to BIOS IRQ handler
+    str r2, [r3]        @ REG_IE/REG_IF= ieif
+    str r0, [r3, #8]    @ Restore REG_IME
+    bx lr

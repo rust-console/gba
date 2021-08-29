@@ -29,116 +29,102 @@ fn start_timers() {
 
 #[no_mangle]
 fn main() -> ! {
-  DISPCNT.write(DisplayControl::new().with_display_mode(3).with_display_bg2(true));
-  mode3::dma3_clear_to(BLACK);
+    DISPCNT.write(DisplayControl::new().with_display_mode(3).with_display_bg2(true));
+    mode3::dma3_clear_to(BLACK);
 
-  // Set the IRQ handler to use.
-  interrupts::set_interrupt_handler(irq_handler_t32);
+    // Set the IRQ handlers to use.
+    irq::set_handler(IrqKind::VBlank, Some(vblank_handler));
+    irq::set_handler(IrqKind::HBlank, Some(hblank_handler));
+    irq::set_handler(IrqKind::VCount, Some(vcount_handler));
+    irq::set_handler(IrqKind::Timer0, Some(timer0_handler));
+    irq::set_handler(IrqKind::Timer1, Some(timer1_handler));
 
-  // Enable all interrupts that are set in the IE register.
-  unsafe { IME.write(true) };
+    // Set the flags needed to enable each IRQ.
+    irq::enable(IrqKind::VBlank);
+    irq::enable(IrqKind::HBlank);
+    irq::enable(IrqKind::VCount);
+    irq::enable(IrqKind::Timer0);
+    irq::enable(IrqKind::Timer1);
 
-  // Request that VBlank, HBlank and VCount will generate IRQs.
-  const DISPLAY_SETTINGS: DisplayStatus = DisplayStatus::new()
-    .with_vblank_irq_enabled(true)
-    .with_hblank_irq_enabled(true)
-    .with_vcount_irq_enabled(true);
-  DISPSTAT.write(DISPLAY_SETTINGS);
+    // Enable all interrupts that were set above.
+    irq::set_master_enabled(true);
 
-  // Start two timers with overflow IRQ generation.
-  start_timers();
+    // Start two timers with overflow IRQ generation.
+    start_timers();
 
-  loop {
-    let this_frame_keys: Keys = KEYINPUT.read().into();
+    loop {
+        let this_frame_keys: Keys = KEYINPUT.read().into();
 
-    // The VBlank IRQ must be enabled at minimum, or else the CPU will halt
-    // at the call to vblank_interrupt_wait() as the VBlank IRQ will never
-    // be triggered.
-    let mut flags = InterruptFlags::new().with_vblank(true);
+        // The VBlank IRQ must be enabled at minimum, or else the CPU will halt
+        // at the call to vblank_interrupt_wait() as the VBlank IRQ will never
+        // be triggered.
+        let mut flags = InterruptFlags::new().with_vblank(true);
 
-    // Enable interrupts based on key input.
-    if this_frame_keys.a() {
-      flags = flags.with_hblank(true);
+        // Enable interrupts based on key input.
+        if this_frame_keys.a() {
+            flags = flags.with_hblank(true);
+        }
+        if this_frame_keys.b() {
+            flags = flags.with_vcount(true);
+        }
+        if this_frame_keys.l() {
+            flags = flags.with_timer0(true);
+        }
+        if this_frame_keys.r() {
+            flags = flags.with_timer1(true);
+        }
+
+        unsafe { IE.write(flags) };
+
+        // Puts the CPU into low power mode until a VBlank IRQ is received. This
+        // will yield considerably better power efficiency as opposed to spin
+        // waiting.
+        unsafe { VBlankIntrWait() };
     }
-    if this_frame_keys.b() {
-      flags = flags.with_vcount(true);
-    }
-    if this_frame_keys.l() {
-      flags = flags.with_timer0(true);
-    }
-    if this_frame_keys.r() {
-      flags = flags.with_timer1(true);
-    }
-
-    unsafe { IE.write(flags) };
-
-    // Puts the CPU into low power mode until a VBlank IRQ is received. This
-    // will yield considerably better power efficiency as opposed to spin
-    // waiting.
-    unsafe { VBlankIntrWait() };
-  }
 }
 
 static mut PIXEL: usize = 0;
 
 fn write_pixel(color: Color) {
-  unsafe {
-    (0x0600_0000 as *mut Color).wrapping_offset(PIXEL as isize).write_volatile(color);
-    PIXEL += 1;
-    if PIXEL == (mode3::WIDTH * mode3::HEIGHT) {
-      PIXEL = 0;
+    unsafe {
+        (0x0600_0000 as *mut Color).wrapping_offset(PIXEL as isize).write_volatile(color);
+        PIXEL += 1;
+        if PIXEL == (mode3::WIDTH * mode3::HEIGHT) {
+            PIXEL = 0;
+        }
     }
-  }
+}
+
+// All interrupt handlers *must* be compiled as Thumb code by annotating them
+// with `#[instruction_set(arm::t32)]`.
+//
+// To allow nested interrupts to be handled, write the appropriate
+// `InterruptFlags` to the `IE` register from within each interrupt handler.
+// `IE` will be cleared before each user-defined interrupt handler is jumped to
+// from the main "switchboard" interrupt handler, and will be restored
+// afterwards.
+
+#[instruction_set(arm::t32)]
+extern "C" fn vblank_handler() {
+    write_pixel(BLUE);
 }
 
 #[instruction_set(arm::t32)]
-extern "C" fn irq_handler_t32(flags: InterruptFlags) {
-  // read the current IntrWait value. It sorta works like a running total, so
-  // any interrupts we process we'll enable in this value, which we write back
-  // at the end.
-  let mut intr_wait_flags = INTR_WAIT_ACKNOWLEDGE.read();
-
-  if flags.vblank() {
-    vblank_handler();
-    intr_wait_flags.set_vblank(true);
-  }
-  if flags.hblank() {
-    hblank_handler();
-    intr_wait_flags.set_hblank(true);
-  }
-  if flags.vcount() {
-    vcount_handler();
-    intr_wait_flags.set_vcount(true);
-  }
-  if flags.timer0() {
-    timer0_handler();
-    intr_wait_flags.set_timer0(true);
-  }
-  if flags.timer1() {
-    timer1_handler();
-    intr_wait_flags.set_timer1(true);
-  }
-
-  // write out any IntrWait changes.
-  unsafe { INTR_WAIT_ACKNOWLEDGE.write(intr_wait_flags) };
+extern "C" fn hblank_handler() {
+    write_pixel(GREEN);
 }
 
-fn vblank_handler() {
-  write_pixel(BLUE);
+#[instruction_set(arm::t32)]
+extern "C" fn vcount_handler() {
+    write_pixel(RED);
 }
 
-fn hblank_handler() {
-  write_pixel(GREEN);
+#[instruction_set(arm::t32)]
+extern "C" fn timer0_handler() {
+    write_pixel(YELLOW);
 }
 
-fn vcount_handler() {
-  write_pixel(RED);
-}
-
-fn timer0_handler() {
-  write_pixel(YELLOW);
-}
-
-fn timer1_handler() {
-  write_pixel(PINK);
+#[instruction_set(arm::t32)]
+extern "C" fn timer1_handler() {
+    write_pixel(PINK);
 }
