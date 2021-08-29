@@ -9,9 +9,9 @@ __start:
 
 .Linit:
     @ Set address of user IRQ handler
-    @ldr r0, =MainIrqHandler
-    @mov r1, #0x04000000
-    @str r0, [r1, #-4]
+    ldr r0, =MainIrqHandler
+    mov r1, #0x04000000
+    str r0, [r1, #-4]
 
     @ set IRQ stack pointer
     mov r0, #0x12
@@ -48,7 +48,6 @@ __start:
     @ main should be `fn() -> !`, but it doesn't hurt to guard
     1: b 1b
 
-/*
     .arm
     .global MainIrqHandler
     .align 4, 0
@@ -77,7 +76,7 @@ MainIrqHandler:
     orr r2, r2, #0xD
     msr cpsr_c, r2
 
-    @ Jump to user specified IRQ handler
+    @ Switch to thumb mode and jump to user specified IRQ handler
     ldr r2, =__IRQ_HANDLER
     ldr r1, [r2]
     stmdb sp!, {lr}
@@ -101,4 +100,3 @@ MainIrqHandler:
     @ Return to BIOS IRQ handler
     bx lr
     .pool
-*/

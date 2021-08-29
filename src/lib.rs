@@ -29,6 +29,8 @@ pub mod prelude {
   #[cfg(target_arch = "arm")]
   pub use crate::debugging::*;
   #[cfg(target_arch = "arm")]
+  pub use crate::interrupts;
+  #[cfg(target_arch = "arm")]
   pub use crate::mmio_addresses::*;
   #[cfg(target_arch = "arm")]
   pub use crate::save::*;
@@ -59,6 +61,9 @@ pub mod save;
 
 #[cfg(target_arch = "arm")]
 pub mod debugging;
+
+#[cfg(target_arch = "arm")]
+pub mod interrupts;
 
 #[cfg(target_arch = "arm")]
 pub mod random;

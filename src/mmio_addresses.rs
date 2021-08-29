@@ -262,9 +262,6 @@ pub const KEYINPUT: VolAddress<KeysLowActive, Safe, ()> = unsafe { VolAddress::n
 pub const KEYCNT: VolAddress<KeyInterruptControl, Safe, Safe> =
   unsafe { VolAddress::new(0x0400_0130) };
 
-/// Points to the (A32) user interrupt handler function.
-pub const USER_IRQ_HANDLER: VolAddress<Option<unsafe extern "C" fn()>, Safe, Unsafe> =
-  unsafe { VolAddress::new(0x0300_7FFC) };
 /// "Interrupt Master Enable", [IME](https://problemkaputt.de/gbatek.htm#gbainterruptcontrol)
 pub const IME: VolAddress<bool, Safe, Unsafe> = unsafe { VolAddress::new(0x0400_0208) };
 /// "Interrupts Enabled", [IE](https://problemkaputt.de/gbatek.htm#gbainterruptcontrol)
