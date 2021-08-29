@@ -3,7 +3,7 @@
 APP_NAME=$1
 if [ -z "$APP_NAME"]; then APP_NAME="rust-console-hello"; fi
 
-TARGET="thumbv4-none-agb"
+TARGET="thumbv4t-none-eabi"
 CRT_LOCAL="crt0.s"
 
 echo "Initializing rust-console gba at: $1"
@@ -12,14 +12,14 @@ echo "Initializing rust-console gba at: $1"
 cargo init $APP_NAME --bin
 
 # remove old
-rm -rf $APP_NAME/thumbv4-none-agb.json*
+rm -rf $APP_NAME/thumbv4t-none-eabi.json*
 rm -rf $APP_NAME/$CRT_LOCAL*
 rm -rf $APP_NAME/linker.ld*
 rm -rf $APP_NAME/Makefile*
 rm -rf $APP_NAME/README.md*
 
 # download dependencies
-wget https://raw.githubusercontent.com/rust-console/gba/master/thumbv4-none-agb.json
+wget https://raw.githubusercontent.com/rust-console/gba/master/thumbv4t-none-eabi.json
 mv $TARGET.json $APP_NAME/$TARGET.json
 
 wget https://raw.githubusercontent.com/rust-console/gba/master/crt0.s
