@@ -29,7 +29,7 @@ pub mod prelude {
   #[cfg(target_arch = "arm")]
   pub use crate::debugging::*;
   #[cfg(target_arch = "arm")]
-  pub use crate::interrupts;
+  pub use crate::interrupts::*;
   #[cfg(target_arch = "arm")]
   pub use crate::mmio_addresses::*;
   #[cfg(target_arch = "arm")]
