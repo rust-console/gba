@@ -111,7 +111,8 @@ const MMIO_BASE_ADDRESS: usize = 0x0400_0000;
 unsafe fn set_irq_flag(kind: IrqKind) {
     let sender = &SENDERS[kind as usize];
     let addr: *mut u16 = core::mem::transmute(MMIO_BASE_ADDRESS + sender.offset);
-    *addr |= sender.mask;
+    let val = *addr;
+    core::ptr::write_volatile(addr, val | sender.mask);
     IE.write(InterruptFlags(IE.read().0 | (1 << (kind as u8))))
 }
 
@@ -119,7 +120,8 @@ unsafe fn set_irq_flag(kind: IrqKind) {
 unsafe fn unset_irq_flag(kind: IrqKind) {
     let sender = &SENDERS[kind as usize];
     let addr: *mut u16 = core::mem::transmute(MMIO_BASE_ADDRESS + sender.offset);
-    *addr &= !sender.mask;
+    let val = *addr;
+    core::ptr::write_volatile(addr, val & !sender.mask);
     IE.write(InterruptFlags(IE.read().0 & !(1 << (kind as u8))))
 }
 
