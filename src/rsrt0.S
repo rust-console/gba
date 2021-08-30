@@ -111,6 +111,7 @@ MainIrqHandler:
     mov r2, #1
     str r2, [r3, #8]    @ REG_IME=1
     adr lr, .Lpost_isr
+    orr r0, r0, #1      @ Thumb mode
     bx  r0
 
 .Lpost_isr:
