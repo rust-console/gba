@@ -8,14 +8,14 @@
 /// # use core::convert::TryFrom;
 /// # use core::mem::size_of_val;
 /// let info = UnpackInfo {
-///   source_data_len_bytes: size_of_val(&CGA_8X8_THICK) as usize,
+///   source_data_len_bytes: size_of_val(&CGA_8X8_THICK) as u16,
 ///   source_unit_bit_width: 1,
 ///   // this assumes we want to unpack to 4bpp tiles
 ///   destination_unit_bit_width: 4,
 ///   data_offset: 0,
 /// };
 /// // our example unpacks directly to the start of VRAM.
-/// unsafe { BitUnPack(CGA_8X8_THICK.as_ptr(), 0x0600_0000 as *mut u32, &info) };
+/// unsafe { BitUnPack(CGA_8X8_THICK.as_ptr().cast::<u8>(), 0x0600_0000 as *mut u32, &info) };
 /// ```
 ///
 /// I am not a lawyer, but type faces are not protected by copyright in the USA.
