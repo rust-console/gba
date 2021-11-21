@@ -30,5 +30,4 @@ panic = "abort"
 #required-features = ["serial"]
 
 [package.metadata.docs.rs]
-default-target = "thumbv6m-none-eabi"
-targets = []
+default-target = "thumbv4t-none-eabi"
