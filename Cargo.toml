@@ -31,3 +31,5 @@ panic = "abort"
 
 [package.metadata.docs.rs]
 default-target = "thumbv4t-none-eabi"
+cargoflags = ["-Zbuild-std=core"]
+rustdoc-args = ["--cfg","docs_rs"]
