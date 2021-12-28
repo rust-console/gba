@@ -2,8 +2,9 @@
 //! WRAM. Both flash media and battery-backed SRAM require reads to be
 //! performed via code in WRAM and cannot be accessed by DMA.
 
-#![cfg_attr(not(target_arch = "arm"), allow(unused_variables, non_snake_case))]
+use core::arch::global_asm;
 
+#[cfg_attr(not(target_arch = "arm"), allow(unused_variables, non_snake_case))]
 #[cfg(target_arch = "arm")]
 global_asm!(include_str!("asm_routines.s"));
 

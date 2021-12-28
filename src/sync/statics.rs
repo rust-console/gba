@@ -2,6 +2,7 @@
 
 use crate::sync::with_irqs_disabled;
 use core::{
+  arch::asm,
   cell::UnsafeCell,
   mem::{align_of, size_of, MaybeUninit},
   ptr,

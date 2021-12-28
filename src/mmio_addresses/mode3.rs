@@ -1,5 +1,6 @@
 use crate::prelude::Color;
 
+use core::arch::asm;
 use voladdress::*;
 
 pub const WIDTH: usize = 240;

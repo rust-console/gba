@@ -2,6 +2,8 @@
 
 use crate::prelude::*;
 
+use core::arch::asm;
+
 mod locks;
 mod statics;
 
