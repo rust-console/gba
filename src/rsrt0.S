@@ -28,7 +28,7 @@ __start:
     @ See https://problemkaputt.de/gbatek.htm#gbasystemcontrol for reference.
     ldr r0, =0x04000204
     ldr r1, =0x4317
-    str r1, [r0]
+    strh r1, [r0]
 
     @ copy .data and .text_iwram section to IWRAM
     ldr r0, =__iwram_lma     @ source address
