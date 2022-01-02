@@ -2,6 +2,7 @@
 
 use crate::sync::with_irqs_disabled;
 use core::{
+  arch::asm,
   cell::UnsafeCell,
   mem::{align_of, size_of, MaybeUninit},
   ptr,
@@ -20,8 +21,10 @@ unsafe fn transfer<T: Copy>(dst: *mut T, src: *const T) {
     // We can do an 4-byte aligned transfer up to 16 bytes.
     transfer_align4_thumb(dst, src);
   } else if size <= 36 && align % 4 == 0 {
-    // We can do the same up to 36 bytes, but we need to switch to ARM.
-    transfer_align4_arm(dst, src);
+    // // We can do the same up to 36 bytes, but we need to switch to ARM.
+    // transfer_align4_arm(dst, src);
+    // TODO(rust-console/gba#158) Cannot optimize larger transfers for now.
+    with_irqs_disabled(|| ptr::write_volatile(dst, ptr::read_volatile(src)));
   } else if size <= 2 && align % 2 == 0 {
     // We can do a 2-byte aligned transfer up to 2 bytes.
     asm!(
@@ -82,65 +85,66 @@ unsafe fn transfer_align4_thumb<T: Copy>(mut dst: *mut T, mut src: *const T) {
   }
 }
 
-#[cfg(target_arch = "arm")]
-#[instruction_set(arm::a32)]
-#[allow(unused_assignments)]
-unsafe fn transfer_align4_arm<T: Copy>(mut dst: *mut T, mut src: *const T) {
-  let size = size_of::<T>();
-  if size <= 16 {
-    unimplemented!("This should be done via transfer_thumb.");
-  } else if size <= 20 {
-    // Starting at size == 20, we have to switch to ARM due to lack of
-    // accessible registers in THUMB mode.
-    asm!(
-      "ldmia {0}!, {{r2-r5,r8}}",
-      "stmia {1}!, {{r2-r5,r8}}",
-      inout(reg) src, inout(reg) dst,
-      out("r2") _, out("r3") _, out("r4") _, out("r5") _, out("r8") _,
-    )
-  } else if size <= 24 {
-    asm!(
-      "push {{r9}}",
-      "ldmia {0}!, {{r2-r5,r8-r9}}",
-      "stmia {1}!, {{r2-r5,r8-r9}}",
-      "pop {{r9}}",
-      inout(reg) src, inout(reg) dst,
-      out("r2") _, out("r3") _, out("r4") _, out("r5") _, out("r8") _,
-    )
-  } else if size <= 28 {
-    asm!(
-      "push {{r9}}",
-      "ldmia {0}!, {{r2-r5,r8-r10}}",
-      "stmia {1}!, {{r2-r5,r8-r10}}",
-      "pop {{r9}}",
-      inout(reg) src, inout(reg) dst,
-      out("r2") _, out("r3") _, out("r4") _, out("r5") _, out("r8") _,
-      out("r10") _,
-    )
-  } else if size <= 32 {
-    asm!(
-      "push {{r9}}",
-      "ldmia {0}!, {{r2-r5,r8-r10,r12}}",
-      "stmia {1}!, {{r2-r5,r8-r10,r12}}",
-      "pop {{r9}}",
-      inout(reg) src, inout(reg) dst,
-      out("r2") _, out("r3") _, out("r4") _, out("r5") _, out("r8") _,
-      out("r10") _, out("r12") _,
-    )
-  } else if size <= 36 {
-    asm!(
-      "push {{r9}}",
-      "ldmia {0}!, {{r2-r5,r8-r10,r12,r14}}",
-      "stmia {1}!, {{r2-r5,r8-r10,r12,r14}}",
-      "pop {{r9}}",
-      inout(reg) src, inout(reg) dst,
-      out("r2") _, out("r3") _, out("r4") _, out("r5") _, out("r8") _,
-      out("r10") _, out("r12") _, out("r14") _,
-    )
-  } else {
-    unimplemented!("Copy too large for use of ldmia/stmia.");
-  }
-}
+// TODO(rust-console/gba#158) Un-comment out this fn when we can use higher registers.
+// #[cfg(target_arch = "arm")]
+// #[instruction_set(arm::a32)]
+// #[allow(unused_assignments)]
+// unsafe fn transfer_align4_arm<T: Copy>(mut dst: *mut T, mut src: *const T) {
+//   let size = size_of::<T>();
+//   if size <= 16 {
+//     unimplemented!("This should be done via transfer_thumb.");
+//   } else if size <= 20 {
+//     // Starting at size == 20, we have to switch to ARM due to lack of
+//     // accessible registers in THUMB mode.
+//     asm!(
+//       "ldmia {0}!, {{r2-r5,r8}}",
+//       "stmia {1}!, {{r2-r5,r8}}",
+//       inout(reg) src, inout(reg) dst,
+//       out("r2") _, out("r3") _, out("r4") _, out("r5") _, out("r8") _,
+//     )
+//   } else if size <= 24 {
+//     asm!(
+//       "push {{r9}}",
+//       "ldmia {0}!, {{r2-r5,r8-r9}}",
+//       "stmia {1}!, {{r2-r5,r8-r9}}",
+//       "pop {{r9}}",
+//       inout(reg) src, inout(reg) dst,
+//       out("r2") _, out("r3") _, out("r4") _, out("r5") _, out("r8") _,
+//     )
+//   } else if size <= 28 {
+//     asm!(
+//       "push {{r9}}",
+//       "ldmia {0}!, {{r2-r5,r8-r10}}",
+//       "stmia {1}!, {{r2-r5,r8-r10}}",
+//       "pop {{r9}}",
+//       inout(reg) src, inout(reg) dst,
+//       out("r2") _, out("r3") _, out("r4") _, out("r5") _, out("r8") _,
+//       out("r10") _,
+//     )
+//   } else if size <= 32 {
+//     asm!(
+//       "push {{r9}}",
+//       "ldmia {0}!, {{r2-r5,r8-r10,r12}}",
+//       "stmia {1}!, {{r2-r5,r8-r10,r12}}",
+//       "pop {{r9}}",
+//       inout(reg) src, inout(reg) dst,
+//       out("r2") _, out("r3") _, out("r4") _, out("r5") _, out("r8") _,
+//       out("r10") _, out("r12") _,
+//     )
+//   } else if size <= 36 {
+//     asm!(
+//       "push {{r9}}",
+//       "ldmia {0}!, {{r2-r5,r8-r10,r12,r14}}",
+//       "stmia {1}!, {{r2-r5,r8-r10,r12,r14}}",
+//       "pop {{r9}}",
+//       inout(reg) src, inout(reg) dst,
+//       out("r2") _, out("r3") _, out("r4") _, out("r5") _, out("r8") _,
+//       out("r10") _, out("r12") _, out("r14") _,
+//     )
+//   } else {
+//     unimplemented!("Copy too large for use of ldmia/stmia.");
+//   }
+// }
 
 /// The internal function for swapping the current value of a [`Static`] with
 /// another value.

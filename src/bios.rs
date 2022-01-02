@@ -11,6 +11,8 @@
 #[allow(unused)]
 use crate::prelude::*;
 
+use core::arch::asm;
+
 /// (`swi 0x00`) Performs a "soft reset" of the device.
 ///
 /// Loads `r14` based on the `u8` value at `0x0300_7FFA`:
