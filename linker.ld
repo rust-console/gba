@@ -29,6 +29,7 @@ SECTIONS {
         
         __text_iwram_start = ABSOLUTE(.);
         *(.text_iwram .text_iwram.*);
+        *(.iwram .iwram.*);
         . = ALIGN(4);
         __text_iwram_end = ABSOLUTE(.);
         
