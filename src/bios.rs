@@ -112,7 +112,7 @@ pub unsafe fn Stop() {
 pub unsafe fn IntrWait(discard_current_flags: bool, flags: crate::mmio_types::InterruptFlags) {
   // Note(Lokathor): we don't mark this preserves_flags because the user's IRQ
   // handler gets called which might end up trashing the flags.
-  asm!("swi 0x03",
+  asm!("swi 0x04",
     inlateout("r0") discard_current_flags as u8 => _,
     inlateout("r1") flags.0 => _,
     out("r3") _,
