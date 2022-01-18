@@ -1,6 +1,6 @@
-use core::ops::BitOr;
-use crate::mmio_addresses::KEYINPUT;
 use super::*;
+use crate::mmio_addresses::KEYINPUT;
+use core::ops::BitOr;
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 #[repr(transparent)]
@@ -22,16 +22,16 @@ impl KeysLowActive {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(u16)]
 pub enum Key {
-  A      = 1u16 << 0,
-  B      = 1u16 << 1,
+  A = 1u16 << 0,
+  B = 1u16 << 1,
   SELECT = 1u16 << 2,
-  START  = 1u16 << 3,
-  RIGHT  = 1u16 << 4,
-  LEFT   = 1u16 << 5,
-  UP     = 1u16 << 6,
-  DOWN   = 1u16 << 7,
-  R      = 1u16 << 8,
-  L      = 1u16 << 9,
+  START = 1u16 << 3,
+  RIGHT = 1u16 << 4,
+  LEFT = 1u16 << 5,
+  UP = 1u16 << 6,
+  DOWN = 1u16 << 7,
+  R = 1u16 << 8,
+  L = 1u16 << 9,
 }
 
 impl BitOr<Key> for Key {
@@ -91,7 +91,7 @@ impl Keys {
       0
     }
   }
-  
+
   pub fn any_pressed(self, key_mask: u16) -> bool {
     self.0 & key_mask != 0
   }
@@ -125,10 +125,7 @@ pub struct KeyMonitor {
 
 impl KeyMonitor {
   pub fn new() -> KeyMonitor {
-    KeyMonitor {
-      current: Keys::read(),
-      previous: Keys::default(),
-    }
+    KeyMonitor { current: Keys::read(), previous: Keys::default() }
   }
 
   pub fn update(&mut self) {
