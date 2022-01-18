@@ -1,3 +1,5 @@
+use core::ops::BitOr;
+use crate::mmio_addresses::KEYINPUT;
 use super::*;
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
@@ -17,6 +19,35 @@ impl KeysLowActive {
   bitfield_bool!(u16; 9, l_released, with_l_released, set_l_released);
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[repr(u16)]
+pub enum Key {
+  A      = 1u16 << 0,
+  B      = 1u16 << 1,
+  SELECT = 1u16 << 2,
+  START  = 1u16 << 3,
+  RIGHT  = 1u16 << 4,
+  LEFT   = 1u16 << 5,
+  UP     = 1u16 << 6,
+  DOWN   = 1u16 << 7,
+  R      = 1u16 << 8,
+  L      = 1u16 << 9,
+}
+
+impl BitOr<Key> for Key {
+  type Output = u16;
+  fn bitor(self, rhs: Key) -> u16 {
+    (self as u16) | (rhs as u16)
+  }
+}
+
+impl BitOr<Key> for u16 {
+  type Output = u16;
+  fn bitor(self, rhs: Key) -> u16 {
+    self | (rhs as u16)
+  }
+}
+
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 #[repr(transparent)]
 pub struct Keys(u16);
@@ -32,6 +63,14 @@ impl Keys {
   bitfield_bool!(u16; 7, down, with_down, set_down);
   bitfield_bool!(u16; 8, r, with_r, set_r);
   bitfield_bool!(u16; 9, l, with_l, set_l);
+
+  pub fn read() -> Self {
+    KEYINPUT.read().into()
+  }
+
+  pub fn update(&mut self) {
+    *self = Keys::read()
+  }
 
   pub const fn x_signum(self) -> i32 {
     if self.right() {
@@ -52,8 +91,19 @@ impl Keys {
       0
     }
   }
+  
+  pub fn any_pressed(self, key_mask: u16) -> bool {
+    self.0 & key_mask != 0
+  }
+
+  pub fn pressed(self, key: Key) -> bool {
+    self.any_pressed(key as u16)
+  }
+
+  pub fn released(self, key: Key) -> bool {
+    self.0 & (key as u16) == 0
+  }
 }
-// TODO: bit ops for keys
 
 impl From<KeysLowActive> for Keys {
   fn from(low_active: KeysLowActive) -> Self {
@@ -64,5 +114,53 @@ impl From<KeysLowActive> for Keys {
 impl From<Keys> for KeysLowActive {
   fn from(keys: Keys) -> Self {
     Self(keys.0 ^ 0b11_1111_1111)
+  }
+}
+
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub struct KeyMonitor {
+  current: Keys,
+  previous: Keys,
+}
+
+impl KeyMonitor {
+  pub fn new() -> KeyMonitor {
+    KeyMonitor {
+      current: Keys::read(),
+      previous: Keys::default(),
+    }
+  }
+
+  pub fn update(&mut self) {
+    self.previous = self.current;
+    self.current = Keys::read();
+  }
+
+  pub fn is_pressed(&self, key: Key) -> bool {
+    self.current.pressed(key)
+  }
+
+  pub fn was_pressed(&self, key: Key) -> bool {
+    self.previous.pressed(key)
+  }
+
+  pub fn is_released(&self, key: Key) -> bool {
+    self.current.released(key)
+  }
+
+  pub fn was_released(&self, key: Key) -> bool {
+    self.previous.released(key)
+  }
+
+  pub fn just_pressed(&self, key: Key) -> bool {
+    self.current.pressed(key) && self.previous.released(key)
+  }
+
+  pub fn just_released(&self, key: Key) -> bool {
+    self.current.released(key) && self.previous.pressed(key)
+  }
+
+  pub fn being_held(&self, key: Key) -> bool {
+    self.current.pressed(key) && self.previous.pressed(key)
   }
 }
