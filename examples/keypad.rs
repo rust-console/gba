@@ -35,7 +35,7 @@ pub fn main() -> ! {
   const RED: Color = Color::from_rgb(31, 0, 0);
   const GREEN: Color = Color::from_rgb(0, 31, 0);
 
-  let mut keys = Keys::new();
+  let mut keys = Keys::read();
 
   fn draw_square(x: usize, y: usize, color: Color) {
     mode3::bitmap_xy(x, y).write(color);
@@ -69,6 +69,6 @@ pub fn main() -> ! {
     draw_square(50, mode3::HEIGHT / 2, if keys.right() { GREEN } else { RED });
 
     // read our keys for next frame
-    keys = KEYINPUT.read().into();
+    keys.update();
   }
 }

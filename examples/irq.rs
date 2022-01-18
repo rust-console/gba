@@ -49,7 +49,7 @@ fn main() -> ! {
   start_timers();
 
   loop {
-    let this_frame_keys: Keys = KEYINPUT.read().into();
+    let this_frame_keys: Keys = Keys::read();
 
     // The VBlank IRQ must be enabled at minimum, or else the CPU will halt
     // at the call to vblank_interrupt_wait() as the VBlank IRQ will never

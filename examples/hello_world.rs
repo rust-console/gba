@@ -43,7 +43,7 @@ pub fn main() -> ! {
 
   loop {
     // read our keys for this frame
-    let keys: Keys = KEYINPUT.read().into();
+    let keys: Keys = Keys::read();
 
     // adjust game state and wait for vblank
     px = px.wrapping_add((2 * keys.x_signum()) as usize);
