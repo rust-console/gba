@@ -5,5 +5,5 @@ target = "thumbv4t-none-eabi"
 build-std = ["core"]
 
 [target.thumbv4t-none-eabi]
-rustflags = ["-Clink-arg=-Tlinker.ld"]
+rustflags = ["-Clink-arg=-Tgba_link_script.ld"]
 runner = "mgba"
