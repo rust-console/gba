@@ -8,7 +8,7 @@ MEMORY {
 
 SECTIONS {
     .text : {
-        KEEP(rsrt0.o(.text));
+        *(.text.rom_header);
         *(.text .text.*);
         . = ALIGN(4);
     } >rom = 0xff
@@ -18,8 +18,9 @@ SECTIONS {
         . = ALIGN(4);
     } >rom = 0xff
 
-    __iwram_lma = .;
-    .iwram : {
+    . = ALIGN(4);
+    __iwram_position_in_rom = .;
+    .data : {
         __iwram_start = ABSOLUTE(.);
         
         __data_start = ABSOLUTE(.);
@@ -37,6 +38,7 @@ SECTIONS {
     } >iwram AT>rom = 0xff
 
     .bss : {
+        __bss_start = ABSOLUTE(.);
         *(.bss .bss.*);
         . = ALIGN(4);
         __bss_end = ABSOLUTE(.);

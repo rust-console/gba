@@ -1,35 +1,20 @@
 [package]
 name = "gba"
-description = "A crate for making GBA games with Rust."
-version = "0.5.2"
-authors = ["Lokathor <zefria@gmail.com>", "Thomas Winwood <twwinwood@gmail.com>"]
-repository = "https://github.com/rust-console/gba"
-readme = "README.md"
-keywords = ["gba"]
-edition = "2018"
+version = "0.6.0"
+edition = "2021"
 license = "Zlib OR Apache-2.0 OR MIT"
 
-[features]
-default = []
-serial = ["embedded-hal", "nb"]
+publish = false
 
 [dependencies]
-voladdress = { version = "0.4" }
-#
-embedded-hal = { version = "0.2.4", optional = true }
-nb = { version = "1", optional = true }
+voladdress = "1"
+bytemuck = "1"
 
 [profile.dev]
 panic = "abort"
+opt-level = 3
+lto = true
 
 [profile.release]
 panic = "abort"
-
-#[[example]]
-#name = "uart_echo"
-#required-features = ["serial"]
-
-[package.metadata.docs.rs]
-default-target = "thumbv4t-none-eabi"
-cargoflags = ["-Zbuild-std=core"]
-rustdoc-args = ["--cfg","docs_rs"]
+lto = true
