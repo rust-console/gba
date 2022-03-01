@@ -49,7 +49,7 @@ impl<T> GbaCell<T> {
 }
 
 macro_rules! unsafe_impl_gba_cell_new_for {
-  ( $( $t:ty ),+ ) => {
+  ( $( $t:ty ),+ $(,)? ) => {
     $(
       impl GbaCell<$t> {
         #[inline]
@@ -63,5 +63,5 @@ macro_rules! unsafe_impl_gba_cell_new_for {
 }
 
 unsafe_impl_gba_cell_new_for! {
-  u8, i8, u16, i16, u32, i32, usize, isize
+  u8, i8, u16, i16, u32, i32, usize, isize, crate::Color,
 }

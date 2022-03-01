@@ -8,7 +8,7 @@ MEMORY {
 
 SECTIONS {
     .text : {
-        *(.text.rom_header);
+        *(.text.gba_rom_header);
         *(.text .text.*);
         . = ALIGN(4);
     } >rom = 0xff

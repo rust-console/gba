@@ -1,7 +1,7 @@
 
 .arm @ must close with a matching .thumb at the end of the file
 
-.section .text.rom_header
+.section .text.gba_rom_header
 .global __start
 __start:
   b asm_init
