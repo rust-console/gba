@@ -2,11 +2,11 @@
 target = "thumbv4t-none-eabi"
 
 [env]
-RUSTC_LOG = "rustc_codegen_ssa::back::link=info"
+# RUSTC_LOG = "rustc_codegen_ssa::back::link=info"
 
 [unstable]
 build-std = ["core"]
 
 [target.thumbv4t-none-eabi]
-rustflags = ["-Clink-arg=-Tgba_link_script.ld", "-Clink-arg=--print-map"]
+rustflags = ["-Clink-arg=-Tgba_link_script.ld"] #, "-Clink-arg=--print-map"]
 runner = "mgba"
