@@ -1,9 +1,9 @@
 #![allow(non_snake_case)]
 
-//! This module allows access to the "bios functions".
+//! This module allows access to the BIOS functions.
 //!
-//! All bios function is accessed through a Software Interrupt (SWI). This means
-//! that they're significantly more costly to call than a normal function
+//! All bios functions are accessed through a Software Interrupt (SWI). This
+//! means that they're significantly more costly to call than a normal function
 //! because the SWI handler has to perform some common setup and then call to
 //! the correct bios function. Still, some of the BIOS functions are useful
 //! enough to justify this additional overhead.
