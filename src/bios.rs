@@ -85,7 +85,9 @@ pub unsafe fn RegisterRamReset(flags: RegisterRamResetFlags) {
 /// timers, serial, keypad) continue to operate. This mode only terminates when
 /// one of the interrupts set in [`IE`] occurs.
 ///
-/// * This function **ignores** the [`IME`] setting.
+/// If [`IME`] is set then the interrupt handler will be called as normal when
+/// the CPU wakes (before this function returns). Otherwise the CPU will simply
+/// wake up without calling the interrupt handler.
 #[inline]
 pub unsafe fn Halt() {
   asm!("swi 0x02",
