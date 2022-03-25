@@ -1,6 +1,11 @@
 [package]
 name = "gba"
+description = "A crate for making GBA games with Rust."
 version = "0.6.0"
+authors = ["Lokathor <zefria@gmail.com>", "Thomas Winwood <twwinwood@gmail.com>"]
+repository = "https://github.com/rust-console/gba"
+readme = "README.md"
+keywords = ["gba"]
 edition = "2021"
 license = "Zlib OR Apache-2.0 OR MIT"
 
@@ -18,3 +23,8 @@ lto = true
 [profile.release]
 panic = "abort"
 lto = true
+
+[package.metadata.docs.rs]
+default-target = "thumbv4t-none-eabi"
+cargoflags = ["-Zbuild-std=core"]
+rustdoc-args = ["--cfg","docs_rs"]

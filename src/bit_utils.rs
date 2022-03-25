@@ -77,3 +77,27 @@ pub const fn u16_with_value<const L: u32, const H: u32>(
 ) -> u16 {
   u16_with_region::<L, H>(x, val << L)
 }
+
+/// Gets the `B` bit.
+///
+/// ## Panics
+/// * If the bit requested is out of range.
+#[inline]
+#[must_use]
+pub const fn u8_get_bit<const B: u32>(x: u8) -> bool {
+  assert!(B < 8);
+  let mask = 1 << B;
+  (x & mask) != 0
+}
+
+/// Replaces the `B` bit.
+///
+/// ## Panics
+/// * If the bit requested is out of range.
+#[inline]
+#[must_use]
+pub const fn u8_with_bit<const B: u32>(x: u8, val: bool) -> u8 {
+  assert!(B < 8);
+  let mask = 1 << B;
+  (x & !mask) | ((val as u8) << B)
+}

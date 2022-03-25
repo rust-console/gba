@@ -65,3 +65,19 @@ macro_rules! u16_bool_field {
   };
 }
 pub(crate) use u16_bool_field;
+
+macro_rules! u8_bool_field {
+  ($bit:literal, $get:ident, $with:ident) => {
+    #[inline]
+    #[must_use]
+    pub const fn $get(self) -> bool {
+      $crate::u8_get_bit::<$bit>(self.0)
+    }
+    #[inline]
+    #[must_use]
+    pub const fn $with(self, b: bool) -> Self {
+      Self($crate::u8_with_bit::<$bit>(self.0, b))
+    }
+  };
+}
+pub(crate) use u8_bool_field;

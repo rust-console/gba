@@ -6,7 +6,7 @@
 __start:
   b asm_init
   @ Blank all the way out to the end of the multi-boot header.
-  @ This prevents some emulators from mis-detecting the ROM type.
+  @ This prevents mGBA from mis-detecting the ROM type.
   .space 0xE0
 
 asm_init:
@@ -67,39 +67,43 @@ end_of_init_code:
 rt_irq_handler:
   @ Assumed: r0 == 0x04000000 (set by the BIOS irq handler)
 
+  @ acknowledge all flagged interrupts in IF
   add   r2, r0, #0x200
   ldr   r0, [r2]
   and   r0, r0, r0, lsr #16
   strh  r0, [r2, #2]
   
+  @ set those bits in BIOS_IF as well
   mov   r3, #0x04000000
   ldrh  r1, [r3, #-8]
   orr   r1, r1, r0
   strh  r1, [r3, #-8]
   
+  @ load the rust handler Option<fn> and check for null
   ldr   r1, =RUST_IRQ_HANDLER
   ldr   r1, [r1]
   cmp   r1, #0
   beq   .L_end_of_rt_irq
 
+  @ if a fn is set, switch to USR mode and call it
   add   r2, r2, #8
   mov   r12, #0
   swp   r12, r12, [r2]
   mrs   r3, SPSR
-  push  {{r3}}
+  push  {r3}
   mov   r3, #0b11111
   msr   CPSR_cf, r3
   mov   r3, sp
   bic   sp, sp, #7
-  push  {{r2, r3, r12, lr}}
+  push  {r2, r3, r12, lr}
   adr   lr, .L_after_the_call
   bx    r1
   .L_after_the_call:
-  pop   {{r2, r3, r12, lr}}
+  pop   {r2, r3, r12, lr}
   mov   sp, r3
   mov   r3, #0b10010010
   msr   CPSR_cf, r3
-  pop   {{r3}}
+  pop   {r3}
   msr   SPSR, r3
   swp   r12, r12, [r2]
   

@@ -24,6 +24,8 @@ impl IrqBits {
   u16_bool_field!(11, dma3, with_dma3);
   u16_bool_field!(12, keypad, with_keypad);
   u16_bool_field!(13, game_pak, with_game_pak);
+
+  pub const V_BLANK: Self = Self(0).with_vblank(true);
 }
 pub const IE: VolAddress<IrqBits, Safe, Safe> =
   unsafe { VolAddress::new(0x0400_0200) };

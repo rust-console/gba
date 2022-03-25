@@ -34,4 +34,4 @@ pub use interrupts::*;
 mod key_input;
 pub use key_input::*;
 
-core::arch::global_asm!(include_str!("header_and_runtime.S"));
+core::arch::global_asm!(include_str!("header_and_runtime.S"), options(raw));
