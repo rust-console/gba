@@ -34,4 +34,4 @@ pub mod bit_utils;
 #[allow(dead_code)]
 extern "C" fn there_can_be_only_one_version_of_the_lib_in_the_build() {}
 
-core::arch::global_asm!(include_str!("header_and_runtime.s"), options(raw));
+core::arch::global_asm!(include_str!("assembly_runtime.s"), options(raw));
