@@ -1,6 +1,7 @@
 #![no_std]
 #![no_main]
-use gba::*;
+
+use gba::prelude::*;
 
 static PEN_COLOR: GbaCell<Color> =
   GbaCell::<Color>::new(Color::from_rgb(31, 0, 0));

@@ -1,3 +1,9 @@
+mod display_control;
+pub use display_control::*;
+
+mod display_status;
+pub use display_status::*;
+
 /// The GBA uses 5-bit-per-channel colors.
 ///
 /// ```txt

@@ -3,35 +3,30 @@
 //! The crate for writing GBA games.
 //!
 //! ## Safety
-//! All safety is considered assuming that you build for the
-//! `thumbv4t-none-eabi` target and then run code on a GBA. For example, MMIO
-//! address safety is considered only for the GBA. If you use this crate on any
-//! other device there are countless ways for things to go wrong.
+//!
+//! The safety of all `unsafe` code within this crate assumes that you're
+//! building using the `thumbv4t-none-eabi` target, using our build script and
+//! runtime, and then running the code on a GBA. In all other situations, this
+//! crate is very likely to be wildly unsound.
 
 mod macros;
 
-mod bit_utils;
-pub use bit_utils::*;
+pub mod audio;
+pub mod bios;
+pub mod input;
+pub mod interrupts;
+pub mod sound;
+pub mod video;
 
-mod bios;
-pub use bios::*;
+pub mod prelude;
 
-mod gba_cell;
-pub use gba_cell::*;
+#[doc(hidden)]
+pub mod bit_utils;
 
-mod color;
-pub use color::*;
+// TODO: Prelude module
 
-mod display_control;
-pub use display_control::*;
-
-mod display_status;
-pub use display_status::*;
-
-mod interrupts;
-pub use interrupts::*;
-
-mod key_input;
-pub use key_input::*;
+#[no_mangle]
+#[allow(dead_code)]
+extern "C" fn there_can_be_only_one_version_of_the_lib_in_the_build() {}
 
 core::arch::global_asm!(include_str!("header_and_runtime.S"), options(raw));

@@ -1,11 +1,11 @@
 use voladdress::{Safe, VolAddress};
 
-use crate::{
-  macros::{const_new, u16_bool_field},
-  GbaCell,
-};
+use crate::macros::{const_new, u16_bool_field};
 
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+mod gba_cell;
+pub use gba_cell::*;
+
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[repr(transparent)]
 pub struct IrqBits(pub(crate) u16);
 impl IrqBits {
@@ -25,10 +25,18 @@ impl IrqBits {
   u16_bool_field!(12, keypad, with_keypad);
   u16_bool_field!(13, game_pak, with_game_pak);
 
-  pub const V_BLANK: Self = Self(0).with_vblank(true);
+  pub const V_BLANK: Self = Self::new().with_vblank(true);
 }
+
+/// Interrupts Enabled
+///
+/// The interrupt handler will only be called for interrupts that are enabled.
 pub const IE: VolAddress<IrqBits, Safe, Safe> =
   unsafe { VolAddress::new(0x0400_0200) };
+
+/// Interrupt Master Enable
+///
+/// This lets interrupts happen (or not).
 pub const IME: VolAddress<bool, Safe, Safe> =
   unsafe { VolAddress::new(0x0400_0208) };
 
@@ -40,6 +48,11 @@ pub const IME: VolAddress<bool, Safe, Safe> =
 /// before calling your function.
 pub type RustIrqFn = extern "C" fn(IrqBits);
 
+/// This allows you to set a new Rust IRQ handler.
+///
+/// This rust function will be called by the assembly runtime on each interrupt.
+/// If you set the rust handler to `None` the assembly runtime will skip the
+/// call.
 #[inline]
 pub fn set_irq_handler(opt_fn: Option<RustIrqFn>) {
   // Safety: We declare this within the assembly runtime.

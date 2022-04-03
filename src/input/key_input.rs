@@ -2,12 +2,27 @@ use voladdress::{Safe, VolAddress};
 
 use crate::macros::{const_new, u16_bool_field};
 
+/// Holds data for GBA keys using a "low-active" convention.
+///
+/// If a bit is 0 the key is "pressed", if a bit is 1 the key is "released".
+///
+/// This is how the hardware exposes the value, though it's often not so easy to
+/// work with because usually we want 1 to be the "pressed" value.
+///
+/// You're expected to convert this into a [Keys] struct, which uses the more
+/// usual high-active convention. Or you can call [get_keys], which will do it
+/// for you.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[repr(transparent)]
 pub struct KeysLowActive(u16);
+
+/// The current state of all the system's keys (buttons).
 pub const KEYINPUT: VolAddress<KeysLowActive, Safe, ()> =
   unsafe { VolAddress::new(0x0400_0130) };
 
+/// Holds data for GBA keys using a "high-active" convention.
+///
+/// If a bit is 1 the key is "pressed", if a bit is 0 the key is "released".
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[repr(transparent)]
 pub struct Keys(u16);
@@ -38,6 +53,8 @@ impl From<Keys> for u16 {
     k.0
   }
 }
+
+/// Reads [`KEYINPUT`] and converts to a [Keys] value.
 #[inline]
 #[must_use]
 pub fn get_keys() -> Keys {

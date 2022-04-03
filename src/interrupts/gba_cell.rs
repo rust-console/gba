@@ -14,11 +14,11 @@ pub struct GbaCell<T>(UnsafeCell<T>);
 unsafe impl<T> Sync for GbaCell<T> {}
 
 impl<T> GbaCell<T> {
-  /// Makes a new value.
+  /// Makes a new value of any element type.
   ///
-  /// Prefer the [new](Self::new) method when possible. Only use this if you're
-  /// very sure that your type is supported despite `new` not being implemented
-  /// for that type.
+  /// Prefer the `new` function when possible, which is implemented for common
+  /// known-good types. Only use this if you're very sure that your type is
+  /// supported despite `new` not being implemented for that type.
   ///
   /// ## Safety
   /// * You must **only** use this with types that are accessed with a single
@@ -63,5 +63,5 @@ macro_rules! unsafe_impl_gba_cell_new_for {
 }
 
 unsafe_impl_gba_cell_new_for! {
-  u8, i8, u16, i16, u32, i32, usize, isize, crate::Color,
+  u8, i8, u16, i16, u32, i32, usize, isize, crate::video::Color,
 }

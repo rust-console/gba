@@ -17,12 +17,12 @@ macro_rules! u16_value_field {
     #[inline]
     #[must_use]
     pub const fn $get(self) -> u16 {
-      $crate::u16_get_value::<$bit_start, $bit_end>(self.0)
+      $crate::bit_utils::u16_get_value::<$bit_start, $bit_end>(self.0)
     }
     #[inline]
     #[must_use]
     pub const fn $with(self, u: u16) -> Self {
-      Self($crate::u16_with_value::<$bit_start, $bit_end>(self.0, u))
+      Self($crate::bit_utils::u16_with_value::<$bit_start, $bit_end>(self.0, u))
     }
   };
 }
@@ -34,17 +34,19 @@ macro_rules! u16_enum_field {
     #[must_use]
     pub const fn $get(self) -> $enum_ty {
       unsafe {
-        core::mem::transmute($crate::u16_get_region::<$bit_start, $bit_end>(
-          self.0,
-        ))
+        core::mem::transmute($crate::bit_utils::u16_get_region::<
+          $bit_start,
+          $bit_end,
+        >(self.0))
       }
     }
     #[inline]
     #[must_use]
     pub const fn $with(self, u: $enum_ty) -> Self {
-      Self($crate::u16_with_region::<$bit_start, $bit_end>(self.0, unsafe {
-        core::mem::transmute(u)
-      }))
+      Self($crate::bit_utils::u16_with_region::<$bit_start, $bit_end>(
+        self.0,
+        unsafe { core::mem::transmute(u) },
+      ))
     }
   };
 }
@@ -55,12 +57,12 @@ macro_rules! u16_bool_field {
     #[inline]
     #[must_use]
     pub const fn $get(self) -> bool {
-      $crate::u16_get_bit::<$bit>(self.0)
+      $crate::bit_utils::u16_get_bit::<$bit>(self.0)
     }
     #[inline]
     #[must_use]
     pub const fn $with(self, b: bool) -> Self {
-      Self($crate::u16_with_bit::<$bit>(self.0, b))
+      Self($crate::bit_utils::u16_with_bit::<$bit>(self.0, b))
     }
   };
 }
@@ -71,12 +73,12 @@ macro_rules! u8_bool_field {
     #[inline]
     #[must_use]
     pub const fn $get(self) -> bool {
-      $crate::u8_get_bit::<$bit>(self.0)
+      $crate::bit_utils::u8_get_bit::<$bit>(self.0)
     }
     #[inline]
     #[must_use]
     pub const fn $with(self, b: bool) -> Self {
-      Self($crate::u8_with_bit::<$bit>(self.0, b))
+      Self($crate::bit_utils::u8_with_bit::<$bit>(self.0, b))
     }
   };
 }
