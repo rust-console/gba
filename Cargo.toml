@@ -14,6 +14,12 @@ publish = false
 [dependencies]
 voladdress = "1"
 bytemuck = "1"
+embedded-hal = { version = "0.2.4", optional = true }
+nb = { version = "1", optional = true }
+
+[features]
+default = []
+serial = ["embedded-hal", "nb"]
 
 [profile.dev]
 panic = "abort"
