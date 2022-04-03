@@ -23,6 +23,7 @@ pub mod video;
 
 pub mod debugging;
 pub mod random;
+pub mod serial;
 pub mod sync;
 
 pub mod prelude;
