@@ -83,3 +83,19 @@ macro_rules! u8_bool_field {
   };
 }
 pub(crate) use u8_bool_field;
+
+macro_rules! u8_value_field {
+  ($bit_start:literal - $bit_end:literal, $get:ident, $with:ident) => {
+    #[inline]
+    #[must_use]
+    pub const fn $get(self) -> u8 {
+      $crate::bit_utils::u8_get_value::<$bit_start, $bit_end>(self.0)
+    }
+    #[inline]
+    #[must_use]
+    pub const fn $with(self, u: u8) -> Self {
+      Self($crate::bit_utils::u8_with_value::<$bit_start, $bit_end>(self.0, u))
+    }
+  };
+}
+pub(crate) use u8_value_field;

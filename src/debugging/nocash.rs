@@ -5,7 +5,7 @@
 //! differences or problems.
 
 use super::{DebugInterface, DebugLevel};
-use crate::prelude::InitOnce;
+use crate::sync::InitOnce;
 use core::fmt::{Arguments, Write};
 use voladdress::*;
 

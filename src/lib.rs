@@ -14,9 +14,11 @@ mod macros;
 
 pub mod audio;
 pub mod bios;
+pub mod dma;
 pub mod interrupts;
 pub mod key_input;
 pub mod save;
+pub mod timers;
 pub mod video;
 
 pub mod debugging;

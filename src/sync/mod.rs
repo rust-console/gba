@@ -57,7 +57,7 @@ pub unsafe extern "C" fn __sync_synchronize() {}
 /// for game functionality.
 pub fn with_irqs_disabled<T>(mut func: impl FnOnce() -> T) -> T {
   let current_ime = IME.read();
-  unsafe { IME.write(false) };
+  IME.write(false);
   // prevents the contents of the function from being reordered before IME is
   // disabled.
   memory_write_hint(&mut func);
@@ -67,7 +67,7 @@ pub fn with_irqs_disabled<T>(mut func: impl FnOnce() -> T) -> T {
   // prevents the contents of the function from being reordered after IME is
   // re-enabled.
   memory_write_hint(&mut result);
-  unsafe { IME.write(current_ime) };
+  IME.write(current_ime);
 
   result
 }
