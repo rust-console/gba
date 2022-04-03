@@ -1,6 +1,6 @@
 pub use crate::{
   bios::halt::*,
-  input::key_input::*,
   interrupts::*,
+  key_input::*,
   video::{Color, VideoMode::*, *},
 };

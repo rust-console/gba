@@ -1,4 +1,5 @@
 #![no_std]
+#![feature(isa_attribute)]
 
 //! The crate for writing GBA games.
 //!
@@ -13,20 +14,22 @@ mod macros;
 
 pub mod audio;
 pub mod bios;
-pub mod input;
 pub mod interrupts;
-pub mod sound;
+pub mod key_input;
+pub mod save;
 pub mod video;
+
+pub mod debugging;
+pub mod random;
+pub mod sync;
 
 pub mod prelude;
 
 #[doc(hidden)]
 pub mod bit_utils;
 
-// TODO: Prelude module
-
 #[no_mangle]
 #[allow(dead_code)]
 extern "C" fn there_can_be_only_one_version_of_the_lib_in_the_build() {}
 
-core::arch::global_asm!(include_str!("header_and_runtime.S"), options(raw));
+core::arch::global_asm!(include_str!("header_and_runtime.s"), options(raw));
