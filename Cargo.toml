@@ -21,6 +21,11 @@ nb = { version = "1", optional = true }
 default = []
 serial = ["embedded-hal", "nb"]
 
+# most examples are fine with defaults, but uart_echo needs an extra feature
+[[example]]
+name = "uart_echo"
+required-features = ["serial"]
+
 [profile.dev]
 panic = "abort"
 opt-level = 3
