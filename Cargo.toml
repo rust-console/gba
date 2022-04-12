@@ -1,7 +1,7 @@
 [package]
 name = "gba"
 description = "A crate for making GBA games with Rust."
-version = "0.5.2"
+version = "0.5.3"
 authors = ["Lokathor <zefria@gmail.com>", "Thomas Winwood <twwinwood@gmail.com>"]
 repository = "https://github.com/rust-console/gba"
 readme = "README.md"
@@ -31,5 +31,5 @@ panic = "abort"
 
 [package.metadata.docs.rs]
 default-target = "thumbv4t-none-eabi"
-cargoflags = ["-Zbuild-std=core"]
+cargo-args = ["-Z", "build-std=core"]
 rustdoc-args = ["--cfg","docs_rs"]
