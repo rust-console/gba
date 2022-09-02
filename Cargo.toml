@@ -1,0 +1,12 @@
+[package]
+name = "gba"
+description = "A crate for 'raw' style GBA development. If you want a 'managed' experience, try the `agb` crate instead."
+version = "0.7.0"
+edition = "2021"
+license = "Zlib OR Apache-2.0 OR MIT"
+
+[dependencies]
+voladdress = "1.0.2"
+
+[profile.dev]
+opt-level = 3
