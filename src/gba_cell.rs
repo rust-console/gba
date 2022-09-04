@@ -135,5 +135,5 @@ unsafe impl GbaCellSafe for i16 {}
 unsafe impl GbaCellSafe for u32 {}
 unsafe impl GbaCellSafe for i32 {}
 unsafe impl GbaCellSafe for char {}
-unsafe impl GbaCellSafe for IrqFn {}
+unsafe impl GbaCellSafe for Option<IrqFn> {}
 // TODO: many more impls can be added over time

@@ -26,7 +26,7 @@ extern "C" fn irq_handler(_: u16) {
 
 #[no_mangle]
 fn main() {
-  RUST_IRQ_HANDLER.write(IrqFn(Some(irq_handler)));
+  RUST_IRQ_HANDLER.write(Some(irq_handler));
   unsafe { DISPSTAT.write_volatile(1 << 3) };
   unsafe { IE.write_volatile(1) };
   unsafe { IME.write_volatile(true) };

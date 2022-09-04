@@ -165,11 +165,7 @@ unsafe extern "C" fn rt0_irq_handler() {
 }
 
 /// A function you want called during an interrupt.
-///
-/// This wrapper type is required to make the function pointer be aligned to 4
-/// (normally function pointers are align 1).
-#[derive(Clone, Copy)]
-pub struct IrqFn(pub Option<unsafe extern "C" fn(u16)>);
+pub type IrqFn = unsafe extern "C" fn(u16);
 
 /// Should store an `unsafe extern "C" fn(u16)`
-pub static RUST_IRQ_HANDLER: GbaCell<IrqFn> = GbaCell::new(IrqFn(None));
+pub static RUST_IRQ_HANDLER: GbaCell<Option<IrqFn>> = GbaCell::new(None);
