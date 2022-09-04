@@ -4,10 +4,9 @@
 #![feature(isa_attribute)]
 #![feature(naked_functions)]
 
-use core::mem::{align_of, size_of};
-
 use gba_cell::GbaCell;
 
+pub mod bios;
 pub mod gba_cell;
 
 #[naked]
@@ -169,7 +168,7 @@ unsafe extern "C" fn rt0_irq_handler() {
 ///
 /// This wrapper type is required to make the function pointer be aligned to 4
 /// (normally function pointers are align 1).
-//#[repr(align(4))]
+#[derive(Clone, Copy)]
 pub struct IrqFn(pub Option<unsafe extern "C" fn(u16)>);
 
 /// Should store an `unsafe extern "C" fn(u16)`
