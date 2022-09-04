@@ -231,7 +231,7 @@ impl<T> GbaCell<T> {
         )
       },
       (2, 2) => unsafe {
-        let u: u32 = core::mem::transmute_copy(&val);
+        let u: u16 = core::mem::transmute_copy(&val);
         let p: *mut T = self.0.get();
         core::arch::asm!(
           "strh {val}, [{addr}]",
@@ -241,7 +241,7 @@ impl<T> GbaCell<T> {
         )
       },
       (1, 1) => unsafe {
-        let u: u32 = core::mem::transmute_copy(&val);
+        let u: u8 = core::mem::transmute_copy(&val);
         let p: *mut T = self.0.get();
         core::arch::asm!(
           "strb {val}, [{addr}]",
