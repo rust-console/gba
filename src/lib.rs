@@ -4,7 +4,10 @@
 #![feature(isa_attribute)]
 #![feature(naked_functions)]
 
-use core::{ptr::null_mut, sync::atomic::AtomicPtr};
+use core::{
+  cell::UnsafeCell,
+  mem::{align_of, size_of},
+};
 
 #[naked]
 #[no_mangle]
@@ -150,21 +153,112 @@ unsafe extern "C" fn rt0_irq_handler() {
     mov r12, #{mmio_base}
     add r12, r12, #{ime_offset}
     swp r3, r3, [r12]  @IME swap previous
-    bx lr              @return
+    mov r0, #{size_of}
+    mov r0, #{align_of}
     ",
     mmio_base = const 0x0400_0000,
     ime_offset = const 0x208,
     RUST_IRQ_HANDLER = sym RUST_IRQ_HANDLER,
     sys_no_mask = const 0b00011111,
     svc_irq_masked = const 0b10010010,
+    size_of = const size_of::<IrqFn>(),
+    align_of = const align_of::<IrqFn>(),
     options(noreturn)
   )
 }
 
-/// Should store an `unsafe extern "C" fn(u16)`
-static RUST_IRQ_HANDLER: AtomicPtr<()> = AtomicPtr::new(null_mut());
-
-pub fn set_rust_irq_handler(f: unsafe extern "C" fn(u16)) {
-  let f_p: *mut () = unsafe { core::mem::transmute(f) };
-  RUST_IRQ_HANDLER.store(f_p, core::sync::atomic::Ordering::SeqCst);
+#[repr(transparent)]
+pub struct GbaCell<T>(UnsafeCell<T>);
+unsafe impl<T> Send for GbaCell<T> {}
+unsafe impl<T> Sync for GbaCell<T> {}
+impl<T> GbaCell<T> {
+  #[inline]
+  pub const fn new(val: T) -> Self {
+    Self(UnsafeCell::new(val))
+  }
+  #[inline]
+  pub fn read(&self) -> T {
+    match (size_of::<T>(), align_of::<T>()) {
+      (4, 4) => unsafe {
+        let val: u32;
+        let p: *mut T = self.0.get();
+        core::arch::asm!(
+          "ldr {r}, [{addr}]",
+          r = out(reg) val,
+          addr = in(reg) p,
+          options(nostack)
+        );
+        core::mem::transmute_copy(&val)
+      },
+      (2, 2) => unsafe {
+        let val: u16;
+        let p: *mut T = self.0.get();
+        core::arch::asm!(
+          "ldrh {r}, [{addr}]",
+          r = out(reg) val,
+          addr = in(reg) p,
+          options(nostack)
+        );
+        core::mem::transmute_copy(&val)
+      },
+      (1, 1) => unsafe {
+        let val: u8;
+        let p: *mut T = self.0.get();
+        core::arch::asm!(
+          "ldrb {r}, [{addr}]",
+          r = out(reg) val,
+          addr = in(reg) p,
+          options(nostack)
+        );
+        core::mem::transmute_copy(&val)
+      },
+      _ => {
+        unimplemented!()
+      }
+    }
+  }
+  #[inline]
+  pub fn write(&self, val: T) {
+    match (size_of::<T>(), align_of::<T>()) {
+      (4, 4) => unsafe {
+        let u: u32 = core::mem::transmute_copy(&val);
+        let p: *mut T = self.0.get();
+        core::arch::asm!(
+          "str {val}, [{addr}]",
+          val = in(reg) u,
+          addr = in(reg) p,
+          options(nostack)
+        )
+      },
+      (2, 2) => unsafe {
+        let u: u32 = core::mem::transmute_copy(&val);
+        let p: *mut T = self.0.get();
+        core::arch::asm!(
+          "strh {val}, [{addr}]",
+          val = in(reg) u,
+          addr = in(reg) p,
+          options(nostack)
+        )
+      },
+      (1, 1) => unsafe {
+        let u: u32 = core::mem::transmute_copy(&val);
+        let p: *mut T = self.0.get();
+        core::arch::asm!(
+          "strb {val}, [{addr}]",
+          val = in(reg) u,
+          addr = in(reg) p,
+          options(nostack)
+        )
+      },
+      _ => {
+        unimplemented!()
+      }
+    }
+  }
 }
+
+#[repr(align(4))]
+pub struct IrqFn(pub Option<unsafe extern "C" fn(u16)>);
+
+/// Should store an `unsafe extern "C" fn(u16)`
+pub static RUST_IRQ_HANDLER: GbaCell<IrqFn> = GbaCell::new(IrqFn(None));
