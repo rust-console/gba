@@ -4,7 +4,7 @@
 
 use core::mem::{align_of, size_of};
 
-use gba::{GbaCell, IrqFn, RUST_IRQ_HANDLER};
+use gba::{gba_cell::GbaCell, IrqFn, RUST_IRQ_HANDLER};
 
 extern crate gba;
 
