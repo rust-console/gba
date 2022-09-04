@@ -6,6 +6,7 @@ edition = "2021"
 license = "Zlib OR Apache-2.0 OR MIT"
 
 [dependencies]
+bitfrob = "0.2.3"
 voladdress = "1.0.2"
 
 [profile.dev]
