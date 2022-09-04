@@ -37,7 +37,6 @@ fn main() {
   unsafe {
     (0x0200_0004 as *mut u32).write_volatile(align_of::<IrqFn>() as u32)
   };
-  panic!();
   RUST_IRQ_HANDLER.write(IrqFn(Some(irq_handler)));
   unsafe { DISPSTAT.write_volatile(1 << 3) };
   unsafe { IE.write_volatile(1) };
