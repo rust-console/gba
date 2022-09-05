@@ -1,10 +1,4 @@
-use voladdress::{Safe, VolAddress};
-
 use crate::macros::{pub_const_fn_new_zeroed, u16_bool_field};
-
-/// Interrupts Enabled
-pub const IE: VolAddress<IrqBits, Safe, Safe> =
-  unsafe { VolAddress::new(0x0400_0200) };
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[repr(transparent)]
@@ -26,7 +20,3 @@ impl IrqBits {
   u16_bool_field!(12, keypad, with_keypad);
   u16_bool_field!(13, gamepak, with_gamepak);
 }
-
-/// Interrupt Master Enable
-pub const IME: VolAddress<bool, Safe, Safe> =
-  unsafe { VolAddress::new(0x0400_0208) };

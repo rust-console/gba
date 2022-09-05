@@ -3,8 +3,11 @@
 #![feature(asm_const)]
 #![feature(isa_attribute)]
 #![feature(naked_functions)]
+#![allow(soft_unstable)]
 
 mod macros;
+
+pub mod mmio;
 
 pub mod bios;
 pub mod gba_cell;

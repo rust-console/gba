@@ -5,12 +5,10 @@
 use gba::{
   bios::VBlankIntrWait,
   gba_cell::GbaCell,
-  interrupts::{IrqBits, IE, IME},
-  keys::KEYINPUT,
+  interrupts::IrqBits,
+  mmio::{BACKDROP_COLOR, DISPCNT, DISPSTAT, IE, IME, KEYINPUT},
   runtime::RUST_IRQ_HANDLER,
-  video::{
-    Color, DisplayControl, DisplayStatus, BACKDROP_COLOR, DISPCNT, DISPSTAT,
-  },
+  video::{Color, DisplayControl, DisplayStatus},
 };
 
 #[panic_handler]

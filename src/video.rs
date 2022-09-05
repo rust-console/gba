@@ -1,5 +1,3 @@
-use voladdress::{Safe, VolAddress};
-
 use crate::macros::{
   pub_const_fn_new_zeroed, u16_bool_field, u16_enum_field, u16_int_field,
 };
@@ -39,10 +37,6 @@ impl DisplayControl {
   u16_bool_field!(15, enable_win_obj, with_enable_win_obj);
 }
 
-/// Display Control Register
-pub const DISPCNT: VolAddress<DisplayControl, Safe, Safe> =
-  unsafe { VolAddress::new(0x0400_0000) };
-
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[repr(transparent)]
 pub struct DisplayStatus(u16);
@@ -57,10 +51,6 @@ impl DisplayStatus {
   u16_int_field!(8 - 15, vcount_setting, with_vcount_setting);
 }
 
-/// Display Status Register
-pub const DISPSTAT: VolAddress<DisplayStatus, Safe, Safe> =
-  unsafe { VolAddress::new(0x0400_0004) };
-
-/// Color to draw when no background or object would otherwise draw to a pixel.
-pub const BACKDROP_COLOR: VolAddress<Color, Safe, Safe> =
-  unsafe { VolAddress::new(0x0500_0000) };
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[repr(transparent)]
+pub struct BackgroundControl(u16);
