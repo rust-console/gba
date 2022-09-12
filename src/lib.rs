@@ -8,11 +8,11 @@ mod macros;
 
 pub mod mmio;
 
+pub mod asm_runtime;
 pub mod bios;
 pub mod gba_cell;
 pub mod interrupts;
 pub mod keys;
-pub mod runtime;
 pub mod video;
 
 /// A function you want called during an interrupt.
