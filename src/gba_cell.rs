@@ -24,6 +24,7 @@ use core::{
   cell::UnsafeCell,
   fmt::Debug,
   mem::{align_of, size_of},
+  panic::RefUnwindSafe,
 };
 
 use crate::IrqFn;
@@ -62,6 +63,7 @@ where
 }
 unsafe impl<T> Send for GbaCell<T> {}
 unsafe impl<T> Sync for GbaCell<T> {}
+impl<T> RefUnwindSafe for GbaCell<T> {}
 impl<T> GbaCell<T>
 where
   T: GbaCellSafe,
