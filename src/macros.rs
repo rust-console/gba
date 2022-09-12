@@ -11,9 +11,6 @@ macro_rules! pub_const_fn_new_zeroed {
 pub(crate) use pub_const_fn_new_zeroed;
 
 macro_rules! u16_bool_field {
-  ($bit:expr, $name: ident) => {
-    ::paste::paste!(u16_bool_field!($bit, $name, [<with_ $name>]););
-  };
   ($bit:expr, $get:ident, $with:ident) => {
     #[inline]
     #[must_use]
@@ -32,9 +29,6 @@ macro_rules! u16_bool_field {
 pub(crate) use u16_bool_field;
 
 macro_rules! u16_enum_field {
-  ($low:literal - $high:literal : $t:ty, $name:ident) => {
-    ::paste::paste!(u16_enum_field!($low - $high : $t, $name, [<with_ $name>]););
-  };
   ($low:literal - $high:literal : $t:ty, $get:ident, $with:ident) => {
     #[inline]
     #[must_use]
@@ -57,9 +51,6 @@ macro_rules! u16_enum_field {
 pub(crate) use u16_enum_field;
 
 macro_rules! u16_int_field {
-  ($low:literal - $high:literal, $name:ident) => {
-    ::paste::paste!(u16_int_field!($low - $high, $name, [<with_ $name>]););
-  };
   ($low:literal - $high:literal, $get:ident, $with:ident) => {
     #[inline]
     #[must_use]
