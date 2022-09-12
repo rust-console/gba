@@ -39,6 +39,9 @@ macro_rules! adr_lr_then_bx_to {
   };
 }
 
+/// The function that the assembly runtime calls when an interrupt occurs.
+pub static RUST_IRQ_HANDLER: GbaCell<Option<IrqFn>> = GbaCell::new(None);
+
 #[naked]
 #[no_mangle]
 #[instruction_set(arm::a32)]
@@ -47,7 +50,7 @@ unsafe extern "C" fn __start() -> ! {
   core::arch::asm!(
     "b 1f",
     ".space 0xE0",
-    "1: /* post header */",
+    "1:", /* post header */
     "mov r12, #{mmio_base}",
     "add r0, r12, #{waitcnt_offset}",
     "ldr r1, ={waitcnt_setting}",
@@ -60,12 +63,26 @@ unsafe extern "C" fn __start() -> ! {
     "ldr r0, =__iwram_start",
     "add r3, r12, #{dma3_offset}",
     "ldr r2, =__iwram_position_in_rom",
-    "str r2, [r3] /* source */",
-    "str r0, [r3, #4] /* destination */",
-    "strh r4, [r3, #8] /* word count */",
+    "str r2, [r3]", /* source */
+    "str r0, [r3, #4]", /* destination */
+    "strh r4, [r3, #8]", /* word count */
     "mov r5, #{dma3_setting}",
-    "strh r5, [r3, #10] /* set control bits */",
-    "1: /* post iwram copy */",
+    "strh r5, [r3, #10]", /* set control bits */
+    "1:", /* post iwram copy */
+
+    /* ewram copy */
+    "ldr r4, =__ewram_word_copy_count",
+    "cmp r4, #0",
+    "beq 1f",
+    "ldr r0, =__ewram_start",
+    "add r3, r12, #{dma3_offset}",
+    "ldr r2, =__ewram_position_in_rom",
+    "str r2, [r3]", /* source */
+    "str r0, [r3, #4]", /* destination */
+    "strh r4, [r3, #8]", /* word count */
+    "mov r5, #{dma3_setting}",
+    "strh r5, [r3, #10]", /* set control bits */
+    "1:", /* post ewram copy */
 
     /* bss zero */
     "ldr r4, =__bss_word_clear_count",
@@ -77,7 +94,7 @@ unsafe extern "C" fn __start() -> ! {
     "str r2, [r0], #4",
     "subs r4, r4, #1",
     "bne 2b",
-    "1: /* post bss zero */",
+    "1:", /* post bss zero */
 
     /* assign the runtime irq handler */
     "ldr r1, ={rt0_irq_handler}",
@@ -97,9 +114,6 @@ unsafe extern "C" fn __start() -> ! {
     options(noreturn)
   )
 }
-
-/// The function that the assembly runtime calls when an interrupt occurs.
-pub static RUST_IRQ_HANDLER: GbaCell<Option<IrqFn>> = GbaCell::new(None);
 
 #[naked]
 #[no_mangle]
@@ -168,7 +182,7 @@ unsafe extern "C" fn rt0_irq_handler() {
 
     /*end_of_rt0*/
     "9:",
-    "swp r3, r3, [r12]  @IME swap previous",
+    "swp r3, r3, [r12]", // IME swap previous
     "bx lr",
     //mmio_base = const 0x0400_0000,
     ime_offset = const 0x208,

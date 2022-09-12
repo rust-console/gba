@@ -29,7 +29,18 @@ SECTIONS {
     . = ALIGN(4);
     
     __iwram_end = ABSOLUTE(.);
-  } >iwram AT>rom = 0xff
+  } >iwram AT>rom = 0x00
+
+  . = ALIGN(4);
+  __ewram_position_in_rom = .;
+  .ewram : {
+    __ewram_start = ABSOLUTE(.);
+    
+    *(.ewram .ewram.*);
+    . = ALIGN(4);
+    
+    __ewram_end = ABSOLUTE(.);
+  } >ewram AT>rom = 0x00
 
   . = ALIGN(4);
   __bss_position_in_rom = .;
@@ -43,6 +54,7 @@ SECTIONS {
   } >iwram
 
   __iwram_word_copy_count = (__iwram_end - __iwram_start) / 4;
+  __ewram_word_copy_count = (__ewram_end - __ewram_start) / 4;
   __bss_word_clear_count = (__bss_end - __bss_start) / 4;
 
   /* debugging sections */
