@@ -25,6 +25,20 @@ macro_rules! with_pushed_registers {
   }
 }
 
+/// Sets `lr` to just after the `bx`, then uses `bx` with the given register.
+///
+/// This generates a label, so pick a `label_id` that won't interfere with any
+/// nearby code.
+macro_rules! adr_lr_then_bx_to {
+  (reg=$reg_name:expr, label_id=$label:expr) => {
+    concat!(
+      concat!("adr lr, ", $label, "f\n"),
+      concat!("bx ", $reg_name, "\n"),
+      concat!($label, ":\n"),
+    )
+  };
+}
+
 #[naked]
 #[no_mangle]
 #[instruction_set(arm::a32)]
@@ -139,24 +153,13 @@ unsafe extern "C" fn rt0_irq_handler() {
     /*call_rust_fn_in_sys_mode*/
     "mrs r2, SPSR",      //save SPSR
 
-    // TODO: why are we pushing r0 here?
-    // It doesn't appear to hold anything that is significant after the block
-    with_pushed_registers!("{{r0, r2}}", {
-      "msr CPSR_cf, #{sys_no_mask}",
+    "msr CPSR_cf, #{sys_no_mask}",
 
-      /* We need to push an even number of registers here. We also need to save,
-      at minimum, r3 (ime_previous) and lr (return_address). We could also save
-      r12 and any junk register, but that costs +2 cycles before *and* after the
-      call, and just rebuilding the r12 value after is only 2 cycles.
-      */
-      with_pushed_registers!("{{r3, lr}}",{
-        "adr lr, 1f",
-        "bx r1",
-        "1:",
-      }),
-
-      "msr CPSR_cf, #{svc_irq_masked}",
+    with_pushed_registers!("{{r2, r3, r12, lr}}",{
+      adr_lr_then_bx_to!(reg="r1", label_id="1")
     }),
+
+    "msr CPSR_cf, #{svc_irq_masked}",
 
     "msr SPSR, r2",
     /* Still Important
@@ -165,11 +168,9 @@ unsafe extern "C" fn rt0_irq_handler() {
 
     /*end_of_rt0*/
     "9:",
-    "mov r12, #{mmio_base}",
-    "add r12, r12, #{ime_offset}",
     "swp r3, r3, [r12]  @IME swap previous",
     "bx lr",
-    mmio_base = const 0x0400_0000,
+    //mmio_base = const 0x0400_0000,
     ime_offset = const 0x208,
     RUST_IRQ_HANDLER = sym RUST_IRQ_HANDLER,
     sys_no_mask = const 0b00011111,
