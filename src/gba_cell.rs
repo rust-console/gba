@@ -23,11 +23,110 @@
 use core::{
   cell::UnsafeCell,
   fmt::Debug,
-  mem::{align_of, size_of},
+  num::{NonZeroI16, NonZeroI32, NonZeroI8, NonZeroU16, NonZeroU32, NonZeroU8},
   panic::RefUnwindSafe,
 };
 
-use crate::IrqFn;
+use crate::{video::Color, IrqFn};
+
+/// Reads from a [`GbaCell`].
+///
+/// See the GbaCell docs for info on why you'd use this.
+#[macro_export]
+macro_rules! gba_cell_read {
+  ($elem:ty, $cell_ref:expr) => {
+    {
+      // Note(Lokathor): We assign the expression to a binding to avoid
+      // evaluating any side-effecting expressions more than once. Also, we give
+      // a type to the binding to ensure that the `transmute_copy` works right.
+      let the_cell: &GbaCell<$elem> = $cell_ref;
+      let out: $elem = match (::core::mem::size_of::<$elem>(), ::core::mem::align_of::<$elem>()) {
+        (4, 4) => unsafe {
+          let val: u32;
+          core::arch::asm!(
+            "ldr {r}, [{addr}]",
+            r = out(reg) val,
+            addr = in(reg) the_cell.get_ptr(),
+            options(readonly, preserves_flags, nostack)
+          );
+          core::mem::transmute_copy(&val)
+        },
+        (2, 2) => unsafe {
+          let val: u16;
+          core::arch::asm!(
+            "ldrh {r}, [{addr}]",
+            r = out(reg) val,
+            addr = in(reg) the_cell.get_ptr(),
+            options(readonly, preserves_flags, nostack)
+          );
+          core::mem::transmute_copy(&val)
+        },
+        (1, 1) => unsafe {
+          let val: u8;
+          core::arch::asm!(
+            "ldrb {r}, [{addr}]",
+            r = out(reg) val,
+            addr = in(reg) the_cell.get_ptr(),
+            options(readonly, preserves_flags, nostack)
+          );
+          core::mem::transmute_copy(&val)
+        },
+        _ => {
+          unimplemented!()
+        }
+      };
+      out
+    }
+  }
+}
+
+/// Writes to a [`GbaCell`].
+///
+/// See the GbaCell docs for info on why you'd use this.
+#[macro_export]
+macro_rules! gba_cell_write {
+  ($elem:ty, $cell_ref:expr, $val:expr) => {
+    {
+      // Note(Lokathor): We assign the expression to a binding to avoid
+      // evaluating any side-effecting expressions more than once. Also, we give
+      // a type to the binding to ensure that the `transmute_copy` works right.
+      let the_cell: &GbaCell<$elem> = $cell_ref;
+      let val: $elem = $val;
+      match (::core::mem::size_of::<$elem>(), ::core::mem::align_of::<$elem>()) {
+        (4, 4) => unsafe {
+          let u: u32 = core::mem::transmute_copy(&val);
+          core::arch::asm!(
+            "str {val}, [{addr}]",
+            val = in(reg) u,
+            addr = in(reg) the_cell.get_ptr(),
+            options(preserves_flags, nostack)
+          )
+        },
+        (2, 2) => unsafe {
+          let u: u16 = core::mem::transmute_copy(&val);
+          core::arch::asm!(
+            "strh {val}, [{addr}]",
+            val = in(reg) u,
+            addr = in(reg) the_cell.get_ptr(),
+            options(preserves_flags, nostack)
+          )
+        },
+        (1, 1) => unsafe {
+          let u: u8 = core::mem::transmute_copy(&val);
+          core::arch::asm!(
+            "strb {val}, [{addr}]",
+            val = in(reg) u,
+            addr = in(reg) the_cell.get_ptr(),
+            options(preserves_flags, nostack)
+          )
+        },
+        _ => {
+          unimplemented!()
+        }
+      }
+    }
+  }
+}
 
 /// A GBA-specific wrapper around Rust's [`UnsafeCell`](core::cell::UnsafeCell)
 /// type.
@@ -51,6 +150,19 @@ use crate::IrqFn;
 ///   inline assembly *might* call the atomic support library to access the
 ///   pointer's data.
 /// * So LLVM has to treat the inline assembly as an atomic sync point.
+///
+/// ## Macro Access
+/// Normally you can just use the `read` and `write` methods. However, register
+/// allocation for the `read` and `write` assembly blocks is performed *before*
+/// the methods are inlined into the caller. This means that `read` and `write`
+/// will always use `r0` and `r1` directly, and several calls to `read` and
+/// `write` will will put a lot of pressure on those two registers.
+///
+/// To reduce register pressure you can use the [gba_cell_read] and
+/// [gba_cell_write] macros. These will expand into inline assembly within your
+/// own code that *then* assigns registers based on your local function's
+/// register usage. This can potentially give some (very small) performance
+/// gains, at the cost of some ergonomics within the code.
 #[repr(transparent)]
 pub struct GbaCell<T>(UnsafeCell<T>);
 impl<T> Debug for GbaCell<T>
@@ -68,91 +180,30 @@ impl<T> GbaCell<T>
 where
   T: GbaCellSafe,
 {
+  /// Wraps a value in a new `GbaCell`.
   #[inline]
   #[must_use]
   pub const fn new(val: T) -> Self {
     Self(UnsafeCell::new(val))
   }
+  /// Gets a pointer to the inner data.
+  ///
+  /// The rules for this pointer work just like with [`UnsafeCell`].
   #[inline]
   #[must_use]
   pub const fn get_ptr(&self) -> *mut T {
     self.0.get()
   }
+  /// Reads the value.
   #[inline]
   #[must_use]
   pub fn read(&self) -> T {
-    let p: *const T = self.get_ptr();
-    match (size_of::<Self>(), align_of::<Self>()) {
-      (4, 4) => unsafe {
-        let val: u32;
-        core::arch::asm!(
-          "ldr {r}, [{addr}]",
-          r = out(reg) val,
-          addr = in(reg) p,
-          options(readonly, preserves_flags, nostack)
-        );
-        core::mem::transmute_copy(&val)
-      },
-      (2, 2) => unsafe {
-        let val: u16;
-        core::arch::asm!(
-          "ldrh {r}, [{addr}]",
-          r = out(reg) val,
-          addr = in(reg) p,
-          options(readonly, preserves_flags, nostack)
-        );
-        core::mem::transmute_copy(&val)
-      },
-      (1, 1) => unsafe {
-        let val: u8;
-        core::arch::asm!(
-          "ldrb {r}, [{addr}]",
-          r = out(reg) val,
-          addr = in(reg) p,
-          options(readonly, preserves_flags, nostack)
-        );
-        core::mem::transmute_copy(&val)
-      },
-      _ => {
-        unimplemented!()
-      }
-    }
+    gba_cell_read!(T, self)
   }
+  /// Writes a new value.
   #[inline]
   pub fn write(&self, val: T) {
-    let p: *mut T = self.get_ptr();
-    match (size_of::<Self>(), align_of::<Self>()) {
-      (4, 4) => unsafe {
-        let u: u32 = core::mem::transmute_copy(&val);
-        core::arch::asm!(
-          "str {val}, [{addr}]",
-          val = in(reg) u,
-          addr = in(reg) p,
-          options(preserves_flags, nostack)
-        )
-      },
-      (2, 2) => unsafe {
-        let u: u16 = core::mem::transmute_copy(&val);
-        core::arch::asm!(
-          "strh {val}, [{addr}]",
-          val = in(reg) u,
-          addr = in(reg) p,
-          options(preserves_flags, nostack)
-        )
-      },
-      (1, 1) => unsafe {
-        let u: u8 = core::mem::transmute_copy(&val);
-        core::arch::asm!(
-          "strb {val}, [{addr}]",
-          val = in(reg) u,
-          addr = in(reg) p,
-          options(preserves_flags, nostack)
-        )
-      },
-      _ => {
-        unimplemented!()
-      }
-    }
+    gba_cell_write!(T, self, val)
   }
 }
 
@@ -176,13 +227,34 @@ where
 /// * a `repr(transparent)` newtype over one of the above
 pub unsafe trait GbaCellSafe: Copy {}
 
-unsafe impl GbaCellSafe for u8 {}
-unsafe impl GbaCellSafe for i8 {}
+// Note(Lokathor): It would be nice if this impl list could be kept sorted, but
+// it's not necessary to do so.
+
+// Note(Lokathor): This list is very incomplete! It's just what I thought would
+// be most useful right away. More types (eg: other fn pointer types) should be
+// added as necessary.
+
 unsafe impl GbaCellSafe for bool {}
-unsafe impl GbaCellSafe for u16 {}
-unsafe impl GbaCellSafe for i16 {}
-unsafe impl GbaCellSafe for u32 {}
-unsafe impl GbaCellSafe for i32 {}
 unsafe impl GbaCellSafe for char {}
+unsafe impl GbaCellSafe for Color {}
+unsafe impl GbaCellSafe for i16 {}
+unsafe impl GbaCellSafe for i32 {}
+unsafe impl GbaCellSafe for i8 {}
+unsafe impl GbaCellSafe for NonZeroI16 {}
+unsafe impl GbaCellSafe for NonZeroI32 {}
+unsafe impl GbaCellSafe for NonZeroI8 {}
+unsafe impl GbaCellSafe for NonZeroU16 {}
+unsafe impl GbaCellSafe for NonZeroU32 {}
+unsafe impl GbaCellSafe for NonZeroU8 {}
+unsafe impl GbaCellSafe for Option<bool> {}
+unsafe impl GbaCellSafe for Option<char> {}
 unsafe impl GbaCellSafe for Option<IrqFn> {}
-// TODO: many more impls can be added over time
+unsafe impl GbaCellSafe for Option<NonZeroI16> {}
+unsafe impl GbaCellSafe for Option<NonZeroI32> {}
+unsafe impl GbaCellSafe for Option<NonZeroI8> {}
+unsafe impl GbaCellSafe for Option<NonZeroU16> {}
+unsafe impl GbaCellSafe for Option<NonZeroU32> {}
+unsafe impl GbaCellSafe for Option<NonZeroU8> {}
+unsafe impl GbaCellSafe for u16 {}
+unsafe impl GbaCellSafe for u32 {}
+unsafe impl GbaCellSafe for u8 {}

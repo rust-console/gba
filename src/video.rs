@@ -2,9 +2,16 @@ use crate::macros::{
   pub_const_fn_new_zeroed, u16_bool_field, u16_enum_field, u16_int_field,
 };
 
+/// An RGB555 color value (packed into `u16`).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[repr(transparent)]
 pub struct Color(pub u16);
+impl Color {
+  pub_const_fn_new_zeroed!();
+  u16_int_field!(0 - 4, red);
+  u16_int_field!(5 - 9, green);
+  u16_int_field!(10 - 14, blue);
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[repr(u16)]
