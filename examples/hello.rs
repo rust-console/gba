@@ -3,11 +3,11 @@
 #![feature(isa_attribute)]
 
 use gba::{
+  asm_runtime::RUST_IRQ_HANDLER,
   bios::VBlankIntrWait,
   gba_cell::GbaCell,
   interrupts::IrqBits,
   mmio::{BACKDROP_COLOR, DISPCNT, DISPSTAT, IE, IME, KEYINPUT},
-  runtime::RUST_IRQ_HANDLER,
   video::{Color, DisplayControl, DisplayStatus},
 };
 
