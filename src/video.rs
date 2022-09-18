@@ -151,3 +151,72 @@ impl BlendControl {
   u16_bool_field!(12, target2_obj, with_target2_obj);
   u16_bool_field!(13, target2_backdrop, with_target2_backdrop);
 }
+
+/// Data for a 4-bit-per-pixel tile.
+pub type Tile4 = [u32; 8];
+
+/// Data for an 8-bit-per-pixel tile.
+pub type Tile8 = [u32; 16];
+
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[repr(u16)]
+pub enum ObjDisplayStyle {
+  #[default]
+  Normal = 0 << 8,
+  Affine = 1 << 8,
+  NotDisplayed = 2 << 8,
+  DoubleSizeAffine = 3 << 8,
+}
+
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[repr(u16)]
+pub enum ObjDisplayMode {
+  #[default]
+  Normal = 0 << 10,
+  SemiTransparent = 1 << 10,
+  Window = 2 << 10,
+}
+
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[repr(u16)]
+pub enum ObjShape {
+  #[default]
+  Square = 0 << 14,
+  Horizontal = 1 << 14,
+  Vertical = 2 << 14,
+}
+
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[repr(transparent)]
+pub struct ObjAttr0(u16);
+impl ObjAttr0 {
+  pub_const_fn_new_zeroed!();
+  u16_int_field!(0 - 7, y, with_y);
+  u16_enum_field!(8 - 9: ObjDisplayStyle, style, with_style);
+  u16_enum_field!(10 - 11: ObjDisplayMode, mode, with_mode);
+  u16_bool_field!(12, mosaic, with_mosaic);
+  u16_bool_field!(13, bpp8, with_bpp8);
+  u16_enum_field!(14 - 15: ObjShape, shape, with_shape);
+}
+
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[repr(transparent)]
+pub struct ObjAttr1(u16);
+impl ObjAttr1 {
+  pub_const_fn_new_zeroed!();
+  u16_int_field!(0 - 8, x, with_x);
+  u16_int_field!(9 - 13, affine_index, with_affine_index);
+  u16_bool_field!(12, hflip, with_hflip);
+  u16_bool_field!(13, vflip, with_vflip);
+  u16_int_field!(14 - 15, size, with_size);
+}
+
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[repr(transparent)]
+pub struct ObjAttr2(u16);
+impl ObjAttr2 {
+  pub_const_fn_new_zeroed!();
+  u16_int_field!(0 - 9, tile_id, with_tile_id);
+  u16_int_field!(10 - 11, priority, with_priority);
+  u16_int_field!(12 - 15, palbank, with_palbank);
+}

@@ -16,12 +16,12 @@ macro_rules! def_mmio {
   };
 }
 
-use core::ffi::c_void;
+use core::{ffi::c_void, mem::size_of};
 use bitfrob::u8x2;
-use voladdress::{Safe, Unsafe, VolAddress, VolBlock};
+use voladdress::{Safe, Unsafe, VolAddress, VolBlock, VolSeries};
 use crate::{
   interrupts::IrqBits,
-  video::{BackgroundControl, Color, DisplayControl, DisplayStatus, WindowInside, WindowOutside, Mosaic, BlendControl}, dma::DmaControl,
+  video::{BackgroundControl, Color, DisplayControl, DisplayStatus, WindowInside, WindowOutside, Mosaic, BlendControl, Tile4, ObjAttr0, ObjAttr1, ObjAttr2}, dma::DmaControl,
 };
 
 // Video
@@ -153,8 +153,23 @@ def_mmio!(0x0500_2000 = OBJ_PALETTE: VolBlock<Color, Safe, Safe, 256>);
 
 // Video RAM (VRAM)
 
-def_mmio!(0x0600_0000 = MODE3_BITMAP: VolBlock<Color, Safe, Safe, {240 * 160}>);
+def_mmio!(0x0600_0000 = MODE3_BITMAP: VolBlock<Color, Safe, Safe, {240 * 160}>; "Mode 3 bitmap, 240x160.");
+
+def_mmio!(0x0600_0000 = MODE4_FRAME0: VolBlock<u8x2, Safe, Safe, {(240/2) * 160}>; "Mode 3 indexmap, frame 0, (240/2)x160.");
+def_mmio!(0x0600_A000 = MODE4_FRAME1: VolBlock<u8x2, Safe, Safe, {(240/2) * 160}>; "Mode 3 indexmap, frame 1, (240/2)x160.");
+
+def_mmio!(0x0600_0000 = MODE5_FRAME0: VolBlock<Color, Safe, Safe, {160 * 128}>; "Mode 3 bitmap, frame 0, 160x128.");
+def_mmio!(0x0600_A000 = MODE5_FRAME1: VolBlock<Color, Safe, Safe, {160 * 128}>; "Mode 3 bitmap, frame 1, 160x128.");
+
+def_mmio!(0x0601_0000 = OBJ_TILES: VolBlock<Tile4, Safe, Safe, 1024>; "Object tiles. In bitmap modes, only indices 512..=1023 are available.");
 
 // Object Attribute Memory (OAM)
 
-// TODO
+def_mmio!(0x0700_0000 = OBJ_ATTR0: VolSeries<ObjAttr0, Safe, Safe, 128, {size_of::<[u16;4]>()}>);
+def_mmio!(0x0700_0002 = OBJ_ATTR1: VolSeries<ObjAttr1, Safe, Safe, 128, {size_of::<[u16;4]>()}>);
+def_mmio!(0x0700_0004 = OBJ_ATTR2: VolSeries<ObjAttr2, Safe, Safe, 128, {size_of::<[u16;4]>()}>);
+
+def_mmio!(0x0700_0006 = AFFINE_PARAM_A: VolSeries<i16, Safe, Safe, 32, {size_of::<[u16;16]>()}>);
+def_mmio!(0x0700_000E = AFFINE_PARAM_B: VolSeries<i16, Safe, Safe, 32, {size_of::<[u16;16]>()}>);
+def_mmio!(0x0700_0016 = AFFINE_PARAM_C: VolSeries<i16, Safe, Safe, 32, {size_of::<[u16;16]>()}>);
+def_mmio!(0x0700_001E = AFFINE_PARAM_D: VolSeries<i16, Safe, Safe, 32, {size_of::<[u16;16]>()}>);
