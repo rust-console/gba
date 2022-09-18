@@ -1,4 +1,4 @@
-use crate::{gba_cell::GbaCell, IrqFn};
+use crate::{dma::DmaControl, gba_cell::GbaCell, IrqFn};
 
 /// Builds an assembly string that pushes some regs, does the body, then pops
 /// the regs.
@@ -39,8 +39,27 @@ macro_rules! adr_lr_then_bx_to {
   };
 }
 
+/// Expands to the asm line to set the control bits of CPSR.
+///
+/// * Can only be used in `a32`
+/// * Only sets the control bits, all other bits (eg: flag bits) are unchanged.
+macro_rules! set_cpu_control {
+  // CPSR low bits are: `I F T MMMMM`
+  // * 0b10011: Supervisor (SVC)
+  // * 0b11111: System (SYS)
+  (System, irq_masked: false, fiq_masked: false) => {
+    "msr CPSR_c, #0b00011111\n"
+  };
+  (Supervisor, irq_masked: true, fiq_masked: false) => {
+    "msr CPSR_c, #0b10010010\n"
+  };
+}
+
 /// The function that the assembly runtime calls when an interrupt occurs.
 pub static RUST_IRQ_HANDLER: GbaCell<Option<IrqFn>> = GbaCell::new(None);
+
+const DMA_32_BIT_MEMCPY: DmaControl =
+  DmaControl::new().with_transfer_32bit(true).with_enabled(true);
 
 #[naked]
 #[no_mangle]
@@ -56,17 +75,19 @@ unsafe extern "C" fn __start() -> ! {
     "ldr r1, ={waitcnt_setting}",
     "strh r1, [r0]",
 
+    /* TODO: set the stack pointers here in case of main returning to the rom base? */
+
     /* iwram copy */
     "ldr r4, =__iwram_word_copy_count",
     "cmp r4, #0",
     "beq 1f",
-    "ldr r0, =__iwram_start",
     "add r3, r12, #{dma3_offset}",
+    "mov r5, #{dma3_setting}",
+    "ldr r0, =__iwram_start",
     "ldr r2, =__iwram_position_in_rom",
     "str r2, [r3]", /* source */
     "str r0, [r3, #4]", /* destination */
     "strh r4, [r3, #8]", /* word count */
-    "mov r5, #{dma3_setting}",
     "strh r5, [r3, #10]", /* set control bits */
     "1:", /* post iwram copy */
 
@@ -74,13 +95,13 @@ unsafe extern "C" fn __start() -> ! {
     "ldr r4, =__ewram_word_copy_count",
     "cmp r4, #0",
     "beq 1f",
-    "ldr r0, =__ewram_start",
     "add r3, r12, #{dma3_offset}",
+    "mov r5, #{dma3_setting}",
+    "ldr r0, =__ewram_start",
     "ldr r2, =__ewram_position_in_rom",
     "str r2, [r3]", /* source */
     "str r0, [r3, #4]", /* destination */
     "strh r4, [r3, #8]", /* word count */
-    "mov r5, #{dma3_setting}",
     "strh r5, [r3, #10]", /* set control bits */
     "1:", /* post ewram copy */
 
@@ -109,7 +130,7 @@ unsafe extern "C" fn __start() -> ! {
     waitcnt_setting = const 0x4317 /*sram8,r0:3.1,r1:4.2,r2:8.2,no_phi,prefetch*/,
     rom_base = const 0x0800_0000,
     dma3_offset = const 0xD4,
-    dma3_setting = const 0x8400 /*u32,enabled*/,
+    dma3_setting = const DMA_32_BIT_MEMCPY.as_raw(),
     rt0_irq_handler = sym rt0_irq_handler,
     options(noreturn)
   )
@@ -167,13 +188,13 @@ unsafe extern "C" fn rt0_irq_handler() {
     /*call_rust_fn_in_sys_mode*/
     "mrs r2, SPSR",      //save SPSR
 
-    "msr CPSR_cf, #{sys_no_mask}",
+    set_cpu_control!(System, irq_masked: false, fiq_masked: false),
 
     with_pushed_registers!("{{r2, r3, r12, lr}}",{
       adr_lr_then_bx_to!(reg="r1", label_id="1")
     }),
 
-    "msr CPSR_cf, #{svc_irq_masked}",
+    set_cpu_control!(Supervisor, irq_masked: true, fiq_masked: false),
 
     "msr SPSR, r2",
     /* Still Important
@@ -184,11 +205,8 @@ unsafe extern "C" fn rt0_irq_handler() {
     "9:",
     "swp r3, r3, [r12]", // IME swap previous
     "bx lr",
-    //mmio_base = const 0x0400_0000,
     ime_offset = const 0x208,
     RUST_IRQ_HANDLER = sym RUST_IRQ_HANDLER,
-    sys_no_mask = const 0b00011111,
-    svc_irq_masked = const 0b10010010,
     options(noreturn)
   )
 }

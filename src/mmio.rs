@@ -21,7 +21,7 @@ use bitfrob::u8x2;
 use voladdress::{Safe, Unsafe, VolAddress, VolBlock};
 use crate::{
   interrupts::IrqBits,
-  video::{BackgroundControl, Color, DisplayControl, DisplayStatus, WindowInside, WindowOutside, Mosaic, BlendControl},
+  video::{BackgroundControl, Color, DisplayControl, DisplayStatus, WindowInside, WindowOutside, Mosaic, BlendControl}, dma::DmaControl,
 };
 
 // Video
@@ -86,22 +86,22 @@ def_mmio!(0x0400_00A4 = FIFO_B: VolAddress<u32, Safe, ()>);
 
 // DMA
 
-def_mmio!(0x0400_00B0 = DMA0SAD: VolAddress<*const c_void, (), Unsafe>);
-def_mmio!(0x0400_00B4 = DMA0DAD: VolAddress<*mut c_void, (), Unsafe>);
-def_mmio!(0x0400_00B8 = DMA0CNT_L: VolAddress<u16, (), Unsafe>);
-def_mmio!(0x0400_00BA = DMA0CNT_H: VolAddress<u16, Safe, Unsafe>);
-def_mmio!(0x0400_00BC = DMA1SAD: VolAddress<*const c_void, (), Unsafe>);
-def_mmio!(0x0400_00C0 = DMA1DAD: VolAddress<*mut c_void, (), Unsafe>);
-def_mmio!(0x0400_00C4 = DMA1CNT_L: VolAddress<u16, (), Unsafe>);
-def_mmio!(0x0400_00C6 = DMA1CNT_H: VolAddress<u16, Safe, Unsafe>);
-def_mmio!(0x0400_00C8 = DMA2SAD: VolAddress<*const c_void, (), Unsafe>);
-def_mmio!(0x0400_00CC = DMA2DAD: VolAddress<*mut c_void, (), Unsafe>);
-def_mmio!(0x0400_00D0 = DMA2CNT_L: VolAddress<u16, (), Unsafe>);
-def_mmio!(0x0400_00D2 = DMA2CNT_H: VolAddress<u16, Safe, Unsafe>);
-def_mmio!(0x0400_00D4 = DMA3SAD: VolAddress<*const c_void, (), Unsafe>);
-def_mmio!(0x0400_00D8 = DMA3DAD: VolAddress<*mut c_void, (), Unsafe>);
-def_mmio!(0x0400_00DC = DMA3CNT_L: VolAddress<u16, (), Unsafe>);
-def_mmio!(0x0400_00DE = DMA3CNT_H: VolAddress<u16, Safe, Unsafe>);
+def_mmio!(0x0400_00B0 = DMA0SAD: VolAddress<*const c_void, (), Unsafe>; "DMA0 Source Address (internal memory only)");
+def_mmio!(0x0400_00B4 = DMA0DAD: VolAddress<*mut c_void, (), Unsafe>; "DMA0 Destination Address (internal memory only)");
+def_mmio!(0x0400_00B8 = DMA0CNT_L: VolAddress<u16, (), Unsafe>; "DMA0 Transfer Count");
+def_mmio!(0x0400_00BA = DMA0CNT_H: VolAddress<DmaControl, Safe, Unsafe>; "DMA0 Control Bits");
+def_mmio!(0x0400_00BC = DMA1SAD: VolAddress<*const c_void, (), Unsafe>; "DMA1 Source Address (non-SRAM memory)");
+def_mmio!(0x0400_00C0 = DMA1DAD: VolAddress<*mut c_void, (), Unsafe>; "DMA1 Destination Address (internal memory only)");
+def_mmio!(0x0400_00C4 = DMA1CNT_L: VolAddress<u16, (), Unsafe>; "DMA1 Transfer Count");
+def_mmio!(0x0400_00C6 = DMA1CNT_H: VolAddress<DmaControl, Safe, Unsafe>; "DMA1 Control Bits");
+def_mmio!(0x0400_00C8 = DMA2SAD: VolAddress<*const c_void, (), Unsafe>; "DMA2 Source Address (non-SRAM memory)");
+def_mmio!(0x0400_00CC = DMA2DAD: VolAddress<*mut c_void, (), Unsafe>; "DMA2 Destination Address (internal memory only)");
+def_mmio!(0x0400_00D0 = DMA2CNT_L: VolAddress<u16, (), Unsafe>; "DMA2 Transfer Count");
+def_mmio!(0x0400_00D2 = DMA2CNT_H: VolAddress<DmaControl, Safe, Unsafe>; "DMA2 Control Bits");
+def_mmio!(0x0400_00D4 = DMA3SAD: VolAddress<*const c_void, (), Unsafe>; "DMA3 Source Address (non-SRAM memory)");
+def_mmio!(0x0400_00D8 = DMA3DAD: VolAddress<*mut c_void, (), Unsafe>; "DMA3 Destination Address (non-SRAM memory)");
+def_mmio!(0x0400_00DC = DMA3CNT_L: VolAddress<u16, (), Unsafe>; "DMA3 Transfer Count");
+def_mmio!(0x0400_00DE = DMA3CNT_H: VolAddress<DmaControl, Safe, Unsafe>; "DMA3 Control Bits");
 
 // Timers
 

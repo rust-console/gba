@@ -10,6 +10,7 @@ pub mod mmio;
 
 pub mod asm_runtime;
 pub mod bios;
+pub mod dma;
 pub mod gba_cell;
 pub mod interrupts;
 pub mod keys;
