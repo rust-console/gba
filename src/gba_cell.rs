@@ -27,7 +27,11 @@ use core::{
   panic::RefUnwindSafe,
 };
 
-use crate::{video::Color, IrqFn};
+use crate::{
+  keys::{KeyControl, KeyInput},
+  video::Color,
+  IrqFn,
+};
 
 /// Reads from a [`GbaCell`].
 ///
@@ -240,6 +244,8 @@ unsafe impl GbaCellSafe for Color {}
 unsafe impl GbaCellSafe for i16 {}
 unsafe impl GbaCellSafe for i32 {}
 unsafe impl GbaCellSafe for i8 {}
+unsafe impl GbaCellSafe for KeyInput {}
+unsafe impl GbaCellSafe for KeyControl {}
 unsafe impl GbaCellSafe for NonZeroI16 {}
 unsafe impl GbaCellSafe for NonZeroI32 {}
 unsafe impl GbaCellSafe for NonZeroI8 {}

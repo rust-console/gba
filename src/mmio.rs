@@ -34,7 +34,11 @@ use crate::{
     BackgroundControl, Color, DisplayControl, DisplayStatus, WindowInside,
     WindowOutside, Mosaic, BlendControl, Tile4, ObjAttr0, ObjAttr1, ObjAttr2
   },
-  dma::DmaControl, sound::{SweepControl, TonePattern, ToneFrequency, WaveBank, WaveLenVolume, WaveFrequency, NoiseLenEnvelope, NoiseFrequency, LeftRightVolume, SoundMix, SoundEnable, SoundBias}, timers::TimerControl,
+  dma::DmaControl,
+  sound::{
+    SweepControl, TonePattern, ToneFrequency, WaveBank, WaveLenVolume, WaveFrequency, NoiseLenEnvelope, NoiseFrequency, LeftRightVolume, SoundMix, SoundEnable, SoundBias
+  },
+  timers::TimerControl, keys::{KeyInput, KeyControl},
 };
 
 // Note(Lokathor): This macro lets us stick each address at the start of the
@@ -176,8 +180,8 @@ def_mmio!(0x0400_012A = SIODATA8: VolAddress<u8, Safe, Safe>);
 
 // Keys
 
-def_mmio!(0x0400_0130 = KEYINPUT: VolAddress<u16, Safe, ()>);
-def_mmio!(0x0400_0132 = KEYCNT: VolAddress<u16, Safe, Safe>);
+def_mmio!(0x0400_0130 = KEYINPUT: VolAddress<KeyInput, Safe, ()>);
+def_mmio!(0x0400_0132 = KEYCNT: VolAddress<KeyControl, Safe, Safe>);
 
 // Serial (part 2)
 

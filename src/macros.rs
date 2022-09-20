@@ -28,6 +28,20 @@ macro_rules! u16_bool_field {
       Self(bitfrob::u16_with_bit($bit, self.0, b))
     }
   };
+  (inverted $bit:expr, $get:ident, $with:ident) => {
+    #[inline]
+    #[must_use]
+    #[allow(missing_docs)]
+    pub const fn $get(self) -> bool {
+      !bitfrob::u16_get_bit($bit, self.0)
+    }
+    #[inline]
+    #[must_use]
+    #[allow(missing_docs)]
+    pub const fn $with(self, b: bool) -> Self {
+      Self(bitfrob::u16_with_bit($bit, self.0, !b))
+    }
+  };
 }
 pub(crate) use u16_bool_field;
 

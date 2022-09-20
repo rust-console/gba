@@ -7,6 +7,7 @@ use gba::{
   bios::VBlankIntrWait,
   gba_cell::GbaCell,
   interrupts::IrqBits,
+  keys::KeyInput,
   mmio::{BACKDROP_COLOR, DISPCNT, DISPSTAT, IE, IME, KEYINPUT},
   video::{Color, DisplayControl, DisplayStatus},
 };
@@ -16,9 +17,10 @@ fn panic_handler(_: &core::panic::PanicInfo) -> ! {
   loop {}
 }
 
-static KEYS: GbaCell<u16> = GbaCell::new(0);
+static KEYS: GbaCell<KeyInput> = GbaCell::new(KeyInput::new());
 
 extern "C" fn irq_handler(_: u16) {
+  // just as a demo, we'll read the keys during vblank.
   KEYS.write(KEYINPUT.read());
 }
 
@@ -35,6 +37,6 @@ extern "C" fn main() -> ! {
     VBlankIntrWait();
 
     let k = KEYS.read();
-    BACKDROP_COLOR.write(Color(k));
+    BACKDROP_COLOR.write(Color(k.to_u16()));
   }
 }
