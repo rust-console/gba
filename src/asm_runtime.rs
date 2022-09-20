@@ -1,4 +1,9 @@
-use crate::{dma::DmaControl, gba_cell::GbaCell, IrqFn};
+use crate::{
+  dma::DmaControl,
+  gba_cell::GbaCell,
+  mmio::{DMA3_SRC, IME},
+  IrqFn,
+};
 
 /// Builds an assembly string that pushes some regs, does the body, then pops
 /// the regs.
@@ -43,8 +48,13 @@ macro_rules! adr_lr_then_bx_to {
 ///
 /// * Can only be used in `a32`
 /// * Only sets the control bits, all other bits (eg: flag bits) are unchanged.
+///
+/// Currently, not all possible patterns are covered by this macro, just the
+/// patterns needed by this runtime when it was written. In general, any of the
+/// five CPU modes can be combined with irq and fiq masking each being either
+/// off or on. If a desired combination is missing just add it.
 macro_rules! set_cpu_control {
-  // CPSR low bits are: `I F T MMMMM`
+  // CPSR low bits are: `I F T MMMMM`, and T must always be left as 0.
   // * 0b10011: Supervisor (SVC)
   // * 0b11111: System (SYS)
   (System, irq_masked: false, fiq_masked: false) => {
@@ -60,6 +70,9 @@ pub static RUST_IRQ_HANDLER: GbaCell<Option<IrqFn>> = GbaCell::new(None);
 
 const DMA_32_BIT_MEMCPY: DmaControl =
   DmaControl::new().with_transfer_32bit(true).with_enabled(true);
+
+const DMA3_OFFSET: usize = DMA3_SRC.as_usize() - 0x0400_0000;
+const IME_OFFSET: usize = IME.as_usize() - 0x0400_0000;
 
 #[naked]
 #[no_mangle]
@@ -122,15 +135,15 @@ unsafe extern "C" fn __start() -> ! {
     "str r1, [r12, #-4]",
 
     /* call to rust main */
-    "mov lr, #{rom_base}",
     "ldr r0, =main",
     "bx r0",
+    // main shouldn't return, but if it does just SoftReset
+    "swi #0",
     mmio_base = const 0x0400_0000,
     waitcnt_offset = const 0x204,
     waitcnt_setting = const 0x4317 /*sram8,r0:3.1,r1:4.2,r2:8.2,no_phi,prefetch*/,
-    rom_base = const 0x0800_0000,
-    dma3_offset = const 0xD4,
-    dma3_setting = const DMA_32_BIT_MEMCPY.as_raw(),
+    dma3_offset = const DMA3_OFFSET,
+    dma3_setting = const DMA_32_BIT_MEMCPY.to_u16(),
     rt0_irq_handler = sym rt0_irq_handler,
     options(noreturn)
   )
@@ -205,7 +218,7 @@ unsafe extern "C" fn rt0_irq_handler() {
     "9:",
     "swp r3, r3, [r12]", // IME swap previous
     "bx lr",
-    ime_offset = const 0x208,
+    ime_offset = const IME_OFFSET,
     RUST_IRQ_HANDLER = sym RUST_IRQ_HANDLER,
     options(noreturn)
   )
