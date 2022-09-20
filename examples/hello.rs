@@ -2,15 +2,7 @@
 #![no_main]
 #![feature(isa_attribute)]
 
-use gba::{
-  asm_runtime::RUST_IRQ_HANDLER,
-  bios::VBlankIntrWait,
-  gba_cell::GbaCell,
-  interrupts::IrqBits,
-  keys::KeyInput,
-  mmio::{BACKDROP_COLOR, DISPCNT, DISPSTAT, IE, IME, KEYINPUT},
-  video::{Color, DisplayControl, DisplayStatus},
-};
+use gba::prelude::*;
 
 #[panic_handler]
 fn panic_handler(_: &core::panic::PanicInfo) -> ! {
