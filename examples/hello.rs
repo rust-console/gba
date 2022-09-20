@@ -26,7 +26,7 @@ extern "C" fn irq_handler(_: u16) {
 extern "C" fn main() -> ! {
   RUST_IRQ_HANDLER.write(Some(irq_handler));
   DISPSTAT.write(DisplayStatus::new().with_irq_vblank(true));
-  IE.write(IrqBits::new().with_vblank(true));
+  IE.write(IrqBits::VBLANK);
   IME.write(true);
 
   DISPCNT.write(DisplayControl::new().with_show_bg0(true));
