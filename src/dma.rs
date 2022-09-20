@@ -49,9 +49,10 @@ impl DmaControl {
   u16_enum_field!(12 - 13: DmaStartTime, start_time, with_start_time);
   u16_bool_field!(14, irq_after, with_irq_after);
   u16_bool_field!(15, enabled, with_enabled);
+
   #[inline]
   #[must_use]
-  pub const fn as_raw(self) -> u16 {
+  pub const fn to_u16(self) -> u16 {
     self.0
   }
 }
