@@ -4,7 +4,7 @@ use crate::interrupts::IrqBits;
 
 /// `0x04` Waits for a specific interrupt type(s) to happen.
 ///
-/// **Important:** This function forces [`IME`](crate::interrupts::IME) on.
+/// **Important:** This function forces [`IME`](crate::mmio::IME) on.
 ///
 /// Waits for *any* of the interrupt types set in `target_irqs` to occur. Your
 /// interrupt handler (if any) will be run before this function returns.
