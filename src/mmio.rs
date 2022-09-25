@@ -169,19 +169,19 @@ def_mmio!(0x0400_0102 = TIMER3_CONTROL/["TM3CNT_H"]: VolAddress<TimerControl, Sa
 
 // Serial (part 1)
 
-def_mmio!(0x0400_0120 = SIODATA32: VolAddress<u32, Safe, Safe>);
-def_mmio!(0x0400_0120 = SIOMULTI0: VolAddress<u16, Safe, Safe>);
-def_mmio!(0x0400_0122 = SIOMULTI1: VolAddress<u16, Safe, Safe>);
-def_mmio!(0x0400_0124 = SIOMULTI2: VolAddress<u16, Safe, Safe>);
-def_mmio!(0x0400_0126 = SIOMULTI3: VolAddress<u16, Safe, Safe>);
-def_mmio!(0x0400_0128 = SIOCNT: VolAddress<u16, Safe, Safe>);
-def_mmio!(0x0400_012A = SIOMLT_SEND: VolAddress<u16, Safe, Safe>);
-def_mmio!(0x0400_012A = SIODATA8: VolAddress<u8, Safe, Safe>);
+def_mmio!(0x0400_0120 = SIODATA32: VolAddress<u32, Safe, Safe>; "SerialIO 32-bit Normal Mode data send/recv. SIOCNT/RCNT must be set *before* writing here.");
+def_mmio!(0x0400_0120 = SIOMULTI0: VolAddress<u16, Safe, Safe>; "After a multiplayer transfer, holds `SIOMLT_SEND` value of GBA 0 in the network");
+def_mmio!(0x0400_0122 = SIOMULTI1: VolAddress<u16, Safe, Safe>; "After a multiplayer transfer, holds `SIOMLT_SEND` value of GBA 1 in the network");
+def_mmio!(0x0400_0124 = SIOMULTI2: VolAddress<u16, Safe, Safe>; "After a multiplayer transfer, holds `SIOMLT_SEND` value of GBA 2 in the network");
+def_mmio!(0x0400_0126 = SIOMULTI3: VolAddress<u16, Safe, Safe>; "After a multiplayer transfer, holds `SIOMLT_SEND` value of GBA 3 in the network");
+def_mmio!(0x0400_0128 = SIOCNT: VolAddress<u16, Safe, Safe>; "SerialIO Control");
+def_mmio!(0x0400_012A = SIOMLT_SEND: VolAddress<u16, Safe, Safe>; "SerialIO Multiplayer Send");
+def_mmio!(0x0400_012A = SIODATA8: VolAddress<u8, Safe, Safe>; "SerialIO 8-bit Normal Mode data send/recv.");
 
 // Keys
 
-def_mmio!(0x0400_0130 = KEYINPUT: VolAddress<KeyInput, Safe, ()>);
-def_mmio!(0x0400_0132 = KEYCNT: VolAddress<KeyControl, Safe, Safe>);
+def_mmio!(0x0400_0130 = KEYINPUT: VolAddress<KeyInput, Safe, ()>; "Key state data.");
+def_mmio!(0x0400_0132 = KEYCNT: VolAddress<KeyControl, Safe, Safe>; "Key control to configure the key interrupt.");
 
 // Serial (part 2)
 
