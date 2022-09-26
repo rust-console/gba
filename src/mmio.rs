@@ -169,14 +169,14 @@ def_mmio!(0x0400_0102 = TIMER3_CONTROL/["TM3CNT_H"]: VolAddress<TimerControl, Sa
 
 // Serial (part 1)
 
-def_mmio!(0x0400_0120 = SIODATA32: VolAddress<u32, Safe, Safe>; "SerialIO 32-bit Normal Mode data send/recv. SIOCNT/RCNT must be set *before* writing here.");
-def_mmio!(0x0400_0120 = SIOMULTI0: VolAddress<u16, Safe, Safe>; "After a multiplayer transfer, holds `SIOMLT_SEND` value of GBA 0 in the network");
-def_mmio!(0x0400_0122 = SIOMULTI1: VolAddress<u16, Safe, Safe>; "After a multiplayer transfer, holds `SIOMLT_SEND` value of GBA 1 in the network");
-def_mmio!(0x0400_0124 = SIOMULTI2: VolAddress<u16, Safe, Safe>; "After a multiplayer transfer, holds `SIOMLT_SEND` value of GBA 2 in the network");
-def_mmio!(0x0400_0126 = SIOMULTI3: VolAddress<u16, Safe, Safe>; "After a multiplayer transfer, holds `SIOMLT_SEND` value of GBA 3 in the network");
-def_mmio!(0x0400_0128 = SIOCNT: VolAddress<u16, Safe, Safe>; "SerialIO Control");
-def_mmio!(0x0400_012A = SIOMLT_SEND: VolAddress<u16, Safe, Safe>; "SerialIO Multiplayer Send");
-def_mmio!(0x0400_012A = SIODATA8: VolAddress<u8, Safe, Safe>; "SerialIO 8-bit Normal Mode data send/recv.");
+def_mmio!(0x0400_0120 = SIODATA32: VolAddress<u32, Safe, Safe>);
+def_mmio!(0x0400_0120 = SIOMULTI0: VolAddress<u16, Safe, Safe>);
+def_mmio!(0x0400_0122 = SIOMULTI1: VolAddress<u16, Safe, Safe>);
+def_mmio!(0x0400_0124 = SIOMULTI2: VolAddress<u16, Safe, Safe>);
+def_mmio!(0x0400_0126 = SIOMULTI3: VolAddress<u16, Safe, Safe>);
+def_mmio!(0x0400_0128 = SIOCNT: VolAddress<u16, Safe, Safe>);
+def_mmio!(0x0400_012A = SIOMLT_SEND: VolAddress<u16, Safe, Safe>);
+def_mmio!(0x0400_012A = SIODATA8: VolAddress<u8, Safe, Safe>);
 
 // Keys
 
@@ -193,26 +193,26 @@ def_mmio!(0x0400_0158 = JOYSTAT: VolAddress<u8, Safe, Safe>);
 
 // Interrupts
 
-def_mmio!(0x0400_0200 = IE: VolAddress<IrqBits, Safe, Safe>);
-def_mmio!(0x0400_0202 = IF: VolAddress<IrqBits, Safe, Unsafe>);
-def_mmio!(0x0400_0204 = WAITCNT: VolAddress<u16, Safe, Unsafe>);
-def_mmio!(0x0400_0208 = IME: VolAddress<bool, Safe, Safe>);
+def_mmio!(0x0400_0200 = IE: VolAddress<IrqBits, Safe, Safe>; "Interrupts Enabled: sets which interrupts will be accepted when a subsystem fires an interrupt");
+def_mmio!(0x0400_0202 = IF: VolAddress<IrqBits, Safe, Safe>; "Interrupts Flagged: reads which interrupts are pending, writing bit(s) will clear a pending interrupt.");
+def_mmio!(0x0400_0204 = WAITCNT: VolAddress<u16, Safe, Unsafe>; "Wait state control for interfacing with the ROM (can make reading the ROM give garbage when it's mis-configured)");
+def_mmio!(0x0400_0208 = IME: VolAddress<bool, Safe, Safe>; "Interrupt Master Enable: Allows turning on/off all interrupts with a single access.");
 
 // Palette RAM (PALRAM)
 
 def_mmio!(0x0500_0000 = BACKDROP_COLOR: VolAddress<Color, Safe, Safe>; "Color that's shown when no BG or OBJ draws to a pixel");
-def_mmio!(0x0500_0000 = BG_PALETTE: VolBlock<Color, Safe, Safe, 256>);
-def_mmio!(0x0500_2000 = OBJ_PALETTE: VolBlock<Color, Safe, Safe, 256>);
+def_mmio!(0x0500_0000 = BG_PALETTE: VolBlock<Color, Safe, Safe, 256>; "Background tile palette entries.");
+def_mmio!(0x0500_2000 = OBJ_PALETTE: VolBlock<Color, Safe, Safe, 256>; "Object tile palette entries.");
 
 // Video RAM (VRAM)
 
 def_mmio!(0x0600_0000 = MODE3_BITMAP: VolBlock<Color, Safe, Safe, {240 * 160}>; "Mode 3 bitmap, 240x160.");
 
-def_mmio!(0x0600_0000 = MODE4_FRAME0: VolBlock<u8x2, Safe, Safe, {(240/2) * 160}>; "Mode 3 indexmap, frame 0, (240/2)x160.");
-def_mmio!(0x0600_A000 = MODE4_FRAME1: VolBlock<u8x2, Safe, Safe, {(240/2) * 160}>; "Mode 3 indexmap, frame 1, (240/2)x160.");
+def_mmio!(0x0600_0000 = MODE4_FRAME0: VolBlock<u8x2, Safe, Safe, {(240/2) * 160}>; "Mode 4 indexmap, frame 0, (240/2)x160.");
+def_mmio!(0x0600_A000 = MODE4_FRAME1: VolBlock<u8x2, Safe, Safe, {(240/2) * 160}>; "Mode 4 indexmap, frame 1, (240/2)x160.");
 
-def_mmio!(0x0600_0000 = MODE5_FRAME0: VolBlock<Color, Safe, Safe, {160 * 128}>; "Mode 3 bitmap, frame 0, 160x128.");
-def_mmio!(0x0600_A000 = MODE5_FRAME1: VolBlock<Color, Safe, Safe, {160 * 128}>; "Mode 3 bitmap, frame 1, 160x128.");
+def_mmio!(0x0600_0000 = MODE5_FRAME0: VolBlock<Color, Safe, Safe, {160 * 128}>; "Mode 5 bitmap, frame 0, 160x128.");
+def_mmio!(0x0600_A000 = MODE5_FRAME1: VolBlock<Color, Safe, Safe, {160 * 128}>; "Mode 5 bitmap, frame 1, 160x128.");
 
 def_mmio!(0x0601_0000 = OBJ_TILES: VolBlock<Tile4, Safe, Safe, 1024>; "Object tiles. In bitmap modes, only indices 512..=1023 are available.");
 
