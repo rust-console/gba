@@ -586,6 +586,7 @@ unsafe extern "C" fn __aeabi_uwrite8(value: u64, address: *mut c_void) {
 }
 
 /// Provides the `libc` styled memory copy (transfer between exclusive regions)
+#[inline]
 #[no_mangle]
 unsafe extern "C" fn memcpy(
   dest: *mut u8, src: *const u8, byte_count: usize,
@@ -596,6 +597,7 @@ unsafe extern "C" fn memcpy(
 
 /// Provides the `libc` styled memory move (transfer between non-exclusive
 /// regions)
+#[inline]
 #[no_mangle]
 unsafe extern "C" fn memmove(
   dest: *mut u8, src: *const u8, byte_count: usize,
@@ -606,6 +608,7 @@ unsafe extern "C" fn memmove(
 
 /// Provides the `libc` styled memory set (assign `u8` in `byte` to the entire
 /// region)
+#[inline]
 #[no_mangle]
 unsafe extern "C" fn memset(
   dest: *mut u8, byte: i32, byte_count: usize,
