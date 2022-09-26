@@ -12,7 +12,7 @@ This will require the use of Nightly Rust. Any recent-ish version of Nightly sho
 
 You'll need the ARM version of the GNU binutils in your path, specifically the linker (`arm-none-eabi-ld`).
 
-You can get them from your linux package manager, or from the [ARM Website](https://developer.arm.com/Tools%20and%20Software/GNU%20Toolchain)
+Linux folks can use the package manager. Mac and Windows folks can use the [ARM Website](https://developer.arm.com/Tools%20and%20Software/GNU%20Toolchain).
 
 ### Run `rustup component add rust-src`
 
