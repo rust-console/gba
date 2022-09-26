@@ -198,6 +198,9 @@ pub use sound_status::*;
 mod sound_bias;
 pub use sound_bias::*;
 
+mod text_entry;
+pub use text_entry::*;
+
 mod timer_control;
 pub use timer_control::*;
 
