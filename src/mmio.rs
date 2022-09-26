@@ -32,7 +32,7 @@ use crate::{
   interrupts::IrqBits,
   video::{
     BackgroundControl, Color, DisplayControl, DisplayStatus, WindowInside,
-    WindowOutside, Mosaic, BlendControl, Tile4, ObjAttr0, ObjAttr1, ObjAttr2
+    WindowOutside, Mosaic, BlendControl, Tile4, ObjAttr0, ObjAttr1, ObjAttr2, Tile8, TextEntry
   },
   dma::DmaControl,
   sound::{
@@ -205,6 +205,31 @@ def_mmio!(0x0500_0000 = BG_PALETTE: VolBlock<Color, Safe, Safe, 256>; "Backgroun
 def_mmio!(0x0500_2000 = OBJ_PALETTE: VolBlock<Color, Safe, Safe, 256>; "Object tile palette entries.");
 
 // Video RAM (VRAM)
+
+def_mmio!(0x0600_0000 = CHARBLOCK0_4BPP: VolBlock<Tile4, Safe, Safe, 512>; "Charblock 0, 4bpp view (512 tiles).");
+def_mmio!(0x0600_4000 = CHARBLOCK1_4BPP: VolBlock<Tile4, Safe, Safe, 512>; "Charblock 1, 4bpp view (512 tiles).");
+def_mmio!(0x0600_8000 = CHARBLOCK2_4BPP: VolBlock<Tile4, Safe, Safe, 512>; "Charblock 2, 4bpp view (512 tiles).");
+def_mmio!(0x0600_C000 = CHARBLOCK3_4BPP: VolBlock<Tile4, Safe, Safe, 512>; "Charblock 3, 4bpp view (512 tiles).");
+
+def_mmio!(0x0600_0000 = CHARBLOCK0_8BPP: VolBlock<Tile8, Safe, Safe, 512>; "Charblock 0, 8bpp view (256 tiles).");
+def_mmio!(0x0600_4000 = CHARBLOCK1_8BPP: VolBlock<Tile8, Safe, Safe, 512>; "Charblock 1, 8bpp view (256 tiles).");
+def_mmio!(0x0600_8000 = CHARBLOCK2_8BPP: VolBlock<Tile8, Safe, Safe, 512>; "Charblock 2, 8bpp view (256 tiles).");
+def_mmio!(0x0600_C000 = CHARBLOCK3_8BPP: VolBlock<Tile8, Safe, Safe, 512>; "Charblock 3, 8bpp view (256 tiles).");
+
+pub type TextScreenBlock = VolBlock<TextEntry, Safe, Safe, {8*8}>;
+/// ## Panics
+/// * Must be in range `0..=31`
+#[inline]
+#[must_use]
+pub const fn text_screenblock(index: usize) -> TextScreenBlock {
+  assert!(index < 32);
+  unsafe { VolBlock::new(0x0600_0000 + index * size_of::<[TextEntry;8*8]>()) }
+}
+
+pub type AffineScreenBlock0 = VolBlock<u8, Safe, Safe, {16*16}>;
+pub type AffineScreenBlock1 = VolBlock<u8, Safe, Safe, {32*32}>;
+pub type AffineScreenBlock2 = VolBlock<u8, Safe, Safe, {64*64}>;
+pub type AffineScreenBlock3 = VolBlock<u8, Safe, Safe, {128*128}>;
 
 def_mmio!(0x0600_0000 = MODE3_BITMAP: VolBlock<Color, Safe, Safe, {240 * 160}>; "Mode 3 bitmap, 240x160.");
 

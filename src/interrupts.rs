@@ -1,5 +1,8 @@
 use crate::macros::{pub_const_fn_new_zeroed, u16_bool_field};
 
+/// A function you want called during an interrupt.
+pub type IrqFn = unsafe extern "C" fn(u16);
+
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[repr(transparent)]
 pub struct IrqBits(u16);

@@ -28,9 +28,9 @@ use core::{
 };
 
 use crate::{
+  interrupts::IrqFn,
   keys::{KeyControl, KeyInput},
   video::Color,
-  IrqFn,
 };
 
 /// Reads from a [`GbaCell`].

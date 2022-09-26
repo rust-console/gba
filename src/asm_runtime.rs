@@ -3,8 +3,8 @@ use core::ffi::c_void;
 use crate::{
   dma::DmaControl,
   gba_cell::GbaCell,
+  interrupts::IrqFn,
   mmio::{DMA3_SRC, IME},
-  IrqFn,
 };
 
 /// Builds an assembly string that pushes some regs, does the body, then pops

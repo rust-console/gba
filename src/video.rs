@@ -159,6 +159,17 @@ pub type Tile4 = [u32; 8];
 pub type Tile8 = [u32; 16];
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[repr(transparent)]
+pub struct TextEntry(u16);
+impl TextEntry {
+  pub_const_fn_new_zeroed!();
+  u16_int_field!(0 - 9, tile_id, with_tile_id);
+  u16_bool_field!(10, hflip, with_hflip);
+  u16_bool_field!(11, vflip, with_vflip);
+  u16_int_field!(12 - 15, palbank, with_palbank);
+}
+
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[repr(u16)]
 pub enum ObjDisplayStyle {
   #[default]

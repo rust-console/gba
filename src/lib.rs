@@ -17,6 +17,3 @@ pub mod prelude;
 pub mod sound;
 pub mod timers;
 pub mod video;
-
-/// A function you want called during an interrupt.
-pub type IrqFn = unsafe extern "C" fn(u16);
