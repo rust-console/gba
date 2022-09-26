@@ -7,6 +7,66 @@ use crate::{
   mmio::{DMA3_SRC, IME},
 };
 
+/// Builds an assembly string that puts the contained code in the section
+/// specified.
+///
+/// ```txt
+/// put_code_in_section!( ".example.section", {
+///   "lines"
+///   "go"
+///   "here"
+/// });
+/// ```
+macro_rules! put_code_in_section {
+  ($section_name:expr, {
+    $($asm_line:expr),+ $(,)?
+  }) => {
+    concat!(
+      concat!(".section ", $section_name, "\n"),
+      $( concat!($asm_line, "\n") ),+ ,
+      concat!(".previous\n"),
+    )
+  }
+}
+
+/// Builds an assembly string wrapped in `.code 32` and `.code 16` as necessary
+///
+/// ```txt
+/// emit_a32_code!{
+///   "lines"
+///   "go"
+///   "here"
+/// };
+/// ```
+#[cfg(target_feature = "thumb-mode")]
+macro_rules! emit_a32_code {
+  ($($asm_line:expr),+ $(,)?) => {
+    concat!(
+      concat!(".code 32\n"),
+      $( concat!($asm_line, "\n") ),+ ,
+      concat!(".code 16\n"),
+    )
+  }
+}
+
+/// Builds an assembly string wrapped in `.code 32` and `.code 16` as necessary
+///
+/// ```txt
+/// emit_a32_code!{
+///   "lines"
+///   "go"
+///   "here"
+/// };
+/// ```
+#[cfg(not(target_feature = "thumb-mode"))]
+macro_rules! emit_a32_code {
+  ($($asm_line:expr),+ $(,)?) => {
+    concat!(
+      $( concat!($asm_line, "\n") ),+ ,
+    )
+  }
+}
+
 /// Builds an assembly string that pushes some regs, does the body, then pops
 /// the regs.
 ///
@@ -523,4 +583,334 @@ unsafe extern "C" fn __aeabi_uwrite8(value: u64, address: *mut c_void) {
     "bx   lr",
     options(noreturn),
   )
+}
+
+/// Provides the `libc` styled memory copy (transfer between exclusive regions)
+#[no_mangle]
+unsafe extern "C" fn memcpy(
+  dest: *mut u8, src: *const u8, byte_count: usize,
+) -> *mut u8 {
+  __aeabi_memcpy(dest, src, byte_count);
+  dest
+}
+
+/// Provides the `libc` styled memory move (transfer between non-exclusive
+/// regions)
+#[no_mangle]
+unsafe extern "C" fn memmove(
+  dest: *mut u8, src: *const u8, byte_count: usize,
+) -> *mut u8 {
+  __aeabi_memmove(dest, src, byte_count);
+  dest
+}
+
+/// Provides the `libc` styled memory set (assign `u8` in `byte` to the entire
+/// region)
+#[no_mangle]
+unsafe extern "C" fn memset(
+  dest: *mut u8, byte: i32, byte_count: usize,
+) -> *mut u8 {
+  __aeabi_memset(dest, byte_count, byte);
+  dest
+}
+
+extern "C" {
+  pub fn __aeabi_memcpy(dest: *mut u8, src: *const u8, byte_count: usize);
+  pub fn __aeabi_memcpy4(dest: *mut u8, src: *const u8, byte_count: usize);
+  pub fn __aeabi_memcpy8(dest: *mut u8, src: *const u8, byte_count: usize);
+
+  pub fn gba_sram_memcpy(dest: *mut u8, src: *const u8, byte_count: usize);
+
+  pub fn __aeabi_memmove(dest: *mut u8, src: *const u8, byte_count: usize);
+  pub fn __aeabi_memmove4(dest: *mut u8, src: *const u8, byte_count: usize);
+  pub fn __aeabi_memmove8(dest: *mut u8, src: *const u8, byte_count: usize);
+
+  pub fn __aeabi_memset(dest: *mut u8, byte_count: usize, byte: i32);
+  pub fn __aeabi_memset4(dest: *mut u8, byte_count: usize, byte: i32);
+  pub fn __aeabi_memset8(dest: *mut u8, byte_count: usize, byte: i32);
+
+  pub fn __aeabi_memclr(dest: *mut u8, byte_count: usize);
+  pub fn __aeabi_memclr4(dest: *mut u8, byte_count: usize);
+  pub fn __aeabi_memclr8(dest: *mut u8, byte_count: usize);
+}
+
+core::arch::global_asm! {
+  emit_a32_code!{
+    put_code_in_section!(".iwram.aeabi.memory.copy.and.move", {
+      "__aeabi_memmove8:",
+      "__aeabi_memmove4:",
+      "__aeabi_memmove:",
+      "cmp    r0, r1", // if d > s, reverse copy
+      "bgt    .L_r_copy_gain_align",
+      // else fallthrough
+
+      "__aeabi_memcpy:",
+      ".L_f_copy_gain_align:",
+      "eor    r3, r0, r1",
+      "lsls   r3, r3, #31",
+      "bmi    .L_f_copy_max_coalign1",
+      "bcs    .L_f_copy_max_coalign2",
+      // else fallthrough
+
+      ".L_f_copy_max_coalign4:",
+      "tst    r0, #3",
+      "bne    .L_f_copy_fixup4",
+      // else fallthrough
+
+      "__aeabi_memcpy8:",
+      "__aeabi_memcpy4:",
+      ".L_f_copy_coalign4_assured:",
+      "cmp    r2, #32",
+      "bge    .L_f_copy_block",
+
+      ".L_f_copy_post_block:",
+      // copy 4 words, two at a time
+      "tst    r2, #0b10000",
+      "ldmne  r1!, {r3, r12}",
+      "stmne  r0!, {r3, r12}",
+      "ldmne  r1!, {r3, r12}",
+      "stmne  r0!, {r3, r12}",
+      "bics   r2, r2, #0b10000",
+      "bxeq   lr",
+
+      // copy 2 and/or 1 words
+      "lsls   r3, r2, #29",
+      "ldmcs  r1!, {r3, r12}",
+      "stmcs  r0!, {r3, r12}",
+      "ldrmi  r3, [r1], #4",
+      "strmi  r3, [r0], #4",
+      "bics   r2, r2, #0b1100",
+      "bxeq   lr",
+
+      // copy halfword and/or byte
+      "lsls   r3, r2, #31",
+      "ldrhcs r3, [r1], #2",
+      "strhcs r3, [r0], #2",
+      "ldrbmi r3, [r1], #1",
+      "strbmi r3, [r0], #1",
+      "bx     lr",
+
+      ".L_f_copy_block:",
+      with_pushed_registers!("{r4-r9}", {
+        "1:",
+        "subs   r2, r2, #32",
+        "ldmge  r1!, {r3-r9, r12}",
+        "stmge  r0!, {r3-r9, r12}",
+        "bgt    1b",
+      }),
+      "bxeq   lr",
+      "b      .L_f_copy_post_block",
+
+      ".L_f_copy_fixup4:",
+      "cmp    r2, #7", // if count <= (fix+word): just byte copy
+      "ble    .L_f_copy_max_coalign1",
+      "lsls   r3, r0, #31",
+      "submi  r2, r2, #1",
+      "ldrbmi r3, [r1], #1",
+      "strbmi r3, [r0], #1",
+      "subcs  r2, r2, #2",
+      "ldrhcs r3, [r1], #2",
+      "strhcs r3, [r0], #2",
+      "b      .L_f_copy_coalign4_assured",
+
+      ".L_f_copy_max_coalign2:",
+      "tst     r0, #1",
+      "bne     .L_f_copy_fixup2",
+      ".L_f_copy_coalign2_assured:",
+      "1:",
+      "subs    r2, r2, #2",
+      "ldrhge  r3, [r1], #2",
+      "strhge  r3, [r0], #2",
+      "bgt     1b",
+      "bxeq    lr",
+      "tst     r2, #1",
+      "ldrbne  r3, [r1], #1",
+      "strbne  r3, [r0], #1",
+      "bx      lr",
+
+      ".L_f_copy_fixup2:",
+      "cmp     r2, #3", // if count <= (fix+halfword): just byte copy
+      "ble     .L_f_copy_max_coalign1",
+      "sub     r2, r2, #1",
+      "ldrb    r3, [r1], #1",
+      "strb    r3, [r0], #1",
+      "b       .L_f_copy_coalign2_assured",
+
+      "gba_sram_memcpy:",
+      ".L_f_copy_max_coalign1:",
+      "1:",
+      "subs    r2, r2, #1",
+      "ldrbge  r3, [r1], #1",
+      "strbge  r3, [r0], #1",
+      "bgt     1b",
+      "bx      lr",
+
+      ".L_r_copy_gain_align:",
+      "add     r0, r0, r2",
+      "add     r1, r1, r2",
+      "eor     r3, r0, r1",
+      "lsls    r3, r3, #31",
+      "bmi     .L_r_copy_max_coalign1",
+      "bcs     .L_r_copy_max_coalign2",
+      // else fallthrough
+
+      ".L_r_copy_max_coalign4:",
+      "tst     r0, #3",
+      "bne     .L_r_copy_fixup4",
+      ".L_r_copy_coalign4_assured:",
+      "cmp     r2, #32",
+      "bge     .L_r_copy_block",
+      ".L_r_copy_post_block:",
+      // copy 4 words, two at a time
+      "tst     r2, #0b10000",
+      "ldmdbne r1!, {r3, r12}",
+      "stmdbne r0!, {r3, r12}",
+      "ldmdbne r1!, {r3, r12}",
+      "stmdbne r0!, {r3, r12}",
+      "bics    r2, r2, #0b10000",
+      "bxeq    lr",
+
+      // copy 2 and/or 1 words
+      "lsls    r3, r2, #29",
+      "ldmdbcs r1!, {r3, r12}",
+      "stmdbcs r0!, {r3, r12}",
+      "ldrmi   r3, [r1, #-4]!",
+      "strmi   r3, [r0, #-4]!",
+      "bxeq    lr",
+      "lsls    r2, r2, #31",
+      "ldrhcs  r3, [r1, #-2]!",
+      "strhcs  r3, [r0, #-2]!",
+      "ldrbmi  r3, [r1, #-1]!",
+      "strbmi  r3, [r0, #-1]!",
+      "bx      lr",
+
+      ".L_r_copy_block:",
+      with_pushed_registers!("{r4-r9}", {
+        "1:",
+        "subs    r2, r2, #32",
+        "ldmdbcs r1!, {r3-r9, r12}",
+        "stmdbcs r0!, {r3-r9, r12}",
+        "bgt     1b",
+      }),
+      "bxeq    lr",
+      "b       .L_r_copy_post_block",
+
+      ".L_r_copy_fixup4:",
+      "cmp     r2, #7", // if count <= (fix+word): just byte copy
+      "ble     .L_r_copy_max_coalign1",
+      "lsls    r3, r0, #31",
+      "submi   r2, r2, #1",
+      "ldrbmi  r3, [r1, #-1]!",
+      "strbmi  r3, [r0, #-1]!",
+      "subcs   r2, r2, #2",
+      "ldrhcs  r3, [r1, #-2]!",
+      "strhcs  r3, [r0, #-2]!",
+      "b       .L_r_copy_coalign4_assured",
+
+      ".L_r_copy_max_coalign2:",
+      "tst     r0, #1",
+      "bne     .L_r_copy_fixup2",
+      ".L_r_copy_coalign2_assured:",
+      "1:",
+      "subs    r2, r2, #2",
+      "ldrhge  r3, [r1, #-2]!",
+      "strhge  r3, [r0, #-2]!",
+      "bgt     1b",
+      "bxeq    lr",
+      "tst     r2, #1",
+      "ldrbne  r3, [r1, #-1]!",
+      "strbne  r3, [r0, #-1]!",
+      "bx      lr",
+
+      ".L_r_copy_fixup2:",
+      "cmp     r2, #3", // if count <= (fix+halfword): just byte copy
+      "ble     .L_r_copy_max_coalign1",
+      "sub     r2, r2, #1",
+      "ldrb    r3, [r1, #-1]!",
+      "strb    r3, [r0, #-1]!",
+      "b       .L_r_copy_coalign2_assured",
+
+      ".L_r_copy_max_coalign1:",
+      "1:",
+      "subs    r2, r2, #1",
+      "ldrbge  r3, [r1, #-1]!",
+      "strbge  r3, [r0, #-1]!",
+      "bgt     1b",
+      "bx      lr",
+    }),
+  },
+  options(raw)
+}
+
+core::arch::global_asm! {
+  emit_a32_code!{
+    put_code_in_section!(".iwram.aeabi.memory.clear.and.set", {
+      "__aeabi_memclr8:",
+      "__aeabi_memclr4:",
+      "mov    r2, #0",
+      "mov    r3, #0",
+      "b      .L_memset_check_for_block_work",
+      "__aeabi_memclr:",
+      "mov    r2, #0",
+      "__aeabi_memset8:",
+      "__aeabi_memset4:",
+      "__aeabi_memset:", // r0(dest), r1(count), r2(byte)
+      // duplicate the byte across all of r2 and r3
+      "and    r2, r2, #0xFF",
+      "orr    r2, r2, r2, lsl #8",
+      "orr    r2, r2, r2, lsl #16",
+      "mov    r3, r2",
+      // for 'sets' too small to fixup we just byte loop
+      "cmp    r1, #3",
+      "ble    .L_memset_byte_loop",
+      // carry/sign test on the address, then do fixup
+      "lsls   r12, r0, #31",
+      "submi  r1, r1, #1",
+      "strbmi r2, [r0], #1",
+      "subcs  r1, r1, #2",
+      "strhcs r2, [r0], #2",
+      ".L_memset_check_for_block_work:",
+      "cmp    r1, #32",
+      "bge    .L_memset_block_work",
+
+      ".L_memset_post_block_work:",
+      // set 4 words
+      "tst    r1, #0b10000",
+      "stmne  r0!, {r2, r3}",
+      "stmne  r0!, {r2, r3}",
+      // set 2 and/or 1 words
+      "lsls   r12, r1, #29",
+      "stmcs  r0!, {r2, r3}",
+      "strmi  r2, [r0], #4",
+      // set halfword and/or byte
+      "lsls   r12, r1, #31",
+      "strhcs r2, [r0], #2",
+      "strbmi r2, [r0], #1",
+      "bx     lr",
+
+      ".L_memset_block_work:",
+      with_pushed_registers!("{r4-r9}", {
+        "mov    r4, r2",
+        "mov    r5, r2",
+        "mov    r6, r2",
+        "mov    r7, r2",
+        "mov    r8, r2",
+        "mov    r9, r2",
+        "1:",
+        "subs   r1, r1, #32",
+        "stmge  r0!, {r2-r9}",
+        "bgt    1b",
+      }),
+      "bxeq   lr",
+      "b      .L_memset_post_block_work",
+
+      ".L_memset_byte_loop:",
+      "1:",
+      "subs   r1, r1, #1",
+      "strbcs r2, [r0], #1",
+      "bgt    1b",
+      "bx     lr",
+    }),
+  },
+  options(raw),
 }
