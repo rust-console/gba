@@ -232,7 +232,7 @@ unsafe extern "C" fn __start() -> ! {
     }),
 
     /* assign the runtime irq handler */
-    "ldr r1, ={rt0_irq_handler}",
+    "ldr r1, ={runtime_irq_handler}",
     "str r1, [r12, #-4]",
 
     /* call to rust main */
@@ -245,7 +245,7 @@ unsafe extern "C" fn __start() -> ! {
     waitcnt_setting = const 0x4317 /*sram8,r0:3.1,r1:4.2,r2:8.2,no_phi,prefetch*/,
     dma3_offset = const DMA3_OFFSET,
     dma3_setting = const DMA_32_BIT_MEMCPY.to_u16(),
-    rt0_irq_handler = sym rt0_irq_handler,
+    runtime_irq_handler = sym runtime_irq_handler,
     options(noreturn)
   )
 }
@@ -253,8 +253,8 @@ unsafe extern "C" fn __start() -> ! {
 #[naked]
 #[no_mangle]
 #[instruction_set(arm::a32)]
-#[link_section = ".iwram.rt0.irq_handler"]
-unsafe extern "C" fn rt0_irq_handler() {
+#[link_section = ".iwram.runtime.irq.handler"]
+unsafe extern "C" fn runtime_irq_handler() {
   // On Entry: r0 = 0x0400_0000 (mmio_base)
   core::arch::asm!(
     /* swap IME off, user can turn it back on if they want */
