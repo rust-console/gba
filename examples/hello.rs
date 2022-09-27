@@ -11,6 +11,9 @@ fn panic_handler(_: &core::panic::PanicInfo) -> ! {
 
 static KEYS: GbaCell<KeyInput> = GbaCell::new(KeyInput::new());
 
+#[link_section = ".ewram"]
+static VALUE: GbaCell<u16> = GbaCell::new(0);
+
 extern "C" fn irq_handler(_: u16) {
   // just as a demo, we'll read the keys during vblank.
   KEYS.write(KEYINPUT.read());
@@ -29,6 +32,7 @@ extern "C" fn main() -> ! {
     VBlankIntrWait();
 
     let k = KEYS.read();
+    VALUE.write((k.to_u16() + 3) / k.to_u16()); // force a runtime division
     BACKDROP_COLOR.write(Color(k.to_u16()));
   }
 }
