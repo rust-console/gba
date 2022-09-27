@@ -14,4 +14,4 @@ voladdress = "1.0.2"
 opt-level = 3
 
 [package.metadata.docs.rs]
-targets = ["arm-unknown-linux-gnueabi"]
+targets = ["armv5te-unknown-linux-gnueabi"]
