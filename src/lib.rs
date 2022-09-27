@@ -12,6 +12,7 @@ pub mod dma;
 pub mod gba_cell;
 pub mod interrupts;
 pub mod keys;
+pub mod mgba;
 pub mod mmio;
 pub mod prelude;
 pub mod sound;

@@ -4,7 +4,8 @@ use crate::{
   dma::DmaControl,
   gba_cell::GbaCell,
   interrupts::IrqFn,
-  mmio::{DMA3_SRC, IME},
+  mgba::MGBA_LOGGING_ENABLE_REQUEST,
+  mmio::{DMA3_SRC, IME, MGBA_LOG_ENABLE},
 };
 
 /// Builds an assembly string that puts the contained code in the section
@@ -235,6 +236,11 @@ unsafe extern "C" fn __start() -> ! {
     "ldr r1, ={runtime_irq_handler}",
     "str r1, [r12, #-4]",
 
+    /* ask for mGBA logging to be enabled. This should be harmless if we're not using mgba. */
+    "ldr r0, ={mgba_log_enable}",
+    "ldr r1, ={mgba_logging_enable_request}",
+    "str r1, [r0]",
+
     /* call to rust main */
     "ldr r0, =main",
     "bx r0",
@@ -246,6 +252,8 @@ unsafe extern "C" fn __start() -> ! {
     dma3_offset = const DMA3_OFFSET,
     dma3_setting = const DMA_32_BIT_MEMCPY.to_u16(),
     runtime_irq_handler = sym runtime_irq_handler,
+    mgba_log_enable = const MGBA_LOG_ENABLE.as_usize(),
+    mgba_logging_enable_request = const MGBA_LOGGING_ENABLE_REQUEST,
     options(noreturn)
   )
 }

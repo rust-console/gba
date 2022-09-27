@@ -2,10 +2,17 @@
 #![no_main]
 #![feature(isa_attribute)]
 
-use gba::prelude::*;
+use core::fmt::Write;
+use gba::{
+  mgba::{MgbaBufferedLogger, MgbaMessageLevel},
+  prelude::*,
+};
 
 #[panic_handler]
-fn panic_handler(_: &core::panic::PanicInfo) -> ! {
+fn panic_handler(info: &core::panic::PanicInfo) -> ! {
+  if let Ok(mut logger) = MgbaBufferedLogger::try_new(MgbaMessageLevel::Fatal) {
+    write!(logger, "{info}").ok();
+  }
   loop {}
 }
 
@@ -25,6 +32,10 @@ extern "C" fn main() -> ! {
   DISPSTAT.write(DisplayStatus::new().with_irq_vblank(true));
   IE.write(IrqBits::VBLANK);
   IME.write(true);
+
+  if let Ok(mut logger) = MgbaBufferedLogger::try_new(MgbaMessageLevel::Debug) {
+    writeln!(logger, "hello!").ok();
+  }
 
   DISPCNT.write(DisplayControl::new().with_show_bg0(true));
 
