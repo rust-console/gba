@@ -12,3 +12,6 @@ voladdress = "1.0.2"
 
 [profile.dev]
 opt-level = 3
+
+[package.metadata.docs.rs]
+targets = ["arm-unknown-linux-gnueabi"]
