@@ -1,6 +1,5 @@
 #![no_std]
 #![no_main]
-#![feature(isa_attribute)]
 
 use core::fmt::Write;
 use gba::{
