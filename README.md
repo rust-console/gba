@@ -1,8 +1,6 @@
 # `gba`
 
-## Status: Pending
-
-This branch is a **pending** release for `0.7` of the crate.
+# [Docs.rs Documentation](https://docs.rs/gba)
 
 ## How To Make Your Own GBA Project Using This Crate
 
