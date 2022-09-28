@@ -198,7 +198,7 @@ def_mmio!(0x0400_0202 = IF: VolAddress<IrqBits, Safe, Safe>; "Interrupts Flagged
 def_mmio!(0x0400_0204 = WAITCNT: VolAddress<u16, Safe, Unsafe>; "Wait state control for interfacing with the ROM (can make reading the ROM give garbage when it's mis-configured)");
 def_mmio!(0x0400_0208 = IME: VolAddress<bool, Safe, Safe>; "Interrupt Master Enable: Allows turning on/off all interrupts with a single access.");
 
-// mGBA Debugging Console
+// mGBA Logging
 
 def_mmio!(0x04FF_F600 = MGBA_LOG_BUFFER: VolBlock<u8, Safe, Safe, 256>; "The buffer to put logging messages into.\n\nThe first 0 in the buffer is the end of each message.");
 def_mmio!(0x04FF_F700 = MGBA_LOG_SEND: VolAddress<MgbaMessageLevel, (), Safe>; "Write to this each time you want to reset a message (it also resets the buffer).");
