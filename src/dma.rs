@@ -56,3 +56,27 @@ impl DmaControl {
     self.0
   }
 }
+
+/// Uses `stm` to set all parts of a DMA as a single instruction.
+///
+/// * `src` address for the transfer
+/// * `dest` address for the transfer
+/// * `count_ctrl` is the count in the low half and control in the upper half
+/// * `dma_id` is 0, 1, 2, or 3 (this is debug asserted).
+///
+/// After setting the DMA, it won't activate for a minimum of 2 CPU cycles.
+#[inline]
+pub unsafe fn stm_dma(
+  dma_id: usize, src: *const u8, dest: *mut u8, count_ctrl: u32,
+) {
+  debug_assert!(dma_id < 4);
+  let dma_addr = 0x0400_00B0 + dma_id * 0xC;
+  core::arch::asm!(
+    "stm r0, {{r1, r2, r3}}",
+    in("r0") dma_addr,
+    in("r1") src,
+    in("r2") dest,
+    in("r3") count_ctrl,
+    options(nostack, preserves_flags)
+  );
+}
