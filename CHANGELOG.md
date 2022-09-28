@@ -1,4 +1,5 @@
 
+* **0.7.5 (unreleased):** Adds more utilities for DMA and screenblock usage.
 * **0.7.4:** Adds mGBA logging support.
 * **0.7.3:** Fixes "multiple definition" errors with the AEABI division functions.
   Filed a PR to fix this soon:
