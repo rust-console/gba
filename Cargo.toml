@@ -14,4 +14,6 @@ voladdress = "1.0.2"
 opt-level = 3
 
 [package.metadata.docs.rs]
+# The crate can only be built for targets that have thumb-interworking support,
+# because otherwise the instruction_set attribute can't be used.
 targets = ["armv5te-unknown-linux-gnueabi"]
