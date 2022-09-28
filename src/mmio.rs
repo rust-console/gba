@@ -217,14 +217,19 @@ def_mmio!(0x0600_4000 = CHARBLOCK1_4BPP: VolBlock<Tile4, Safe, Safe, 512>; "Char
 def_mmio!(0x0600_8000 = CHARBLOCK2_4BPP: VolBlock<Tile4, Safe, Safe, 512>; "Charblock 2, 4bpp view (512 tiles).");
 def_mmio!(0x0600_C000 = CHARBLOCK3_4BPP: VolBlock<Tile4, Safe, Safe, 512>; "Charblock 3, 4bpp view (512 tiles).");
 
-def_mmio!(0x0600_0000 = CHARBLOCK0_8BPP: VolBlock<Tile8, Safe, Safe, 512>; "Charblock 0, 8bpp view (256 tiles).");
-def_mmio!(0x0600_4000 = CHARBLOCK1_8BPP: VolBlock<Tile8, Safe, Safe, 512>; "Charblock 1, 8bpp view (256 tiles).");
-def_mmio!(0x0600_8000 = CHARBLOCK2_8BPP: VolBlock<Tile8, Safe, Safe, 512>; "Charblock 2, 8bpp view (256 tiles).");
-def_mmio!(0x0600_C000 = CHARBLOCK3_8BPP: VolBlock<Tile8, Safe, Safe, 512>; "Charblock 3, 8bpp view (256 tiles).");
+def_mmio!(0x0600_0000 = CHARBLOCK0_8BPP: VolBlock<Tile8, Safe, Safe, 256>; "Charblock 0, 8bpp view (256 tiles).");
+def_mmio!(0x0600_4000 = CHARBLOCK1_8BPP: VolBlock<Tile8, Safe, Safe, 256>; "Charblock 1, 8bpp view (256 tiles).");
+def_mmio!(0x0600_8000 = CHARBLOCK2_8BPP: VolBlock<Tile8, Safe, Safe, 256>; "Charblock 2, 8bpp view (256 tiles).");
+def_mmio!(0x0600_C000 = CHARBLOCK3_8BPP: VolBlock<Tile8, Safe, Safe, 256>; "Charblock 3, 8bpp view (256 tiles).");
 
 pub type TextScreenBlock = VolBlock<TextEntry, Safe, Safe, {8*8}>;
+pub type AffineScreenBlock0 = VolBlock<u8, Safe, Safe, {16*16}>;
+pub type AffineScreenBlock1 = VolBlock<u8, Safe, Safe, {32*32}>;
+pub type AffineScreenBlock2 = VolBlock<u8, Safe, Safe, {64*64}>;
+pub type AffineScreenBlock3 = VolBlock<u8, Safe, Safe, {128*128}>;
+
 /// ## Panics
-/// * Must be in range `0..=31`
+/// * Must be less than 32
 #[inline]
 #[must_use]
 pub const fn text_screenblock(index: usize) -> TextScreenBlock {
@@ -232,10 +237,41 @@ pub const fn text_screenblock(index: usize) -> TextScreenBlock {
   unsafe { VolBlock::new(0x0600_0000 + index * size_of::<[TextEntry;8*8]>()) }
 }
 
-pub type AffineScreenBlock0 = VolBlock<u8, Safe, Safe, {16*16}>;
-pub type AffineScreenBlock1 = VolBlock<u8, Safe, Safe, {32*32}>;
-pub type AffineScreenBlock2 = VolBlock<u8, Safe, Safe, {64*64}>;
-pub type AffineScreenBlock3 = VolBlock<u8, Safe, Safe, {128*128}>;
+/// ## Panics
+/// * Must be less than 256
+#[inline]
+#[must_use]
+pub const fn affine_screenblock0(index: usize) -> AffineScreenBlock0 {
+  assert!(index < 256);
+  unsafe { VolBlock::new(0x0600_0000 + index * size_of::<[u8;16*16]>()) }
+}
+
+/// ## Panics
+/// * Must be less than 64
+#[inline]
+#[must_use]
+pub const fn affine_screenblock1(index: usize) -> AffineScreenBlock1 {
+  assert!(index < 64);
+  unsafe { VolBlock::new(0x0600_0000 + index * size_of::<[u8;32*32]>()) }
+}
+
+/// ## Panics
+/// * Must be less than 16
+#[inline]
+#[must_use]
+pub const fn affine_screenblock2(index: usize) -> AffineScreenBlock2 {
+  assert!(index < 16);
+  unsafe { VolBlock::new(0x0600_0000 + index * size_of::<[u8;64*64]>()) }
+}
+
+/// ## Panics
+/// * Must be less than 4
+#[inline]
+#[must_use]
+pub const fn affine_screenblock3(index: usize) -> AffineScreenBlock3 {
+  assert!(index < 4);
+  unsafe { VolBlock::new(0x0600_0000 + index * size_of::<[u8;128*128]>()) }
+}
 
 def_mmio!(0x0600_0000 = MODE3_BITMAP: VolBlock<Color, Safe, Safe, {240 * 160}>; "Mode 3 bitmap, 240x160.");
 
