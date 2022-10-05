@@ -42,8 +42,8 @@
 //! * **Make Your Executables:** At this point you can make a `bin` or an
 //!   `example` file. Every executable will need to be `#![no_std]` and
 //!   `#![no_main]`. They will also need a `#[panic_handler]` defined, as well
-//!   as a `#[no_mangle] extern "C" main() -> !` function, which is what the
-//!   assembly runtime will call to start your Rust program after it fully
+//!   as a `#[no_mangle] extern "C" fn main() -> ! {}` function, which is what
+//!   the assembly runtime will call to start your Rust program after it fully
 //!   initializes the system.
 //!
 //! ```rust
