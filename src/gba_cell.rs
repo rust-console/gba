@@ -14,15 +14,15 @@
 //!
 //! ```
 //! # static THE_COLOR: GbaCell<Color> = GbaCell::new(Color::new());
-//! # let some_new_color = Color::default();
 //! let old_color = THE_COLOR.read();
 //!
-//! THE_COLOR.write(some_new_color);
+//! THE_COLOR.write(Color::default());
 //! ```
 
 use core::{
   cell::UnsafeCell,
   fmt::Debug,
+  mem::{align_of, size_of},
   num::{NonZeroI16, NonZeroI32, NonZeroI8, NonZeroU16, NonZeroU32, NonZeroU8},
   panic::RefUnwindSafe,
 };
@@ -33,105 +33,6 @@ use crate::{
   video::Color,
 };
 
-/// Reads from a [`GbaCell`].
-///
-/// See the GbaCell docs for info on why you'd use this.
-#[macro_export]
-macro_rules! gba_cell_read {
-  ($elem:ty, $cell_ref:expr) => {
-    {
-      // Note(Lokathor): We assign the expression to a binding to avoid
-      // evaluating any side-effecting expressions more than once. Also, we give
-      // a type to the binding to ensure that the `transmute_copy` works right.
-      let the_cell: &GbaCell<$elem> = $cell_ref;
-      let out: $elem = match (::core::mem::size_of::<$elem>(), ::core::mem::align_of::<$elem>()) {
-        (4, 4) => unsafe {
-          let val: u32;
-          core::arch::asm!(
-            "ldr {r}, [{addr}]",
-            r = out(reg) val,
-            addr = in(reg) the_cell.get_ptr(),
-            options(readonly, preserves_flags, nostack)
-          );
-          core::mem::transmute_copy(&val)
-        },
-        (2, 2) => unsafe {
-          let val: u16;
-          core::arch::asm!(
-            "ldrh {r}, [{addr}]",
-            r = out(reg) val,
-            addr = in(reg) the_cell.get_ptr(),
-            options(readonly, preserves_flags, nostack)
-          );
-          core::mem::transmute_copy(&val)
-        },
-        (1, 1) => unsafe {
-          let val: u8;
-          core::arch::asm!(
-            "ldrb {r}, [{addr}]",
-            r = out(reg) val,
-            addr = in(reg) the_cell.get_ptr(),
-            options(readonly, preserves_flags, nostack)
-          );
-          core::mem::transmute_copy(&val)
-        },
-        _ => {
-          unimplemented!()
-        }
-      };
-      out
-    }
-  }
-}
-
-/// Writes to a [`GbaCell`].
-///
-/// See the GbaCell docs for info on why you'd use this.
-#[macro_export]
-macro_rules! gba_cell_write {
-  ($elem:ty, $cell_ref:expr, $val:expr) => {
-    {
-      // Note(Lokathor): We assign the expression to a binding to avoid
-      // evaluating any side-effecting expressions more than once. Also, we give
-      // a type to the binding to ensure that the `transmute_copy` works right.
-      let the_cell: &GbaCell<$elem> = $cell_ref;
-      let val: $elem = $val;
-      match (::core::mem::size_of::<$elem>(), ::core::mem::align_of::<$elem>()) {
-        (4, 4) => unsafe {
-          let u: u32 = core::mem::transmute_copy(&val);
-          core::arch::asm!(
-            "str {val}, [{addr}]",
-            val = in(reg) u,
-            addr = in(reg) the_cell.get_ptr(),
-            options(preserves_flags, nostack)
-          )
-        },
-        (2, 2) => unsafe {
-          let u: u16 = core::mem::transmute_copy(&val);
-          core::arch::asm!(
-            "strh {val}, [{addr}]",
-            val = in(reg) u,
-            addr = in(reg) the_cell.get_ptr(),
-            options(preserves_flags, nostack)
-          )
-        },
-        (1, 1) => unsafe {
-          let u: u8 = core::mem::transmute_copy(&val);
-          core::arch::asm!(
-            "strb {val}, [{addr}]",
-            val = in(reg) u,
-            addr = in(reg) the_cell.get_ptr(),
-            options(preserves_flags, nostack)
-          )
-        },
-        _ => {
-          unimplemented!()
-        }
-      }
-    }
-  }
-}
-
 /// A GBA-specific wrapper around Rust's [`UnsafeCell`](core::cell::UnsafeCell)
 /// type.
 ///
@@ -140,33 +41,23 @@ macro_rules! gba_cell_write {
 /// ## Safety Logic
 ///
 /// * LLVM thinks that ARMv4T only supports atomic operations via special atomic
-///   support library functions (which is basically true).
+///   support library functions. This is true for the "complex" atomic ops like
+///   "fetch-add", but for individual load or store ops this is overkill.
 /// * If you directly write an Acquire/load, Release/store, or a Relaxed op with
-///   a `compiler_fence`, then LLVM does generate correct code. However, it will
-///   have sub-optimal performance. LLVM will generate calls to the mythical
-///   atomic support library when it should just directly use an `ldr` or `str`
-///   instruction.
+///   an associated `compiler_fence`, then LLVM does generate correct code.
+///   However, it will have very sub-optimal performance. LLVM will generate
+///   calls to the mythical atomic support library, when it should just directly
+///   use an `ldr` or `str` instruction.
 /// * In response to this LLVM nonsense, the `GbaCell` type just uses inline
 ///   assembly to perform all accesses to the contained data.
 /// * When LLVM sees inline assembly, it is forced to defensively act as if the
 ///   inline assembly might have done *anything* legally possible using the
 ///   pointer and value provided to the inline assembly. This includes that the
 ///   inline assembly *might* call the atomic support library to access the
-///   pointer's data.
-/// * So LLVM has to treat the inline assembly as an atomic sync point.
-///
-/// ## Macro Access
-/// Normally you can just use the `read` and `write` methods. However, register
-/// allocation for the `read` and `write` assembly blocks is performed *before*
-/// the methods are inlined into the caller. This means that `read` and `write`
-/// will always use `r0` and `r1` directly, and several calls to `read` and
-/// `write` will will put a lot of pressure on those two registers.
-///
-/// To reduce register pressure you can use the [gba_cell_read] and
-/// [gba_cell_write] macros. These will expand into inline assembly within your
-/// own code that *then* assigns registers based on your local function's
-/// register usage. This can potentially give some (very small) performance
-/// gains, at the cost of some ergonomics within the code.
+///   pointer's data using an atomic load or store. So LLVM has to treat the
+///   inline assembly as an atomic sync point.
+/// * However, inside the inline asm block we actually just use the single load
+///   or store op that we wanted.
 #[repr(transparent)]
 pub struct GbaCell<T>(UnsafeCell<T>);
 impl<T> Debug for GbaCell<T>
@@ -190,6 +81,7 @@ where
   pub const fn new(val: T) -> Self {
     Self(UnsafeCell::new(val))
   }
+
   /// Gets a pointer to the inner data.
   ///
   /// The rules for this pointer work just like with [`UnsafeCell`].
@@ -198,16 +90,83 @@ where
   pub const fn get_ptr(&self) -> *mut T {
     self.0.get()
   }
+
   /// Reads the value.
   #[inline]
   #[must_use]
   pub fn read(&self) -> T {
-    gba_cell_read!(T, self)
+    match (size_of::<T>(), align_of::<T>()) {
+      (4, 4) => unsafe {
+        let val: u32;
+        core::arch::asm!(
+          "ldr {r}, [{addr}]",
+          r = out(reg) val,
+          addr = in(reg) self.get_ptr(),
+          options(readonly, preserves_flags, nostack)
+        );
+        core::mem::transmute_copy(&val)
+      },
+      (2, 2) => unsafe {
+        let val: u16;
+        core::arch::asm!(
+          "ldrh {r}, [{addr}]",
+          r = out(reg) val,
+          addr = in(reg) self.get_ptr(),
+          options(readonly, preserves_flags, nostack)
+        );
+        core::mem::transmute_copy(&val)
+      },
+      (1, 1) => unsafe {
+        let val: u8;
+        core::arch::asm!(
+          "ldrb {r}, [{addr}]",
+          r = out(reg) val,
+          addr = in(reg) self.get_ptr(),
+          options(readonly, preserves_flags, nostack)
+        );
+        core::mem::transmute_copy(&val)
+      },
+      _ => {
+        unimplemented!()
+      }
+    }
   }
+
   /// Writes a new value.
   #[inline]
   pub fn write(&self, val: T) {
-    gba_cell_write!(T, self, val)
+    match (size_of::<T>(), align_of::<T>()) {
+      (4, 4) => unsafe {
+        let u: u32 = core::mem::transmute_copy(&val);
+        core::arch::asm!(
+          "str {val}, [{addr}]",
+          val = in(reg) u,
+          addr = in(reg) self.get_ptr(),
+          options(preserves_flags, nostack)
+        )
+      },
+      (2, 2) => unsafe {
+        let u: u16 = core::mem::transmute_copy(&val);
+        core::arch::asm!(
+          "strh {val}, [{addr}]",
+          val = in(reg) u,
+          addr = in(reg) self.get_ptr(),
+          options(preserves_flags, nostack)
+        )
+      },
+      (1, 1) => unsafe {
+        let u: u8 = core::mem::transmute_copy(&val);
+        core::arch::asm!(
+          "strb {val}, [{addr}]",
+          val = in(reg) u,
+          addr = in(reg) self.get_ptr(),
+          options(preserves_flags, nostack)
+        )
+      },
+      _ => {
+        unimplemented!()
+      }
+    }
   }
 }
 
