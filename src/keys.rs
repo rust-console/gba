@@ -1,3 +1,26 @@
+//! Module for interfacing with the device's button inputs.
+//!
+//! The GBA has two primary face buttons (A and B), two secondary face buttons
+//! (Select and Start), a 4-way directional pad ("D-pad"), and two shoulder
+//! buttons (L and R).
+//!
+//! To get the state of all the buttons just read from
+//! [`KEYINPUT`](crate::mmio::KEYINPUT). For consistency, you should usually
+//! read the buttons only once per frame. Then use that same data for all user
+//! input considerations across that entire frame. Otherwise, small fluctuations
+//! in pressure can cause inconsistencies in the reading during a frame.
+//!
+//! In addition to simply providing inputs, the buttons can also trigger a
+//! hardware interrupt. Set the desired set of buttons that will trigger a key
+//! interrupt with [`KEYCNT`](crate::mmio::KEYCNT), and when that button
+//! combination is pressed the key interrupt will be fired. Key interrupts
+//! aren't a good fit for standard inputs, but as a way to provide a single
+//! extra special input it works okay. For example, this is generally how games
+//! with a "soft reset" button combination do that. The key interrupt handler
+//! sets a "reset requested" flag when the key interrupt occurs, and then the
+//! main game loop checks the flag each frame and performs a soft reset instead
+//! of the normal game simulation when the flag is set.
+
 use crate::macros::{pub_const_fn_new_zeroed, u16_bool_field};
 
 /// Key input data.
