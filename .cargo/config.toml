@@ -6,4 +6,4 @@ build-std = ["core"]
 
 [target.thumbv4t-none-eabi]
 runner = "mgba-qt"
-rustflags = ["-Clink-arg=-Tlink_scripts/mono_boot.ld"]
+rustflags = ["-Clink-arg=-Tlinker_scripts/mono_boot.ld"]
