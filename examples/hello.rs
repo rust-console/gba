@@ -1,7 +1,7 @@
 #![no_std]
 #![no_main]
 
-use core::fmt::Write;
+use core::{fmt::Write, mem::size_of_val};
 use gba::{
   mgba::{MgbaBufferedLogger, MgbaMessageLevel},
   prelude::*,
@@ -36,7 +36,20 @@ extern "C" fn main() -> ! {
     writeln!(logger, "hello!").ok();
   }
 
-  DISPCNT.write(DisplayControl::new().with_show_bg0(true));
+  {
+    // get our tile data into memory.
+    //let src = ;
+    let dest = CHARBLOCK0_4BPP.index(0).as_usize() as *mut u32;
+    let info = BitUnpackInfo {
+      src_byte_len: size_of_val(&CGA_8X8_THICK) as u16,
+      src_elem_width: 1,
+      dest_elem_width: 4,
+      offset_and_touch_zero: 0,
+    };
+    unsafe { BitUnPack(CGA_8X8_THICK.as_ptr().cast::<u8>(), dest, &info) };
+  }
+
+  DISPCNT.write(DisplayControl::new().with_show_bg2(true));
 
   loop {
     VBlankIntrWait();

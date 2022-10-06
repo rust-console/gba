@@ -106,9 +106,9 @@ pub struct BitUnpackInfo {
 /// * `dest` must be 4 byte aligned.
 #[inline]
 #[instruction_set(arm::t32)]
-pub unsafe fn BitUnPack(src: *mut u8, dest: *mut u32, info: &BitUnpackInfo) {
+pub unsafe fn BitUnPack(src: *const u8, dest: *mut u32, info: &BitUnpackInfo) {
   core::arch::asm! {
-    "swi #0x05",
+    "swi #0x10",
     inout("r0") src => _,
     inout("r1") dest => _,
     inout("r2") info => _,

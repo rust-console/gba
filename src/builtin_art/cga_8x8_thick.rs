@@ -8,7 +8,7 @@
 /// # use core::mem::size_of_val;
 /// let src = CGA_8X8_THICK.as_ptr().cast::<u8>();
 ///
-/// let dest = CHARBLOCK0_4BPP.as_usize() as *mut u32;
+/// let dest = CHARBLOCK0_4BPP.index(0).as_usize() as *mut u32;
 ///
 /// let info = BitUnpackInfo {
 ///   src_byte_len: size_of_val(&CGA_8X8_THICK) as u16,
@@ -35,7 +35,7 @@
 /// https://en.wikipedia.org/wiki/Intellectual_property_protection_of_typefaces
 ///
 /// [df-tiles]: https://dwarffortresswiki.org/Tileset_repository#8.C3.978
-pub const CGA_8X8_THICK: [u32; 512] = [
+pub static CGA_8X8_THICK: [u32; 512] = [
   // Note(Lokathor): I generated this by (1) converting the type face file from
   // an RGB PNG to Indexed Color PNG using GIMP, (2) running `grit
   // CGA8x8thick-indexed.png -gB1` to output an assembly file full of the
