@@ -5,6 +5,8 @@
     I had at first thought that they'd assign registers and then inline, but it
     turns out that the inline phase happens way before the register assignment
     phase, so the macros were unnecessary (and clunky).
+  * **Break:** The `IrqFn` type is changed to pass the function an `IrqBits`
+    instead of a bare `u16`.
   * Adds a helper for using `stm` to set all controls of a DMA at once.
   * Adds functions to pick a screenblock location (one for each screenblock
     type).
