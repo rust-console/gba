@@ -15,12 +15,14 @@ fn panic_handler(info: &core::panic::PanicInfo) -> ! {
   loop {}
 }
 
+// GbaCell is non-freeze, so `.data` section, so this will default to IWRAM.
 static KEYS: GbaCell<KeyInput> = GbaCell::new(KeyInput::new());
 
+// We can also put things into EWRAM if we want to.
 #[link_section = ".ewram"]
 static VALUE: GbaCell<u16> = GbaCell::new(0);
 
-extern "C" fn irq_handler(_: u16) {
+extern "C" fn irq_handler(_: IrqBits) {
   // just as a demo, we'll read the keys during vblank.
   KEYS.write(KEYINPUT.read());
 }
