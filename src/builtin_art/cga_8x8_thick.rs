@@ -36,10 +36,14 @@
 ///
 /// [df-tiles]: https://dwarffortresswiki.org/Tileset_repository#8.C3.978
 pub static CGA_8X8_THICK: [u32; 512] = [
-  // Note(Lokathor): I generated this by (1) converting the type face file from
-  // an RGB PNG to Indexed Color PNG using GIMP, (2) running `grit
-  // CGA8x8thick-indexed.png -gB1` to output an assembly file full of the
-  // compressed data `.word` entries, (3) copying all those words into here.
+  // Note(Lokathor): I generated this by:
+  //
+  // 1) converting the type face image from an RGB PNG to Indexed Color PNG
+  //    using GIMP (any other image editor works too).
+  // 2) running `grit CGA8x8thick-indexed.png -gB1` to output an assembly file
+  //    full of the compressed data `.word` entries.
+  //    https://www.coranac.com/projects/grit/
+  // 3) copying all those words into this array.
   0x00000000, 0x00000000, 0x81A5817E, 0x7E8199BD, 0xFFDBFF7E, 0x7EFFE7C3,
   0x7F7F7F36, 0x00081C3E, 0x7F3E1C08, 0x00081C3E, 0x7F1C3E1C, 0x1C086B7F,
   0x3E1C0808, 0x1C083E7F, 0x3C180000, 0x0000183C, 0xC3E7FFFF, 0xFFFFE7C3,
