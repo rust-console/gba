@@ -1,3 +1,14 @@
+//! This module holds the assembly runtime that supports your Rust program.
+//!
+//! Most importantly, you can set the [`RUST_IRQ_HANDLER`] variable to assign
+//! which function should be run during a hardware interrupt.
+//! * When a hardware interrupt occurs, control first goes to the BIOS, which
+//!   will then call the assembly runtime's handler.
+//! * The assembly runtime handler will properly acknowledge the interrupt
+//!   within the system on its own without you having to do anything.
+//! * If a function is set in the `RUST_IRQ_HANDLER` variable then that function
+//!   will be called and passed the bits for which interrupt(s) occurred.
+
 use core::ffi::c_void;
 
 use crate::{
@@ -593,32 +604,49 @@ unsafe extern "C" fn __aeabi_uwrite8(value: u64, address: *mut c_void) {
   )
 }
 
-/// Provides the `libc` styled memory copy (transfer between exclusive regions)
+/// Provides a `libc` styled memory copy (transfer between exclusive regions).
+///
+/// This has mild overhead compared to calling [`__aeabi_memcpy`], prefer that
+/// function when possible.
+///
+/// * **Returns:** the original `dest` pointer.
 #[inline]
 #[no_mangle]
-unsafe extern "C" fn memcpy(
+pub unsafe extern "C" fn memcpy(
   dest: *mut u8, src: *const u8, byte_count: usize,
 ) -> *mut u8 {
   __aeabi_memcpy(dest, src, byte_count);
   dest
 }
 
-/// Provides the `libc` styled memory move (transfer between non-exclusive
-/// regions)
+/// Provides a `libc` styled memory move (transfer between non-exclusive
+/// regions).
+///
+/// This has mild overhead compared to calling [`__aeabi_memmove`], prefer that
+/// function when possible.
+///
+/// * **Returns:** the original `dest` pointer.
 #[inline]
 #[no_mangle]
-unsafe extern "C" fn memmove(
+pub unsafe extern "C" fn memmove(
   dest: *mut u8, src: *const u8, byte_count: usize,
 ) -> *mut u8 {
   __aeabi_memmove(dest, src, byte_count);
   dest
 }
 
-/// Provides the `libc` styled memory set (assign `u8` in `byte` to the entire
-/// region)
+/// Provides a `libc` styled memory set (assign `u8` in `byte` to the entire
+/// region).
+///
+/// This has mild overhead compared to calling [`__aeabi_memset`], prefer that
+/// function when possible. Note that this function and that function have
+/// slightly different argument ordering, though the compiler won't let you mess
+/// it up like might happen in C.
+///
+/// * **Returns:** the original `dest` pointer.
 #[inline]
 #[no_mangle]
-unsafe extern "C" fn memset(
+pub unsafe extern "C" fn memset(
   dest: *mut u8, byte: i32, byte_count: usize,
 ) -> *mut u8 {
   __aeabi_memset(dest, byte_count, byte);
@@ -626,22 +654,73 @@ unsafe extern "C" fn memset(
 }
 
 extern "C" {
+  /// Memory transfer between *exclusive* regions.
+  ///
+  /// There are no alignment requirements for the pointers. This will
+  /// automatically detect when pointers are sufficiently aligned to use `u16`
+  /// or `u32` transfers, instead of always using `u8` transfers.
+  ///
+  /// This follows the AEABI convention of not returning the original `dest`
+  /// pointer at the end of the function. This actually allows a minor
+  /// optimization, so if you're going to call a memory copy function at all,
+  /// prefer this over [`memcpy`].
   pub fn __aeabi_memcpy(dest: *mut u8, src: *const u8, byte_count: usize);
+
+  /// As [`__aeabi_memcpy`], but both pointers are assumed to be aligned to 4.
   pub fn __aeabi_memcpy4(dest: *mut u8, src: *const u8, byte_count: usize);
+
+  /// As [`__aeabi_memcpy`], but both pointers are assumed to be aligned to 8.
   pub fn __aeabi_memcpy8(dest: *mut u8, src: *const u8, byte_count: usize);
 
+  /// As [`__aeabi_memcpy`], but *only* performs `u8` transfers.
+  ///
+  /// Importantly, this means that this function can be used to get data to/from
+  /// the SRAM region.
   pub fn gba_sram_memcpy(dest: *mut u8, src: *const u8, byte_count: usize);
 
+  /// Memory transfer between *non-exclusive* regions.
+  ///
+  /// As [`__aeabi_memcpy`], but the regions don't need to be exclusive.
   pub fn __aeabi_memmove(dest: *mut u8, src: *const u8, byte_count: usize);
+
+  /// As [`__aeabi_memmove`], but both pointers are assumed to be aligned to 4.
   pub fn __aeabi_memmove4(dest: *mut u8, src: *const u8, byte_count: usize);
+
+  /// As [`__aeabi_memmove`], but both pointers are assumed to be aligned to 8.
   pub fn __aeabi_memmove8(dest: *mut u8, src: *const u8, byte_count: usize);
 
+  /// Sets all bytes in the region to the value given.
+  ///
+  /// For historical reasons, the "byte" passed in is passed as an `i32`. Still,
+  /// only the low 8 bits of the value are kept and written to the region.
+  ///
+  /// There are no alignment requirements for the pointer. This will
+  /// automatically detect when pointer is sufficiently aligned to use `u16` or
+  /// `u32` writes, instead of always using `u8` writes.
+  ///
+  /// This follows the AEABI convention of not returning the original `dest`
+  /// pointer at the end of the function. This actually allows a minor
+  /// optimization, so if you're going to call a memory copy function at all,
+  /// prefer this over [`memcpy`].
   pub fn __aeabi_memset(dest: *mut u8, byte_count: usize, byte: i32);
+
+  /// As [`__aeabi_memset`], but both pointers are assumed to be aligned to 4.
   pub fn __aeabi_memset4(dest: *mut u8, byte_count: usize, byte: i32);
+
+  /// As [`__aeabi_memset`], but both pointers are assumed to be aligned to 8.
   pub fn __aeabi_memset8(dest: *mut u8, byte_count: usize, byte: i32);
 
+  /// Sets all bytes in the region to 0.
+  ///
+  /// There are no alignment requirements for the pointer. This will
+  /// automatically detect when pointer is sufficiently aligned to use `u16` or
+  /// `u32` writes, instead of always using `u8` writes.
   pub fn __aeabi_memclr(dest: *mut u8, byte_count: usize);
+
+  /// As [`__aeabi_memclr`], but both pointers are assumed to be aligned to 4.
   pub fn __aeabi_memclr4(dest: *mut u8, byte_count: usize);
+
+  /// As [`__aeabi_memclr`], but both pointers are assumed to be aligned to 8.
   pub fn __aeabi_memclr8(dest: *mut u8, byte_count: usize);
 }
 
