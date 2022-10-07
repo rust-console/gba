@@ -7,11 +7,11 @@
     phase, so the macros were unnecessary (and clunky).
   * **Break:** The `IrqFn` type is changed to pass the function an `IrqBits`
     instead of a bare `u16`.
-  * Adds a helper for using `stm` to set all controls of a DMA at once.
   * Adds functions to pick a screenblock location (one for each screenblock
     type).
   * Add `BitUnPack` BIOS function.
   * Add the `CGA_8X8_THICK` art data.
+  * Greatly improved documentation.
 * **0.7.4:** Adds mGBA logging support.
 * **0.7.3:** Fixes "multiple definition" errors with the AEABI division functions.
   Filed a PR to fix this soon:
