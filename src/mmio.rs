@@ -222,7 +222,7 @@ def_mmio!(0x0600_4000 = CHARBLOCK1_8BPP: VolBlock<Tile8, Safe, Safe, 256>; "Char
 def_mmio!(0x0600_8000 = CHARBLOCK2_8BPP: VolBlock<Tile8, Safe, Safe, 256>; "Charblock 2, 8bpp view (256 tiles).");
 def_mmio!(0x0600_C000 = CHARBLOCK3_8BPP: VolBlock<Tile8, Safe, Safe, 256>; "Charblock 3, 8bpp view (256 tiles).");
 
-pub type TextScreenBlock = VolBlock<TextEntry, Safe, Safe, {8*8}>;
+pub type TextScreenBlock = VolBlock<TextEntry, Safe, Safe, {32*32}>;
 pub type AffineScreenBlock0 = VolBlock<u8, Safe, Safe, {16*16}>;
 pub type AffineScreenBlock1 = VolBlock<u8, Safe, Safe, {32*32}>;
 pub type AffineScreenBlock2 = VolBlock<u8, Safe, Safe, {64*64}>;
@@ -234,7 +234,7 @@ pub type AffineScreenBlock3 = VolBlock<u8, Safe, Safe, {128*128}>;
 #[must_use]
 pub const fn text_screenblock(index: usize) -> TextScreenBlock {
   assert!(index < 32);
-  unsafe { VolBlock::new(0x0600_0000 + index * size_of::<[TextEntry;8*8]>()) }
+  unsafe { VolBlock::new(0x0600_0000 + index * size_of::<[TextEntry;32*32]>()) }
 }
 
 /// ## Panics
