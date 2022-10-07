@@ -3,7 +3,7 @@
 #![feature(asm_const)]
 #![feature(isa_attribute)]
 #![feature(naked_functions)]
-#![warn(missing_docs)]
+//#![warn(missing_docs)]
 
 //! A crate for GBA development.
 //!
