@@ -15,16 +15,11 @@ fn panic_handler(info: &core::panic::PanicInfo) -> ! {
   loop {}
 }
 
-// GbaCell is non-freeze, so `.data` section, so this will default to IWRAM.
-static KEYS: GbaCell<KeyInput> = GbaCell::new(KeyInput::new());
-
-// We can also put things into EWRAM if we want to.
-#[link_section = ".ewram"]
-static VALUE: GbaCell<u16> = GbaCell::new(0);
+static FRAME_KEYS: GbaCell<KeyInput> = GbaCell::new(KeyInput::new());
 
 extern "C" fn irq_handler(_: IrqBits) {
-  // just as a demo, we'll read the keys during vblank.
-  KEYS.write(KEYINPUT.read());
+  // We'll read the keys during vblank and store it for later.
+  FRAME_KEYS.write(KEYINPUT.read());
 }
 
 #[no_mangle]
@@ -51,13 +46,43 @@ extern "C" fn main() -> ! {
     unsafe { BitUnPack(CGA_8X8_THICK.as_ptr().cast::<u8>(), dest, &info) };
   }
 
-  DISPCNT.write(DisplayControl::new().with_show_bg2(true));
+  let tsb = text_screenblock(31);
+  for y in 0..16_u16 {
+    for x in 0..16_u16 {
+      let tsb_i = y * 32 + x;
+      let t_i = y * 16 + x;
+      tsb.index(tsb_i as usize).write(TextEntry::new().with_tile_id(t_i));
+    }
+  }
 
+  BG0CNT.write(BackgroundControl::new().with_screenblock(31));
+
+  DISPCNT.write(DisplayControl::new().with_show_bg0(true));
+
+  let mut x_off = 0_u32;
+  let mut y_off = 0_u32;
+  let mut backdrop_color = Color(0);
   loop {
     VBlankIntrWait();
+    // show current frame
+    BACKDROP_COLOR.write(backdrop_color);
+    BG0HOFS.write(x_off as u16);
+    BG0VOFS.write(y_off as u16);
 
-    let k = KEYS.read();
-    VALUE.write((k.to_u16() + 3) / k.to_u16()); // force a runtime division
-    BACKDROP_COLOR.write(Color(k.to_u16()));
+    // prep next frame
+    let k = FRAME_KEYS.read();
+    backdrop_color = Color(k.to_u16());
+    if k.up() {
+      y_off = y_off.wrapping_add(1);
+    }
+    if k.down() {
+      y_off = y_off.wrapping_sub(1);
+    }
+    if k.left() {
+      x_off = x_off.wrapping_add(1);
+    }
+    if k.right() {
+      x_off = x_off.wrapping_sub(1);
+    }
   }
 }
