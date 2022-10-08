@@ -48,11 +48,11 @@ extern "C" fn main() -> ! {
 
   {
     // the the tilemap set up
-    let tsb = TileScreenblock::new(31);
+    let tsb = TextScreenblock::new(31);
     for row in 0..16_usize {
       for col in 0..16_usize {
         let id = row * 16 + col;
-        let entry = TileEntry::new().with_tile_id(id as u16);
+        let entry = TextEntry::new().with_tile_id(id as u16);
         tsb.row_col(row, col).write(entry);
       }
     }

@@ -32,7 +32,7 @@ use crate::{
   interrupts::IrqBits,
   video::{
     BackgroundControl, Color, DisplayControl, DisplayStatus, WindowInside,
-    WindowOutside, Mosaic, BlendControl, Tile4, ObjAttr0, ObjAttr1, ObjAttr2, Tile8, TileEntry
+    WindowOutside, Mosaic, BlendControl, Tile4, ObjAttr0, ObjAttr1, ObjAttr2, Tile8, TextEntry
   },
   dma::DmaControl,
   sound::{
@@ -257,7 +257,7 @@ macro_rules! make_me_a_screenblock {
   }
 }
 
-make_me_a_screenblock!(TileScreenblock(TileEntry), size: 32, max_index: 32);
+make_me_a_screenblock!(TextScreenblock(TextEntry), size: 32, max_index: 32);
 make_me_a_screenblock!(AffineScreenBlock0(u8), size: 16, max_index: 32);
 make_me_a_screenblock!(AffineScreenBlock1(u8), size: 32, max_index: 32);
 make_me_a_screenblock!(AffineScreenBlock2(u8), size: 64, max_index: 30);

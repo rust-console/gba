@@ -17,28 +17,40 @@
 //! "sprites" within a game. Because there isn't an exact 1:1 mapping between
 //! sprites and objects, these docs will attempt to only talk about objects.
 //!
-//! ## Color And Bit Depth
+//! ## Color, Bit Depth, and Palettes
 //!
 //! [Color] values on the GBA are 5-bits-per-channel RGB values. They're always
-//! stored packed and aligned to 2, so think of them as being like a `u16`.
+//! bit-packed and aligned to 2, so think of them as being like a `u16`.
 //!
-//! Because of the GBA's limited memory, image data will rarely be stored with
-//! one full color value per pixel. Instead they'll be stored as
-//! 4-bits-per-pixel (4bpp) or 8-bits-per-pixel (8bpp). In both cases, each
-//! pixel is an index into the PALRAM (either the [`BG_PALETTE`] or
-//! [`OBJ_PALETTE`]), which stores the color to draw. This is known as "indexed"
-//! or "paletted" color.
+//! Because of the GBA's limited memory, most images don't use direct color (one
+//! color per pixel). Instead they use indexed color (one *palette index* per
+//! pixel). Indexed image data can be 4-bits-per-pixel (4bpp) or
+//! 8-bits-per-pixel (8bpp). In either case, the color values themselves are
+//! stored in the PALRAM region. When used as a background, the [`BG_PALETTE`]
+//! is used, and when used as an object the [`OBJ_PALETTE`] is used. Both
+//! palettes have 256 slots. The palettes are always indexed with 8 bits total,
+//! but how those bits are determined depends on the bit depth of the image:
+//! * Things drawing with 8bpp image data index into the full range of the
+//!   palette directly.
+//! * Things drawing with 4bpp image data will also have a "palbank" setting.
+//!   The palbank acts as the upper 4 bits of the index, selecting which block
+//!   of 16 palette entries the that thing will be able to use. Then each 4-bit
+//!   pixel within the image indexes within the palbank.
 //!
-//! Each palette has 256 slots. The palettes are always indexed with 8 bits
-//! total, but how those bits are determined depends on the bit depth of the
-//! image:
-//! * 8bpp images index into the full range of the palette directly.
-//! * 4bpp images are always associated with a "palbank". The palbank acts as
-//!   the upper 4 bits of the index, selecting which block of 16 palette entries
-//!   the image will be able to use. Then each 4-bit pixel within the image
-//!   indexes into that palbank.
-//! * In both 8bpp and 4bpp modes, if a pixel's value is 0 then that pixel is
-//!   transparent.
+//! In both 8bpp and 4bpp modes, if a pixel's value is 0 then that pixel is
+//! transparent. So 8bpp images can use 255 colors (+ transparent), and 4bpp
+//! images can use 15 colors (+ transparent). Each background layer and each
+//! object can individually be set for 4bpp or 8bpp mode.
+//!
+//! ## Tiles, Screenblocks, and Charblocks
+//!
+//! Regardless of their bit depth, a tile is always an 8x8 area. This means that
+//! they're either 32 bytes (4bpp) or 64 bytes (8bpp). Since VRAM starts aligned
+//! to 4, and since both size tiles are a multiple of 4 bytes large, we model
+//! tile data as `u32` arrays rather than `u8` arrays. Having the data stay
+//! aligned to 4 gives a significant speed gain when moving entire tiles around.
+//!
+//! The layout of tiles is a "screenblock". This is a square of entries
 //!
 //! ## Priority
 //!
@@ -67,10 +79,6 @@ use crate::macros::{
 };
 #[allow(unused_imports)]
 use crate::prelude::*;
-
-pub mod affine_backgrounds;
-pub mod bitmap_backgrounds;
-pub mod tiled_backgrounds;
 
 /// An RGB555 color value (packed into `u16`).
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -241,8 +249,8 @@ pub type Tile8 = [u32; 16];
 ///   mode this has no effect.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[repr(transparent)]
-pub struct TileEntry(u16);
-impl TileEntry {
+pub struct TextEntry(u16);
+impl TextEntry {
   pub_const_fn_new_zeroed!();
   u16_int_field!(0 - 9, tile_id, with_tile_id);
   u16_bool_field!(10, hflip, with_hflip);
