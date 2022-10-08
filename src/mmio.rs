@@ -32,7 +32,7 @@ use crate::{
   interrupts::IrqBits,
   video::{
     BackgroundControl, Color, DisplayControl, DisplayStatus, WindowInside,
-    WindowOutside, Mosaic, BlendControl, Tile4, ObjAttr0, ObjAttr1, ObjAttr2, Tile8, TextEntry
+    WindowOutside, Mosaic, BlendControl, Tile4, ObjAttr0, ObjAttr1, ObjAttr2, Tile8, TileEntry
   },
   dma::DmaControl,
   sound::{
@@ -222,56 +222,46 @@ def_mmio!(0x0600_4000 = CHARBLOCK1_8BPP: VolBlock<Tile8, Safe, Safe, 256>; "Char
 def_mmio!(0x0600_8000 = CHARBLOCK2_8BPP: VolBlock<Tile8, Safe, Safe, 256>; "Charblock 2, 8bpp view (256 tiles).");
 def_mmio!(0x0600_C000 = CHARBLOCK3_8BPP: VolBlock<Tile8, Safe, Safe, 256>; "Charblock 3, 8bpp view (256 tiles).");
 
-pub type TextScreenBlock = VolBlock<TextEntry, Safe, Safe, {32*32}>;
-pub type AffineScreenBlock0 = VolBlock<u8, Safe, Safe, {16*16}>;
-pub type AffineScreenBlock1 = VolBlock<u8, Safe, Safe, {32*32}>;
-pub type AffineScreenBlock2 = VolBlock<u8, Safe, Safe, {64*64}>;
-pub type AffineScreenBlock3 = VolBlock<u8, Safe, Safe, {128*128}>;
-
-/// ## Panics
-/// * Must be less than 32
 #[inline]
 #[must_use]
-pub const fn text_screenblock(index: usize) -> TextScreenBlock {
-  assert!(index < 32);
-  unsafe { VolBlock::new(0x0600_0000 + index * size_of::<[TextEntry;32*32]>()) }
+const fn screenblock_addr(index: usize) -> usize {
+  /// The VRAM offset per screenblock.
+  const SCREENBLOCK_OFFSET: usize = 2_048;
+
+  0x0600_0000 + index * SCREENBLOCK_OFFSET
 }
 
-/// ## Panics
-/// * Must be less than 256
-#[inline]
-#[must_use]
-pub const fn affine_screenblock0(index: usize) -> AffineScreenBlock0 {
-  assert!(index < 256);
-  unsafe { VolBlock::new(0x0600_0000 + index * size_of::<[u8;16*16]>()) }
+macro_rules! make_me_a_screenblock {
+  ($name:ident($t:ty), size: $size:literal, max_index: $max_index:literal) => {
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+    #[repr(transparent)]
+    pub struct $name {
+      block: VolBlock<$t, Safe, Safe, {$size*$size}>,
+    }
+    impl $name {
+      #[inline]
+      #[must_use]
+      pub const fn new(index: usize) -> Self {
+        assert!(index < $max_index);
+        Self { block: unsafe { VolBlock::new(screenblock_addr(index)) } }
+      }
+    
+      #[inline]
+      #[must_use]
+      pub const fn row_col(self, row: usize, col: usize) -> VolAddress<$t, Safe, Safe> {
+        assert!(row < $size);
+        assert!(col < $size);
+        self.block.index(row * $size + col)
+      }
+    }
+  }
 }
 
-/// ## Panics
-/// * Must be less than 64
-#[inline]
-#[must_use]
-pub const fn affine_screenblock1(index: usize) -> AffineScreenBlock1 {
-  assert!(index < 64);
-  unsafe { VolBlock::new(0x0600_0000 + index * size_of::<[u8;32*32]>()) }
-}
-
-/// ## Panics
-/// * Must be less than 16
-#[inline]
-#[must_use]
-pub const fn affine_screenblock2(index: usize) -> AffineScreenBlock2 {
-  assert!(index < 16);
-  unsafe { VolBlock::new(0x0600_0000 + index * size_of::<[u8;64*64]>()) }
-}
-
-/// ## Panics
-/// * Must be less than 4
-#[inline]
-#[must_use]
-pub const fn affine_screenblock3(index: usize) -> AffineScreenBlock3 {
-  assert!(index < 4);
-  unsafe { VolBlock::new(0x0600_0000 + index * size_of::<[u8;128*128]>()) }
-}
+make_me_a_screenblock!(TileScreenblock(TileEntry), size: 32, max_index: 32);
+make_me_a_screenblock!(AffineScreenBlock0(u8), size: 16, max_index: 32);
+make_me_a_screenblock!(AffineScreenBlock1(u8), size: 32, max_index: 32);
+make_me_a_screenblock!(AffineScreenBlock2(u8), size: 64, max_index: 30);
+make_me_a_screenblock!(AffineScreenBlock3(u8), size: 128, max_index: 24);
 
 def_mmio!(0x0600_0000 = MODE3_BITMAP: VolBlock<Color, Safe, Safe, {240 * 160}>; "Mode 3 bitmap, 240x160.");
 

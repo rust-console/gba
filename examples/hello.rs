@@ -35,7 +35,7 @@ extern "C" fn main() -> ! {
 
   {
     // get our tile data into memory.
-    //let src = ;
+    let src = CGA_8X8_THICK.as_ptr().cast::<u8>();
     let dest = CHARBLOCK0_4BPP.index(0).as_usize() as *mut u32;
     let info = BitUnpackInfo {
       src_byte_len: size_of_val(&CGA_8X8_THICK) as u16,
@@ -43,21 +43,26 @@ extern "C" fn main() -> ! {
       dest_elem_width: 4,
       offset_and_touch_zero: 0,
     };
-    unsafe { BitUnPack(CGA_8X8_THICK.as_ptr().cast::<u8>(), dest, &info) };
+    unsafe { BitUnPack(src, dest, &info) };
   }
 
-  let tsb = text_screenblock(31);
-  for y in 0..16_u16 {
-    for x in 0..16_u16 {
-      let tsb_i = y * 32 + x;
-      let t_i = y * 16 + x;
-      tsb.index(tsb_i as usize).write(TextEntry::new().with_tile_id(t_i));
+  {
+    // the the tilemap set up
+    let tsb = TileScreenblock::new(31);
+    for row in 0..16_usize {
+      for col in 0..16_usize {
+        let id = row * 16 + col;
+        let entry = TileEntry::new().with_tile_id(id as u16);
+        tsb.row_col(row, col).write(entry);
+      }
     }
   }
 
-  BG0CNT.write(BackgroundControl::new().with_screenblock(31));
-
-  DISPCNT.write(DisplayControl::new().with_show_bg0(true));
+  {
+    // Set BG0 to use the tilemap we just made, and set it to be shown.
+    BG0CNT.write(BackgroundControl::new().with_screenblock(31));
+    DISPCNT.write(DisplayControl::new().with_show_bg0(true));
+  }
 
   let mut x_off = 0_u32;
   let mut y_off = 0_u32;
