@@ -19,10 +19,9 @@
 //! 
 //! ## Safety
 //! 
-//! While it's safe to use this crate's data type definitions anywhere (they're
-//! just wrappers for ints), the MMIO declarations in this module **must not**
-//! be used outside of a GBA. The read and write safety of each address are
-//! declared assuming that code is running on a GBA. On any other platform, the
+//! The MMIO declarations and wrapper types in this module **must not** be used
+//! outside of a GBA. The read and write safety of each address are declared
+//! assuming that code is running on a GBA. On any other platform, the
 //! declarations are simply incorrect.
 
 use core::{ffi::c_void, mem::size_of};
