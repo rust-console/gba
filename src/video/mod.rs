@@ -44,13 +44,31 @@
 //!
 //! ## Tiles, Screenblocks, and Charblocks
 //!
+//! The basic unit of the GBA's hardware graphics support is a "tile".
 //! Regardless of their bit depth, a tile is always an 8x8 area. This means that
 //! they're either 32 bytes (4bpp) or 64 bytes (8bpp). Since VRAM starts aligned
 //! to 4, and since both size tiles are a multiple of 4 bytes large, we model
-//! tile data as `u32` arrays rather than `u8` arrays. Having the data stay
-//! aligned to 4 gives a significant speed gain when moving entire tiles around.
+//! tile data as being arrays of `u32 rather than arrays of `u8`. Having the
+//! data keep aligned to 4 gives a significant speed gain when moving entire
+//! tiles around.
 //!
-//! The layout of tiles is a "screenblock". This is a square of entries
+//! The layout of tiles within a background is defined by a "screenblock".
+//! * Text backgrounds use a fixed 32x32 size screenblock, with larger
+//!   backgrounds using more than one screenblock. Each [TextEntry] value in the
+//!   screenblock has a tile index (10-bit) as well as some other data.
+//! * Affine backgrounds always have a single screenblock each, and the size of
+//!   the screenblock itself changes with the background's size (from 16x16 to
+//!   128x128, in powers of 2). Each entry in an affine screenblock is just a
+//!   `u8` tile index, with no special options.
+//!
+//! A background's screenblock is selected by an index (5-bit). The indexes go
+//! in 2,048 byte (2k) jumps. This is exactly the size of a text screenblock,
+//! but doesn't precisely match the size of any of the affine screenblocks.
+//!
+//! Because tile indexes can only be so large, there are also "charblocks". This
+//! offsets all of the tile index values that the background uses, allowing you
+//! to make better use of all of the VRAM. The charblock value provides a 16,384
+//! byte (16k) offset, and can be in the range `0..=3`.
 //!
 //! ## Priority
 //!
