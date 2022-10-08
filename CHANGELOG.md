@@ -1,6 +1,9 @@
 # Changelog
 
-* **0.8.0 (unreleased):**
+* **0.9.0:** (unreleased)
+  * **Break:** Quite a bit of the video interface has been replaced, but it
+    should be much easier to use now.
+* **0.8.0:**
   * **Break:** Removed the macros for `GbaCell` access in favor of just methods.
     I had at first thought that they'd assign registers and then inline, but it
     turns out that the inline phase happens way before the register assignment
