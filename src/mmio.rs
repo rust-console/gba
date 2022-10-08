@@ -195,7 +195,7 @@ def_mmio!(0x0400_0158 = JOYSTAT: VolAddress<u8, Safe, Safe>);
 
 def_mmio!(0x0400_0200 = IE: VolAddress<IrqBits, Safe, Safe>; "Interrupts Enabled: sets which interrupts will be accepted when a subsystem fires an interrupt");
 def_mmio!(0x0400_0202 = IF: VolAddress<IrqBits, Safe, Safe>; "Interrupts Flagged: reads which interrupts are pending, writing bit(s) will clear a pending interrupt.");
-def_mmio!(0x0400_0204 = WAITCNT: VolAddress<u16, Safe, Unsafe>; "Wait state control for interfacing with the ROM (can make reading the ROM give garbage when it's mis-configured)");
+def_mmio!(0x0400_0204 = WAITCNT: VolAddress<u16, Safe, Unsafe>; "Wait state control for interfacing with the ROM.\n\nThis can make reading the ROM give garbage when it's mis-configured!");
 def_mmio!(0x0400_0208 = IME: VolAddress<bool, Safe, Safe>; "Interrupt Master Enable: Allows turning on/off all interrupts with a single access.");
 
 // mGBA Logging
@@ -232,36 +232,74 @@ const fn screenblock_addr(index: usize) -> usize {
 }
 
 macro_rules! make_me_a_screenblock {
-  ($name:ident($t:ty), size: $size:literal, max_index: $max_index:literal) => {
+  ( $(#[$name_meta:meta])* $name:ident($t:ty), $(#[$size_meta:meta])* size: $size:literal, $(#[$index_meta:meta])* max_index: $max_index:literal) => {
     #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
     #[repr(transparent)]
+    $(#[$name_meta])*
     pub struct $name {
       block: VolBlock<$t, Safe, Safe, {$size*$size}>,
     }
     impl $name {
       #[inline]
       #[must_use]
+      $(#[$index_meta])*
       pub const fn new(index: usize) -> Self {
-        assert!(index < $max_index);
+        assert!(index <= $max_index);
         Self { block: unsafe { VolBlock::new(screenblock_addr(index)) } }
       }
     
       #[inline]
       #[must_use]
+      $(#[$size_meta])*
       pub const fn row_col(self, row: usize, col: usize) -> VolAddress<$t, Safe, Safe> {
-        assert!(row < $size);
-        assert!(col < $size);
+        assert!(row < $size, concat!("`row` must be less than ", $size));
+        assert!(col < $size, concat!("`col` must be less than ", $size));
         self.block.index(row * $size + col)
       }
     }
   }
 }
 
-make_me_a_screenblock!(TextScreenblock(TextEntry), size: 32, max_index: 32);
-make_me_a_screenblock!(AffineScreenBlock0(u8), size: 16, max_index: 32);
-make_me_a_screenblock!(AffineScreenBlock1(u8), size: 32, max_index: 32);
-make_me_a_screenblock!(AffineScreenBlock2(u8), size: 64, max_index: 30);
-make_me_a_screenblock!(AffineScreenBlock3(u8), size: 128, max_index: 24);
+make_me_a_screenblock!(
+  /// Screenblock for text mode backgrounds (32x32).
+  TextScreenblock(TextEntry),
+  /// Size: 32x32
+  size: 32,
+  /// Max Index: 31
+  max_index: 31
+);
+make_me_a_screenblock!(
+  /// Screenblock for size 0 affine mode backgrounds (16x16).
+  AffineScreenBlock0(u8),
+  /// Size: 16x16
+  size: 16,
+  /// Max Index: 31
+  max_index: 31
+);
+make_me_a_screenblock!(
+  /// Screenblock for size 1 affine mode backgrounds (32x32).
+  AffineScreenBlock1(u8),
+  /// Size: 32x32
+  size: 32,
+  /// Max Index: 31
+  max_index: 31
+);
+make_me_a_screenblock!(
+  /// Screenblock for size 2 affine mode backgrounds (64x64).
+  AffineScreenBlock2(u8),
+  /// Size: 64x64
+  size: 64,
+  /// Max Index: 29
+  max_index: 29
+);
+make_me_a_screenblock!(
+  /// Screenblock for size 3 affine mode backgrounds (128x128).
+  AffineScreenBlock3(u8),
+  /// Size: 128x128
+  size: 128,
+  /// Max Index: 23
+  max_index: 23
+);
 
 def_mmio!(0x0600_0000 = MODE3_BITMAP: VolBlock<Color, Safe, Safe, {240 * 160}>; "Mode 3 bitmap, 240x160.");
 
@@ -275,11 +313,11 @@ def_mmio!(0x0601_0000 = OBJ_TILES: VolBlock<Tile4, Safe, Safe, 1024>; "Object ti
 
 // Object Attribute Memory (OAM)
 
-def_mmio!(0x0700_0000 = OBJ_ATTR0: VolSeries<ObjAttr0, Safe, Safe, 128, {size_of::<[u16;4]>()}>);
-def_mmio!(0x0700_0002 = OBJ_ATTR1: VolSeries<ObjAttr1, Safe, Safe, 128, {size_of::<[u16;4]>()}>);
-def_mmio!(0x0700_0004 = OBJ_ATTR2: VolSeries<ObjAttr2, Safe, Safe, 128, {size_of::<[u16;4]>()}>);
+def_mmio!(0x0700_0000 = OBJ_ATTR0: VolSeries<ObjAttr0, Safe, Safe, 128, {size_of::<[u16;4]>()}>; "Object attributes 0.");
+def_mmio!(0x0700_0002 = OBJ_ATTR1: VolSeries<ObjAttr1, Safe, Safe, 128, {size_of::<[u16;4]>()}>; "Object attributes 1.");
+def_mmio!(0x0700_0004 = OBJ_ATTR2: VolSeries<ObjAttr2, Safe, Safe, 128, {size_of::<[u16;4]>()}>; "Object attributes 2.");
 
-def_mmio!(0x0700_0006 = AFFINE_PARAM_A: VolSeries<i16, Safe, Safe, 32, {size_of::<[u16;16]>()}>);
-def_mmio!(0x0700_000E = AFFINE_PARAM_B: VolSeries<i16, Safe, Safe, 32, {size_of::<[u16;16]>()}>);
-def_mmio!(0x0700_0016 = AFFINE_PARAM_C: VolSeries<i16, Safe, Safe, 32, {size_of::<[u16;16]>()}>);
-def_mmio!(0x0700_001E = AFFINE_PARAM_D: VolSeries<i16, Safe, Safe, 32, {size_of::<[u16;16]>()}>);
+def_mmio!(0x0700_0006 = AFFINE_PARAM_A: VolSeries<i16, Safe, Safe, 32, {size_of::<[u16;16]>()}>; "Affine parameters A.");
+def_mmio!(0x0700_000E = AFFINE_PARAM_B: VolSeries<i16, Safe, Safe, 32, {size_of::<[u16;16]>()}>; "Affine parameters B.");
+def_mmio!(0x0700_0016 = AFFINE_PARAM_C: VolSeries<i16, Safe, Safe, 32, {size_of::<[u16;16]>()}>; "Affine parameters C.");
+def_mmio!(0x0700_001E = AFFINE_PARAM_D: VolSeries<i16, Safe, Safe, 32, {size_of::<[u16;16]>()}>; "Affine parameters D.");
