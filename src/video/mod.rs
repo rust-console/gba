@@ -48,7 +48,7 @@
 //! Regardless of their bit depth, a tile is always an 8x8 area. This means that
 //! they're either 32 bytes (4bpp) or 64 bytes (8bpp). Since VRAM starts aligned
 //! to 4, and since both size tiles are a multiple of 4 bytes large, we model
-//! tile data as being arrays of `u32 rather than arrays of `u8`. Having the
+//! tile data as being arrays of `u32` rather than arrays of `u8`. Having the
 //! data keep aligned to 4 gives a significant speed gain when moving entire
 //! tiles around.
 //!
@@ -109,15 +109,23 @@ impl Color {
   u16_int_field!(10 - 14, blue, with_blue);
 }
 
+/// The video mode controls how each background layer will operate.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[repr(u16)]
 pub enum VideoMode {
+  /// All four background layers use text mode.
   #[default]
   _0 = 0,
+  /// BG0 and BG1 are text mode, while BG2 is affine. BG3 is unavailable.
   _1 = 1,
+  /// BG2 and BG3 are affine. BG0 and BG1 are unavailable.
   _2 = 2,
+  /// BG2 is a single full color bitmap.
   _3 = 3,
+  /// BG2 holds two 8bpp indexmaps, and you can flip between.
   _4 = 4,
+  /// BG2 holds two full color bitmaps of reduced size (only 160x128), and you
+  /// can flip between.
   _5 = 5,
 }
 
