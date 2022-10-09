@@ -9,29 +9,15 @@ use crate::{
 
 /// The CGA [Code Page 437][cp437] type face, with thick lines.
 ///
-/// There's 256 tiles, packed down to 1bpp. To decompress this into 4bpp tile
-/// data you can call [`BitUnPack`](crate::bios::BitUnPack) as follows:
+/// There's 256 tiles, packed down to 1bpp.
+///
+/// To easily decompress this you can use the [`Cga8x8Thick`] type, which
+/// provides a safe helper method:
 ///
 /// ```no_run
 /// # use gba::prelude::*;
-/// # use core::mem::size_of_val;
-/// let src = CGA_8X8_THICK.as_ptr().cast::<u8>();
-///
-/// let dest = CHARBLOCK0_4BPP.index(0).as_usize() as *mut u32;
-///
-/// let info = BitUnpackInfo {
-///   src_byte_len: size_of_val(&CGA_8X8_THICK) as u16,
-///   src_elem_width: 1,
-///   dest_elem_width: 4,
-///   offset_and_touch_zero: 0,
-/// };
-///
-/// unsafe { BitUnPack(src, dest, &info) };
+/// Cga8x8Thick.bitunpack_4bpp(CHARBLOCK0_4BPP, 0);
 /// ```
-///
-/// * You can use `dest_elem_width: 8` if you want 8bpp tile data.
-/// * If you want the "opaque" pixels to be a palette index other than 1 you can
-///   use an appropriate offset value.
 ///
 /// I am not a lawyer, but type faces are not protected by copyright in the USA.
 /// The copyright status of font faces [varies by country][wp]. If it matters,
@@ -145,8 +131,12 @@ pub static CGA_8X8_THICK: [u32; 512] = [
 pub struct Cga8x8Thick;
 
 impl Cga8x8Thick {
+  /// Bit unpacks the data (4bpp depth) to the location given.
+  ///
+  /// * `offset_and_touch_zero`: Works like the [`BitUnpackInfo`] field. By
+  ///   default you should usually pass 0 here.
   #[inline]
-  pub fn bitunpack_to_4bpp(
+  pub fn bitunpack_4bpp(
     self, b: VolBlock<Tile4, Safe, Safe, 512>, offset_and_touch_zero: u32,
   ) {
     let src = CGA_8X8_THICK.as_ptr();
