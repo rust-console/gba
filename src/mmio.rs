@@ -255,6 +255,21 @@ macro_rules! make_me_a_screenblock {
         assert!(col < $size, concat!("`col` must be less than ", $size));
         self.block.index(row * $size + col)
       }
+
+      const WORD_COUNT: usize = (size_of::<$t>() * $size * $size)/4;
+      const _DEBUG_CHECK: () = {
+        assert!((size_of::<$t>() * $size * $size) % 4 == 0);
+        ()
+      };
+
+      /// Overwrites the entire screenblock with the data provided.
+      pub fn write_words(self, words: &[u32; Self::WORD_COUNT]) {
+        use crate::prelude::__aeabi_memcpy4;
+        let dest: *mut u32 = self.block.index(0).as_usize() as *mut u32;
+        let src: *const u32 = words.as_ptr();
+        let byte_count = size_of::<[u32; Self::WORD_COUNT]>();
+        unsafe { __aeabi_memcpy4(dest.cast(), src.cast(), byte_count) };
+      }
     }
   }
 }

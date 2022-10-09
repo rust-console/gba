@@ -264,7 +264,7 @@ pub type Tile8 = [u32; 16];
 
 /// An entry within a tile mode tilemap.
 ///
-/// * `tile_id` is the index of the tile, offset from the `charblock` that the
+/// * `tile` is the index of the tile, offset from the `charblock` that the
 ///   background is using. This is a 10-bit value, so indexes are in the range
 ///   `0..=1023`. You *cannot* index past the end of background VRAM into object
 ///   VRAM (it just won't draw properly), but you *can* index past the end of
@@ -278,10 +278,17 @@ pub type Tile8 = [u32; 16];
 pub struct TextEntry(u16);
 impl TextEntry {
   pub_const_fn_new_zeroed!();
-  u16_int_field!(0 - 9, tile_id, with_tile_id);
+  u16_int_field!(0 - 9, tile, with_tile);
   u16_bool_field!(10, hflip, with_hflip);
   u16_bool_field!(11, vflip, with_vflip);
   u16_int_field!(12 - 15, palbank, with_palbank);
+
+  /// Shorthand for `TextEntry::new().with_tile(id)`
+  #[inline]
+  #[must_use]
+  pub const fn from_tile(id: u16) -> Self {
+    Self(id & 0b11_1111_1111)
+  }
 }
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]

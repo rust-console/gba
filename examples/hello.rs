@@ -15,12 +15,40 @@ fn panic_handler(info: &core::panic::PanicInfo) -> ! {
   loop {}
 }
 
+#[link_section = ".ewram"]
 static FRAME_KEYS: GbaCell<KeyInput> = GbaCell::new(KeyInput::new());
 
+#[link_section = ".iwram"]
 extern "C" fn irq_handler(_: IrqBits) {
   // We'll read the keys during vblank and store it for later.
   FRAME_KEYS.write(KEYINPUT.read());
 }
+
+const TILE_LAYOUT: [u32; 512] = {
+  // Rust's const eval is limited at the moment, but with a bit of careful math
+  // we can set up `u32` values that store the right data. Tile maps are 32x32
+  // `u16` values, so when packing it as `u32` instead we have to throw in some
+  // `/2` stuff in a few places. Seperately, the tiles that we're using come
+  // from an image that was drawn as a 16 by 16 tile sheet, so most of the
+  // layout's area will be left as zero. Thankfully, tile index 0 is a blank
+  // tile in this tileset, so it all works out.
+  let mut data = [0; 512];
+  let mut r = 0;
+  while r < 16 {
+    let mut c = 0;
+    while c < 16 {
+      let index = r * (32 / 2) + (c / 2);
+      let a = r * 16 + c;
+      let b = r * 16 + c + 1;
+      data[index] = (a as u32) | ((b as u32) << 16);
+      //
+      c += 2;
+    }
+    //
+    r += 1;
+  }
+  data
+};
 
 #[no_mangle]
 extern "C" fn main() -> ! {
@@ -47,15 +75,9 @@ extern "C" fn main() -> ! {
   }
 
   {
-    // the the tilemap set up
+    // get the the tilemap copied into place
     let tsb = TextScreenblock::new(31);
-    for row in 0..16_usize {
-      for col in 0..16_usize {
-        let id = row * 16 + col;
-        let entry = TextEntry::new().with_tile_id(id as u16);
-        tsb.row_col(row, col).write(entry);
-      }
-    }
+    tsb.write_words(&TILE_LAYOUT);
   }
 
   {
