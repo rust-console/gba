@@ -1,7 +1,7 @@
 #![no_std]
 #![no_main]
 
-use core::{fmt::Write, mem::size_of_val};
+use core::fmt::Write;
 use gba::{
   mgba::{MgbaBufferedLogger, MgbaMessageLevel},
   prelude::*,
@@ -63,15 +63,7 @@ extern "C" fn main() -> ! {
 
   {
     // get our tile data into memory.
-    let src = CGA_8X8_THICK.as_ptr().cast::<u8>();
-    let dest = CHARBLOCK0_4BPP.index(0).as_usize() as *mut u32;
-    let info = BitUnpackInfo {
-      src_byte_len: size_of_val(&CGA_8X8_THICK) as u16,
-      src_elem_width: 1,
-      dest_elem_width: 4,
-      offset_and_touch_zero: 0,
-    };
-    unsafe { BitUnPack(src, dest, &info) };
+    Cga8x8Thick.bitunpack_to_4bpp(CHARBLOCK0_4BPP, 0);
   }
 
   {

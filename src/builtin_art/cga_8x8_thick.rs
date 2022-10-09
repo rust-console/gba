@@ -1,3 +1,12 @@
+use core::mem::size_of_val;
+
+use voladdress::{Safe, VolBlock};
+
+use crate::{
+  bios::{BitUnPack, BitUnpackInfo},
+  video::Tile4,
+};
+
 /// The CGA [Code Page 437][cp437] type face, with thick lines.
 ///
 /// There's 256 tiles, packed down to 1bpp. To decompress this into 4bpp tile
@@ -131,3 +140,23 @@ pub static CGA_8X8_THICK: [u32; 512] = [
   0x3636361E, 0x00000036, 0x060C180E, 0x0000001E, 0x3C3C0000, 0x00003C3C,
   0x00000000, 0x00000000,
 ];
+
+#[derive(Debug, Clone, Copy)]
+pub struct Cga8x8Thick;
+
+impl Cga8x8Thick {
+  #[inline]
+  pub fn bitunpack_to_4bpp(
+    self, b: VolBlock<Tile4, Safe, Safe, 512>, offset_and_touch_zero: u32,
+  ) {
+    let src = CGA_8X8_THICK.as_ptr();
+    let dest = b.index(0).as_usize() as *mut u32;
+    let info = BitUnpackInfo {
+      src_byte_len: size_of_val(&CGA_8X8_THICK) as u16,
+      src_elem_width: 1,
+      dest_elem_width: 4,
+      offset_and_touch_zero,
+    };
+    unsafe { BitUnPack(src.cast(), dest, &info) };
+  }
+}
