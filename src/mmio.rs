@@ -224,13 +224,13 @@ def_mmio!(0x0600_C000 = CHARBLOCK3_8BPP: VolBlock<Tile8, Safe, Safe, 256>; "Char
 #[inline]
 #[must_use]
 const fn screenblock_addr(index: usize) -> usize {
-  /// The VRAM offset per screenblock.
+  /// The VRAM offset per screenblock. This isn't affected by the screenblock's size.
   const SCREENBLOCK_OFFSET: usize = 2_048;
 
   0x0600_0000 + index * SCREENBLOCK_OFFSET
 }
 
-macro_rules! make_me_a_screenblock {
+macro_rules! make_me_a_screenblock_addr {
   ( $(#[$name_meta:meta])* $name:ident($t:ty), $(#[$size_meta:meta])* size: $size:literal, $(#[$index_meta:meta])* max_index: $max_index:literal) => {
     #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
     #[repr(transparent)]
@@ -274,41 +274,41 @@ macro_rules! make_me_a_screenblock {
   }
 }
 
-make_me_a_screenblock!(
-  /// Screenblock for text mode backgrounds (32x32).
-  TextScreenblock(TextEntry),
+make_me_a_screenblock_addr!(
+  /// Screenblock address for text mode backgrounds (32x32).
+  TextScreenblockAddress(TextEntry),
   /// Size: 32x32
   size: 32,
   /// Max Index: 31
   max_index: 31
 );
-make_me_a_screenblock!(
-  /// Screenblock for size 0 affine mode backgrounds (16x16).
-  AffineScreenBlock0(u8),
+make_me_a_screenblock_addr!(
+  /// Screenblock address for size 0 affine mode backgrounds (16x16).
+  AffineScreenBlock0Address(u8),
   /// Size: 16x16
   size: 16,
   /// Max Index: 31
   max_index: 31
 );
-make_me_a_screenblock!(
-  /// Screenblock for size 1 affine mode backgrounds (32x32).
-  AffineScreenBlock1(u8),
+make_me_a_screenblock_addr!(
+  /// Screenblock address for size 1 affine mode backgrounds (32x32).
+  AffineScreenBlock1Address(u8),
   /// Size: 32x32
   size: 32,
   /// Max Index: 31
   max_index: 31
 );
-make_me_a_screenblock!(
-  /// Screenblock for size 2 affine mode backgrounds (64x64).
-  AffineScreenBlock2(u8),
+make_me_a_screenblock_addr!(
+  /// Screenblock address for size 2 affine mode backgrounds (64x64).
+  AffineScreenBlock2Address(u8),
   /// Size: 64x64
   size: 64,
   /// Max Index: 29
   max_index: 29
 );
-make_me_a_screenblock!(
-  /// Screenblock for size 3 affine mode backgrounds (128x128).
-  AffineScreenBlock3(u8),
+make_me_a_screenblock_addr!(
+  /// Screenblock address for size 3 affine mode backgrounds (128x128).
+  AffineScreenBlock3Address(u8),
   /// Size: 128x128
   size: 128,
   /// Max Index: 23
