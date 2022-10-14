@@ -63,7 +63,7 @@ extern "C" fn main() -> ! {
 
   {
     // get our tile data into memory.
-    Cga8x8Thick.bitunpack_4bpp(CHARBLOCK0_4BPP.as_region().sub_slice(..256), 0);
+    Cga8x8Thick.bitunpack_4bpp(CHARBLOCK0_4BPP.as_region(), 0);
   }
 
   {
