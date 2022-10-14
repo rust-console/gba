@@ -8,7 +8,7 @@
 //! but most importantly it determines the [`VideoMode`] for the display to use.
 //!
 //! The GBA has four Background layers. Depending on the current video mode,
-//! different background layers will be available for use with either "text",
+//! different background layers will be available for use in either "text",
 //! "affine", or "bitmap" mode.
 //!
 //! In addition to the background layers, there's also an "OBJ" layer. This
@@ -26,10 +26,11 @@
 //! color per pixel). Instead they use indexed color (one *palette index* per
 //! pixel). Indexed image data can be 4-bits-per-pixel (4bpp) or
 //! 8-bits-per-pixel (8bpp). In either case, the color values themselves are
-//! stored in the PALRAM region. When used as a background, the [`BG_PALETTE`]
-//! is used, and when used as an object the [`OBJ_PALETTE`] is used. Both
-//! palettes have 256 slots. The palettes are always indexed with 8 bits total,
-//! but how those bits are determined depends on the bit depth of the image:
+//! stored in the PALRAM region. The PALRAM contains the [`BG_PALETTE`] and
+//! [`OBJ_PALETTE`], which hold the color values for backgrounds and objects
+//! respectively. Both palettes have 256 slots. The palettes are always indexed
+//! with 8 bits total, but *how* those bits are determined depends on the bit
+//! depth of the image:
 //! * Things drawing with 8bpp image data index into the full range of the
 //!   palette directly.
 //! * Things drawing with 4bpp image data will also have a "palbank" setting.
@@ -37,25 +38,28 @@
 //!   of 16 palette entries the that thing will be able to use. Then each 4-bit
 //!   pixel within the image indexes within the palbank.
 //!
-//! In both 8bpp and 4bpp modes, if a pixel's value is 0 then that pixel is
-//! transparent. So 8bpp images can use 255 colors (+ transparent), and 4bpp
-//! images can use 15 colors (+ transparent). Each background layer and each
-//! object can individually be set for 4bpp or 8bpp mode.
+//! In both 8bpp and 4bpp modes, if a particular pixel's index value is 0 then
+//! that pixel is instead considered transparent. So 8bpp images can use 255
+//! colors (+ transparent), and 4bpp images can use 15 colors (+ transparent).
+//! Each background layer and each object can individually be set to display
+//! with either 4bpp or 8bpp mode.
 //!
 //! ## Tiles, Screenblocks, and Charblocks
 //!
 //! The basic unit of the GBA's hardware graphics support is a "tile".
 //! Regardless of their bit depth, a tile is always an 8x8 area. This means that
 //! they're either 32 bytes (4bpp) or 64 bytes (8bpp). Since VRAM starts aligned
-//! to 4, and since both size tiles are a multiple of 4 bytes large, we model
+//! to 4, and since both size tiles are a multiple of 4 bytes in size, we model
 //! tile data as being arrays of `u32` rather than arrays of `u8`. Having the
-//! data keep aligned to 4 gives a significant speed gain when moving entire
-//! tiles around.
+//! data stay aligned to 4 within the ROM gives a significant speed gain when
+//! copying tiles from ROM into VRAM.
 //!
 //! The layout of tiles within a background is defined by a "screenblock".
 //! * Text backgrounds use a fixed 32x32 size screenblock, with larger
 //!   backgrounds using more than one screenblock. Each [TextEntry] value in the
-//!   screenblock has a tile index (10-bit) as well as some other data.
+//!   screenblock has a tile index (10-bit), bits for horizontal flip and
+//!   vertical flip, and a palbank value. If the background is not in 4bpp mode
+//!   the palbank value is simply ignored.
 //! * Affine backgrounds always have a single screenblock each, and the size of
 //!   the screenblock itself changes with the background's size (from 16x16 to
 //!   128x128, in powers of 2). Each entry in an affine screenblock is just a
