@@ -10,7 +10,7 @@ use gba::{
 #[panic_handler]
 fn panic_handler(info: &core::panic::PanicInfo) -> ! {
   if let Ok(mut logger) = MgbaBufferedLogger::try_new(MgbaMessageLevel::Fatal) {
-    write!(logger, "{info}").ok();
+    writeln!(logger, "{info}").ok();
   }
   loop {}
 }
