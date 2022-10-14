@@ -63,7 +63,8 @@
 //! * Affine backgrounds always have a single screenblock each, and the size of
 //!   the screenblock itself changes with the background's size (from 16x16 to
 //!   128x128, in powers of 2). Each entry in an affine screenblock is just a
-//!   `u8` tile index, with no special options.
+//!   `u8` tile index, with no special options. Affine backgrounds can't use
+//!   4bpp color, and they also can't flip tiles on a per-tile basis.
 //!
 //! A background's screenblock is selected by an index (5-bit). The indexes go
 //! in 2,048 byte (2k) jumps. This is exactly the size of a text screenblock,
