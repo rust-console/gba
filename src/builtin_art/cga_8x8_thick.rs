@@ -1,10 +1,10 @@
 use core::mem::size_of_val;
 
-use voladdress::{Safe, VolBlock};
+use voladdress::{Safe, VolRegion};
 
 use crate::{
   bios::{BitUnPack, BitUnpackInfo},
-  video::Tile4,
+  video::{Tile4, Tile8},
 };
 
 /// The CGA [Code Page 437][cp437] type face, with thick lines.
@@ -135,16 +135,43 @@ impl Cga8x8Thick {
   ///
   /// * `offset_and_touch_zero`: Works like the [`BitUnpackInfo`] field. By
   ///   default you should usually pass 0 here.
+  ///
+  /// ## Panics
+  /// * Requires at least 256 elements of space within the region.
   #[inline]
   pub fn bitunpack_4bpp(
-    self, b: VolBlock<Tile4, Safe, Safe, 512>, offset_and_touch_zero: u32,
+    self, b: VolRegion<Tile4, Safe, Safe>, offset_and_touch_zero: u32,
   ) {
+    assert!(b.len() >= 256);
     let src = CGA_8X8_THICK.as_ptr();
     let dest = b.index(0).as_usize() as *mut u32;
     let info = BitUnpackInfo {
       src_byte_len: size_of_val(&CGA_8X8_THICK) as u16,
       src_elem_width: 1,
       dest_elem_width: 4,
+      offset_and_touch_zero,
+    };
+    unsafe { BitUnPack(src.cast(), dest, &info) };
+  }
+
+  /// Bit unpacks the data (8bpp depth) to the location given.
+  ///
+  /// * `offset_and_touch_zero`: Works like the [`BitUnpackInfo`] field. By
+  ///   default you should usually pass 0 here.
+  ///
+  /// ## Panics
+  /// * Requires at least 256 elements of space within the region.
+  #[inline]
+  pub fn bitunpack_8bpp(
+    self, b: VolRegion<Tile8, Safe, Safe>, offset_and_touch_zero: u32,
+  ) {
+    assert!(b.len() >= 256);
+    let src = CGA_8X8_THICK.as_ptr();
+    let dest = b.index(0).as_usize() as *mut u32;
+    let info = BitUnpackInfo {
+      src_byte_len: size_of_val(&CGA_8X8_THICK) as u16,
+      src_elem_width: 1,
+      dest_elem_width: 8,
       offset_and_touch_zero,
     };
     unsafe { BitUnPack(src.cast(), dest, &info) };

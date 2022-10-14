@@ -8,7 +8,7 @@ license = "Zlib OR Apache-2.0 OR MIT"
 
 [dependencies]
 bitfrob = "0.2.3"
-voladdress = "1.0.2"
+voladdress = { version = "1.1", features = ["experimental_volregion"] }
 
 [profile.dev]
 opt-level = 3
