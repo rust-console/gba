@@ -89,6 +89,7 @@ pub mod asm_runtime;
 pub mod bios;
 pub mod builtin_art;
 pub mod dma;
+pub mod fixed;
 pub mod gba_cell;
 pub mod interrupts;
 pub mod keys;
