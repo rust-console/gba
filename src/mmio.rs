@@ -37,7 +37,7 @@ use crate::{
   sound::{
     SweepControl, TonePattern, ToneFrequency, WaveBank, WaveLenVolume, WaveFrequency, NoiseLenEnvelope, NoiseFrequency, LeftRightVolume, SoundMix, SoundEnable, SoundBias
   },
-  timers::TimerControl, keys::{KeyInput, KeyControl}, mgba::MgbaMessageLevel,
+  timers::TimerControl, keys::{KeyInput, KeyControl}, mgba::MgbaMessageLevel, fixed::Fixed,
 };
 
 // Note(Lokathor): This macro lets us stick each address at the start of the
@@ -66,28 +66,31 @@ def_mmio!(0x0400_000A = BG1CNT: VolAddress<BackgroundControl, Safe, Safe>; "Back
 def_mmio!(0x0400_000C = BG2CNT: VolAddress<BackgroundControl, Safe, Safe>; "Background 2 Control");
 def_mmio!(0x0400_000E = BG3CNT: VolAddress<BackgroundControl, Safe, Safe>; "Background 3 Control");
 
-def_mmio!(0x0400_0010 = BG0HOFS: VolAddress<u16, (), Safe>; "Background 0 Horizontal Offset, wrapped to `0..=511`, (text mode)");
-def_mmio!(0x0400_0012 = BG0VOFS: VolAddress<u16, (), Safe>; "Background 0 Vertical Offset, wrapped to `0..=511`, (text mode)");
-def_mmio!(0x0400_0014 = BG1HOFS: VolAddress<u16, (), Safe>; "Background 1 Horizontal Offset, wrapped to `0..=511`, (text mode)");
-def_mmio!(0x0400_0016 = BG1VOFS: VolAddress<u16, (), Safe>; "Background 1 Vertical Offset, wrapped to `0..=511`, (text mode)");
-def_mmio!(0x0400_0018 = BG2HOFS: VolAddress<u16, (), Safe>; "Background 2 Horizontal Offset, wrapped to `0..=511`, (text mode)");
-def_mmio!(0x0400_001A = BG2VOFS: VolAddress<u16, (), Safe>; "Background 2 Vertical Offset, wrapped to `0..=511`, (text mode)");
-def_mmio!(0x0400_001C = BG3HOFS: VolAddress<u16, (), Safe>; "Background 3 Horizontal Offset, wrapped to `0..=511`, (text mode)");
-def_mmio!(0x0400_001E = BG3VOFS: VolAddress<u16, (), Safe>; "Background 3 Vertical Offset, wrapped to `0..=511`, (text mode)");
+def_mmio!(0x0400_0010 = BG0HOFS: VolAddress<u16, (), Safe>; "Background 0 Horizontal Offset (9-bit, text mode)");
+def_mmio!(0x0400_0012 = BG0VOFS: VolAddress<u16, (), Safe>; "Background 0 Vertical Offset (9-bit, text mode)");
 
-def_mmio!(0x0400_0020 = BG2PA: VolAddress<i16, (), Safe>; "Background 2 Param A (affine mode)");
-def_mmio!(0x0400_0022 = BG2PB: VolAddress<i16, (), Safe>; "Background 2 Param B (affine mode)");
-def_mmio!(0x0400_0024 = BG2PC: VolAddress<i16, (), Safe>; "Background 2 Param C (affine mode)");
-def_mmio!(0x0400_0026 = BG2PD: VolAddress<i16, (), Safe>; "Background 2 Param D (affine mode)");
-def_mmio!(0x0400_0028 = BG2X/["BG2X_L", "BG2X_H"]: VolAddress<i32, (), Safe>; "Background 2 X Reference Point, 8-bits fractional (affine/bitmap modes)");
-def_mmio!(0x0400_002C = BG2Y/["BG2Y_L", "BG2Y_H"]: VolAddress<i32, (), Safe>; "Background 2 Y Reference Point, 8-bits fractional (affine/bitmap modes)");
+def_mmio!(0x0400_0014 = BG1HOFS: VolAddress<u16, (), Safe>; "Background 1 Horizontal Offset (9-bit, text mode)");
+def_mmio!(0x0400_0016 = BG1VOFS: VolAddress<u16, (), Safe>; "Background 1 Vertical Offset (9-bit, text mode)");
 
-def_mmio!(0x0400_0030 = BG3PA: VolAddress<i16, (), Safe>; "Background 3 Param A (affine mode)");
-def_mmio!(0x0400_0032 = BG3PB: VolAddress<i16, (), Safe>; "Background 3 Param B (affine mode)");
-def_mmio!(0x0400_0034 = BG3PC: VolAddress<i16, (), Safe>; "Background 3 Param C (affine mode)");
-def_mmio!(0x0400_0036 = BG3PD: VolAddress<i16, (), Safe>; "Background 3 Param D (affine mode)");
-def_mmio!(0x0400_0038 = BG3X/["BG3X_L", "BG3X_H"]: VolAddress<i32, (), Safe>; "Background 3 X Reference Point, 8-bits fractional (affine/bitmap modes)");
-def_mmio!(0x0400_003C = BG3Y/["BG3Y_L", "BG3Y_H"]: VolAddress<i32, (), Safe>; "Background 3 Y Reference Point, 8-bits fractional (affine/bitmap modes)");
+def_mmio!(0x0400_0018 = BG2HOFS: VolAddress<u16, (), Safe>; "Background 2 Horizontal Offset (9-bit, text mode)");
+def_mmio!(0x0400_001A = BG2VOFS: VolAddress<u16, (), Safe>; "Background 2 Vertical Offset (9-bit, text mode)");
+
+def_mmio!(0x0400_001C = BG3HOFS: VolAddress<u16, (), Safe>; "Background 3 Horizontal Offset (9-bit, text mode)");
+def_mmio!(0x0400_001E = BG3VOFS: VolAddress<u16, (), Safe>; "Background 3 Vertical Offset (9-bit, text mode)");
+
+def_mmio!(0x0400_0020 = BG2PA: VolAddress<Fixed<i16, 8>, (), Safe>; "Background 2 Param A (affine mode)");
+def_mmio!(0x0400_0022 = BG2PB: VolAddress<Fixed<i16, 8>, (), Safe>; "Background 2 Param B (affine mode)");
+def_mmio!(0x0400_0024 = BG2PC: VolAddress<Fixed<i16, 8>, (), Safe>; "Background 2 Param C (affine mode)");
+def_mmio!(0x0400_0026 = BG2PD: VolAddress<Fixed<i16, 8>, (), Safe>; "Background 2 Param D (affine mode)");
+def_mmio!(0x0400_0028 = BG2X/["BG2X_L", "BG2X_H"]: VolAddress<Fixed<i32, 8>, (), Safe>; "Background 2 X Reference Point (affine/bitmap modes)");
+def_mmio!(0x0400_002C = BG2Y/["BG2Y_L", "BG2Y_H"]: VolAddress<Fixed<i32, 8>, (), Safe>; "Background 2 Y Reference Point (affine/bitmap modes)");
+
+def_mmio!(0x0400_0030 = BG3PA: VolAddress<Fixed<i16, 8>, (), Safe>; "Background 3 Param A (affine mode)");
+def_mmio!(0x0400_0032 = BG3PB: VolAddress<Fixed<i16, 8>, (), Safe>; "Background 3 Param B (affine mode)");
+def_mmio!(0x0400_0034 = BG3PC: VolAddress<Fixed<i16, 8>, (), Safe>; "Background 3 Param C (affine mode)");
+def_mmio!(0x0400_0036 = BG3PD: VolAddress<Fixed<i16, 8>, (), Safe>; "Background 3 Param D (affine mode)");
+def_mmio!(0x0400_0038 = BG3X/["BG3X_L", "BG3X_H"]: VolAddress<Fixed<i32, 8>, (), Safe>; "Background 3 X Reference Point (affine/bitmap modes)");
+def_mmio!(0x0400_003C = BG3Y/["BG3Y_L", "BG3Y_H"]: VolAddress<Fixed<i32, 8>, (), Safe>; "Background 3 Y Reference Point (affine/bitmap modes)");
 
 def_mmio!(0x0400_0040 = WIN0H: VolAddress<u8x2, (), Safe>; "Window 0 Horizontal: high=left, low=(right+1)");
 def_mmio!(0x0400_0042 = WIN1H: VolAddress<u8x2, (), Safe>; "Window 1 Horizontal: high=left, low=(right+1)");
@@ -331,7 +334,7 @@ def_mmio!(0x0700_0000 = OBJ_ATTR0: VolSeries<ObjAttr0, Safe, Safe, 128, {size_of
 def_mmio!(0x0700_0002 = OBJ_ATTR1: VolSeries<ObjAttr1, Safe, Safe, 128, {size_of::<[u16;4]>()}>; "Object attributes 1.");
 def_mmio!(0x0700_0004 = OBJ_ATTR2: VolSeries<ObjAttr2, Safe, Safe, 128, {size_of::<[u16;4]>()}>; "Object attributes 2.");
 
-def_mmio!(0x0700_0006 = AFFINE_PARAM_A: VolSeries<i16, Safe, Safe, 32, {size_of::<[u16;16]>()}>; "Affine parameters A.");
-def_mmio!(0x0700_000E = AFFINE_PARAM_B: VolSeries<i16, Safe, Safe, 32, {size_of::<[u16;16]>()}>; "Affine parameters B.");
-def_mmio!(0x0700_0016 = AFFINE_PARAM_C: VolSeries<i16, Safe, Safe, 32, {size_of::<[u16;16]>()}>; "Affine parameters C.");
-def_mmio!(0x0700_001E = AFFINE_PARAM_D: VolSeries<i16, Safe, Safe, 32, {size_of::<[u16;16]>()}>; "Affine parameters D.");
+def_mmio!(0x0700_0006 = AFFINE_PARAM_A: VolSeries<Fixed<i16, 8>, Safe, Safe, 32, {size_of::<[u16;16]>()}>; "Affine parameters A.");
+def_mmio!(0x0700_000E = AFFINE_PARAM_B: VolSeries<Fixed<i16, 8>, Safe, Safe, 32, {size_of::<[u16;16]>()}>; "Affine parameters B.");
+def_mmio!(0x0700_0016 = AFFINE_PARAM_C: VolSeries<Fixed<i16, 8>, Safe, Safe, 32, {size_of::<[u16;16]>()}>; "Affine parameters C.");
+def_mmio!(0x0700_001E = AFFINE_PARAM_D: VolSeries<Fixed<i16, 8>, Safe, Safe, 32, {size_of::<[u16;16]>()}>; "Affine parameters D.");
