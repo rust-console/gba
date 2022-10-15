@@ -44,7 +44,8 @@
 //!   `#![no_main]`. They will also need a `#[panic_handler]` defined, as well
 //!   as a `#[no_mangle] extern "C" fn main() -> ! {}` function, which is what
 //!   the assembly runtime will call to start your Rust program after it fully
-//!   initializes the system.
+//!   initializes the system. The C ABI must be used because Rust's own ABI is
+//!   not stable.
 //!
 //! ```rust
 //! #![no_std]
