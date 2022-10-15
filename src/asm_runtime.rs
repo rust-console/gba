@@ -713,14 +713,14 @@ extern "C" {
   /// Sets all bytes in the region to 0.
   ///
   /// There are no alignment requirements for the pointer. This will
-  /// automatically detect when pointer is sufficiently aligned to use `u16` or
-  /// `u32` writes, instead of always using `u8` writes.
+  /// automatically detect when the pointer is sufficiently aligned to use `u16`
+  /// or `u32` writes, instead of always using `u8` writes.
   pub fn __aeabi_memclr(dest: *mut u8, byte_count: usize);
 
-  /// As [`__aeabi_memclr`], but both pointers are assumed to be aligned to 4.
+  /// As [`__aeabi_memclr`], but the pointer is assumed to be aligned to 4.
   pub fn __aeabi_memclr4(dest: *mut u8, byte_count: usize);
 
-  /// As [`__aeabi_memclr`], but both pointers are assumed to be aligned to 8.
+  /// As [`__aeabi_memclr`], but the pointer is assumed to be aligned to 8.
   pub fn __aeabi_memclr8(dest: *mut u8, byte_count: usize);
 }
 
