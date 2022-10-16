@@ -227,10 +227,8 @@ def_mmio!(0x0600_C000 = CHARBLOCK3_8BPP: VolBlock<Tile8, Safe, Safe, 256>; "Char
 #[inline]
 #[must_use]
 const fn screenblock_addr(index: usize) -> usize {
-  /// The VRAM offset per screenblock. This isn't affected by the screenblock's size.
-  const SCREENBLOCK_OFFSET: usize = 2_048;
-
-  0x0600_0000 + index * SCREENBLOCK_OFFSET
+  // The VRAM offset per screenblock isn't affected by the screenblock's size, it's always 2k
+  0x0600_0000 + index * 2_048
 }
 
 macro_rules! make_me_a_screenblock_addr {
@@ -268,7 +266,7 @@ macro_rules! make_me_a_screenblock_addr {
       /// Overwrites the entire screenblock with the data provided.
       pub fn write_words(self, words: &[u32; Self::WORD_COUNT]) {
         use crate::prelude::__aeabi_memcpy4;
-        let dest: *mut u32 = self.block.index(0).as_usize() as *mut u32;
+        let dest: *mut u32 = self.block.as_ptr() as *mut u32;
         let src: *const u32 = words.as_ptr();
         let byte_count = size_of::<[u32; Self::WORD_COUNT]>();
         unsafe { __aeabi_memcpy4(dest.cast(), src.cast(), byte_count) };
@@ -318,7 +316,29 @@ make_me_a_screenblock_addr!(
   max_index: 23
 );
 
-def_mmio!(0x0600_0000 = MODE3_BITMAP: VolBlock<Color, Safe, Safe, {240 * 160}>; "Mode 3 bitmap, 240x160.");
+/// Gets the block of memory for a single scanline of the Video Mode 3 bitmap.
+/// 
+/// ## Panics
+/// * `line` must be less than 160.
+#[inline]
+#[must_use]
+pub const fn mode3_scanline(line: usize) -> VolBlock<Color, Safe, Safe, 240> {
+  assert!(line < 160);
+  unsafe { VolBlock::new(0x0600_0000 + line * size_of::<[Color; 240]>()) }
+}
+
+/// Gets an individual pixel within the Video Mode 3 bitmap.
+/// 
+/// ## Panics
+/// * `row` must be less than 160.
+/// * `col` must be less than 240.
+#[inline]
+#[must_use]
+pub const fn mode3_row_col(row: usize, col: usize) -> VolAddress<Color, Safe, Safe> {
+  assert!(row < 160);
+  assert!(col < 240);
+  mode3_scanline(row).index(col)
+}
 
 def_mmio!(0x0600_0000 = MODE4_FRAME0: VolBlock<u8x2, Safe, Safe, {(240/2) * 160}>; "Mode 4 indexmap, frame 0, (240/2)x160.");
 def_mmio!(0x0600_A000 = MODE4_FRAME1: VolBlock<u8x2, Safe, Safe, {(240/2) * 160}>; "Mode 4 indexmap, frame 1, (240/2)x160.");

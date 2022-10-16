@@ -333,7 +333,7 @@ unsafe extern "C" fn runtime_irq_handler() {
 ///
 /// [aeabi-division-by-zero]: https://github.com/ARM-software/abi-aa/blob/main/rtabi32/rtabi32.rst#division-by-zero
 #[naked]
-//#[no_mangle]
+#[no_mangle]
 #[instruction_set(arm::a32)]
 // this should literally never get called for real, so we leave it in ROM
 extern "C" fn __aeabi_idiv0(numerator: i32) -> i32 {
@@ -358,7 +358,7 @@ extern "C" fn __aeabi_idiv0(numerator: i32) -> i32 {
 /// [aeabi-integer-32-32-division]:
 ///     https://github.com/ARM-software/abi-aa/blob/main/rtabi32/rtabi32.rst#integer-32-32-32-division-functions
 #[naked]
-//#[no_mangle]
+#[no_mangle]
 #[instruction_set(arm::a32)]
 #[link_section = ".iwram.aeabi.uidiv"]
 extern "C" fn __aeabi_uidiv(numerator: u32, denominator: u32) -> u32 {
@@ -402,7 +402,7 @@ extern "C" fn __aeabi_uidiv(numerator: u32, denominator: u32) -> u32 {
 /// [aeabi-integer-32-32-division]:
 ///     https://github.com/ARM-software/abi-aa/blob/main/rtabi32/rtabi32.rst#integer-32-32-32-division-functions
 #[naked]
-//#[no_mangle]
+#[no_mangle]
 #[instruction_set(arm::a32)]
 #[link_section = ".iwram.aeabi.idiv"]
 extern "C" fn __aeabi_idiv(numerator: i32, denominator: i32) -> u32 {
@@ -440,7 +440,7 @@ extern "C" fn __aeabi_idiv(numerator: i32, denominator: i32) -> u32 {
 /// [aeabi-integer-32-32-division]:
 ///     https://github.com/ARM-software/abi-aa/blob/main/rtabi32/rtabi32.rst#integer-32-32-32-division-functions
 #[naked]
-//#[no_mangle]
+#[no_mangle]
 #[instruction_set(arm::a32)]
 #[link_section = ".iwram.aeabi.uidivmod"]
 extern "C" fn __aeabi_uidivmod(numerator: u32, denominator: u32) -> u64 {
@@ -476,7 +476,7 @@ extern "C" fn __aeabi_uidivmod(numerator: u32, denominator: u32) -> u64 {
 /// [aeabi-integer-32-32-division]:
 ///     https://github.com/ARM-software/abi-aa/blob/main/rtabi32/rtabi32.rst#integer-32-32-32-division-functions
 #[naked]
-//#[no_mangle]
+#[no_mangle]
 #[instruction_set(arm::a32)]
 #[link_section = ".iwram.aeabi.idivmod"]
 extern "C" fn __aeabi_idivmod(numerator: i32, denominator: i32) -> u64 {
