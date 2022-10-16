@@ -316,37 +316,91 @@ make_me_a_screenblock_addr!(
   max_index: 23
 );
 
-/// Gets the block of memory for a single scanline of the Video Mode 3 bitmap.
-/// 
-/// ## Panics
-/// * `line` must be less than 160.
-#[inline]
-#[must_use]
-pub const fn mode3_scanline(line: usize) -> VolBlock<Color, Safe, Safe, 240> {
-  assert!(line < 160);
-  unsafe { VolBlock::new(0x0600_0000 + line * size_of::<[Color; 240]>()) }
+/// Video mode 3 has a single full resolution bitmap
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct VideoMode3Bitmap;
+impl VideoMode3Bitmap {
+  /// Gets the block of memory for a single scanline of the bitmap.
+  /// 
+  /// ## Panics
+  /// * `line` must be less than 160.
+  #[inline]
+  #[must_use]
+  pub const fn scanline(self, line: usize) -> VolBlock<Color, Safe, Safe, 240> {
+    assert!(line < 160);
+    unsafe { VolBlock::new(0x0600_0000 + line * size_of::<[Color; 240]>()) }
+  }
+
+  /// Gets an individual pixel address within the bitmap.
+  /// 
+  /// ## Panics
+  /// * `row` must be less than 160.
+  /// * `col` must be less than 240.
+  #[inline]
+  #[must_use]
+  pub const fn row_col(self, row: usize, col: usize) -> VolAddress<Color, Safe, Safe> {
+    assert!(row < 160);
+    assert!(col < 240);
+    self.scanline(row).index(col)
+  }
 }
 
-/// Gets an individual pixel within the Video Mode 3 bitmap.
+/// Video mode 4 has two 8bpp indexmaps.
 /// 
-/// ## Panics
-/// * `row` must be less than 160.
-/// * `col` must be less than 240.
-#[inline]
-#[must_use]
-pub const fn mode3_row_col(row: usize, col: usize) -> VolAddress<Color, Safe, Safe> {
-  assert!(row < 160);
-  assert!(col < 240);
-  mode3_scanline(row).index(col)
+/// Because VRAM can't be written with less than `u16` at a time, the scanlines
+/// here use `u8x2` to represent pixels pairs so that all the writes are at
+/// least `u16` large.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct VideoMode4Frame(usize);
+impl VideoMode4Frame {
+  pub const _0: Self = Self(0x0600_0000);
+  pub const _1: Self = Self(0x0600_A000);
+
+  /// Gets the block of memory for a single scanline of the frame's indexmap.
+  /// 
+  /// ## Panics
+  /// * `line` must be less than 160.
+  #[inline]
+  #[must_use]
+  pub const fn scanline(self, line: usize) -> VolBlock<u8x2, Safe, Safe, {240/2}> {
+    assert!(line < 160);
+    unsafe { VolBlock::new(self.0 + line * size_of::<[u8x2; 240/2]>()) }
+  }
 }
 
-def_mmio!(0x0600_0000 = MODE4_FRAME0: VolBlock<u8x2, Safe, Safe, {(240/2) * 160}>; "Mode 4 indexmap, frame 0, (240/2)x160.");
-def_mmio!(0x0600_A000 = MODE4_FRAME1: VolBlock<u8x2, Safe, Safe, {(240/2) * 160}>; "Mode 4 indexmap, frame 1, (240/2)x160.");
+/// Video mode 5 has two reduced-resolution bitmaps.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct VideoMode5Frame(usize);
+impl VideoMode5Frame {
+  pub const _0: Self = Self(0x0600_0000);
+  pub const _1: Self = Self(0x0600_A000);
 
-def_mmio!(0x0600_0000 = MODE5_FRAME0: VolBlock<Color, Safe, Safe, {160 * 128}>; "Mode 5 bitmap, frame 0, 160x128.");
-def_mmio!(0x0600_A000 = MODE5_FRAME1: VolBlock<Color, Safe, Safe, {160 * 128}>; "Mode 5 bitmap, frame 1, 160x128.");
+  /// Gets the block of memory for a single scanline of the frame's indexmap.
+  /// 
+  /// ## Panics
+  /// * `line` must be less than 128.
+  #[inline]
+  #[must_use]
+  pub const fn scanline(self, line: usize) -> VolBlock<Color, Safe, Safe, 160> {
+    assert!(line < 128);
+    unsafe { VolBlock::new(self.0 + line * size_of::<[Color; 160]>()) }
+  }
 
-def_mmio!(0x0601_0000 = OBJ_TILES: VolBlock<Tile4, Safe, Safe, 1024>; "Object tiles. In bitmap modes, only indices 512..=1023 are available.");
+  /// Gets an individual pixel address within the bitmap.
+  /// 
+  /// ## Panics
+  /// * `row` must be less than 128.
+  /// * `col` must be less than 160.
+  #[inline]
+  #[must_use]
+  pub const fn row_col(self, row: usize, col: usize) -> VolAddress<Color, Safe, Safe> {
+    assert!(row < 128);
+    assert!(col < 160);
+    self.scanline(row).index(col)
+  }
+}
+
+def_mmio!(0x0601_0000 = OBJ_TILES: VolBlock<Tile4, Safe, Safe, 1024>; "Object tiles. In video modes 3, 4, and 5 only indices 512..=1023 are available.");
 
 // Object Attribute Memory (OAM)
 
