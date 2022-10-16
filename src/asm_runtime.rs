@@ -727,6 +727,13 @@ extern "C" {
 core::arch::global_asm! {
   emit_a32_code!{
     put_code_in_section!(".iwram.aeabi.memory.copy.and.move", {
+      ".global __aeabi_memmove8",
+      ".global __aeabi_memmove4",
+      ".global __aeabi_memmove",
+      ".global __aeabi_memcpy8",
+      ".global __aeabi_memcpy4",
+      ".global __aeabi_memcpy",
+      //
       "__aeabi_memmove8:",
       "__aeabi_memmove4:",
       "__aeabi_memmove:",
@@ -935,6 +942,13 @@ core::arch::global_asm! {
 core::arch::global_asm! {
   emit_a32_code!{
     put_code_in_section!(".iwram.aeabi.memory.clear.and.set", {
+      ".global __aeabi_memclr8",
+      ".global __aeabi_memclr4",
+      ".global __aeabi_memclr",
+      ".global __aeabi_memset8",
+      ".global __aeabi_memset4",
+      ".global __aeabi_memset",
+      //
       "__aeabi_memclr8:",
       "__aeabi_memclr4:",
       "mov    r2, #0",
