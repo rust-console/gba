@@ -48,14 +48,18 @@
 //! TIMER0_RELOAD.write(x.wrapping_neg());
 //! ```
 //!
-//! ## Timer Tips
+//! ## Using Cascade To Pause A Timer
 //!
 //! When a timer goes from disabled to enabled it will reset the counter value
 //! to the reload value. If you want to temporarily pause a timer *without*
 //! having the counter value get reset when you resume the timer you can instead
-//! set the `cascade` bit of the timer while the next lower timer is disabled.
-//! This keeps the timer active but prevents it from ticking. Note that this
-//! doesn't work for timer 0 because that timer ignores the cascade bit.
+//! set the `cascade` bit of the timer while the next lower timer is
+//! **disabled**. This keeps the timer "active" but prevents it from ticking.
+//! When you turn off cascade mode the timer will resume ticking from the
+//! current counter value.
+//!
+//! Note that this doesn't work for timer 0, because that timer ignores the
+//! cascade bit.
 
 use crate::macros::{pub_const_fn_new_zeroed, u16_bool_field, u16_enum_field};
 
@@ -74,14 +78,20 @@ pub enum TimerScale {
   /// Approximately 3.815 microseconds
   _64 = 1,
   /// Approximately 15.26 microseconds
+  ///
+  /// **Hint:** With a reload value of 0, this timer scale will overflow
+  /// exactly once per second.
   _256 = 2,
   /// Approximately 61.04 microseconds
+  ///
+  /// **Hint:** With a reload value of `0x4000_u16.wrapping_neg()`,
+  /// this timer scale will overflow exactly once per second.
   _1024 = 3,
 }
 
 /// Timer configuration bits.
 ///
-/// * `prescale` is how many CPU cycles per tick
+/// * `scale` is how many CPU cycles per tick
 /// * `cascade` will override the prescale value and instead tick the timer once
 ///   per overflow of the next lower timer. Timer 0 ignores the cascade bit.
 /// * `overflow_irq` will cause an IRQ to be sent each overflow.
