@@ -100,7 +100,7 @@ where
         let val: u32;
         core::arch::asm!(
           "ldr {r}, [{addr}]",
-          r = out(reg) val,
+          r = lateout(reg) val,
           addr = in(reg) self.get_ptr(),
           options(readonly, preserves_flags, nostack)
         );
@@ -110,7 +110,7 @@ where
         let val: u16;
         core::arch::asm!(
           "ldrh {r}, [{addr}]",
-          r = out(reg) val,
+          r = lateout(reg) val,
           addr = in(reg) self.get_ptr(),
           options(readonly, preserves_flags, nostack)
         );
@@ -120,7 +120,7 @@ where
         let val: u8;
         core::arch::asm!(
           "ldrb {r}, [{addr}]",
-          r = out(reg) val,
+          r = lateout(reg) val,
           addr = in(reg) self.get_ptr(),
           options(readonly, preserves_flags, nostack)
         );
