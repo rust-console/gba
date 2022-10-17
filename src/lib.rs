@@ -97,6 +97,7 @@ pub mod keys;
 pub mod mgba;
 pub mod mmio;
 pub mod prelude;
+pub mod random;
 pub mod sound;
 pub mod timers;
 pub mod video;
