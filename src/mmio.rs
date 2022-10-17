@@ -265,11 +265,11 @@ macro_rules! make_me_a_screenblock_addr {
 
       /// Overwrites the entire screenblock with the data provided.
       pub fn write_words(self, words: &[u32; Self::WORD_COUNT]) {
-        use crate::prelude::__aeabi_memcpy4;
+        use crate::prelude::bx__aeabi_memcpy4;
         let dest: *mut u32 = self.block.as_ptr() as *mut u32;
         let src: *const u32 = words.as_ptr();
         let byte_count = size_of::<[u32; Self::WORD_COUNT]>();
-        unsafe { __aeabi_memcpy4(dest.cast(), src.cast(), byte_count) };
+        unsafe { bx__aeabi_memcpy4(dest.cast(), src.cast(), byte_count) };
       }
     }
   }
