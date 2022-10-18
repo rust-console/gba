@@ -12,7 +12,19 @@ pub type i16fx8 = Fixed<i16, 8>;
 #[allow(non_camel_case_types)]
 pub type i32fx8 = Fixed<i32, 8>;
 
-// TODO: this derived Debug impl prints the wrong thing, but it's fine for now.
+/// A [fixed-point][wp-fp] number. This transparently wraps an integer with a
+/// const generic for how many bits are fractional.
+///
+/// [wp-fp]: https://en.wikipedia.org/wiki/Fixed-point_arithmetic
+///
+/// * The `I` type is intended to be a signed or unsigned integer of a specific
+///   size: `i8`, `i16`, `i32`, `u8`, `u16`, or `u32`. This type is *not*
+///   supported to work with any other `I` type: semver compatible updates to
+///   the crate may change the generic bounds on methods that cause other types
+///   of `I` to cease working.
+/// * The `B` value is the number of bits that form the fractional part. It
+///   should be less than the number of bits in the integer's type, or various
+///   methods will likely panic when they shift the inner value by too much.
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[repr(transparent)]
 pub struct Fixed<I, const B: u32>(I);
