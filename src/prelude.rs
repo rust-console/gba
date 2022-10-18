@@ -2,5 +2,6 @@
 
 pub use crate::{
   asm_runtime::*, bios::*, builtin_art::*, dma::*, fixed::*, gba_cell::*,
-  interrupts::*, keys::*, mmio::*, sound::*, timers::*, video::*,
+  include_aligned_bytes, interrupts::*, keys::*, mgba::*, mmio::*, sound::*,
+  timers::*, video::*, Align4,
 };

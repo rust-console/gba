@@ -101,3 +101,24 @@ pub mod random;
 pub mod sound;
 pub mod timers;
 pub mod video;
+
+/// Wraps a value to be aligned to a minimum of 4.
+///
+/// If the size of the value held is already a multiple of 4 then this will be
+/// the same size as the wrapped value. Otherwise the compiler will add
+/// sufficient padding bytes on the end to make the size a multiple of 4.
+#[repr(C, align(4))]
+pub struct Align4<T>(pub T);
+
+/// As [`include_bytes!`] but the value is wrapped in [`Align4`]
+///
+/// ## Panics
+/// * The included number of bytes must be a multiple of 4.
+#[macro_export]
+macro_rules! include_aligned_bytes {
+  ($file:expr $(,)?) => {{
+    let LONG_NAME_THAT_DOES_NOT_CLASH = *include_bytes!($file);
+    assert!(LONG_NAME_THAT_DOES_NOT_CLASH.len() % 4 == 0);
+    Align4(LONG_NAME_THAT_DOES_NOT_CLASH)
+  }};
+}

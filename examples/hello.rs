@@ -2,10 +2,7 @@
 #![no_main]
 
 use core::fmt::Write;
-use gba::{
-  mgba::{MgbaBufferedLogger, MgbaMessageLevel},
-  prelude::*,
-};
+use gba::prelude::*;
 
 #[panic_handler]
 fn panic_handler(info: &core::panic::PanicInfo) -> ! {
@@ -14,6 +11,9 @@ fn panic_handler(info: &core::panic::PanicInfo) -> ! {
   }
   loop {}
 }
+
+#[allow(dead_code)]
+const FOO_: Align4<[u8; 4]> = include_aligned_bytes!("foo.txt");
 
 #[link_section = ".ewram"]
 static FRAME_KEYS: GbaCell<KeyInput> = GbaCell::new(KeyInput::new());

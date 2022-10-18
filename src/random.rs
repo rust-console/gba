@@ -124,6 +124,7 @@ pub trait Gen32 {
 }
 
 impl Gen32 for Lcg32 {
+  #[inline]
   fn next_u32(&mut self) -> u32 {
     Lcg32::next_u32(self)
   }

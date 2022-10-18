@@ -3,6 +3,8 @@
 * **0.9.1:**
   * Adds some randomization support directly into the crate.
   * Added more methods to the `Fixed` type.
+  * Adds an `include_aligned_bytes!` macro to pull in compile time data that's
+    aligned to 4.
 * **0.9.0:**
   * **MSRV:** The crate now requires `compiler_builtins-0.1.81` to build. You
     will need a Nightly from 2022-10-15 or later.
