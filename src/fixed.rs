@@ -1,9 +1,54 @@
 use core::ops::*;
 
+/// `i16` with 8 bits of fixed-point fraction.
+///
+/// This is used by the affine matrix entries.
+#[allow(non_camel_case_types)]
+pub type i16fx8 = Fixed<i16, 8>;
+
+/// `i32` with 8 bits of fixed-point fraction.
+///
+/// This is used by the background reference point entries.
+#[allow(non_camel_case_types)]
+pub type i32fx8 = Fixed<i32, 8>;
+
 // TODO: this derived Debug impl prints the wrong thing, but it's fine for now.
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[repr(transparent)]
 pub struct Fixed<I, const B: u32>(I);
+
+impl<I, const B: u32> Fixed<I, B> {
+  /// Converts a base typed value into the fixed-point form.
+  ///
+  /// This involves left-shifting the input by `B` bits. If the input is large
+  /// enough then bits will shift off of the left edge. The resulting value is
+  /// thus "wrapped" into the numeric range of this fixed point type.
+  #[inline]
+  #[must_use]
+  pub fn wrapping_from(i: I) -> Self
+  where
+    I: Shl<u32, Output = I>,
+  {
+    Self(i << B)
+  }
+
+  /// Makes a `Fixed` from a raw inner value.
+  #[inline]
+  #[must_use]
+  pub const fn from_raw(i: I) -> Self {
+    Self(i)
+  }
+
+  /// Unwraps the inner value back into the base type.
+  #[inline]
+  #[must_use]
+  pub const fn into_raw(self) -> I
+  where
+    I: Copy,
+  {
+    self.0
+  }
+}
 
 macro_rules! impl_passthrough_self_rhs {
   ($trait_name:ident, $method_name:ident) => {
