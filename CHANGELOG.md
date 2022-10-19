@@ -1,5 +1,8 @@
 # Changelog
 
+* **0.9.2:**
+  * Adds support for more BIOS functions, though not all functions are as
+    clearly documented as I'd like.
 * **0.9.1:**
   * Adds some randomization support directly into the crate.
   * Added more methods to the `Fixed` type.

@@ -116,3 +116,138 @@ pub unsafe fn BitUnPack(src: *const u8, dest: *mut u32, info: &BitUnpackInfo) {
     options(preserves_flags),
   }
 }
+
+/// `0x11`: Decompress LZ77 data from `src` to `dest` using 8-bit writes.
+///
+/// * The `src` is the LZ77 header and data, and must start aligned to 4.
+/// * The `dest` pointer is written 8 bits at a time, meaning that this function
+///   is **not** VRAM compatible.
+///
+/// ## The GBA's LZ77 Format
+/// * Data header (32bit)
+///   * Bit 0-7: Magic number `0b0001_0000`
+///   * Bit 8-31: Byte count of *decompressed* data
+///
+/// Repeat below. Each Flag Byte followed by eight Blocks.
+/// * Flag data (8bit)
+///   * Bit 0-7: block type bits for the next 8 blocks, MSB first.
+/// * Block Type 0 (Uncompressed): Literal byte.
+///   * Bit 0-7: one byte to copy directly to the output
+/// * Block Type 1 (Compressed): Repeated sequence. Copies `N+3` bytes from
+///   `dest-delta-1` back in the output sequence to `dest`. The GBATEK docs call
+///   the delta value "disp", presumably for "displacement".
+///   * Bit 0-3: high 4 bits of `delta`
+///   * Bit 4-7: `N`
+///   * Bit 8-15: low 8 bits of `delta`
+#[inline]
+#[instruction_set(arm::t32)]
+pub unsafe fn LZ77UnCompReadNormalWrite8bit(src: *const u8, dest: *mut u8) {
+  core::arch::asm! {
+    "swi #0x11",
+    inout("r0") src => _,
+    inout("r1") dest => _,
+    out("r3") _,
+    options(preserves_flags),
+  }
+}
+
+/// `0x12`: Decompress LZ77 data from `src` to `dest` using 16-bit writes.
+///
+/// * The `src` is the LZ77 header and data, and must start aligned to 4.
+/// * The `dest` pointer is written 16 bits at a time, so it must have align 2.
+///
+/// See [`LZ77UnCompReadNormalWrite16bit`] for a description of the LZ77 format
+/// used.
+#[inline]
+#[instruction_set(arm::t32)]
+pub unsafe fn LZ77UnCompReadNormalWrite16bit(src: *const u8, dest: *mut u16) {
+  core::arch::asm! {
+    "swi #0x12",
+    inout("r0") src => _,
+    inout("r1") dest => _,
+    out("r3") _,
+    options(preserves_flags),
+  }
+}
+
+/// `0x13`: Decompress huffman encoded data.
+///
+/// * `src` points to the header and data (must be aligned to 4).
+/// * `dest` points to the output buffer (must be aligned to 4).
+///
+/// ## Data Format
+///
+/// * `header` (32bit)
+///   * Bits 0-3: bits per data element (normally 4 or 8).
+///   * Bits 4-7: must be 2
+///   * Bits 8-31: size of decompressed data in *bytes*
+/// * `tree_size` (8bit)
+///   * Bits 0-7: `tree_table/2 - 1` (aka the offset to `compressed_bitstream`)
+/// * `tree_table` (list of 8bit nodes, starting with the root node)
+///   * Root Node and Non-Data-Child Nodes are:
+///     * Bits 0-5: Offset to next child node.
+///       * Next child node0 is at `(CurrentAddr AND NOT 1)+Offset*2+2`
+///       * Next child node1 is at `(CurrentAddr AND NOT 1)+Offset*2+2+1`
+///     * Bit 6: Node1 End Flag (1=Next child node is data)
+///     * Bit 7: Node0 End Flag (1=Next child node is data)
+///   * Data nodes are (when End Flag was set in parent node):
+///     * Bits 0-7: Data element (upper bits should be zero when elements are
+///       less than 8 bits)
+/// * `compressed_bitstream` (stored in units of 32bits)
+///   * Bit 0-31: Node Bits (high bit to low bit)  (0=Node0, 1=Node1)
+#[inline]
+#[instruction_set(arm::t32)]
+pub unsafe fn HuffUnCompReadNormal(src: *const u8, dest: *mut u32) {
+  core::arch::asm! {
+    "swi #0x13",
+    inout("r0") src => _,
+    inout("r1") dest => _,
+    out("r3") _,
+    options(preserves_flags),
+  }
+}
+
+/// `0x14`: Decompress run-length encoded data (8-bit writes).
+///
+/// * `src` points to the header and data (must be aligned to 4).
+/// * `dest` points to the output buffer.
+///
+/// ## Data Format
+/// * `header` (32bit)
+///   * Bits 0-7: magic number `0b0011_0000`
+///   * Bit: 8-31:  Size of decompressed data in *bytes*
+/// * Repeat below. Each Flag Byte followed by one or more Data Bytes.
+///   * Flag data (8bit)
+///     * Bits 0-6: Expanded Data Length (uncompressed N-1, compressed N-3)
+///     * Bit 7: Flag (0=uncompressed, 1=compressed)
+///   * Data Byte(s): N uncompressed bytes, or 1 byte repeated N times
+#[inline]
+#[instruction_set(arm::t32)]
+pub unsafe fn RLUnCompReadNormalWrite8bit(src: *const u8, dest: *mut u8) {
+  core::arch::asm! {
+    "swi #0x14",
+    inout("r0") src => _,
+    inout("r1") dest => _,
+    out("r3") _,
+    options(preserves_flags),
+  }
+}
+
+/// `0x15`: Decompress run-length encoded data (16-bit writes).
+///
+/// * `src` points to the header and data (must be aligned to 4).
+/// * `dest` points to the output buffer.
+///
+/// ## Data Format
+/// * See [`RLUnCompReadNormalWrite8bit`]
+#[inline]
+#[instruction_set(arm::t32)]
+pub unsafe fn RLUnCompReadNormalWrite16bit(src: *const u8, dest: *mut u16) {
+  core::arch::asm! {
+    "swi #0x15",
+    inout("r0") src => _,
+    inout("r1") dest => _,
+    out("r3") _,
+    options(preserves_flags),
+  }
+}
