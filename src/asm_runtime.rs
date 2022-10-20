@@ -1018,29 +1018,3 @@ core::arch::global_asm! {
   },
   options(raw),
 }
-
-/// This does a `bx` directly to [`__aeabi_memcpy4`], instead of doing a `bl` to
-/// the symbol and having the linker generate a stub function.
-///
-/// This saves only 6 cycles, but there's no real harm in it other than it being
-/// a pain in the butt to manually indirect like this.
-///
-/// In the future we probably want to allow users to call this, but for now it's
-/// fine to just have it internally for the one place we're manually using it.
-#[inline]
-#[allow(non_snake_case)]
-pub(crate) unsafe fn bx__aeabi_memcpy4(
-  dest: *mut u8, src: *const u8, byte_count: usize,
-) {
-  let f: unsafe extern "C" fn(*mut u8, *const u8, usize) = __aeabi_memcpy4;
-  core::arch::asm!("bx r3",
-    inout("r0") dest => _,
-    inout("r1") src => _,
-    inout("r2") byte_count => _,
-    inout("r3") f => _,
-    out("r12") _,
-    // CAUTION: this doesn't allow `lr` to be altered in the ASM block, so it
-    // doesn't work for the general C ABI, but since we've implemented the
-    // specific function ourselves we know that `lr` won't be trashed.
-  )
-}
