@@ -347,9 +347,9 @@ impl VideoMode3Bitmap {
 
 /// Video mode 4 has two 8bpp indexmaps.
 /// 
-/// Because VRAM can't be written with less than `u16` at a time, the scanlines
-/// here use `u8x2` to represent pixels pairs so that all the writes are at
-/// least `u16` large.
+/// Because VRAM can't be written with less than 2 bytes at a time, the
+/// scanlines here use `u8x2` to represent pixels pairs so that all the writes
+/// are at least 2 bytes large.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct VideoMode4Frame(usize);
 impl VideoMode4Frame {
