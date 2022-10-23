@@ -17,216 +17,249 @@ pub type i32fx8 = Fixed<i32, 8>;
 ///
 /// [wp-fp]: https://en.wikipedia.org/wiki/Fixed-point_arithmetic
 ///
-/// * The `I` type is intended to be a signed or unsigned integer of a specific
-///   size: `i8`, `i16`, `i32`, `u8`, `u16`, or `u32`. This type is *not*
-///   supported to work with any other `I` type: semver compatible updates to
-///   the crate may change the generic bounds on methods that cause other types
-///   of `I` to cease working.
+/// * This type is generic, but the `I` type is intended to be a signed or
+///   unsigned integer of a fixed bit size: `i8`, `i16`, `i32`, `u8`, `u16`, or
+///   `u32`. This type is *not* semver supported to work with any other `I`
+///   type. If it does work for other types of `I`, that's on accident.
 /// * The `B` value is the number of bits that form the fractional part. It
-///   should be less than the number of bits in the integer's type, or various
-///   methods will likely panic when they shift the inner value by too much.
+///   should be *less than* the number of bits in the integer's type. Multiply
+///   and divide ops need to shift the value by `B`, and so if `B` is greater
+///   than or equal to the integer's size the op will panic.
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[repr(transparent)]
 pub struct Fixed<I, const B: u32>(I);
 
-impl<I, const B: u32> Fixed<I, B> {
-  /// Converts a base typed value into the fixed-point form.
-  ///
-  /// This involves left-shifting the input by `B` bits. If the input is large
-  /// enough then bits will shift off of the left edge. The resulting value is
-  /// thus "wrapped" into the numeric range of this fixed point type.
-  #[inline]
-  #[must_use]
-  pub fn wrapping_from(i: I) -> Self
-  where
-    I: Shl<u32, Output = I>,
-  {
-    Self(i << B)
-  }
-
-  /// Makes a `Fixed` from a raw inner value.
-  #[inline]
-  #[must_use]
-  pub const fn from_raw(i: I) -> Self {
-    Self(i)
-  }
-
-  /// Unwraps the inner value back into the base type.
-  #[inline]
-  #[must_use]
-  pub const fn into_raw(self) -> I
-  where
-    I: Copy,
-  {
-    self.0
-  }
-}
-
-macro_rules! impl_passthrough_self_rhs {
-  ($trait_name:ident, $method_name:ident) => {
-    impl<I: $trait_name<Output = I>, const B: u32> $trait_name for Fixed<I, B> {
+macro_rules! impl_trait_op_unit {
+  ($t:ty, $trait:ident, $op:ident) => {
+    impl<const B: u32> $trait for Fixed<$t, B> {
       type Output = Self;
       #[inline]
       #[must_use]
-      fn $method_name(self, rhs: Self) -> Self::Output {
-        Self(self.0.$method_name(rhs.0))
+      fn $op(self) -> Self::Output {
+        Self::$op(self)
       }
     }
   };
 }
-impl_passthrough_self_rhs!(Add, add);
-impl_passthrough_self_rhs!(Sub, sub);
-impl_passthrough_self_rhs!(Rem, rem);
-impl_passthrough_self_rhs!(BitAnd, bitand);
-impl_passthrough_self_rhs!(BitOr, bitor);
-impl_passthrough_self_rhs!(BitXor, bitxor);
-
-macro_rules! impl_passthrough_self_assign {
-  ($trait_name:ident, $method_name:ident) => {
-    impl<I: $trait_name, const B: u32> $trait_name for Fixed<I, B> {
-      #[inline]
-      fn $method_name(&mut self, rhs: Self) {
-        self.0.$method_name(rhs.0);
-      }
-    }
-  };
-}
-impl_passthrough_self_assign!(AddAssign, add_assign);
-impl_passthrough_self_assign!(SubAssign, sub_assign);
-impl_passthrough_self_assign!(RemAssign, rem_assign);
-impl_passthrough_self_assign!(BitAndAssign, bitand_assign);
-impl_passthrough_self_assign!(BitOrAssign, bitor_assign);
-impl_passthrough_self_assign!(BitXorAssign, bitxor_assign);
-
-macro_rules! impl_self_unit {
-  ($trait_name:ident, $method_name:ident) => {
-    impl<I: $trait_name<Output = I>, const B: u32> $trait_name for Fixed<I, B> {
+macro_rules! impl_trait_op_self_rhs {
+  ($t:ty, $trait:ident, $op:ident) => {
+    impl<const B: u32> $trait for Fixed<$t, B> {
       type Output = Self;
       #[inline]
       #[must_use]
-      fn $method_name(self) -> Self::Output {
-        Self(self.0.$method_name())
+      fn $op(self, rhs: Self) -> Self::Output {
+        Self::$op(self, rhs)
       }
     }
   };
 }
-impl_self_unit!(Neg, neg);
-impl_self_unit!(Not, not);
-
-macro_rules! impl_shift {
-  ($trait_name:ident, $method_name:ident) => {
-    impl<S, I: $trait_name<S, Output = I>, const B: u32> $trait_name<S>
-      for Fixed<I, B>
-    {
+macro_rules! impl_trait_op_assign_self_rhs {
+  ($t:ty, $trait:ident, $op:ident, $op_assign:ident) => {
+    impl<const B: u32> $trait for Fixed<$t, B> {
+      #[inline]
+      fn $op_assign(&mut self, rhs: Self) {
+        *self = self.$op(rhs);
+      }
+    }
+  };
+}
+macro_rules! impl_shift_self_u32 {
+  ($t:ty, $trait:ident, $op:ident) => {
+    impl<const B: u32> $trait<u32> for Fixed<$t, B> {
       type Output = Self;
       #[inline]
       #[must_use]
-      fn $method_name(self, rhs: S) -> Self::Output {
-        Self(self.0.$method_name(rhs))
+      fn $op(self, rhs: u32) -> Self::Output {
+        Self::$op(self, rhs)
       }
     }
   };
 }
-impl_shift!(Shl, shl);
-impl_shift!(Shr, shr);
-
-macro_rules! impl_shift_assign {
-  ($trait_name:ident, $method_name:ident) => {
-    impl<S, I: $trait_name<S>, const B: u32> $trait_name<S> for Fixed<I, B> {
+macro_rules! impl_shift_assign_self_u32 {
+  ($t:ty, $trait:ident, $op:ident, $op_assign:ident) => {
+    impl<const B: u32> $trait<u32> for Fixed<$t, B> {
       #[inline]
-      fn $method_name(&mut self, rhs: S) {
-        self.0.$method_name(rhs)
+      fn $op_assign(&mut self, rhs: u32) {
+        *self = self.$op(rhs);
       }
     }
   };
 }
-impl_shift_assign!(ShlAssign, shl_assign);
-impl_shift_assign!(ShrAssign, shr_assign);
 
-macro_rules! impl_signed_mul {
-  ($i:ty) => {
-    impl<const B: u32> Mul for Fixed<$i, B> {
-      type Output = Self;
+macro_rules! impl_common_fixed_ops {
+  ($t:ty) => {
+    impl<const B: u32> Fixed<$t, B> {
+      /// Shifts the value left by `B`, wrapping it into the range of this Fixed
+      /// type.
       #[inline]
       #[must_use]
-      #[allow(clippy::suspicious_arithmetic_impl)]
-      fn mul(self, rhs: Self) -> Self::Output {
-        Self(((self.0 as i32).mul(rhs.0 as i32) >> B) as $i)
+      pub const fn wrapping_from(i: $t) -> Self {
+        Self(i << B)
       }
-    }
-  };
-}
-impl_signed_mul!(i8);
-impl_signed_mul!(i16);
-impl_signed_mul!(i32);
 
-macro_rules! impl_unsigned_mul {
-  ($u:ty) => {
-    impl<const B: u32> Mul for Fixed<$u, B> {
-      type Output = Self;
+      /// Makes a `Fixed` directly from a raw inner value (no shift).
       #[inline]
       #[must_use]
-      #[allow(clippy::suspicious_arithmetic_impl)]
-      fn mul(self, rhs: Self) -> Self::Output {
-        Self(((self.0 as u32).mul(rhs.0 as u32) >> B) as $u)
+      pub const fn from_raw(i: $t) -> Self {
+        Self(i)
       }
-    }
-  };
-}
-impl_unsigned_mul!(u8);
-impl_unsigned_mul!(u16);
-impl_unsigned_mul!(u32);
 
-impl<I, const B: u32> MulAssign for Fixed<I, B>
-where
-  Self: Mul<Output = Self> + Clone,
-{
-  #[inline]
-  fn mul_assign(&mut self, rhs: Self) {
-    *self = self.clone().mul(rhs);
-  }
-}
-
-macro_rules! impl_signed_div {
-  ($i:ty) => {
-    impl<const B: u32> Div for Fixed<$i, B> {
-      type Output = Self;
+      /// Unwraps the inner value directly into the base type (no shift).
       #[inline]
       #[must_use]
-      #[allow(clippy::suspicious_arithmetic_impl)]
-      fn div(self, rhs: Self) -> Self::Output {
-        Self((self.0 as i32).mul(1 << B).div(rhs.0 as i32) as $i)
+      pub const fn into_raw(self) -> $t {
+        self.0
       }
-    }
-  };
-}
-impl_signed_div!(i8);
-impl_signed_div!(i16);
-impl_signed_div!(i32);
 
-macro_rules! impl_unsigned_div {
-  ($u:ty) => {
-    impl<const B: u32> Div for Fixed<$u, B> {
-      type Output = Self;
+      /// Bitwise Not.
       #[inline]
       #[must_use]
-      #[allow(clippy::suspicious_arithmetic_impl)]
-      fn div(self, rhs: Self) -> Self::Output {
-        Self((self.0 as u32).mul(1 << B).div(rhs.0 as u32) as $u)
+      pub const fn not(self) -> Self {
+        Self(!self.0)
+      }
+
+      /// Addition.
+      #[inline]
+      #[must_use]
+      pub const fn add(self, rhs: Self) -> Self {
+        Self(self.0 + rhs.0)
+      }
+
+      /// Subtraction.
+      #[inline]
+      #[must_use]
+      pub const fn sub(self, rhs: Self) -> Self {
+        Self(self.0 - rhs.0)
+      }
+
+      /// Remainder.
+      #[inline]
+      #[must_use]
+      pub const fn rem(self, rhs: Self) -> Self {
+        Self(self.0 % rhs.0)
+      }
+
+      /// Bitwise AND.
+      #[inline]
+      #[must_use]
+      pub const fn bitand(self, rhs: Self) -> Self {
+        Self(self.0 & rhs.0)
+      }
+
+      /// Bitwise OR.
+      #[inline]
+      #[must_use]
+      pub const fn bitor(self, rhs: Self) -> Self {
+        Self(self.0 | rhs.0)
+      }
+
+      /// Bitwise XOR.
+      #[inline]
+      #[must_use]
+      pub const fn bitxor(self, rhs: Self) -> Self {
+        Self(self.0 ^ rhs.0)
+      }
+
+      /// Bit-shift Left.
+      #[inline]
+      #[must_use]
+      pub const fn shl(self, rhs: u32) -> Self {
+        Self(self.0 << rhs)
+      }
+
+      /// Bit-shift Right.
+      #[inline]
+      #[must_use]
+      pub const fn shr(self, rhs: u32) -> Self {
+        Self(self.0 >> rhs)
+      }
+    }
+    impl_trait_op_unit!($t, Not, not);
+    impl_trait_op_self_rhs!($t, Add, add);
+    impl_trait_op_self_rhs!($t, Sub, sub);
+    impl_trait_op_self_rhs!($t, Mul, mul);
+    impl_trait_op_self_rhs!($t, Div, div);
+    impl_trait_op_self_rhs!($t, Rem, rem);
+    impl_trait_op_self_rhs!($t, BitAnd, bitand);
+    impl_trait_op_self_rhs!($t, BitOr, bitor);
+    impl_trait_op_self_rhs!($t, BitXor, bitxor);
+    impl_shift_self_u32!($t, Shl, shl);
+    impl_shift_self_u32!($t, Shr, shr);
+    impl_trait_op_assign_self_rhs!($t, AddAssign, add, add_assign);
+    impl_trait_op_assign_self_rhs!($t, SubAssign, sub, sub_assign);
+    impl_trait_op_assign_self_rhs!($t, MulAssign, mul, mul_assign);
+    impl_trait_op_assign_self_rhs!($t, DivAssign, div, div_assign);
+    impl_trait_op_assign_self_rhs!($t, RemAssign, rem, rem_assign);
+    impl_trait_op_assign_self_rhs!($t, BitAndAssign, bitand, bitand_assign);
+    impl_trait_op_assign_self_rhs!($t, BitOrAssign, bitor, bitor_assign);
+    impl_trait_op_assign_self_rhs!($t, BitXorAssign, bitxor, bitxor_assign);
+    impl_shift_assign_self_u32!($t, ShlAssign, shl, shl_assign);
+    impl_shift_assign_self_u32!($t, ShrAssign, shr, shr_assign);
+  };
+}
+impl_common_fixed_ops!(i8);
+impl_common_fixed_ops!(i16);
+impl_common_fixed_ops!(i32);
+impl_common_fixed_ops!(u8);
+impl_common_fixed_ops!(u16);
+impl_common_fixed_ops!(u32);
+
+macro_rules! impl_signed_fixed_ops {
+  ($t:ty) => {
+    impl<const B: u32> Fixed<$t, B> {
+      /// Negate.
+      #[inline]
+      #[must_use]
+      pub const fn neg(self) -> Self {
+        Self(-self.0)
+      }
+
+      /// Multiply.
+      #[inline]
+      #[must_use]
+      pub const fn mul(self, rhs: Self) -> Self {
+        let raw = (self.0 as i32) * (rhs.0 as i32);
+        Self((raw >> B) as $t)
+      }
+
+      /// Divide.
+      #[inline]
+      #[must_use]
+      pub const fn div(self, rhs: Self) -> Self {
+        let m = (self.0 as i32) * (1 << B);
+        let d = m / (rhs.0 as i32);
+        Self(d as $t)
+      }
+    }
+    impl_trait_op_unit!($t, Neg, neg);
+  };
+}
+impl_signed_fixed_ops!(i8);
+impl_signed_fixed_ops!(i16);
+impl_signed_fixed_ops!(i32);
+
+macro_rules! impl_unsigned_fixed_ops {
+  ($t:ty) => {
+    impl<const B: u32> Fixed<$t, B> {
+      /// Multiply.
+      #[inline]
+      #[must_use]
+      pub const fn mul(self, rhs: Self) -> Self {
+        let raw = (self.0 as u32) * (rhs.0 as u32);
+        Self((raw >> B) as $t)
+      }
+
+      /// Divide.
+      #[inline]
+      #[must_use]
+      pub const fn div(self, rhs: Self) -> Self {
+        let m = (self.0 as u32) * (1 << B);
+        let d = m / (rhs.0 as u32);
+        Self(d as $t)
       }
     }
   };
 }
-impl_unsigned_div!(u8);
-impl_unsigned_div!(u16);
-impl_unsigned_div!(u32);
-
-impl<I, const B: u32> DivAssign for Fixed<I, B>
-where
-  Self: Div<Output = Self> + Clone,
-{
-  #[inline]
-  fn div_assign(&mut self, rhs: Self) {
-    *self = self.clone().div(rhs);
-  }
-}
+impl_unsigned_fixed_ops!(u8);
+impl_unsigned_fixed_ops!(u16);
+impl_unsigned_fixed_ops!(u32);
