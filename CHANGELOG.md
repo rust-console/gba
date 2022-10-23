@@ -3,6 +3,12 @@
 * **0.9.2:**
   * Adds support for more BIOS functions, though not all functions are as
     clearly documented as I'd like.
+  * Made much more of the `Fixed` type const friendly. Most ops now have an
+    inherent method that is `const fn` as well as implementing the `core::ops`
+    trait (the trait fn just calls the inherent fn). This means that you can't
+    do `x + y` in a const context, but you can do `x.add(y)`. This is not the
+    best system, but until const trait impls are stable this is the best middle
+    ground.
 * **0.9.1:**
   * Adds some randomization support directly into the crate.
   * Added more methods to the `Fixed` type.

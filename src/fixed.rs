@@ -6,6 +6,12 @@ use core::ops::*;
 #[allow(non_camel_case_types)]
 pub type i16fx8 = Fixed<i16, 8>;
 
+/// `i16` with 14 bits of fixed-point fraction.
+///
+/// This is used by the [`ArcTan`] and [`ArcTan2`] BIOS functions.
+#[allow(non_camel_case_types)]
+pub type i16fx14 = Fixed<i16, 14>;
+
 /// `i32` with 8 bits of fixed-point fraction.
 ///
 /// This is used by the background reference point entries.

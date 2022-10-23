@@ -8,10 +8,30 @@
 //! of the function ends up inlined). Despite this higher cost, some bios
 //! functions are useful enough to justify the overhead.
 
-use crate::interrupts::IrqBits;
+use crate::{fixed::i16fx14, interrupts::IrqBits};
 
 // Note(Lokathor): All `swi` calls will preserve the flags. You should generally
 // not use any other inline-asm options with `swi` calls.
+
+/// `0x00`: Software Reset.
+///
+/// This clears the BIOS portion of IWRAM (the top `0x200` bytes), resets the
+/// SVC, IRQ, and SYS stack pointers to their defaults, then performs a `bx r14`
+/// to go to an address based on what's written to the byte at `0x0300_7FFA`:
+/// * zero: `0x0800_0000` (ROM)
+/// * non-zero: `0x0200_0000` (IWRAM).
+///
+/// (Note: the target address is determined *before* clearing the top of IWRAM.)
+#[inline]
+#[instruction_set(arm::t32)]
+pub fn SoftReset() -> ! {
+  unsafe {
+    core::arch::asm! {
+      "swi #0x00",
+      options(noreturn),
+    }
+  };
+}
 
 /// `0x04`: Waits for a specific interrupt type(s) to happen.
 ///
@@ -60,6 +80,50 @@ pub fn VBlankIntrWait() {
       options(preserves_flags),
     }
   };
+}
+
+/// `0x09`: Arc tangent.
+///
+/// * **Returns:** The output is in the range +/- `pi/2`, but accuracy is worse
+///   outside of +/- `pi/4`.
+#[inline]
+#[instruction_set(arm::t32)]
+pub fn ArcTan(theta: i16fx14) -> i16fx14 {
+  let mut i = theta.into_raw();
+  unsafe {
+    core::arch::asm! {
+      "swi #0x09",
+      inout("r0") i,
+      out("r1") _,
+      out("r3") _,
+      options(pure, nomem, preserves_flags),
+    }
+  };
+  i16fx14::from_raw(i)
+}
+
+/// `0x0A`: The "2-argument arctangent" ([atan2][wp-atan2]).
+///
+/// [wp-atan2]: https://en.wikipedia.org/wiki/Atan2
+///
+/// * **Returns:** The angle of the input vector, with `u16::MAX` being
+///   equivalent to `2pi`.
+#[inline]
+#[instruction_set(arm::t32)]
+pub fn ArcTan2(x: i16fx14, y: i16fx14) -> u16 {
+  let x = x.into_raw();
+  let y = y.into_raw();
+  let output: u16;
+  unsafe {
+    core::arch::asm! {
+      "swi #0x0A",
+      inout("r0") x => output,
+      inout("r1") y => _,
+      out("r3") _,
+      options(pure, nomem, preserves_flags),
+    }
+  };
+  output
 }
 
 /// Used to provide info to a call of the [`BitUnPack`] function.
