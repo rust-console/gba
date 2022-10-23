@@ -25,7 +25,7 @@ pub type i32fx8 = Fixed<i32, 8>;
 ///   should be *less than* the number of bits in the integer's type. Multiply
 ///   and divide ops need to shift the value by `B`, and so if `B` is greater
 ///   than or equal to the integer's size the op will panic.
-#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[repr(transparent)]
 pub struct Fixed<I, const B: u32>(I);
 
@@ -205,13 +205,20 @@ impl_common_fixed_ops!(u16);
 impl_common_fixed_ops!(u32);
 
 macro_rules! impl_signed_fixed_ops {
-  ($t:ty) => {
+  ($t:ty, $unsigned:ty) => {
     impl<const B: u32> Fixed<$t, B> {
       /// Negate.
       #[inline]
       #[must_use]
       pub const fn neg(self) -> Self {
         Self(-self.0)
+      }
+
+      /// If the number is negative or not.
+      #[inline]
+      #[must_use]
+      pub const fn is_negative(self) -> bool {
+        self.0 < 0
       }
 
       /// Multiply.
@@ -230,13 +237,41 @@ macro_rules! impl_signed_fixed_ops {
         let d = m / (rhs.0 as i32);
         Self(d as $t)
       }
+
+      /// Fractional part of the value.
+      #[inline]
+      #[must_use]
+      pub const fn fract(self) -> Self {
+        let frac_mask = (<$unsigned>::MAX >> (<$t>::BITS - B));
+        Self((self.0.unsigned_abs() & frac_mask) as $t)
+      }
+
+      /// Whole part of the value.
+      #[inline]
+      #[must_use]
+      pub const fn trunc(self) -> Self {
+        Self(((self.0.unsigned_abs() >> B) << B) as $t)
+      }
     }
     impl_trait_op_unit!($t, Neg, neg);
+    impl<const B: u32> core::fmt::Debug for Fixed<$t, B> {
+      fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+        let whole: $t = self.trunc().into_raw() >> B;
+        let fract: $t = self.fract().into_raw();
+        let divisor: $t = 1 << B;
+        if self.is_negative() {
+          let whole = whole.unsigned_abs();
+          write!(f, "-({whole}+{fract}/{divisor})")
+        } else {
+          write!(f, "{whole}+{fract}/{divisor}")
+        }
+      }
+    }
   };
 }
-impl_signed_fixed_ops!(i8);
-impl_signed_fixed_ops!(i16);
-impl_signed_fixed_ops!(i32);
+impl_signed_fixed_ops!(i8, u8);
+impl_signed_fixed_ops!(i16, u16);
+impl_signed_fixed_ops!(i32, u32);
 
 macro_rules! impl_unsigned_fixed_ops {
   ($t:ty) => {
@@ -256,6 +291,28 @@ macro_rules! impl_unsigned_fixed_ops {
         let m = (self.0 as u32) * (1 << B);
         let d = m / (rhs.0 as u32);
         Self(d as $t)
+      }
+
+      /// Fractional part of the value.
+      #[inline]
+      #[must_use]
+      pub const fn fract(self) -> Self {
+        Self(self.0 & (<$t>::MAX >> (<$t>::BITS - B)))
+      }
+
+      /// Whole part of the value.
+      #[inline]
+      #[must_use]
+      pub const fn trunc(self) -> Self {
+        Self(self.0 & (<$t>::MAX << B))
+      }
+    }
+    impl<const B: u32> core::fmt::Debug for Fixed<$t, B> {
+      fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+        let whole: $t = self.trunc().into_raw() >> B;
+        let fract: $t = self.fract().into_raw();
+        let divisor: $t = 1 << B;
+        write!(f, "{whole}+{fract}/{divisor}")
       }
     }
   };

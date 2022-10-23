@@ -59,6 +59,19 @@ extern "C" fn main() -> ! {
 
   if let Ok(mut logger) = MgbaBufferedLogger::try_new(MgbaMessageLevel::Debug) {
     writeln!(logger, "hello!").ok();
+
+    let fx_u: Fixed<u32, 8> =
+      Fixed::<u32, 8>::wrapping_from(7) + Fixed::<u32, 8>::from_raw(12);
+    writeln!(logger, "fixed unsigned: {fx_u:?}").ok();
+
+    let fx_i1: Fixed<i32, 8> =
+      Fixed::<i32, 8>::wrapping_from(8) + Fixed::<i32, 8>::from_raw(15);
+    writeln!(logger, "fixed signed positive: {fx_i1:?}").ok();
+
+    let fx_i2: Fixed<i32, 8> = Fixed::<i32, 8>::wrapping_from(0)
+      - Fixed::<i32, 8>::wrapping_from(3)
+      - Fixed::<i32, 8>::from_raw(17);
+    writeln!(logger, "fixed signed negative: {fx_i2:?}").ok();
   }
 
   {
