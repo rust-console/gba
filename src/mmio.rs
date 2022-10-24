@@ -247,6 +247,12 @@ macro_rules! make_me_a_screenblock_addr {
         assert!(index <= $max_index);
         Self { block: unsafe { VolBlock::new(screenblock_addr(index)) } }
       }
+
+      #[inline]
+      #[must_use]
+      pub const fn as_usize(self) -> usize {
+        self.block.as_usize()
+      }
     
       #[inline]
       #[must_use]

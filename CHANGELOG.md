@@ -1,5 +1,10 @@
 # Changelog
 
+* **0.9.3:**
+  * Added `as_u32_slice` and `as_u16_slice` to `Align4`.
+  * *Removed* the requirement for inputs to `include_aligned_bytes!` to be a
+    multiple of 4 bytes.
+  * Added `as_usize` to all the screeblock address types.
 * **0.9.2:**
   * Adds support for more BIOS functions, though not all functions are as
     clearly documented as I'd like.

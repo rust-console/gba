@@ -110,15 +110,41 @@ pub mod video;
 #[repr(C, align(4))]
 pub struct Align4<T>(pub T);
 
-/// As [`include_bytes!`] but the value is wrapped in [`Align4`]
-///
-/// ## Panics
-/// * The included number of bytes must be a multiple of 4.
+impl<const N: usize> Align4<[u8; N]> {
+  /// Views these bytes as a slice of `u32`
+  /// ## Panics
+  /// * If the number of bytes isn't a multiple of 4
+  pub fn as_u32_slice(&self) -> &[u32] {
+    assert!(self.0.len() % 4 == 0);
+    // Safety: our struct is aligned to 4, so the pointer will already be
+    // aligned, we only need to check the length
+    unsafe {
+      let data: *const u8 = self.0.as_ptr();
+      let len: usize = self.0.len();
+      core::slice::from_raw_parts(data.cast::<u32>(), len / 4)
+    }
+  }
+
+  /// Views these bytes as a slice of `u16`
+  /// ## Panics
+  /// * If the number of bytes isn't a multiple of 2
+  pub fn as_u16_slice(&self) -> &[u16] {
+    assert!(self.0.len() % 2 == 0);
+    // Safety: our struct is aligned to 4, so the pointer will already be
+    // aligned, we only need to check the length
+    unsafe {
+      let data: *const u8 = self.0.as_ptr();
+      let len: usize = self.0.len();
+      core::slice::from_raw_parts(data.cast::<u16>(), len / 2)
+    }
+  }
+}
+
+/// Works like [`include_bytes!`], but the value is wrapped in [`Align4`].
 #[macro_export]
 macro_rules! include_aligned_bytes {
   ($file:expr $(,)?) => {{
     let LONG_NAME_THAT_DOES_NOT_CLASH = *include_bytes!($file);
-    assert!(LONG_NAME_THAT_DOES_NOT_CLASH.len() % 4 == 0);
     Align4(LONG_NAME_THAT_DOES_NOT_CLASH)
   }};
 }
