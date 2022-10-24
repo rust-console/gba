@@ -82,7 +82,7 @@ extern "C" fn main() -> ! {
   {
     // get the the tilemap copied into place
     let tsb = TextScreenblockAddress::new(31);
-    tsb.write_words(&TILE_LAYOUT);
+    tsb.write_word_array(&TILE_LAYOUT);
   }
 
   {

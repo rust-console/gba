@@ -6,6 +6,10 @@ version = "0.9.3"
 edition = "2021"
 license = "Zlib OR Apache-2.0 OR MIT"
 
+[features]
+default = ["track_caller"]
+track_caller = []
+
 [dependencies]
 bitfrob = "0.2.3"
 voladdress = { version = "1.2.1", features = ["experimental_volregion"] }
