@@ -2,7 +2,7 @@
 name = "gba"
 description = "A crate for 'raw' style GBA development. If you want a 'managed' experience, try the `agb` crate instead."
 repository = "https://github.com/rust-console/gba"
-version = "0.9.1"
+version = "0.9.2"
 edition = "2021"
 license = "Zlib OR Apache-2.0 OR MIT"
 
