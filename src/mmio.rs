@@ -210,7 +210,7 @@ def_mmio!(0x04FF_F780 = MGBA_LOG_ENABLE: VolAddress<u16, Safe, Safe>; "Allows yo
 
 def_mmio!(0x0500_0000 = BACKDROP_COLOR: VolAddress<Color, Safe, Safe>; "Color that's shown when no BG or OBJ draws to a pixel");
 def_mmio!(0x0500_0000 = BG_PALETTE: VolBlock<Color, Safe, Safe, 256>; "Background tile palette entries.");
-def_mmio!(0x0500_2000 = OBJ_PALETTE: VolBlock<Color, Safe, Safe, 256>; "Object tile palette entries.");
+def_mmio!(0x0500_0200 = OBJ_PALETTE: VolBlock<Color, Safe, Safe, 256>; "Object tile palette entries.");
 
 // Video RAM (VRAM)
 
