@@ -4,6 +4,8 @@
   * **Breaking:** Cleaned up the screenblock interface. Because they're in VRAM,
     they can't use `u8` access like they were defined to use before. Now the
     types use `u8x2`, similar to the Mode 4 bitmap.
+  * Fixed the MMIO definition for the OBJ palette, so the OBJ palette should
+    work now.
 * **0.9.3:**
   * Added `as_u32_slice` and `as_u16_slice` to `Align4`.
   * *Removed* the requirement for inputs to `include_aligned_bytes!` to be a
