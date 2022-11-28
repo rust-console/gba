@@ -610,6 +610,11 @@ unsafe extern "C" fn __aeabi_uwrite8(value: u64, address: *mut c_void) {
 /// function when possible.
 ///
 /// * **Returns:** the original `dest` pointer.
+///
+/// ## Safety
+/// * `src` must be readable for `byte_count` bytes.
+/// * `dest` must be writable for `byte_count` bytes.
+/// * The `src` and `dest` regions must not overlap.
 #[inline]
 #[no_mangle]
 pub unsafe extern "C" fn memcpy(
@@ -626,6 +631,10 @@ pub unsafe extern "C" fn memcpy(
 /// function when possible.
 ///
 /// * **Returns:** the original `dest` pointer.
+///
+/// ## Safety
+/// * `src` must be readable for `byte_count` bytes.
+/// * `dest` must be writable for `byte_count` bytes.
 #[inline]
 #[no_mangle]
 pub unsafe extern "C" fn memmove(
@@ -644,6 +653,9 @@ pub unsafe extern "C" fn memmove(
 /// it up like might happen in C.
 ///
 /// * **Returns:** the original `dest` pointer.
+///
+/// ## Safety
+/// * `dest` must be writable for `byte_count` bytes.
 #[inline]
 #[no_mangle]
 pub unsafe extern "C" fn memset(

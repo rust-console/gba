@@ -64,6 +64,7 @@ impl<T> Debug for GbaCell<T>
 where
   T: GbaCellSafe + Debug,
 {
+  #[inline]
   fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
     <T as Debug>::fmt(&self.read(), f)
   }

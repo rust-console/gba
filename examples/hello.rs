@@ -13,7 +13,7 @@ fn panic_handler(info: &core::panic::PanicInfo) -> ! {
 }
 
 #[allow(dead_code)]
-const FOO_: Align4<[u8; 4]> = include_aligned_bytes!("foo.txt");
+const FOO: Align4<[u8; 3]> = include_aligned_bytes!("foo.txt");
 
 #[link_section = ".ewram"]
 static FRAME_KEYS: GbaCell<KeyInput> = GbaCell::new(KeyInput::new());

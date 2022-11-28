@@ -35,9 +35,10 @@ use crate::{
   },
   dma::DmaControl,
   sound::{
-    SweepControl, TonePattern, ToneFrequency, WaveBank, WaveLenVolume, WaveFrequency, NoiseLenEnvelope, NoiseFrequency, LeftRightVolume, SoundMix, SoundEnable, SoundBias
+    SweepControl, TonePattern, ToneFrequency, WaveBank, WaveLenVolume, WaveFrequency,
+    NoiseLenEnvelope, NoiseFrequency, LeftRightVolume, SoundMix, SoundEnable, SoundBias
   },
-  timers::TimerControl, keys::{KeyInput, KeyControl}, mgba::MgbaMessageLevel, fixed::{i16fx8, i32fx8},
+  timers::TimerControl, keys::{KeyInput, KeyControl}, mgba::MgbaMessageLevel, fixed::{i16fx8, i32fx8}, prelude::ObjAttr,
 };
 
 // Note(Lokathor): This macro lets us stick each address at the start of the
@@ -214,14 +215,14 @@ def_mmio!(0x0500_0200 = OBJ_PALETTE: VolBlock<Color, Safe, Safe, 256>; "Object t
 
 // Video RAM (VRAM)
 
-/// The VRAM offset per screenblock index.
+/// The VRAM byte offset per screenblock index.
 /// 
 /// This is the same for all background types and sizes.
 pub const SCREENBLOCK_INDEX_OFFSET: usize = 2 * 1_024;
 
 /// The size of the background tile region of VRAM.
 /// 
-/// Background tile index use can cross between charblocks, but not past the end
+/// Background tile index use will work between charblocks, but not past the end
 /// of BG tile memory into OBJ tile memory.
 pub const BG_TILE_REGION_SIZE: usize = 64 * 1_024;
 
@@ -474,6 +475,8 @@ def_mmio!(0x0601_0000 = OBJ_TILES: VolBlock<Tile4, Safe, Safe, 1024>; "Object ti
 def_mmio!(0x0700_0000 = OBJ_ATTR0: VolSeries<ObjAttr0, Safe, Safe, 128, {size_of::<[u16;4]>()}>; "Object attributes 0.");
 def_mmio!(0x0700_0002 = OBJ_ATTR1: VolSeries<ObjAttr1, Safe, Safe, 128, {size_of::<[u16;4]>()}>; "Object attributes 1.");
 def_mmio!(0x0700_0004 = OBJ_ATTR2: VolSeries<ObjAttr2, Safe, Safe, 128, {size_of::<[u16;4]>()}>; "Object attributes 2.");
+
+def_mmio!(0x0700_0000 = OBJ_ATTR_ALL: VolSeries<ObjAttr, Safe, Safe, 128, {size_of::<[u16;4]>()}>; "Object attributes (all in one).");
 
 def_mmio!(0x0700_0006 = AFFINE_PARAM_A: VolSeries<i16fx8, Safe, Safe, 32, {size_of::<[u16;16]>()}>; "Affine parameters A.");
 def_mmio!(0x0700_000E = AFFINE_PARAM_B: VolSeries<i16fx8, Safe, Safe, 32, {size_of::<[u16;16]>()}>; "Affine parameters B.");

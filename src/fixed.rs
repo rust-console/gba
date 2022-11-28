@@ -262,6 +262,7 @@ macro_rules! impl_signed_fixed_ops {
     }
     impl_trait_op_unit!($t, Neg, neg);
     impl<const B: u32> core::fmt::Debug for Fixed<$t, B> {
+      #[inline]
       fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
         let whole: $t = self.trunc().into_raw() >> B;
         let fract: $t = self.fract().into_raw();
@@ -315,6 +316,7 @@ macro_rules! impl_unsigned_fixed_ops {
       }
     }
     impl<const B: u32> core::fmt::Debug for Fixed<$t, B> {
+      #[inline]
       fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
         let whole: $t = self.trunc().into_raw() >> B;
         let fract: $t = self.fract().into_raw();

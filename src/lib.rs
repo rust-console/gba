@@ -1,8 +1,9 @@
 #![no_std]
-#![feature(asm_sym)]
 #![feature(asm_const)]
-#![feature(isa_attribute)]
 #![feature(naked_functions)]
+#![warn(clippy::missing_inline_in_public_items)]
+#![allow(clippy::let_and_return)]
+#![allow(clippy::result_unit_err)]
 //#![warn(missing_docs)]
 
 //! A crate for GBA development.
@@ -72,9 +73,10 @@
 //!
 //! ## Other GBA-related Crates
 //!
-//! This crate provides a largely "unmanaged" interaction with the GBA's
-//! hardware. If you would like an API that use the borrow checker to guide you
-//! more, the [agb](https://docs.rs/agb) crate might be what you want.
+//! This crate provides an API to interact with the GBA that is safe, but with
+//! minimal restrictions on what components can be changed when. If you'd like
+//! an API where the borrow checker provides stronger control over component
+//! access then the [agb](https://docs.rs/agb) crate might be what you want.
 //!
 //! ## Safety
 //!
@@ -114,6 +116,7 @@ impl<const N: usize> Align4<[u8; N]> {
   /// Views these bytes as a slice of `u32`
   /// ## Panics
   /// * If the number of bytes isn't a multiple of 4
+  #[inline]
   pub fn as_u32_slice(&self) -> &[u32] {
     assert!(self.0.len() % 4 == 0);
     // Safety: our struct is aligned to 4, so the pointer will already be
@@ -128,6 +131,7 @@ impl<const N: usize> Align4<[u8; N]> {
   /// Views these bytes as a slice of `u16`
   /// ## Panics
   /// * If the number of bytes isn't a multiple of 2
+  #[inline]
   pub fn as_u16_slice(&self) -> &[u16] {
     assert!(self.0.len() % 2 == 0);
     // Safety: our struct is aligned to 4, so the pointer will already be
@@ -144,7 +148,6 @@ impl<const N: usize> Align4<[u8; N]> {
 #[macro_export]
 macro_rules! include_aligned_bytes {
   ($file:expr $(,)?) => {{
-    let LONG_NAME_THAT_DOES_NOT_CLASH = *include_bytes!($file);
-    Align4(LONG_NAME_THAT_DOES_NOT_CLASH)
+    Align4(*include_bytes!($file))
   }};
 }

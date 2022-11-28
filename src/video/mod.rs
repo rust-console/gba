@@ -107,7 +107,17 @@ use crate::prelude::*;
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[repr(transparent)]
 pub struct Color(pub u16);
+#[allow(clippy::unusual_byte_groupings)]
 impl Color {
+  pub const BLACK: Color = Color(0b0_00000_00000_00000);
+  pub const RED: Color = Color(0b0_00000_00000_11111);
+  pub const GREEN: Color = Color(0b0_00000_11111_00000);
+  pub const YELLOW: Color = Color(0b0_00000_11111_11111);
+  pub const BLUE: Color = Color(0b0_11111_00000_00000);
+  pub const MAGENTA: Color = Color(0b0_11111_00000_11111);
+  pub const CYAN: Color = Color(0b0_11111_11111_00000);
+  pub const WHITE: Color = Color(0b0_11111_11111_11111);
+
   pub_const_fn_new_zeroed!();
   u16_int_field!(0 - 4, red, with_red);
   u16_int_field!(5 - 9, green, with_green);
@@ -357,4 +367,23 @@ impl ObjAttr2 {
   u16_int_field!(0 - 9, tile_id, with_tile_id);
   u16_int_field!(10 - 11, priority, with_priority);
   u16_int_field!(12 - 15, palbank, with_palbank);
+}
+
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[repr(C)]
+pub struct ObjAttr(pub ObjAttr0, pub ObjAttr1, pub ObjAttr2);
+impl ObjAttr {
+  #[inline]
+  pub const fn new() -> Self {
+    Self(ObjAttr0(0), ObjAttr1(0), ObjAttr2(0))
+  }
+  pub fn set_x(&mut self, x: u16) {
+    self.1 = self.1.with_x(x);
+  }
+  pub fn set_y(&mut self, y: u16) {
+    self.0 = self.0.with_y(y);
+  }
+  pub fn set_tile_id(&mut self, id: u16) {
+    self.2 = self.2.with_tile_id(id);
+  }
 }

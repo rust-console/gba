@@ -71,6 +71,7 @@ pub struct MgbaBufferedLogger {
   pub message_level: MgbaMessageLevel,
 }
 impl MgbaBufferedLogger {
+  #[inline]
   pub fn try_new(message_level: MgbaMessageLevel) -> Result<Self, ()> {
     if mgba_logging_available() {
       Ok(Self { byte_count: 0, message_level })
@@ -84,6 +85,7 @@ impl MgbaBufferedLogger {
   }
 }
 impl Drop for MgbaBufferedLogger {
+  #[inline]
   fn drop(&mut self) {
     if self.byte_count != 0 {
       self.flush();
@@ -91,6 +93,7 @@ impl Drop for MgbaBufferedLogger {
   }
 }
 impl core::fmt::Write for MgbaBufferedLogger {
+  #[inline]
   fn write_str(&mut self, s: &str) -> core::fmt::Result {
     for b in s.as_bytes().iter().copied() {
       if b == b'\n' {

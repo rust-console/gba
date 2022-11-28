@@ -1,4 +1,5 @@
 #![allow(non_snake_case)]
+#![allow(clippy::missing_safety_doc)]
 
 //! The GBA's BIOS provides limited built-in utility functions.
 //!
