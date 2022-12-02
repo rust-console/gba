@@ -13,12 +13,18 @@ track_caller = []
 [dependencies]
 bitfrob = "0.2.3"
 voladdress = { version = "1.2.1", features = ["experimental_volregion"] }
+bracer = "0.1"
 
 [profile.dev]
 opt-level = 3
+incremental = false
+
+[profile.dev.package."*"]
+debug-assertions = false
 
 [profile.release]
 codegen-units = 1
+incremental = false
 
 [package.metadata.docs.rs]
 # The crate can only be built for targets that have thumb-interworking support,
