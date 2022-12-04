@@ -1,11 +1,11 @@
 #![no_std]
 #![no_main]
 
-use core::fmt::Write;
 use gba::prelude::*;
 
 #[panic_handler]
 fn panic_handler(info: &core::panic::PanicInfo) -> ! {
+  use core::fmt::Write;
   if let Ok(mut logger) = MgbaBufferedLogger::try_new(MgbaMessageLevel::Fatal) {
     writeln!(logger, "{info}").ok();
   }

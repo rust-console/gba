@@ -96,6 +96,7 @@ pub mod fixed;
 pub mod gba_cell;
 pub mod interrupts;
 pub mod keys;
+pub mod mem_fns;
 pub mod mgba;
 pub mod mmio;
 pub mod prelude;

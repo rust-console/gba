@@ -9,8 +9,6 @@
 //! * If a function is set in the `RUST_IRQ_HANDLER` variable then that function
 //!   will be called and passed the bits for which interrupt(s) occurred.
 
-use core::ffi::c_void;
-
 use crate::{
   dma::DmaControl,
   gba_cell::GbaCell,
@@ -18,7 +16,6 @@ use crate::{
   mgba::MGBA_LOGGING_ENABLE_REQUEST,
   mmio::{DMA3_SRC, IME, MGBA_LOG_ENABLE},
 };
-use bracer::*;
 
 /// The function pointer that the assembly runtime calls when an interrupt
 /// occurs.
@@ -46,7 +43,7 @@ unsafe extern "C" fn __start() -> ! {
 
     /* iwram copy */
     "ldr r4, =__iwram_word_copy_count",
-    when!("r4" != "#0" [label_id=1] {
+    bracer::when!("r4" != "#0" [label_id=1] {
       "add r3, r12, #{dma3_offset}",
       "mov r5, #{dma3_setting}",
       "ldr r0, =__iwram_start",
@@ -59,7 +56,7 @@ unsafe extern "C" fn __start() -> ! {
 
     /* ewram copy */
     "ldr r4, =__ewram_word_copy_count",
-    when!("r4" != "#0" [label_id=1] {
+    bracer::when!("r4" != "#0" [label_id=1] {
       "add r3, r12, #{dma3_offset}",
       "mov r5, #{dma3_setting}",
       "ldr r0, =__ewram_start",
@@ -72,7 +69,7 @@ unsafe extern "C" fn __start() -> ! {
 
     /* bss zero */
     "ldr r4, =__bss_word_clear_count",
-    when!("r4" != "#0" [label_id=1] {
+    bracer::when!("r4" != "#0" [label_id=1] {
       "ldr r0, =__bss_start",
       "mov r2, #0",
       "2:",
@@ -133,9 +130,9 @@ unsafe extern "C" fn runtime_irq_handler() {
     /* Call the Rust fn pointer (if set), using System mode */
     "ldr r1, ={RUST_IRQ_HANDLER}",
     "ldr r1, [r1]",
-    when!("r1" != "#0" [label_id=9] {
-      with_spsr_held_in!("r2", {
-        set_cpu_control!(System, irq_masked: false, fiq_masked: false),
+    bracer::when!("r1" != "#0" [label_id=9] {
+      bracer::with_spsr_held_in!("r2", {
+        bracer::set_cpu_control!(System, irq_masked: false, fiq_masked: false),
 
         // Note(Lokathor): We are *SKIPPING* the part where we ensure that the
         // System stack pointer is aligned to 8 during the call to the rust
@@ -145,11 +142,11 @@ unsafe extern "C" fn runtime_irq_handler() {
         // cycles total. Which is neat, but if this were on the DS (which has an
         // ARMv5TE CPU) you'd want to ensure the aligned stack.
 
-        with_pushed_registers!("{{r2, r3, r12, lr}}", {
-          adr_lr_then_bx_to!(reg="r1", label_id=1)
+        bracer::with_pushed_registers!("{{r2, r3, r12, lr}}", {
+          bracer::adr_lr_then_bx_to!(reg="r1", label_id=1)
         }),
 
-        set_cpu_control!(Supervisor, irq_masked: true, fiq_masked: false),
+        bracer::set_cpu_control!(Supervisor, irq_masked: true, fiq_masked: false),
       }),
     }),
 
@@ -161,6 +158,8 @@ unsafe extern "C" fn runtime_irq_handler() {
     options(noreturn)
   )
 }
+
+// For now, the division fns can just keep living here.
 
 /// Returns 0 in `r0`, while placing the `numerator` into `r1`.
 ///
@@ -207,7 +206,7 @@ extern "C" fn __aeabi_uidiv(numerator: u32, denominator: u32) -> u32 {
     core::arch::asm!(
       // Check for divide by 0
       "cmp   r1, #0",
-      "beq   __aeabi_idiv0",
+      "beq   {__aeabi_idiv0}",
       // r3(shifted_denom) = denom
       "mov   r3, r1",
       // while shifted_denom < (num>>1): shifted_denom =<< 1;
@@ -228,6 +227,7 @@ extern "C" fn __aeabi_uidiv(numerator: u32, denominator: u32) -> u32 {
       "cmp   r3, r1",
       "bcs   3b",
       "bx    lr",
+      __aeabi_idiv0 = sym __aeabi_idiv0,
       options(noreturn)
     )
   }
@@ -253,14 +253,15 @@ extern "C" fn __aeabi_idiv(numerator: i32, denominator: i32) -> u32 {
       "rsblt r0, r0, #0",
       "cmp   r1, #0",
       "rsclt r1, r1, #0",
-      with_pushed_registers!("{{lr}}", {
+      bracer::with_pushed_registers!("{{lr}}", {
         // divide them using `u32` division (this will check for divide by 0)
-        "bl    __aeabi_uidiv",
+        "bl    {__aeabi_uidiv}",
       }),
       // if they started as different signs, flip the output's sign.
       "cmp   r12, #0",
       "rsblt r0, r0, #0",
       "bx    lr",
+      __aeabi_uidiv = sym __aeabi_uidiv,
       options(noreturn)
     )
   }
@@ -289,14 +290,15 @@ extern "C" fn __aeabi_uidivmod(numerator: u32, denominator: u32) -> u64 {
       // touch `r12`, while the other will be pushed onto the stack along with
       // `lr`. Since the function's output will be in `r0`, we push/pop `r1`.
       "mov   r12, r0",
-      with_pushed_registers!("{{r1, lr}}", {
-        "bl    __aeabi_uidiv",
+      bracer::with_pushed_registers!("{{r1, lr}}", {
+        "bl    {__aeabi_uidiv}",
       }),
       // Now r0 holds the `quot`, and we use it along with the input args to
       // calculate the `rem`.
       "mul   r2, r0, r1",
       "sub   r1, r12, r2",
       "bx    lr",
+      __aeabi_uidiv = sym __aeabi_uidiv,
       options(noreturn)
     )
   }
@@ -320,7 +322,7 @@ extern "C" fn __aeabi_uidivmod(numerator: u32, denominator: u32) -> u64 {
 extern "C" fn __aeabi_idivmod(numerator: i32, denominator: i32) -> u64 {
   unsafe {
     core::arch::asm!(
-      with_pushed_registers!("{{r4, r5, lr}}", {
+      bracer::with_pushed_registers!("{{r4, r5, lr}}", {
         // store old numerator then make it the unsigned absolute
         "movs  r4, r0",
         "rsblt r0, r0, #0",
@@ -328,7 +330,7 @@ extern "C" fn __aeabi_idivmod(numerator: i32, denominator: i32) -> u64 {
         "movs  r5, r1",
         "rsblt r1, r1, #0",
         // divmod using unsigned.
-        "bl    __aeabi_uidivmod",
+        "bl    {__aeabi_uidivmod}",
         // if signs started opposite, quot becomes negative
         "eors  r12, r4, r5",
         "rsblt r0, r0, #0",
@@ -337,534 +339,8 @@ extern "C" fn __aeabi_idivmod(numerator: i32, denominator: i32) -> u64 {
         "rsblt r1, r1, #0",
       }),
       "bx    lr",
+      __aeabi_uidivmod = sym __aeabi_uidivmod,
       options(noreturn)
     )
   }
-}
-
-/// Reads 4 bytes, starting at the address given.
-///
-/// See [__aeabi_uread4]
-///
-/// [__aeabi_uread4]: https://github.com/ARM-software/abi-aa/blob/main/rtabi32/rtabi32.rst#unaligned-memory-access
-#[naked]
-#[no_mangle]
-#[instruction_set(arm::a32)]
-#[link_section = ".iwram.aeabi.uread4"]
-unsafe extern "C" fn __aeabi_uread4(address: *const c_void) -> u32 {
-  core::arch::asm!(
-    "ldrb r2, [r0]",
-    "ldrb r3, [r0, #1]",
-    "orr  r2, r2, r3, lsl #8",
-    "ldrb r3, [r0, #2]",
-    "orr  r2, r2, r3, lsl #16",
-    "ldrb r3, [r0, #3]",
-    "orr  r2, r2, r3, lsl #24",
-    "mov  r0, r2",
-    "bx   lr",
-    options(noreturn),
-  )
-}
-
-/// Writes 4 bytes, starting at the address given.
-///
-/// See [__aeabi_uwrite4]
-///
-/// [__aeabi_uwrite4]: https://github.com/ARM-software/abi-aa/blob/main/rtabi32/rtabi32.rst#unaligned-memory-access
-#[naked]
-#[no_mangle]
-#[instruction_set(arm::a32)]
-#[link_section = ".iwram.aeabi.uwrite4"]
-unsafe extern "C" fn __aeabi_uwrite4(value: u32, address: *mut c_void) {
-  core::arch::asm!(
-    "strb r0, [r1]",
-    "lsr  r2, r0, #8",
-    "strb r2, [r1, #1]",
-    "lsr  r2, r2, #8",
-    "strb r2, [r1, #2]",
-    "lsr  r2, r2, #8",
-    "strb r2, [r1, #3]",
-    "bx   lr",
-    options(noreturn),
-  )
-}
-
-/// Reads 8 bytes, starting at the address given.
-///
-/// See [__aeabi_uread8]
-///
-/// [__aeabi_uread8]: https://github.com/ARM-software/abi-aa/blob/main/rtabi32/rtabi32.rst#unaligned-memory-access
-#[naked]
-#[no_mangle]
-#[instruction_set(arm::a32)]
-#[link_section = ".iwram.aeabi.uread8"]
-unsafe extern "C" fn __aeabi_uread8(address: *const c_void) -> u64 {
-  core::arch::asm!(
-    "ldrb r1, [r0, #4]",
-    "ldrb r2, [r0, #5]",
-    "orr  r1, r1, r2, lsl #8",
-    "ldrb r2, [r0, #6]",
-    "orr  r1, r1, r2, lsl #16",
-    "ldrb r2, [r0, #7]",
-    "orr  r1, r1, r2, lsl #24",
-    "b    __aeabi_uread4",
-    options(noreturn),
-  )
-}
-
-/// Writes 8 bytes, starting at the address given.
-///
-/// See [__aeabi_uwrite8]
-///
-/// [__aeabi_uwrite8]: https://github.com/ARM-software/abi-aa/blob/main/rtabi32/rtabi32.rst#unaligned-memory-access
-#[naked]
-#[no_mangle]
-#[instruction_set(arm::a32)]
-#[link_section = ".iwram.aeabi.uwrite8"]
-unsafe extern "C" fn __aeabi_uwrite8(value: u64, address: *mut c_void) {
-  core::arch::asm!(
-    "strb r0, [r2]",
-    "lsr  r3, r0, #8",
-    "strb r3, [r2, #1]",
-    "lsr  r3, r3, #8",
-    "strb r3, [r2, #2]",
-    "lsr  r3, r3, #8",
-    "strb r3, [r2, #3]",
-    "strb r1, [r2, #4]",
-    "lsr  r3, r1, #8",
-    "strb r3, [r2, #5]",
-    "lsr  r3, r3, #8",
-    "strb r3, [r2, #6]",
-    "lsr  r3, r3, #8",
-    "strb r3, [r2, #7]",
-    "bx   lr",
-    options(noreturn),
-  )
-}
-
-/// Provides a `libc` styled memory copy (transfer between exclusive regions).
-///
-/// This has mild overhead compared to calling [`__aeabi_memcpy`], prefer that
-/// function when possible.
-///
-/// * **Returns:** the original `dest` pointer.
-///
-/// ## Safety
-/// * `src` must be readable for `byte_count` bytes.
-/// * `dest` must be writable for `byte_count` bytes.
-/// * The `src` and `dest` regions must not overlap.
-#[inline]
-#[no_mangle]
-pub unsafe extern "C" fn memcpy(
-  dest: *mut u8, src: *const u8, byte_count: usize,
-) -> *mut u8 {
-  __aeabi_memcpy(dest, src, byte_count);
-  dest
-}
-
-/// Provides a `libc` styled memory move (transfer between non-exclusive
-/// regions).
-///
-/// This has mild overhead compared to calling [`__aeabi_memmove`], prefer that
-/// function when possible.
-///
-/// * **Returns:** the original `dest` pointer.
-///
-/// ## Safety
-/// * `src` must be readable for `byte_count` bytes.
-/// * `dest` must be writable for `byte_count` bytes.
-#[inline]
-#[no_mangle]
-pub unsafe extern "C" fn memmove(
-  dest: *mut u8, src: *const u8, byte_count: usize,
-) -> *mut u8 {
-  __aeabi_memmove(dest, src, byte_count);
-  dest
-}
-
-/// Provides a `libc` styled memory set (assign `u8` in `byte` to the entire
-/// region).
-///
-/// This has mild overhead compared to calling [`__aeabi_memset`], prefer that
-/// function when possible. Note that this function and that function have
-/// slightly different argument ordering, though the compiler won't let you mess
-/// it up like might happen in C.
-///
-/// * **Returns:** the original `dest` pointer.
-///
-/// ## Safety
-/// * `dest` must be writable for `byte_count` bytes.
-#[inline]
-#[no_mangle]
-pub unsafe extern "C" fn memset(
-  dest: *mut u8, byte: i32, byte_count: usize,
-) -> *mut u8 {
-  __aeabi_memset(dest, byte_count, byte);
-  dest
-}
-
-extern "C" {
-  /// Memory transfer between *exclusive* regions.
-  ///
-  /// There are no alignment requirements for the pointers. This will
-  /// automatically detect when pointers are sufficiently aligned to use `u16`
-  /// or `u32` transfers, instead of always using `u8` transfers.
-  ///
-  /// This follows the AEABI convention of not returning the original `dest`
-  /// pointer at the end of the function. This actually allows a minor
-  /// optimization, so if you're going to call a memory copy function at all,
-  /// prefer this over [`memcpy`].
-  pub fn __aeabi_memcpy(dest: *mut u8, src: *const u8, byte_count: usize);
-
-  /// As [`__aeabi_memcpy`], but both pointers are assumed to be aligned to 4.
-  pub fn __aeabi_memcpy4(dest: *mut u8, src: *const u8, byte_count: usize);
-
-  /// As [`__aeabi_memcpy`], but both pointers are assumed to be aligned to 8.
-  pub fn __aeabi_memcpy8(dest: *mut u8, src: *const u8, byte_count: usize);
-
-  /// As [`__aeabi_memcpy`], but *only* performs `u8` transfers.
-  ///
-  /// Importantly, this means that this function can be used to get data to/from
-  /// the SRAM region.
-  pub fn gba_sram_memcpy(dest: *mut u8, src: *const u8, byte_count: usize);
-
-  /// Memory transfer between *non-exclusive* regions.
-  ///
-  /// As [`__aeabi_memcpy`], but the regions don't need to be exclusive.
-  pub fn __aeabi_memmove(dest: *mut u8, src: *const u8, byte_count: usize);
-
-  /// As [`__aeabi_memmove`], but both pointers are assumed to be aligned to 4.
-  pub fn __aeabi_memmove4(dest: *mut u8, src: *const u8, byte_count: usize);
-
-  /// As [`__aeabi_memmove`], but both pointers are assumed to be aligned to 8.
-  pub fn __aeabi_memmove8(dest: *mut u8, src: *const u8, byte_count: usize);
-
-  /// Sets all bytes in the region to the value given.
-  ///
-  /// For historical reasons, the "byte" passed in is passed as an `i32`. Still,
-  /// only the low 8 bits of the value are kept and written to the region.
-  ///
-  /// There are no alignment requirements for the pointer. This will
-  /// automatically detect when pointer is sufficiently aligned to use `u16` or
-  /// `u32` writes, instead of always using `u8` writes.
-  ///
-  /// This follows the AEABI convention of not returning the original `dest`
-  /// pointer at the end of the function. This actually allows a minor
-  /// optimization, so if you're going to call a memory copy function at all,
-  /// prefer this over [`memcpy`].
-  pub fn __aeabi_memset(dest: *mut u8, byte_count: usize, byte: i32);
-
-  /// As [`__aeabi_memset`], but both pointers are assumed to be aligned to 4.
-  pub fn __aeabi_memset4(dest: *mut u8, byte_count: usize, byte: i32);
-
-  /// As [`__aeabi_memset`], but both pointers are assumed to be aligned to 8.
-  pub fn __aeabi_memset8(dest: *mut u8, byte_count: usize, byte: i32);
-
-  /// Sets all bytes in the region to 0.
-  ///
-  /// There are no alignment requirements for the pointer. This will
-  /// automatically detect when the pointer is sufficiently aligned to use `u16`
-  /// or `u32` writes, instead of always using `u8` writes.
-  pub fn __aeabi_memclr(dest: *mut u8, byte_count: usize);
-
-  /// As [`__aeabi_memclr`], but the pointer is assumed to be aligned to 4.
-  pub fn __aeabi_memclr4(dest: *mut u8, byte_count: usize);
-
-  /// As [`__aeabi_memclr`], but the pointer is assumed to be aligned to 8.
-  pub fn __aeabi_memclr8(dest: *mut u8, byte_count: usize);
-}
-
-core::arch::global_asm! {
-  emit_a32_code!{
-    put_code_in_section!(".iwram.aeabi.memory.copy.and.move", {
-      ".global __aeabi_memmove8",
-      ".global __aeabi_memmove4",
-      ".global __aeabi_memmove",
-      ".global __aeabi_memcpy8",
-      ".global __aeabi_memcpy4",
-      ".global __aeabi_memcpy",
-      //
-      "__aeabi_memmove8:",
-      "__aeabi_memmove4:",
-      "__aeabi_memmove:",
-      "cmp    r0, r1", // if d > s, reverse copy
-      "bgt    .L_r_copy_gain_align",
-      // else fallthrough
-
-      "__aeabi_memcpy:",
-      ".L_f_copy_gain_align:",
-      "eor    r3, r0, r1",
-      "lsls   r3, r3, #31",
-      "bmi    .L_f_copy_max_coalign1",
-      "bcs    .L_f_copy_max_coalign2",
-      // else fallthrough
-
-      ".L_f_copy_max_coalign4:",
-      "tst    r0, #3",
-      "bne    .L_f_copy_fixup4",
-      // else fallthrough
-
-      "__aeabi_memcpy8:",
-      "__aeabi_memcpy4:",
-      ".L_f_copy_coalign4_assured:",
-      "cmp    r2, #32",
-      "bge    .L_f_copy_block",
-
-      ".L_f_copy_post_block:",
-      // copy 4 words, two at a time
-      "tst    r2, #0b10000",
-      "ldmne  r1!, {r3, r12}",
-      "stmne  r0!, {r3, r12}",
-      "ldmne  r1!, {r3, r12}",
-      "stmne  r0!, {r3, r12}",
-      "bics   r2, r2, #0b10000",
-      "bxeq   lr",
-
-      // copy 2 and/or 1 words
-      "lsls   r3, r2, #29",
-      "ldmcs  r1!, {r3, r12}",
-      "stmcs  r0!, {r3, r12}",
-      "ldrmi  r3, [r1], #4",
-      "strmi  r3, [r0], #4",
-      "bics   r2, r2, #0b1100",
-      "bxeq   lr",
-
-      // copy halfword and/or byte
-      "lsls   r3, r2, #31",
-      "ldrhcs r3, [r1], #2",
-      "strhcs r3, [r0], #2",
-      "ldrbmi r3, [r1], #1",
-      "strbmi r3, [r0], #1",
-      "bx     lr",
-
-      ".L_f_copy_block:",
-      with_pushed_registers!("{r4-r9}", {
-        "1:",
-        "subs   r2, r2, #32",
-        "ldmge  r1!, {r3-r9, r12}",
-        "stmge  r0!, {r3-r9, r12}",
-        "bgt    1b",
-      }),
-      "bxeq   lr",
-      "b      .L_f_copy_post_block",
-
-      ".L_f_copy_fixup4:",
-      "cmp    r2, #7", // if count <= (fix+word): just byte copy
-      "ble    .L_f_copy_max_coalign1",
-      "lsls   r3, r0, #31",
-      "submi  r2, r2, #1",
-      "ldrbmi r3, [r1], #1",
-      "strbmi r3, [r0], #1",
-      "subcs  r2, r2, #2",
-      "ldrhcs r3, [r1], #2",
-      "strhcs r3, [r0], #2",
-      "b      .L_f_copy_coalign4_assured",
-
-      ".L_f_copy_max_coalign2:",
-      "tst     r0, #1",
-      "bne     .L_f_copy_fixup2",
-      ".L_f_copy_coalign2_assured:",
-      "1:",
-      "subs    r2, r2, #2",
-      "ldrhge  r3, [r1], #2",
-      "strhge  r3, [r0], #2",
-      "bgt     1b",
-      "bxeq    lr",
-      "tst     r2, #1",
-      "ldrbne  r3, [r1], #1",
-      "strbne  r3, [r0], #1",
-      "bx      lr",
-
-      ".L_f_copy_fixup2:",
-      "cmp     r2, #3", // if count <= (fix+halfword): just byte copy
-      "ble     .L_f_copy_max_coalign1",
-      "sub     r2, r2, #1",
-      "ldrb    r3, [r1], #1",
-      "strb    r3, [r0], #1",
-      "b       .L_f_copy_coalign2_assured",
-
-      "gba_sram_memcpy:",
-      ".L_f_copy_max_coalign1:",
-      "1:",
-      "subs    r2, r2, #1",
-      "ldrbge  r3, [r1], #1",
-      "strbge  r3, [r0], #1",
-      "bgt     1b",
-      "bx      lr",
-
-      ".L_r_copy_gain_align:",
-      "add     r0, r0, r2",
-      "add     r1, r1, r2",
-      "eor     r3, r0, r1",
-      "lsls    r3, r3, #31",
-      "bmi     .L_r_copy_max_coalign1",
-      "bcs     .L_r_copy_max_coalign2",
-      // else fallthrough
-
-      ".L_r_copy_max_coalign4:",
-      "tst     r0, #3",
-      "bne     .L_r_copy_fixup4",
-      ".L_r_copy_coalign4_assured:",
-      "cmp     r2, #32",
-      "bge     .L_r_copy_block",
-      ".L_r_copy_post_block:",
-      // copy 4 words, two at a time
-      "tst     r2, #0b10000",
-      "ldmdbne r1!, {r3, r12}",
-      "stmdbne r0!, {r3, r12}",
-      "ldmdbne r1!, {r3, r12}",
-      "stmdbne r0!, {r3, r12}",
-      "bics    r2, r2, #0b10000",
-      "bxeq    lr",
-
-      // copy 2 and/or 1 words
-      "lsls    r3, r2, #29",
-      "ldmdbcs r1!, {r3, r12}",
-      "stmdbcs r0!, {r3, r12}",
-      "ldrmi   r3, [r1, #-4]!",
-      "strmi   r3, [r0, #-4]!",
-      "bxeq    lr",
-      "lsls    r2, r2, #31",
-      "ldrhcs  r3, [r1, #-2]!",
-      "strhcs  r3, [r0, #-2]!",
-      "ldrbmi  r3, [r1, #-1]!",
-      "strbmi  r3, [r0, #-1]!",
-      "bx      lr",
-
-      ".L_r_copy_block:",
-      with_pushed_registers!("{r4-r9}", {
-        "1:",
-        "subs    r2, r2, #32",
-        "ldmdbcs r1!, {r3-r9, r12}",
-        "stmdbcs r0!, {r3-r9, r12}",
-        "bgt     1b",
-      }),
-      "bxeq    lr",
-      "b       .L_r_copy_post_block",
-
-      ".L_r_copy_fixup4:",
-      "cmp     r2, #7", // if count <= (fix+word): just byte copy
-      "ble     .L_r_copy_max_coalign1",
-      "lsls    r3, r0, #31",
-      "submi   r2, r2, #1",
-      "ldrbmi  r3, [r1, #-1]!",
-      "strbmi  r3, [r0, #-1]!",
-      "subcs   r2, r2, #2",
-      "ldrhcs  r3, [r1, #-2]!",
-      "strhcs  r3, [r0, #-2]!",
-      "b       .L_r_copy_coalign4_assured",
-
-      ".L_r_copy_max_coalign2:",
-      "tst     r0, #1",
-      "bne     .L_r_copy_fixup2",
-      ".L_r_copy_coalign2_assured:",
-      "1:",
-      "subs    r2, r2, #2",
-      "ldrhge  r3, [r1, #-2]!",
-      "strhge  r3, [r0, #-2]!",
-      "bgt     1b",
-      "bxeq    lr",
-      "tst     r2, #1",
-      "ldrbne  r3, [r1, #-1]!",
-      "strbne  r3, [r0, #-1]!",
-      "bx      lr",
-
-      ".L_r_copy_fixup2:",
-      "cmp     r2, #3", // if count <= (fix+halfword): just byte copy
-      "ble     .L_r_copy_max_coalign1",
-      "sub     r2, r2, #1",
-      "ldrb    r3, [r1, #-1]!",
-      "strb    r3, [r0, #-1]!",
-      "b       .L_r_copy_coalign2_assured",
-
-      ".L_r_copy_max_coalign1:",
-      "1:",
-      "subs    r2, r2, #1",
-      "ldrbge  r3, [r1, #-1]!",
-      "strbge  r3, [r0, #-1]!",
-      "bgt     1b",
-      "bx      lr",
-    }),
-  },
-  options(raw)
-}
-
-core::arch::global_asm! {
-  emit_a32_code!{
-    put_code_in_section!(".iwram.aeabi.memory.clear.and.set", {
-      ".global __aeabi_memclr8",
-      ".global __aeabi_memclr4",
-      ".global __aeabi_memclr",
-      ".global __aeabi_memset8",
-      ".global __aeabi_memset4",
-      ".global __aeabi_memset",
-      //
-      "__aeabi_memclr8:",
-      "__aeabi_memclr4:",
-      "mov    r2, #0",
-      "mov    r3, #0",
-      "b      .L_memset_check_for_block_work",
-      "__aeabi_memclr:",
-      "mov    r2, #0",
-      "__aeabi_memset8:",
-      "__aeabi_memset4:",
-      "__aeabi_memset:", // r0(dest), r1(count), r2(byte)
-      // duplicate the byte across all of r2 and r3
-      "and    r2, r2, #0xFF",
-      "orr    r2, r2, r2, lsl #8",
-      "orr    r2, r2, r2, lsl #16",
-      "mov    r3, r2",
-      // for 'sets' too small to fixup we just byte loop
-      "cmp    r1, #3",
-      "ble    .L_memset_byte_loop",
-      // carry/sign test on the address, then do fixup
-      "lsls   r12, r0, #31",
-      "submi  r1, r1, #1",
-      "strbmi r2, [r0], #1",
-      "subcs  r1, r1, #2",
-      "strhcs r2, [r0], #2",
-      ".L_memset_check_for_block_work:",
-      "cmp    r1, #32",
-      "bge    .L_memset_block_work",
-
-      ".L_memset_post_block_work:",
-      // set 4 words
-      "tst    r1, #0b10000",
-      "stmne  r0!, {r2, r3}",
-      "stmne  r0!, {r2, r3}",
-      // set 2 and/or 1 words
-      "lsls   r12, r1, #29",
-      "stmcs  r0!, {r2, r3}",
-      "strmi  r2, [r0], #4",
-      // set halfword and/or byte
-      "lsls   r12, r1, #31",
-      "strhcs r2, [r0], #2",
-      "strbmi r2, [r0], #1",
-      "bx     lr",
-
-      ".L_memset_block_work:",
-      with_pushed_registers!("{r4-r9}", {
-        "mov    r4, r2",
-        "mov    r5, r2",
-        "mov    r6, r2",
-        "mov    r7, r2",
-        "mov    r8, r2",
-        "mov    r9, r2",
-        "1:",
-        "subs   r1, r1, #32",
-        "stmge  r0!, {r2-r9}",
-        "bgt    1b",
-      }),
-      "bxeq   lr",
-      "b      .L_memset_post_block_work",
-
-      ".L_memset_byte_loop:",
-      "1:",
-      "subs   r1, r1, #1",
-      "strbcs r2, [r0], #1",
-      "bgt    1b",
-      "bx     lr",
-    }),
-  },
-  options(raw),
 }
