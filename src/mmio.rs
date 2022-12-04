@@ -277,11 +277,11 @@ impl TextScreenblockAddress {
 
   #[inline]
   pub fn write_word_array(self, words: &[u32; Self::WORD_COUNT]) {
-    use crate::mem_fns::forward_copy_u32;
+    use crate::mem_fns::__aeabi_memcpy4;
     let dest: *mut u32 = self.block.as_ptr() as *mut u32;
     let src: *const u32 = words.as_ptr();
     let byte_count = size_of::<[u32; Self::WORD_COUNT]>();
-    unsafe { forward_copy_u32(dest.cast(), src.cast(), byte_count) };
+    unsafe { __aeabi_memcpy4(dest.cast(), src.cast(), byte_count) };
   }
 
   #[inline]
@@ -347,11 +347,11 @@ macro_rules! make_affine_screenblock_address_type {
     
       #[inline]
       pub fn write_word_array(self, words: &[u32; Self::WORD_COUNT]) {
-        use crate::mem_fns::forward_copy_u32;
+        use crate::mem_fns::__aeabi_memcpy4;
         let dest: *mut u32 = self.block.as_ptr() as *mut u32;
         let src: *const u32 = words.as_ptr();
         let byte_count = size_of::<[u32; Self::WORD_COUNT]>();
-        unsafe { forward_copy_u32(dest.cast(), src.cast(), byte_count) };
+        unsafe { __aeabi_memcpy4(dest.cast(), src.cast(), byte_count) };
       }
     
       #[inline]
