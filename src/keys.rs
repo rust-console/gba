@@ -23,12 +23,20 @@
 
 use crate::macros::{pub_const_fn_new_zeroed, u16_bool_field};
 
-/// Key input data.
+/// [`KEYINPUT`](crate::prelude::KEYINPUT): Key input data.
 ///
-/// Internally this uses a "low-active" convention: A bit is 0 when the key is
-/// *pressed*, and 1 when a key is *released*. The accessor methods handle this
-/// automatically, you only need to consider this fact if you want to use the
-/// raw bit pattern for something (eg: as a randomness source).
+/// Each key on the GBA is reprisented by a single bit within this value, so all
+/// button state can be captured in the same moment. The `input.getter()` method
+/// for each button will return `true` if that button was held down at the time
+/// of reading this input data.
+///
+/// Generally you should read `KEYINPUT` just once per frame, and then use that
+/// data for the entire frame's computation. If you read `KEYINPUT` each time
+/// you need to check a particular button for input then small variations in
+/// button contact can cause confusing frame inputs. For example, a particular
+/// button reads as pressed at one part of a frame and then released later
+/// during the same frame. Reading the input only once per frame is a simple
+/// form of "debouncing" that will help maintain consistency in the program.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[repr(transparent)]
 pub struct KeyInput(u16);
@@ -45,13 +53,42 @@ impl KeyInput {
   u16_bool_field!(inverted 8, r, with_r);
   u16_bool_field!(inverted 9, l, with_l);
 
+  /// Unwraps the input into its raw `u16` form.
+  ///
+  /// Internally this type uses a "low-active" convention: A bit is 0 when the
+  /// key is *pressed*, and 1 when a key is *released*. The accessor methods
+  /// handle this automatically, but when unwrapping the value into a `u16` you
+  /// may need to consider this yourself.
   #[inline]
   #[must_use]
   pub const fn to_u16(self) -> u16 {
     self.0
   }
 }
+impl From<KeyInput> for u16 {
+  #[inline]
+  #[must_use]
+  fn from(value: KeyInput) -> Self {
+    value.to_u16()
+  }
+}
 
+/// [`KEYCNT`](crate::prelude::KEYCNT): Determines when a key interrupt will be
+/// sent.
+///
+/// A key interrupt can be sent if `irq_enabled` is set and the correct buttons
+/// are pushed. This *should not* be used for normal user input. For normal
+/// input you should just read [`KEYINPUT`](crate::prelude::KEYINPUT). Instead,
+/// the key interrupts are primarily used for breaking the CPU out of Halt
+/// state.
+///
+/// * If `irq_all` is `true` then *all* buttons enabled must be pressed at once.
+/// * Otherwise *any* buttons enabled can be pressed to trigger the interrupt.
+///
+/// As with all interrupts, the key interrupt must also be set to be received in
+/// the [`IE`](crate::prelude::IE) control, and interrupts must be enabled with
+/// the [`IME`](crate::prelude::IME) control, or the key interrupt won't
+/// actually be triggered even when `irq_enabled` is set.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[repr(transparent)]
 pub struct KeyControl(u16);
@@ -70,10 +107,4 @@ impl KeyControl {
 
   u16_bool_field!(14, irq_enabled, with_irq_enabled);
   u16_bool_field!(15, irq_all, with_irq_all);
-
-  #[inline]
-  #[must_use]
-  pub const fn to_u16(self) -> u16 {
-    self.0
-  }
 }
