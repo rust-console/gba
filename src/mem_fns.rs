@@ -496,7 +496,8 @@ pub unsafe extern "C" fn __aeabi_memset(
   }
 }
 
-/// Copy between non-exclusive regions, prefer [`__aeabi_memset`] if possible.
+/// Write a value to all bytes in the region, prefer [`__aeabi_memset`] if
+/// possible.
 ///
 /// This is the libc version of a memory set. It's required to return the
 /// `dest` pointer at the end of the call, which makes it need an extra
