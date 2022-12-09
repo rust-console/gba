@@ -1,6 +1,8 @@
 #![no_std]
 #![no_main]
 
+use core::num::Wrapping;
+
 use gba::prelude::*;
 
 #[panic_handler]
@@ -28,20 +30,39 @@ extern "C" fn main() -> ! {
   let no_display = ObjAttr0::new().with_style(ObjDisplayStyle::NotDisplayed);
   OBJ_ATTR0.iter().for_each(|va| va.write(no_display));
 
+  let mut x = Wrapping(13);
+  let mut y = Wrapping(37);
+
   let mut obj = ObjAttr::new();
-  obj.set_x(13);
-  obj.set_y(37);
+  obj.set_x(x.0);
+  obj.set_y(y.0);
   obj.set_tile_id(1);
   OBJ_ATTR_ALL.index(0).write(obj);
 
   DISPCNT.write(DisplayControl::new().with_show_obj(true));
 
   loop {
+    // wait for vblank
     VBlankIntrWait();
+
+    // update graphics
+    OBJ_ATTR_ALL.index(0).write(obj);
+
+    // get input and prepare next frame
     let keys = KEYINPUT.read();
-    if keys.a() {
-      let t = TIMER0_COUNT.read();
-      BACKDROP_COLOR.write(Color(t));
+    if keys.up() {
+      y -= 1;
     }
+    if keys.down() {
+      y += 1;
+    }
+    if keys.left() {
+      x -= 1;
+    }
+    if keys.right() {
+      x += 1;
+    }
+    obj.set_x(x.0);
+    obj.set_y(y.0);
   }
 }
