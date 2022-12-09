@@ -623,7 +623,8 @@ unsafe extern "C" fn __aeabi_uread8(address: *const c_void) -> u64 {
     "orr  r1, r1, r2, lsl #16",
     "ldrb r2, [r0, #7]",
     "orr  r1, r1, r2, lsl #24",
-    "b    __aeabi_uread4",
+    "b    {__aeabi_uread4}",
+    __aeabi_uread4 = sym __aeabi_uread4,
     options(noreturn),
   )
 }
