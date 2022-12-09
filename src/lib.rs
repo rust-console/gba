@@ -118,6 +118,7 @@ impl<const N: usize> Align4<[u8; N]> {
   /// ## Panics
   /// * If the number of bytes isn't a multiple of 4
   #[inline]
+  #[must_use]
   pub fn as_u32_slice(&self) -> &[u32] {
     assert!(self.0.len() % 4 == 0);
     // Safety: our struct is aligned to 4, so the pointer will already be
@@ -133,6 +134,7 @@ impl<const N: usize> Align4<[u8; N]> {
   /// ## Panics
   /// * If the number of bytes isn't a multiple of 2
   #[inline]
+  #[must_use]
   pub fn as_u16_slice(&self) -> &[u16] {
     assert!(self.0.len() % 2 == 0);
     // Safety: our struct is aligned to 4, so the pointer will already be
