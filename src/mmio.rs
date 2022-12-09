@@ -27,19 +27,7 @@
 use core::{ffi::c_void, mem::size_of};
 use bitfrob::u8x2;
 use voladdress::{Safe, Unsafe, VolAddress, VolBlock, VolSeries};
-use crate::{
-  interrupts::IrqBits,
-  video::{
-    BackgroundControl, Color, DisplayControl, DisplayStatus, WindowInside,
-    WindowOutside, Mosaic, BlendControl, Tile4, ObjAttr0, ObjAttr1, ObjAttr2, Tile8, TextEntry
-  },
-  dma::DmaControl,
-  sound::{
-    SweepControl, TonePattern, ToneFrequency, WaveBank, WaveLenVolume, WaveFrequency,
-    NoiseLenEnvelope, NoiseFrequency, LeftRightVolume, SoundMix, SoundEnable, SoundBias
-  },
-  timers::TimerControl, keys::{KeyInput, KeyControl}, mgba::MgbaMessageLevel, fixed::{i16fx8, i32fx8}, prelude::ObjAttr,
-};
+use crate::prelude::*;
 
 // Note(Lokathor): This macro lets us stick each address at the start of the
 // definition, which lets us easily keep each declaration in address order.
