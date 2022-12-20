@@ -16,13 +16,19 @@ fn panic_handler(info: &core::panic::PanicInfo) -> ! {
 
 #[no_mangle]
 extern "C" fn main() -> ! {
-  // game simulation
-  let mut player_x = Wrapping(13);
-  let mut player_y = Wrapping(37);
+  // game simulation setup
+  let mut player_x = 13_u16;
+  let mut player_y = 37_u16;
   let mut world = [[0_u8; 32]; 32];
-  world[0][0] = b'B';
-  world[1][0] = b'G';
-  world[2][0] = b'0';
+  for i in 0..32 {
+    world[0][i] = b'z';
+    world[31][i] = b'z';
+    world[i][0] = b'z';
+    world[i][31] = b'z';
+  }
+  world[1][1] = b'B';
+  world[2][1] = b'G';
+  world[3][1] = b'0';
 
   // hardware configuration
   DISPSTAT.write(DisplayStatus::new().with_irq_vblank(true));
@@ -47,8 +53,8 @@ extern "C" fn main() -> ! {
   }
 
   let mut obj = ObjAttr::new();
-  obj.set_x(player_x.0);
-  obj.set_y(player_y.0);
+  obj.set_x(player_x);
+  obj.set_y(player_y);
   obj.set_tile_id(1);
   OBJ_ATTR_ALL.index(0).write(obj);
 
@@ -61,25 +67,51 @@ extern "C" fn main() -> ! {
     // wait for vblank
     VBlankIntrWait();
 
-    // update graphics
+    // update graphics MMIO
     OBJ_ATTR_ALL.index(0).write(obj);
 
-    // get input and prepare next frame
+    // handle input
     let keys = KEYINPUT.read();
+    // the way we handle movement here is per-direction. If you're against a
+    // wall and you press a diagonal then one axis will progress while the other
+    // will be halted by the wall. This makes the player slide along the wall
+    // when bumping into walls.
     if keys.up() {
-      player_y -= 1;
+      let new_y = player_y.saturating_sub(1);
+      if iter_tiles_of_area((player_x, new_y), (8, 8))
+        .all(|(tx, ty)| allows_movement(world[ty as usize][tx as usize]))
+      {
+        player_y = new_y;
+      }
     }
     if keys.down() {
-      player_y += 1;
+      let new_y = player_y.saturating_add(1);
+      if iter_tiles_of_area((player_x, new_y), (8, 8))
+        .all(|(tx, ty)| allows_movement(world[ty as usize][tx as usize]))
+      {
+        player_y = new_y;
+      }
     }
     if keys.left() {
-      player_x -= 1;
+      let new_x = player_x.saturating_sub(1);
+      if iter_tiles_of_area((new_x, player_y), (8, 8))
+        .all(|(tx, ty)| allows_movement(world[ty as usize][tx as usize]))
+      {
+        player_x = new_x;
+      }
     }
     if keys.right() {
-      player_x += 1;
+      let new_x = player_x.saturating_add(1);
+      if iter_tiles_of_area((new_x, player_y), (8, 8))
+        .all(|(tx, ty)| allows_movement(world[ty as usize][tx as usize]))
+      {
+        player_x = new_x;
+      }
     }
-    obj.set_x(player_x.0);
-    obj.set_y(player_y.0);
+
+    // ready our graphics for next frame
+    obj.set_x(player_x);
+    obj.set_y(player_y);
   }
 }
 
