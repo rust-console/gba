@@ -31,6 +31,16 @@ impl Rect {
       && self.y < other.y + other.h
       && self.h + self.y > other.y
   }
+
+  fn iter_tiles(self) -> impl Iterator<Item = (u16, u16)> {
+    let y_range_incl = (self.y / 8)..=((self.y + self.h - 1) / 8);
+    let x_range_incl = (self.x / 8)..=((self.x + self.w - 1) / 8);
+    y_range_incl
+      .map(move |y_index| {
+        x_range_incl.clone().map(move |x_index| (x_index, y_index))
+      })
+      .flatten()
+  }
 }
 
 #[no_mangle]
@@ -91,6 +101,9 @@ extern "C" fn main() -> ! {
 
   DISPCNT.write(DisplayControl::new().with_show_obj(true).with_show_bg0(true));
 
+  let mut l_was_pressed = false;
+  let mut r_was_pressed = false;
+
   loop {
     // wait for vblank
     VBlankIntrWait();
@@ -109,6 +122,15 @@ extern "C" fn main() -> ! {
 
     // handle input
     let keys = KEYINPUT.read();
+    if keys.l() && !l_was_pressed {
+      creatures.rotate_left(1);
+    }
+    if keys.r() && !r_was_pressed {
+      creatures.rotate_right(1);
+    }
+    l_was_pressed = keys.l();
+    r_was_pressed = keys.r();
+
     // the way we handle movement here is per-direction. If you're against a
     // wall and you press a diagonal then one axis will progress while the other
     // will be halted by the wall. This makes the player slide along the wall
@@ -119,7 +141,8 @@ extern "C" fn main() -> ! {
     if keys.up() {
       let new_p = Position { x: player.x, y: player.y - 1 };
       let new_r = Rect { x: new_p.x, y: new_p.y, w: 8, h: 8 };
-      if iter_tiles_of_area(new_p, (8, 8))
+      if new_r
+        .iter_tiles()
         .all(|(tx, ty)| allows_movement(world[ty as usize][tx as usize]))
         && enemies.iter().all(|enemy| {
           let enemy_r = Rect { x: enemy.x, y: enemy.y, w: 8, h: 8 };
@@ -132,7 +155,8 @@ extern "C" fn main() -> ! {
     if keys.down() {
       let new_p = Position { x: player.x, y: player.y + 1 };
       let new_r = Rect { x: new_p.x, y: new_p.y, w: 8, h: 8 };
-      if iter_tiles_of_area(new_p, (8, 8))
+      if new_r
+        .iter_tiles()
         .all(|(tx, ty)| allows_movement(world[ty as usize][tx as usize]))
         && enemies.iter().all(|enemy| {
           let enemy_r = Rect { x: enemy.x, y: enemy.y, w: 8, h: 8 };
@@ -145,7 +169,8 @@ extern "C" fn main() -> ! {
     if keys.left() {
       let new_p = Position { x: player.x - 1, y: player.y };
       let new_r = Rect { x: new_p.x, y: new_p.y, w: 8, h: 8 };
-      if iter_tiles_of_area(new_p, (8, 8))
+      if new_r
+        .iter_tiles()
         .all(|(tx, ty)| allows_movement(world[ty as usize][tx as usize]))
         && enemies.iter().all(|enemy| {
           let enemy_r = Rect { x: enemy.x, y: enemy.y, w: 8, h: 8 };
@@ -158,7 +183,8 @@ extern "C" fn main() -> ! {
     if keys.right() {
       let new_p = Position { x: player.x + 1, y: player.y };
       let new_r = Rect { x: new_p.x, y: new_p.y, w: 8, h: 8 };
-      if iter_tiles_of_area(new_p, (8, 8))
+      if new_r
+        .iter_tiles()
         .all(|(tx, ty)| allows_movement(world[ty as usize][tx as usize]))
         && enemies.iter().all(|enemy| {
           let enemy_r = Rect { x: enemy.x, y: enemy.y, w: 8, h: 8 };
@@ -173,16 +199,4 @@ extern "C" fn main() -> ! {
 
 const fn allows_movement(u: u8) -> bool {
   u == 0 || u == b' ' || u == u8::MAX
-}
-
-fn iter_tiles_of_area(
-  p: Position, (width, height): (u16, u16),
-) -> impl Iterator<Item = (u16, u16)> {
-  let y_range_incl = (p.y / 8)..=((p.y + height - 1) / 8);
-  let x_range_incl = (p.x / 8)..=((p.x + width - 1) / 8);
-  y_range_incl
-    .map(move |y_index| {
-      x_range_incl.clone().map(move |x_index| (x_index, y_index))
-    })
-    .flatten()
 }
