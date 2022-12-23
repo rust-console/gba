@@ -37,8 +37,8 @@ impl Rect {
 extern "C" fn main() -> ! {
   // game simulation setup
   let mut creatures = [Position::default(); 5];
-  creatures[0].x = 13;
-  creatures[0].y = 37;
+  creatures[0].x = 11;
+  creatures[0].y = 14;
   //
   creatures[1].x = 41;
   creatures[1].y = 38;
