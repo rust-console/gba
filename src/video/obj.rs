@@ -153,4 +153,8 @@ impl ObjAttr {
   pub fn set_tile_id(&mut self, id: u16) {
     self.2 = self.2.with_tile_id(id);
   }
+  #[inline]
+  pub fn set_palbank(&mut self, palbank: u16) {
+    self.2 = self.2.with_palbank(palbank);
+  }
 }
