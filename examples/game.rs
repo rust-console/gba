@@ -141,56 +141,56 @@ extern "C" fn main() -> ! {
     if keys.up() {
       let new_p = Position { x: player.x, y: player.y - 1 };
       let new_r = Rect { x: new_p.x, y: new_p.y, w: 8, h: 8 };
-      if new_r
+      let terrain_clear = new_r
         .iter_tiles()
-        .all(|(tx, ty)| allows_movement(world[ty as usize][tx as usize]))
-        && enemies.iter().all(|enemy| {
-          let enemy_r = Rect { x: enemy.x, y: enemy.y, w: 8, h: 8 };
-          !new_r.intersect(enemy_r)
-        })
-      {
+        .all(|(tx, ty)| allows_movement(world[ty as usize][tx as usize]));
+      let enemy_clear = enemies.iter().all(|enemy| {
+        let enemy_r = Rect { x: enemy.x, y: enemy.y, w: 8, h: 8 };
+        !new_r.intersect(enemy_r)
+      });
+      if terrain_clear && enemy_clear {
         *player = new_p;
       }
     }
     if keys.down() {
       let new_p = Position { x: player.x, y: player.y + 1 };
       let new_r = Rect { x: new_p.x, y: new_p.y, w: 8, h: 8 };
-      if new_r
+      let terrain_clear = new_r
         .iter_tiles()
-        .all(|(tx, ty)| allows_movement(world[ty as usize][tx as usize]))
-        && enemies.iter().all(|enemy| {
-          let enemy_r = Rect { x: enemy.x, y: enemy.y, w: 8, h: 8 };
-          !new_r.intersect(enemy_r)
-        })
-      {
+        .all(|(tx, ty)| allows_movement(world[ty as usize][tx as usize]));
+      let enemy_clear = enemies.iter().all(|enemy| {
+        let enemy_r = Rect { x: enemy.x, y: enemy.y, w: 8, h: 8 };
+        !new_r.intersect(enemy_r)
+      });
+      if terrain_clear && enemy_clear {
         *player = new_p;
       }
     }
     if keys.left() {
       let new_p = Position { x: player.x - 1, y: player.y };
       let new_r = Rect { x: new_p.x, y: new_p.y, w: 8, h: 8 };
-      if new_r
+      let terrain_clear = new_r
         .iter_tiles()
-        .all(|(tx, ty)| allows_movement(world[ty as usize][tx as usize]))
-        && enemies.iter().all(|enemy| {
-          let enemy_r = Rect { x: enemy.x, y: enemy.y, w: 8, h: 8 };
-          !new_r.intersect(enemy_r)
-        })
-      {
+        .all(|(tx, ty)| allows_movement(world[ty as usize][tx as usize]));
+      let enemy_clear = enemies.iter().all(|enemy| {
+        let enemy_r = Rect { x: enemy.x, y: enemy.y, w: 8, h: 8 };
+        !new_r.intersect(enemy_r)
+      });
+      if terrain_clear && enemy_clear {
         *player = new_p;
       }
     }
     if keys.right() {
       let new_p = Position { x: player.x + 1, y: player.y };
       let new_r = Rect { x: new_p.x, y: new_p.y, w: 8, h: 8 };
-      if new_r
+      let terrain_clear = new_r
         .iter_tiles()
-        .all(|(tx, ty)| allows_movement(world[ty as usize][tx as usize]))
-        && enemies.iter().all(|enemy| {
-          let enemy_r = Rect { x: enemy.x, y: enemy.y, w: 8, h: 8 };
-          !new_r.intersect(enemy_r)
-        })
-      {
+        .all(|(tx, ty)| allows_movement(world[ty as usize][tx as usize]));
+      let enemy_clear = enemies.iter().all(|enemy| {
+        let enemy_r = Rect { x: enemy.x, y: enemy.y, w: 8, h: 8 };
+        !new_r.intersect(enemy_r)
+      });
+      if terrain_clear && enemy_clear {
         *player = new_p;
       }
     }
