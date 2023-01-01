@@ -5,8 +5,9 @@ use gba::prelude::*;
 
 #[panic_handler]
 fn panic_handler(info: &core::panic::PanicInfo) -> ! {
-  use core::fmt::Write;
+  #[cfg(debug_assertions)]
   if let Ok(mut logger) = MgbaBufferedLogger::try_new(MgbaMessageLevel::Fatal) {
+    use core::fmt::Write;
     writeln!(logger, "{info}").ok();
   }
   loop {}
