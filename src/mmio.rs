@@ -203,12 +203,14 @@ def_mmio!(0x0500_0200 = OBJ_PALETTE: VolBlock<Color, Safe, Safe, 256>; "Object t
 
 #[inline]
 #[must_use]
+#[cfg_attr(feature="track_caller", track_caller)]
 pub const fn bg_palbank(bank: usize) -> VolBlock<Color, Safe, Safe, 16> {
   let u = BG_PALETTE.index(bank * 16).as_usize();
   unsafe { VolBlock::new(u) }
 }
 #[inline]
 #[must_use]
+#[cfg_attr(feature="track_caller", track_caller)]
 pub const fn obj_palbank(bank: usize) -> VolBlock<Color, Safe, Safe, 16> {
   let u = OBJ_PALETTE.index(bank * 16).as_usize();
   unsafe { VolBlock::new(u) }
