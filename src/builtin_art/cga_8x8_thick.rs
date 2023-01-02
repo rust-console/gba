@@ -7,6 +7,107 @@ use crate::{
   video::{Tile4, Tile8},
 };
 
+macro_rules! glyph {
+  ($name:ident = $id:expr) => {
+    pub const $name: u8 = $id;
+  };
+}
+
+#[derive(Debug, Clone, Copy)]
+pub struct Cga8x8Thick;
+
+impl Cga8x8Thick {
+  // 0x0?
+  glyph!(NULL = 0x00);
+  glyph!(FACE = 0x01);
+  glyph!(FACE_INVERSE = 0x02);
+  glyph!(HEART = 0x03);
+  glyph!(DIAMOND = 0x04);
+  glyph!(CLUB = 0x05);
+  glyph!(SPADE = 0x06);
+  glyph!(BULLET = 0x07);
+  glyph!(BULLET_INVERSE = 0x08);
+  glyph!(CIRCLE = 0x09);
+  glyph!(CIRCLE_INVERSE = 0x0A);
+  glyph!(MALE = 0x0B);
+  glyph!(FEMALE = 0x0C);
+  glyph!(NOTE = 0x0D);
+  glyph!(NOTE_DOUBLE = 0x0E);
+  glyph!(SOLAR = 0x0F);
+
+  // 0x1?
+  glyph!(POINTER_RIGHT = 0x10);
+  glyph!(POINTER_LEFT = 0x11);
+  glyph!(ARROW_UP_DOWN = 0x12);
+  glyph!(BANG_DOUBLE = 0x13);
+  glyph!(PARAGRAPH = 0x14);
+  glyph!(SECTION = 0x15);
+  glyph!(UNDERLINE_THICK = 0x16);
+  glyph!(ARROW_UP_DOWN_UNDERLINED = 0x17);
+  glyph!(ARROW_UP = 0x18);
+  glyph!(ARROW_DOWN = 0x19);
+  glyph!(ARROW_RIGHT = 0x1A);
+  glyph!(ARROW_LEFT = 0x1B);
+  glyph!(RIGHT_ANGLE = 0x1C);
+  glyph!(ARROW_LEFT_RIGHT = 0x1D);
+  glyph!(POINTER_UP = 0x1E);
+  glyph!(POINTER_DOWN = 0x1F);
+
+  // Box drawing
+  glyph!(BOX_VERTICAL = 0xB3);
+  glyph!(BOX_HORIZONTAL = 0xC4);
+  glyph!(BOX_UPPER_RIGHT = 0xBF);
+  glyph!(BOX_UPPER_LEFT = 0xDA);
+  glyph!(BOX_LOWER_RIGHT = 0xD9);
+  glyph!(BOX_LOWER_LEFT = 0xC0);
+
+  /// Bit unpacks the data (4bpp depth) to the location given.
+  ///
+  /// * `offset_and_touch_zero`: Works like the [`BitUnpackInfo`] field. By
+  ///   default you should usually pass 0 here.
+  ///
+  /// ## Panics
+  /// * Requires at least 256 elements of space within the region.
+  #[inline]
+  pub fn bitunpack_4bpp(
+    self, b: VolRegion<Tile4, Safe, Safe>, offset_and_touch_zero: u32,
+  ) {
+    assert!(b.len() >= 256);
+    let src = CGA_8X8_THICK.as_ptr();
+    let dest = b.index(0).as_usize() as *mut u32;
+    let info = BitUnpackInfo {
+      src_byte_len: size_of_val(&CGA_8X8_THICK) as u16,
+      src_elem_width: 1,
+      dest_elem_width: 4,
+      offset_and_touch_zero,
+    };
+    unsafe { BitUnPack(src.cast(), dest, &info) };
+  }
+
+  /// Bit unpacks the data (8bpp depth) to the location given.
+  ///
+  /// * `offset_and_touch_zero`: Works like the [`BitUnpackInfo`] field. By
+  ///   default you should usually pass 0 here.
+  ///
+  /// ## Panics
+  /// * Requires at least 256 elements of space within the region.
+  #[inline]
+  pub fn bitunpack_8bpp(
+    self, b: VolRegion<Tile8, Safe, Safe>, offset_and_touch_zero: u32,
+  ) {
+    assert!(b.len() >= 256);
+    let src = CGA_8X8_THICK.as_ptr();
+    let dest = b.index(0).as_usize() as *mut u32;
+    let info = BitUnpackInfo {
+      src_byte_len: size_of_val(&CGA_8X8_THICK) as u16,
+      src_elem_width: 1,
+      dest_elem_width: 8,
+      offset_and_touch_zero,
+    };
+    unsafe { BitUnPack(src.cast(), dest, &info) };
+  }
+}
+
 /// The CGA [Code Page 437][cp437] type face, with thick lines.
 ///
 /// There's 256 tiles, packed down to 1bpp.
@@ -126,54 +227,3 @@ pub static CGA_8X8_THICK: [u32; 512] = [
   0x3636361E, 0x00000036, 0x060C180E, 0x0000001E, 0x3C3C0000, 0x00003C3C,
   0x00000000, 0x00000000,
 ];
-
-#[derive(Debug, Clone, Copy)]
-pub struct Cga8x8Thick;
-
-impl Cga8x8Thick {
-  /// Bit unpacks the data (4bpp depth) to the location given.
-  ///
-  /// * `offset_and_touch_zero`: Works like the [`BitUnpackInfo`] field. By
-  ///   default you should usually pass 0 here.
-  ///
-  /// ## Panics
-  /// * Requires at least 256 elements of space within the region.
-  #[inline]
-  pub fn bitunpack_4bpp(
-    self, b: VolRegion<Tile4, Safe, Safe>, offset_and_touch_zero: u32,
-  ) {
-    assert!(b.len() >= 256);
-    let src = CGA_8X8_THICK.as_ptr();
-    let dest = b.index(0).as_usize() as *mut u32;
-    let info = BitUnpackInfo {
-      src_byte_len: size_of_val(&CGA_8X8_THICK) as u16,
-      src_elem_width: 1,
-      dest_elem_width: 4,
-      offset_and_touch_zero,
-    };
-    unsafe { BitUnPack(src.cast(), dest, &info) };
-  }
-
-  /// Bit unpacks the data (8bpp depth) to the location given.
-  ///
-  /// * `offset_and_touch_zero`: Works like the [`BitUnpackInfo`] field. By
-  ///   default you should usually pass 0 here.
-  ///
-  /// ## Panics
-  /// * Requires at least 256 elements of space within the region.
-  #[inline]
-  pub fn bitunpack_8bpp(
-    self, b: VolRegion<Tile8, Safe, Safe>, offset_and_touch_zero: u32,
-  ) {
-    assert!(b.len() >= 256);
-    let src = CGA_8X8_THICK.as_ptr();
-    let dest = b.index(0).as_usize() as *mut u32;
-    let info = BitUnpackInfo {
-      src_byte_len: size_of_val(&CGA_8X8_THICK) as u16,
-      src_elem_width: 1,
-      dest_elem_width: 8,
-      offset_and_touch_zero,
-    };
-    unsafe { BitUnPack(src.cast(), dest, &info) };
-  }
-}

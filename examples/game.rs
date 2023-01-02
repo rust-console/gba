@@ -62,11 +62,16 @@ extern "C" fn main() -> ! {
 
   let mut world = [[0_u8; 32]; 32];
   for i in 0..32 {
-    world[0][i] = b'z';
-    world[19][i] = b'z';
-    world[i][0] = b'z';
-    world[i][29] = b'z';
+    world[0][i] = Cga8x8Thick::BOX_HORIZONTAL;
+    world[19][i] = Cga8x8Thick::BOX_HORIZONTAL;
+    world[i][0] = Cga8x8Thick::BOX_VERTICAL;
+    world[i][29] = Cga8x8Thick::BOX_VERTICAL;
   }
+  world[0][0] = Cga8x8Thick::BOX_UPPER_LEFT;
+  world[0][29] = Cga8x8Thick::BOX_UPPER_RIGHT;
+  world[19][0] = Cga8x8Thick::BOX_LOWER_LEFT;
+  world[19][29] = Cga8x8Thick::BOX_LOWER_RIGHT;
+  //
   world[1][3] = b'B';
   world[2][3] = b'G';
   world[3][3] = b'0';
