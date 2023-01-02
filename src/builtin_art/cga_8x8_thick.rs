@@ -127,8 +127,59 @@ pub static CGA_8X8_THICK: [u32; 512] = [
   0x00000000, 0x00000000,
 ];
 
+macro_rules! glyph_name {
+  ($name:ident = $x:expr) => {
+    pub const $name: u8 = $x;
+  };
+}
+
 #[derive(Debug, Clone, Copy)]
 pub struct Cga8x8Thick;
+impl Cga8x8Thick {
+  // 0x0? series
+  glyph_name!(NULL = 0x00);
+  glyph_name!(SMILEY = 0x01);
+  glyph_name!(SMILEY_INVERSE = 0x02);
+  glyph_name!(HEART = 0x03);
+  glyph_name!(DIAMOND = 0x04);
+  glyph_name!(CLUB = 0x05);
+  glyph_name!(SPADE = 0x06);
+  glyph_name!(BULLET = 0x07);
+  glyph_name!(BULLET_INVERSE = 0x08);
+  glyph_name!(BULLET_BIG = 0x09);
+  glyph_name!(BULLET_INVERSE_BIG = 0x0A);
+  glyph_name!(MALE = 0x0B);
+  glyph_name!(FEMALE = 0x0C);
+  glyph_name!(NOTE = 0x0D);
+  glyph_name!(DOUBLE_NOTE = 0x0E);
+  glyph_name!(SOLAR = 0x0F);
+  // 0x1? series
+  glyph_name!(POINTER_RIGHT = 0x10);
+  glyph_name!(POINTER_LEFT = 0x11);
+  glyph_name!(ARROW_UP_DOWN = 0x12);
+  glyph_name!(DOUBLE_BANG = 0x13);
+  glyph_name!(PARAGRAPH = 0x14);
+  glyph_name!(SECTION = 0x15);
+  glyph_name!(UNDERLINE_THICK = 0x16);
+  glyph_name!(ARROW_UP_DOWN_UNDERLINED = 0x17);
+  glyph_name!(ARROW_UP = 0x18);
+  glyph_name!(ARROW_DOWN = 0x19);
+  glyph_name!(ARROW_RIGHT = 0x1A);
+  glyph_name!(ARROW_LEFT = 0x1B);
+  glyph_name!(RIGHT_ANGLE = 0x1C);
+  glyph_name!(ARROW_LEFT_RIGHT = 0x1D);
+  glyph_name!(POINTER_UP = 0x1E);
+  glyph_name!(POINTER_DOWN = 0x1F);
+  // 0x7? series
+  glyph_name!(HOUSE = 0x7F);
+  //
+  glyph_name!(BOX_LIGHT_HORIZONTAL = 0xC4);
+  glyph_name!(BOX_LIGHT_VERTICAL = 0xB3);
+  glyph_name!(BOX_LIGHT_UPPER_LEFT = 0xDA);
+  glyph_name!(BOX_LIGHT_UPPER_RIGHT = 0xBF);
+  glyph_name!(BOX_LIGHT_LOWER_LEFT = 0xC0);
+  glyph_name!(BOX_LIGHT_LOWER_RIGHT = 0xD9);
+}
 
 impl Cga8x8Thick {
   /// Bit unpacks the data (4bpp depth) to the location given.
