@@ -5,8 +5,9 @@ use gba::prelude::*;
 
 #[panic_handler]
 fn panic_handler(info: &core::panic::PanicInfo) -> ! {
-  use core::fmt::Write;
+  #[cfg(debug_assertions)]
   if let Ok(mut logger) = MgbaBufferedLogger::try_new(MgbaMessageLevel::Fatal) {
+    use core::fmt::Write;
     writeln!(logger, "{info}").ok();
   }
   loop {}
@@ -25,7 +26,7 @@ struct Rect {
   h: u16,
 }
 impl Rect {
-  pub fn intersect(self, other: Self) -> bool {
+  fn intersect(self, other: Self) -> bool {
     self.x < other.x + other.w
       && self.x + self.w > other.x
       && self.y < other.y + other.h
@@ -50,7 +51,7 @@ extern "C" fn main() -> ! {
   creatures[0].x = 11;
   creatures[0].y = 14;
   //
-  creatures[1].x = 41;
+  creatures[1].x = 44;
   creatures[1].y = 38;
   creatures[2].x = 100;
   creatures[2].y = 23;
@@ -61,11 +62,16 @@ extern "C" fn main() -> ! {
 
   let mut world = [[0_u8; 32]; 32];
   for i in 0..32 {
-    world[0][i] = b'z';
-    world[31][i] = b'z';
-    world[i][0] = b'z';
-    world[i][31] = b'z';
+    world[0][i] = Cga8x8Thick::BOX_HORIZONTAL;
+    world[19][i] = Cga8x8Thick::BOX_HORIZONTAL;
+    world[i][0] = Cga8x8Thick::BOX_VERTICAL;
+    world[i][29] = Cga8x8Thick::BOX_VERTICAL;
   }
+  world[0][0] = Cga8x8Thick::BOX_UPPER_LEFT;
+  world[0][29] = Cga8x8Thick::BOX_UPPER_RIGHT;
+  world[19][0] = Cga8x8Thick::BOX_LOWER_LEFT;
+  world[19][29] = Cga8x8Thick::BOX_LOWER_RIGHT;
+  //
   world[1][3] = b'B';
   world[2][3] = b'G';
   world[3][3] = b'0';
@@ -77,12 +83,14 @@ extern "C" fn main() -> ! {
 
   TIMER0_CONTROL.write(TimerControl::new().with_enabled(true));
 
+  // bg
   BG_PALETTE.index(1).write(Color::MAGENTA);
-  OBJ_PALETTE.index(1).write(Color::CYAN);
-  OBJ_PALETTE.index(16 * 1 + 1).write(Color::GREEN);
-  OBJ_PALETTE.index(16 * 2 + 1).write(Color::RED);
-  OBJ_PALETTE.index(16 * 3 + 1).write(Color::BLUE);
-  OBJ_PALETTE.index(16 * 4 + 1).write(Color::YELLOW);
+  // obj
+  let colors =
+    [Color::CYAN, Color::GREEN, Color::RED, Color::BLUE, Color::YELLOW];
+  for (pal, color) in colors.iter().enumerate() {
+    obj_palbank(pal).index(1).write(*color);
+  }
 
   Cga8x8Thick.bitunpack_4bpp(CHARBLOCK0_4BPP.as_region(), 0);
   Cga8x8Thick.bitunpack_4bpp(OBJ_TILES.as_region(), 0);
@@ -141,56 +149,56 @@ extern "C" fn main() -> ! {
     if keys.up() {
       let new_p = Position { x: player.x, y: player.y - 1 };
       let new_r = Rect { x: new_p.x, y: new_p.y, w: 8, h: 8 };
-      if new_r
+      let terrain_clear = new_r
         .iter_tiles()
-        .all(|(tx, ty)| allows_movement(world[ty as usize][tx as usize]))
-        && enemies.iter().all(|enemy| {
-          let enemy_r = Rect { x: enemy.x, y: enemy.y, w: 8, h: 8 };
-          !new_r.intersect(enemy_r)
-        })
-      {
+        .all(|(tx, ty)| allows_movement(world[ty as usize][tx as usize]));
+      let enemy_clear = enemies.iter().all(|enemy| {
+        let enemy_r = Rect { x: enemy.x, y: enemy.y, w: 8, h: 8 };
+        !new_r.intersect(enemy_r)
+      });
+      if terrain_clear && enemy_clear {
         *player = new_p;
       }
     }
     if keys.down() {
       let new_p = Position { x: player.x, y: player.y + 1 };
       let new_r = Rect { x: new_p.x, y: new_p.y, w: 8, h: 8 };
-      if new_r
+      let terrain_clear = new_r
         .iter_tiles()
-        .all(|(tx, ty)| allows_movement(world[ty as usize][tx as usize]))
-        && enemies.iter().all(|enemy| {
-          let enemy_r = Rect { x: enemy.x, y: enemy.y, w: 8, h: 8 };
-          !new_r.intersect(enemy_r)
-        })
-      {
+        .all(|(tx, ty)| allows_movement(world[ty as usize][tx as usize]));
+      let enemy_clear = enemies.iter().all(|enemy| {
+        let enemy_r = Rect { x: enemy.x, y: enemy.y, w: 8, h: 8 };
+        !new_r.intersect(enemy_r)
+      });
+      if terrain_clear && enemy_clear {
         *player = new_p;
       }
     }
     if keys.left() {
       let new_p = Position { x: player.x - 1, y: player.y };
       let new_r = Rect { x: new_p.x, y: new_p.y, w: 8, h: 8 };
-      if new_r
+      let terrain_clear = new_r
         .iter_tiles()
-        .all(|(tx, ty)| allows_movement(world[ty as usize][tx as usize]))
-        && enemies.iter().all(|enemy| {
-          let enemy_r = Rect { x: enemy.x, y: enemy.y, w: 8, h: 8 };
-          !new_r.intersect(enemy_r)
-        })
-      {
+        .all(|(tx, ty)| allows_movement(world[ty as usize][tx as usize]));
+      let enemy_clear = enemies.iter().all(|enemy| {
+        let enemy_r = Rect { x: enemy.x, y: enemy.y, w: 8, h: 8 };
+        !new_r.intersect(enemy_r)
+      });
+      if terrain_clear && enemy_clear {
         *player = new_p;
       }
     }
     if keys.right() {
       let new_p = Position { x: player.x + 1, y: player.y };
       let new_r = Rect { x: new_p.x, y: new_p.y, w: 8, h: 8 };
-      if new_r
+      let terrain_clear = new_r
         .iter_tiles()
-        .all(|(tx, ty)| allows_movement(world[ty as usize][tx as usize]))
-        && enemies.iter().all(|enemy| {
-          let enemy_r = Rect { x: enemy.x, y: enemy.y, w: 8, h: 8 };
-          !new_r.intersect(enemy_r)
-        })
-      {
+        .all(|(tx, ty)| allows_movement(world[ty as usize][tx as usize]));
+      let enemy_clear = enemies.iter().all(|enemy| {
+        let enemy_r = Rect { x: enemy.x, y: enemy.y, w: 8, h: 8 };
+        !new_r.intersect(enemy_r)
+      });
+      if terrain_clear && enemy_clear {
         *player = new_p;
       }
     }
