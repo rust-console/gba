@@ -41,7 +41,9 @@ use crate::macros::{pub_const_fn_new_zeroed, u16_bool_field};
 #[repr(transparent)]
 pub struct KeyInput(u16);
 impl KeyInput {
-  pub_const_fn_new_zeroed!();
+  pub const fn new() -> Self {
+    Self(0xFFFF)
+  }
   u16_bool_field!(inverted 0, a, with_a);
   u16_bool_field!(inverted 1, b, with_b);
   u16_bool_field!(inverted 2, select, with_select);
@@ -70,6 +72,13 @@ impl From<KeyInput> for u16 {
   #[must_use]
   fn from(value: KeyInput) -> Self {
     value.to_u16()
+  }
+}
+impl From<u16> for KeyInput {
+  #[inline]
+  #[must_use]
+  fn from(value: u16) -> Self {
+    Self(value)
   }
 }
 
