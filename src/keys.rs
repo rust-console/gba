@@ -21,6 +21,7 @@
 //! main game loop checks the flag each frame and performs a soft reset instead
 //! of the normal game simulation when the flag is set.
 
+use core::ops;
 use crate::macros::{pub_const_fn_new_zeroed, u16_bool_field};
 
 /// [`KEYINPUT`](crate::prelude::KEYINPUT): Key input data.
@@ -41,7 +42,9 @@ use crate::macros::{pub_const_fn_new_zeroed, u16_bool_field};
 #[repr(transparent)]
 pub struct KeyInput(u16);
 impl KeyInput {
-  pub_const_fn_new_zeroed!();
+  pub const fn new() -> Self {
+    Self(0xFFFF)
+  }
   u16_bool_field!(inverted 0, a, with_a);
   u16_bool_field!(inverted 1, b, with_b);
   u16_bool_field!(inverted 2, select, with_select);
@@ -70,6 +73,56 @@ impl From<KeyInput> for u16 {
   #[must_use]
   fn from(value: KeyInput) -> Self {
     value.to_u16()
+  }
+}
+impl From<u16> for KeyInput {
+  #[inline]
+  #[must_use]
+  fn from(value: u16) -> Self {
+    Self(value)
+  }
+}
+impl ops::BitAnd for KeyInput {
+  type Output = Self;
+
+  fn bitand(self, other: Self) -> Self {
+    Self(!(!self.to_u16() & !other.to_u16()))
+  }
+}
+impl ops::BitAndAssign for KeyInput {
+  fn bitand_assign(&mut self, other: Self) {
+    *self = *self & other;
+  }
+}
+impl ops::BitOr for KeyInput {
+  type Output = Self;
+
+  fn bitor(self, other: Self) -> Self {
+    Self(!(!self.to_u16() | !other.to_u16()))
+  }
+}
+impl ops::BitOrAssign for KeyInput {
+  fn bitor_assign(&mut self, other: Self) {
+    *self = *self | other;
+  }
+}
+impl ops::BitXor for KeyInput {
+  type Output = Self;
+
+  fn bitxor(self, other: Self) -> Self {
+    Self(!(!self.to_u16() ^ !other.to_u16()))
+  }
+}
+impl ops::BitXorAssign for KeyInput {
+  fn bitxor_assign(&mut self, other: Self) {
+    *self = *self ^ other;
+  }
+}
+impl ops::Not for KeyInput {
+  type Output = Self;
+
+  fn not(self) -> Self {
+    Self(!self.to_u16())
   }
 }
 
