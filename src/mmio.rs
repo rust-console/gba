@@ -345,7 +345,7 @@ macro_rules! make_affine_screenblock_address_type {
       pub const fn row_col(self, row: usize, col: usize) -> VolAddress<u8x2, Safe, Safe> {
         assert!(row < Self::HEIGHT, "`row` out of bounds.");
         assert!(col < Self::WIDTH, "`col` out of bounds.");
-        self.block.index(row * 32 + col)
+        self.block.index(row * Self::WIDTH + col)
       }
     
       #[inline]
