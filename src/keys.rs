@@ -21,12 +21,12 @@
 //! main game loop checks the flag each frame and performs a soft reset instead
 //! of the normal game simulation when the flag is set.
 
-use core::ops;
 use crate::macros::{pub_const_fn_new_zeroed, u16_bool_field};
+use core::ops;
 
 /// [`KEYINPUT`](crate::prelude::KEYINPUT): Key input data.
 ///
-/// Each key on the GBA is reprisented by a single bit within this value, so all
+/// Each key on the GBA is represented by a single bit within this value, so all
 /// button state can be captured in the same moment. The `input.getter()` method
 /// for each button will return `true` if that button was held down at the time
 /// of reading this input data.
