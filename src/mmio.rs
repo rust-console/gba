@@ -485,3 +485,9 @@ def_mmio!(0x0700_0006 = AFFINE_PARAM_A: VolSeries<i16fx8, Safe, Safe, 32, {size_
 def_mmio!(0x0700_000E = AFFINE_PARAM_B: VolSeries<i16fx8, Safe, Safe, 32, {size_of::<[u16;16]>()}>; "Affine parameters B.");
 def_mmio!(0x0700_0016 = AFFINE_PARAM_C: VolSeries<i16fx8, Safe, Safe, 32, {size_of::<[u16;16]>()}>; "Affine parameters C.");
 def_mmio!(0x0700_001E = AFFINE_PARAM_D: VolSeries<i16fx8, Safe, Safe, 32, {size_of::<[u16;16]>()}>; "Affine parameters D.");
+
+// Cartridge IO port
+// https://problemkaputt.de/gbatek.htm#gbacartioportgpio
+def_mmio!(0x0800_00C4 = IO_PORT_DATA: VolAddress<u16, Safe, Safe>; "I/O port data");
+def_mmio!(0x0800_00C6 = IO_PORT_DIRECTION: VolAddress<u16, Safe, Safe>; "I/O port direction");
+def_mmio!(0x0800_00C8 = IO_PORT_CONTROL: VolAddress<u16, Safe, Safe>; "I/O port control");
