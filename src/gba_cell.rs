@@ -28,6 +28,7 @@ use core::{
 };
 
 use crate::{
+  fixed::Fixed,
   interrupts::IrqFn,
   keys::{KeyControl, KeyInput},
   video::Color,
@@ -224,3 +225,4 @@ unsafe impl GbaCellSafe for Option<NonZeroU8> {}
 unsafe impl GbaCellSafe for u16 {}
 unsafe impl GbaCellSafe for u32 {}
 unsafe impl GbaCellSafe for u8 {}
+unsafe impl<I: GbaCellSafe, const B: u32> GbaCellSafe for Fixed<I, B> {}
