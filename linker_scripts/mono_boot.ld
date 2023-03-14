@@ -32,7 +32,7 @@ SECTIONS {
   } >iwram AT>rom = 0x00
 
   . = ALIGN(4);
-  __ewram_position_in_rom = .;
+  __ewram_position_in_rom = __iwram_position_in_rom + (__iwram_end - __iwram_start);
   .ewram : {
     __ewram_start = ABSOLUTE(.);
     
@@ -43,7 +43,7 @@ SECTIONS {
   } >ewram AT>rom = 0x00
 
   . = ALIGN(4);
-  __bss_position_in_rom = .;
+  __bss_position_in_rom = __ewram_position_in_rom + (__ewram_end - __ewram_start);
   .bss : {
     __bss_start = ABSOLUTE(.);
 
