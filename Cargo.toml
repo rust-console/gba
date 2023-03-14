@@ -11,8 +11,8 @@ default = ["track_caller"]
 track_caller = []
 
 [dependencies]
-bitfrob = "0.2.3"
-voladdress = { version = "1.2.1", features = ["experimental_volregion"] }
+voladdress = "1.3.0"
+bitfrob = "1"
 bracer = "0.1.2"
 
 [profile.dev]
