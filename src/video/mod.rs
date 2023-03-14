@@ -125,6 +125,13 @@ impl Color {
   u16_int_field!(0 - 4, red, with_red);
   u16_int_field!(5 - 9, green, with_green);
   u16_int_field!(10 - 14, blue, with_blue);
+
+  /// Constructs a new color value from the given channel values.
+  #[inline]
+  #[must_use]
+  pub const fn from_rgb(r: u16, g: u16, b: u16) -> Self {
+    Self(r & 0b11111 | (g & 0b11111) << 5 | (b & 0b11111) << 10)
+  }
 }
 
 /// The video mode controls how each background layer will operate.
