@@ -251,7 +251,7 @@ def_mmio!(0x0600_0000 = AFFINE3_SCREENBLOCKS: VolGrid2dStrided<u8, Safe, Safe, 1
 
 def_mmio!(0x0600_0000 = VIDEO3_VRAM: VolGrid2dStrided<Color, Safe, Safe, 240, 160, 2, 0xA000>; "Video mode 3 bitmap");
 
-def_mmio!(0x0600_0000 = VIDEO4_VRAM: VolGrid2dStrided<u8, Safe, Safe, 240, 160, 2, 0xA000>; "Video mode 4 palette maps (frames 0 and 1).");
+def_mmio!(0x0600_0000 = VIDEO4_VRAM: VolGrid2dStrided<u8x2, Safe, Safe, 120, 160, 2, 0xA000>; "Video mode 4 palette maps (frames 0 and 1). Each entry is two palette indexes.");
 
 def_mmio!(0x0600_0000 = VIDEO5_VRAM: VolGrid2dStrided<Color, Safe, Safe, 160, 128, 2, 0xA000>; "Video mode 5 bitmaps (frames 0 and 1).");
 
