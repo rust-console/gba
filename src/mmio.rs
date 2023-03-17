@@ -26,7 +26,7 @@
 
 use core::{ffi::c_void, mem::size_of};
 use bitfrob::u8x2;
-use voladdress::{Safe, Unsafe, VolAddress, VolBlock, VolSeries};
+use voladdress::{Safe, Unsafe, VolAddress, VolBlock, VolSeries, VolGrid2dStrided};
 use crate::prelude::*;
 
 // Note(Lokathor): This macro lets us stick each address at the start of the
@@ -239,237 +239,21 @@ def_mmio!(0x0600_4000 = CHARBLOCK1_8BPP: VolBlock<Tile8, Safe, Safe, 256>; "Char
 def_mmio!(0x0600_8000 = CHARBLOCK2_8BPP: VolBlock<Tile8, Safe, Safe, 256>; "Charblock 2, 8bpp view (256 tiles).");
 def_mmio!(0x0600_C000 = CHARBLOCK3_8BPP: VolBlock<Tile8, Safe, Safe, 256>; "Charblock 3, 8bpp view (256 tiles).");
 
-#[inline]
-#[must_use]
-const fn screenblock_addr(index: usize) -> usize {
-  // The VRAM offset per screenblock isn't affected by the screenblock's size, it's always 2k
-  0x0600_0000 + index * SCREENBLOCK_INDEX_OFFSET
-}
+def_mmio!(0x0600_0000 = TEXT_SCREENBLOCKS: VolGrid2dStrided<TextEntry, Safe, Safe, 32, 32, 32, SCREENBLOCK_INDEX_OFFSET>; "Text mode screenblocks.");
 
-/// Text mode screenblock address.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[repr(transparent)]
-pub struct TextScreenblockAddress {
-  block: VolBlock<TextEntry, Safe, Safe, {32*32}>,
-}
-impl TextScreenblockAddress {
-  const WORD_COUNT: usize = (32 * 32 * size_of::<TextEntry>())/4;
+def_mmio!(0x0600_0000 = AFFINE0_SCREENBLOCKS: VolGrid2dStrided<u8, Safe, Safe, 16, 16, 32, SCREENBLOCK_INDEX_OFFSET>; "Affine screenblocks (size 0).");
 
-  #[inline]
-  #[must_use]
-  #[cfg_attr(feature="track_caller", track_caller)]
-  pub const fn new(index: usize) -> Self {
-    assert!(index <= 31);
-    Self { block: unsafe { VolBlock::new(screenblock_addr(index)) } }
-  }
+def_mmio!(0x0600_0000 = AFFINE1_SCREENBLOCKS: VolGrid2dStrided<u8, Safe, Safe, 32, 32, 32, SCREENBLOCK_INDEX_OFFSET>; "Affine screenblocks (size 1).");
 
-  #[inline]
-  #[must_use]
-  pub const fn as_vol_block(self) -> VolBlock<TextEntry, Safe, Safe, {32*32}> {
-    self.block
-  }
+def_mmio!(0x0600_0000 = AFFINE2_SCREENBLOCKS: VolGrid2dStrided<u8, Safe, Safe, 64, 64, 31, SCREENBLOCK_INDEX_OFFSET>; "Affine screenblocks (size 2).");
 
-  #[inline]
-  #[must_use]
-  #[cfg_attr(feature="track_caller", track_caller)]
-  pub const fn row_col(self, row: usize, col: usize) -> VolAddress<TextEntry, Safe, Safe> {
-    assert!(row < 32, "`row` must be less than 32");
-    assert!(col < 32, "`col` must be less than 32");
-    self.block.index(row * 32 + col)
-  }
+def_mmio!(0x0600_0000 = AFFINE3_SCREENBLOCKS: VolGrid2dStrided<u8, Safe, Safe, 128, 128, 25, SCREENBLOCK_INDEX_OFFSET>; "Affine screenblocks (size 3).");
 
-  #[inline]
-  pub fn write_word_array(self, words: &[u32; Self::WORD_COUNT]) {
-    use crate::mem_fns::__aeabi_memcpy4;
-    let dest: *mut u32 = self.block.as_ptr() as *mut u32;
-    let src: *const u32 = words.as_ptr();
-    let byte_count = size_of::<[u32; Self::WORD_COUNT]>();
-    unsafe { __aeabi_memcpy4(dest.cast(), src.cast(), byte_count) };
-  }
+def_mmio!(0x0600_0000 = VIDEO3_VRAM: VolGrid2dStrided<Color, Safe, Safe, 240, 160, 2, 0xA000>; "Video mode 3 bitmap");
 
-  #[inline]
-  #[cfg_attr(feature="track_caller", track_caller)]
-  pub fn write_word_slice(self, words: &[u32]) {
-    assert_eq!(words.len(), Self::WORD_COUNT);
-    self.write_word_array(unsafe { &*words.as_ptr().cast::<[u32; Self::WORD_COUNT]>() })
-  }
-}
+def_mmio!(0x0600_0000 = VIDEO4_VRAM: VolGrid2dStrided<u8, Safe, Safe, 240, 160, 2, 0xA000>; "Video mode 4 palette maps (frames 0 and 1).");
 
-macro_rules! make_affine_screenblock_address_type {
-  ($(#[$name_meta:meta])* $name:ident, size: $size:literal) => {
-    $(#[$name_meta])*
-    #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
-    #[repr(transparent)]
-    pub struct $name {
-      block: VolBlock<u8x2, Safe, Safe, {Self::HEIGHT*Self::WIDTH}>,
-    }
-    impl $name {
-      pub const BG_SIZE: usize = $size;
-      pub const WIDTH: usize = (16 << Self::BG_SIZE) / 2;
-      pub const HEIGHT: usize = 16 << Self::BG_SIZE;
-      pub const ENTRIES: usize = Self::WIDTH * Self::HEIGHT;
-      pub const BYTES: usize = Self::ENTRIES * size_of::<u8x2>();
-      pub const WORD_COUNT: usize = {
-        assert!(Self::BYTES % 4 == 0);
-        Self::BYTES/4
-      };
-      pub const MAX_INDEX: usize = {
-        let mut i = 0;
-        while ((i+1) * SCREENBLOCK_INDEX_OFFSET) + (Self::BYTES) <= BG_TILE_REGION_SIZE {
-          i += 1;
-        }
-        if i > 31 {
-          31
-        } else {
-          i
-        }
-      };
-    
-      #[inline]
-      #[must_use]
-      #[cfg_attr(feature="track_caller", track_caller)]
-      pub const fn new(index: usize) -> Self {
-        assert!(index <= Self::MAX_INDEX);
-        Self { block: unsafe { VolBlock::new(screenblock_addr(index)) } }
-      }
-    
-      #[inline]
-      #[must_use]
-      pub const fn as_vol_block(self) -> VolBlock<u8x2, Safe, Safe, {Self::HEIGHT*Self::WIDTH}> {
-        self.block
-      }
-    
-      #[inline]
-      #[must_use]
-      #[cfg_attr(feature="track_caller", track_caller)]
-      pub const fn row_col(self, row: usize, col: usize) -> VolAddress<u8x2, Safe, Safe> {
-        assert!(row < Self::HEIGHT, "`row` out of bounds.");
-        assert!(col < Self::WIDTH, "`col` out of bounds.");
-        self.block.index(row * Self::WIDTH + col)
-      }
-    
-      #[inline]
-      pub fn write_word_array(self, words: &[u32; Self::WORD_COUNT]) {
-        use crate::mem_fns::__aeabi_memcpy4;
-        let dest: *mut u32 = self.block.as_ptr() as *mut u32;
-        let src: *const u32 = words.as_ptr();
-        let byte_count = size_of::<[u32; Self::WORD_COUNT]>();
-        unsafe { __aeabi_memcpy4(dest.cast(), src.cast(), byte_count) };
-      }
-    
-      #[inline]
-      #[cfg_attr(feature="track_caller", track_caller)]
-      pub fn write_word_slice(self, words: &[u32]) {
-        assert_eq!(words.len(), Self::WORD_COUNT);
-        self.write_word_array(unsafe { &*words.as_ptr().cast::<[u32; Self::WORD_COUNT]>() })
-      }
-    }
-  }
-}
-make_affine_screenblock_address_type!(
-  /// Affine mode screenblock address for a size 0 background.
-  Affine0ScreenblockAddress,
-  size: 0
-);
-make_affine_screenblock_address_type!(
-  /// Affine mode screenblock address for a size 1 background.
-  Affine1ScreenblockAddress,
-  size: 1
-);
-make_affine_screenblock_address_type!(
-  /// Affine mode screenblock address for a size 2 background.
-  Affine2ScreenblockAddress,
-  size: 2
-);
-make_affine_screenblock_address_type!(
-  /// Affine mode screenblock address for a size 3 background.
-  Affine3ScreenblockAddress,
-  size: 3
-);
-
-/// Accesses VRAM as the Video Mode 3 single bitmap.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct VideoMode3Bitmap;
-impl VideoMode3Bitmap {
-  /// Gets the block of memory for a single scanline of the bitmap.
-  /// 
-  /// ## Panics
-  /// * `line` must be less than 160.
-  #[inline]
-  #[must_use]
-  pub const fn scanline(self, line: usize) -> VolBlock<Color, Safe, Safe, 240> {
-    assert!(line < 160);
-    unsafe { VolBlock::new(0x0600_0000 + line * size_of::<[Color; 240]>()) }
-  }
-
-  /// Gets an individual pixel address within the bitmap.
-  /// 
-  /// ## Panics
-  /// * `row` must be less than 160.
-  /// * `col` must be less than 240.
-  #[inline]
-  #[must_use]
-  pub const fn row_col(self, row: usize, col: usize) -> VolAddress<Color, Safe, Safe> {
-    assert!(row < 160);
-    assert!(col < 240);
-    self.scanline(row).index(col)
-  }
-}
-
-/// Accesses VRAM as a Video Mode 4 bitmap frame.
-/// 
-/// Because VRAM can't be written with less than 2 bytes at a time, the
-/// scanlines here use `u8x2` to represent pixels pairs so that all the writes
-/// are at least 2 bytes large.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct VideoMode4Frame(usize);
-impl VideoMode4Frame {
-  pub const _0: Self = Self(0x0600_0000);
-  pub const _1: Self = Self(0x0600_A000);
-
-  /// Gets the block of memory for a single scanline of the frame's indexmap.
-  /// 
-  /// ## Panics
-  /// * `line` must be less than 160.
-  #[inline]
-  #[must_use]
-  pub const fn scanline(self, line: usize) -> VolBlock<u8x2, Safe, Safe, {240/2}> {
-    assert!(line < 160);
-    unsafe { VolBlock::new(self.0 + line * size_of::<[u8x2; 240/2]>()) }
-  }
-}
-
-/// Accesses VRAM as a Video Mode 5 bitmap frame.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct VideoMode5Frame(usize);
-impl VideoMode5Frame {
-  pub const _0: Self = Self(0x0600_0000);
-  pub const _1: Self = Self(0x0600_A000);
-
-  /// Gets the block of memory for a single scanline of the frame's indexmap.
-  /// 
-  /// ## Panics
-  /// * `line` must be less than 128.
-  #[inline]
-  #[must_use]
-  pub const fn scanline(self, line: usize) -> VolBlock<Color, Safe, Safe, 160> {
-    assert!(line < 128);
-    unsafe { VolBlock::new(self.0 + line * size_of::<[Color; 160]>()) }
-  }
-
-  /// Gets an individual pixel address within the bitmap.
-  /// 
-  /// ## Panics
-  /// * `row` must be less than 128.
-  /// * `col` must be less than 160.
-  #[inline]
-  #[must_use]
-  pub const fn row_col(self, row: usize, col: usize) -> VolAddress<Color, Safe, Safe> {
-    assert!(row < 128);
-    assert!(col < 160);
-    self.scanline(row).index(col)
-  }
-}
+def_mmio!(0x0600_0000 = VIDEO5_VRAM: VolGrid2dStrided<Color, Safe, Safe, 160, 128, 2, 0xA000>; "Video mode 5 bitmaps (frames 0 and 1).");
 
 def_mmio!(0x0601_0000 = OBJ_TILES: VolBlock<Tile4, Safe, Safe, 1024>; "Object tiles. In video modes 3, 4, and 5 only indices 512..=1023 are available.");
 

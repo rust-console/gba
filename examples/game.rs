@@ -96,11 +96,12 @@ extern "C" fn main() -> ! {
   Cga8x8Thick.bitunpack_4bpp(OBJ_TILES.as_region(), 0);
 
   BG0CNT.write(BackgroundControl::new().with_screenblock(8));
-  let screenblock_addr = TextScreenblockAddress::new(8);
-  for row in 0..32 {
-    for col in 0..32 {
-      let te = TextEntry::new().with_tile(world[row][col] as u16);
-      screenblock_addr.row_col(row, col).write(te);
+  let screenblock = TEXT_SCREENBLOCKS.get_frame(8).unwrap();
+  for y in 0..32 {
+    let row = screenblock.get_row(y).unwrap();
+    for (x, addr) in row.iter().enumerate() {
+      let te = TextEntry::new().with_tile(world[y][x] as u16);
+      addr.write(te);
     }
   }
 

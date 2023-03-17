@@ -14,7 +14,7 @@ fn panic_handler(info: &core::panic::PanicInfo) -> ! {
 }
 
 #[allow(dead_code)]
-const FOO: Align4<[u8; 3]> = include_aligned_bytes!("foo.txt");
+const FOO: Align4<[u8; 14]> = include_aligned_bytes!("foo.txt");
 
 #[link_section = ".ewram"]
 static FRAME_KEYS: GbaCell<KeyInput> = GbaCell::new(KeyInput::new());
@@ -24,32 +24,6 @@ extern "C" fn irq_handler(_: IrqBits) {
   // We'll read the keys during vblank and store it for later.
   FRAME_KEYS.write(KEYINPUT.read());
 }
-
-const TILE_LAYOUT: [u32; 512] = {
-  // Rust's const eval is limited at the moment, but with a bit of careful math
-  // we can set up `u32` values that store the right data. Tile maps are 32x32
-  // `u16` values, so when packing it as `u32` instead we have to throw in some
-  // `/2` stuff in a few places. Seperately, the tiles that we're using come
-  // from an image that was drawn as a 16 by 16 tile sheet, so most of the
-  // layout's area will be left as zero. Thankfully, tile index 0 is a blank
-  // tile in this tileset, so it all works out.
-  let mut data = [0; 512];
-  let mut r = 0;
-  while r < 16 {
-    let mut c = 0;
-    while c < 16 {
-      let index = r * (32 / 2) + (c / 2);
-      let a = r * 16 + c;
-      let b = r * 16 + c + 1;
-      data[index] = (a as u32) | ((b as u32) << 16);
-      //
-      c += 2;
-    }
-    //
-    r += 1;
-  }
-  data
-};
 
 #[no_mangle]
 extern "C" fn main() -> ! {
@@ -81,9 +55,15 @@ extern "C" fn main() -> ! {
   }
 
   {
-    // get the the tilemap copied into place
-    let tsb = TextScreenblockAddress::new(31);
-    tsb.write_word_array(&TILE_LAYOUT);
+    // set up the tilemap
+    let tsb = TEXT_SCREENBLOCKS.get_frame(31).unwrap();
+    for y in 0..16 {
+      let row = tsb.get_row(y).unwrap();
+      for (x, addr) in row.iter().enumerate().take(16) {
+        let te = TextEntry::new().with_tile((y * 16 + x) as u16);
+        addr.write(te);
+      }
+    }
   }
 
   {

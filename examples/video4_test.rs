@@ -15,10 +15,10 @@ fn panic_handler(info: &core::panic::PanicInfo) -> ! {
 
 #[no_mangle]
 fn main() -> ! {
-  let a = TextScreenblockAddress::new(0).as_vol_block().as_mut_ptr();
+  let a = TEXT_SCREENBLOCKS.get_frame(0).unwrap().as_usize();
   unsafe {
     __aeabi_memcpy(
-      a.cast(),
+      a as _,
       INDEXES.as_ptr().cast(),
       core::mem::size_of_val(INDEXES) as _,
     )
