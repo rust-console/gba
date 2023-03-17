@@ -1,5 +1,8 @@
 # Changelog
 
+* **0.11.0:**
+  * **Breaking:** Once again the video memory interface has been updated. It should be simpler to follow now, because video memory consistently uses `VolGrid2dStrided`, rather than using special types for every screenblock style.
+
 * **0.10.0:**
   * **Breaking:** Cleaned up the screenblock interface. Because they're in VRAM,
     they can't use `u8` access like they were defined to use before. Now the
