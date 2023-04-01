@@ -499,9 +499,10 @@ pub unsafe extern "C" fn __aeabi_memset(
 /// Write a value to all bytes in the region, prefer [`__aeabi_memset`] if
 /// possible.
 ///
-/// This is the libc version of a memory set. It's required to return the
-/// `dest` pointer at the end of the call, which makes it need an extra
-/// push/pop compared to a direct call to `__aeabi_memset`.
+/// This is the libc version of a memory set. It's required to return the `dest`
+/// pointer at the end of the call, which makes it need an extra push/pop
+/// compared to a direct call to `__aeabi_memset`. Also, the argument ordering
+/// is swapped, so shuffling registers costs a few cycles.
 ///
 /// * **Returns:** The `dest` pointer.
 #[naked]
@@ -513,6 +514,9 @@ pub unsafe extern "C" fn memset(
 ) -> *mut u8 {
   core::arch::asm! {
     bracer::with_pushed_registers!("{{r0, lr}}", {
+      "mov r3, r2",
+      "mov r2, r1",
+      "mov r1, r3",
       "bl {__aeabi_memset}",
     }),
     "bx lr",
