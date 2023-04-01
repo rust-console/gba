@@ -447,13 +447,13 @@ pub unsafe extern "C" fn __aeabi_memset(
       "orr    r2, r2, r2, lsl #16",
       "mov    r3, r2",
 
-      // carry/sign test on the address, then do fixup
-      "lsls   r12, r0, #31",
-      "submi  r1, r1, #1",
-      "strbmi r2, [r0], #1",
-      "lsls   r12, r0, #31",
-      "subcs  r1, r1, #2",
-      "strhcs r2, [r0], #2",
+      // align the pointer for word ops
+      "tst    r0, #0b1",
+      "subne  r1, r1, #1",
+      "strbne r2, [r0], #1",
+      "tst    r0, #0b10",
+      "subne  r1, r1, #2",
+      "strhne r2, [r0], #2",
 
       bracer::when!("r1" >=u "#32" [label_id=8] {
         bracer::with_pushed_registers!("{{r4-r9}}", {
