@@ -146,17 +146,17 @@ def_mmio!(0x0400_0100 = TIMER0_COUNT/["TM0CNT_L"]: VolAddress<u16, Safe, ()>; "T
 def_mmio!(0x0400_0100 = TIMER0_RELOAD/["TM0CNT_L"]: VolAddress<u16, (), Safe>; "Timer 0 Reload write");
 def_mmio!(0x0400_0102 = TIMER0_CONTROL/["TM0CNT_H"]: VolAddress<TimerControl, Safe, Safe>; "Timer 0 control");
 
-def_mmio!(0x0400_0100 = TIMER1_COUNT/["TM1CNT_L"]: VolAddress<u16, Safe, ()>; "Timer 1 Count read");
-def_mmio!(0x0400_0100 = TIMER1_RELOAD/["TM1CNT_L"]: VolAddress<u16, (), Safe>; "Timer 1 Reload write");
-def_mmio!(0x0400_0102 = TIMER1_CONTROL/["TM1CNT_H"]: VolAddress<TimerControl, Safe, Safe>; "Timer 1 control");
+def_mmio!(0x0400_0104 = TIMER1_COUNT/["TM1CNT_L"]: VolAddress<u16, Safe, ()>; "Timer 1 Count read");
+def_mmio!(0x0400_0104 = TIMER1_RELOAD/["TM1CNT_L"]: VolAddress<u16, (), Safe>; "Timer 1 Reload write");
+def_mmio!(0x0400_0106 = TIMER1_CONTROL/["TM1CNT_H"]: VolAddress<TimerControl, Safe, Safe>; "Timer 1 control");
 
-def_mmio!(0x0400_0100 = TIMER2_COUNT/["TM2CNT_L"]: VolAddress<u16, Safe, ()>; "Timer 2 Count read");
-def_mmio!(0x0400_0100 = TIMER2_RELOAD/["TM2CNT_L"]: VolAddress<u16, (), Safe>; "Timer 2 Reload write");
-def_mmio!(0x0400_0102 = TIMER2_CONTROL/["TM2CNT_H"]: VolAddress<TimerControl, Safe, Safe>; "Timer 2 control");
+def_mmio!(0x0400_0108 = TIMER2_COUNT/["TM2CNT_L"]: VolAddress<u16, Safe, ()>; "Timer 2 Count read");
+def_mmio!(0x0400_0108 = TIMER2_RELOAD/["TM2CNT_L"]: VolAddress<u16, (), Safe>; "Timer 2 Reload write");
+def_mmio!(0x0400_010A = TIMER2_CONTROL/["TM2CNT_H"]: VolAddress<TimerControl, Safe, Safe>; "Timer 2 control");
 
-def_mmio!(0x0400_0100 = TIMER3_COUNT/["TM3CNT_L"]: VolAddress<u16, Safe, ()>; "Timer 3 Count read");
-def_mmio!(0x0400_0100 = TIMER3_RELOAD/["TM3CNT_L"]: VolAddress<u16, (), Safe>; "Timer 3 Reload write");
-def_mmio!(0x0400_0102 = TIMER3_CONTROL/["TM3CNT_H"]: VolAddress<TimerControl, Safe, Safe>; "Timer 3 control");
+def_mmio!(0x0400_010C = TIMER3_COUNT/["TM3CNT_L"]: VolAddress<u16, Safe, ()>; "Timer 3 Count read");
+def_mmio!(0x0400_010C = TIMER3_RELOAD/["TM3CNT_L"]: VolAddress<u16, (), Safe>; "Timer 3 Reload write");
+def_mmio!(0x0400_010E = TIMER3_CONTROL/["TM3CNT_H"]: VolAddress<TimerControl, Safe, Safe>; "Timer 3 control");
 
 // Serial (part 1)
 
