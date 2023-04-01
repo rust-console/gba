@@ -451,6 +451,7 @@ pub unsafe extern "C" fn __aeabi_memset(
       "lsls   r12, r0, #31",
       "submi  r1, r1, #1",
       "strbmi r2, [r0], #1",
+      "lsls   r12, r0, #31",
       "subcs  r1, r1, #2",
       "strhcs r2, [r0], #2",
 
