@@ -57,6 +57,9 @@ SECTIONS {
   __ewram_word_copy_count = (__ewram_end - __ewram_start) / 4;
   __bss_word_clear_count = (__bss_end - __bss_start) / 4;
 
+  /* rust-lld demands we keep the `section header string table` */
+  .shstrtab        0 : { *(.shstrtab) }
+
   /* debugging sections */
   /* Stabs */
   .stab            0 : { *(.stab) }
