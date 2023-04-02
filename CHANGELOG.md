@@ -1,7 +1,28 @@
 # Changelog
 
+* **0.11.1:**
+  * Fixed incorrect timer 1/2/3 addresses (classic copy-paste error).
+  * Fixed missing argument ordering swap in memset between the libc version and
+    aeabi version.
+  * Fixed incorrect handling of unaligned pointers in memset.
+  * Added `.shstrtab` entry to the linker script so that it works with the new
+    `rust-lld` used in Nightly 2023-01-01 (See
+    https://github.com/rust-lang/rust/pull/109721)
+  * Marked the linker script file (`mono_boot.ld`) as simply being
+    [CC0](https://creativecommons.org/publicdomain/zero/1.0/legalcode). The
+    reason being that it's the one file that often needs to be manually copied
+    out of this repo and into the repo of a project using the crate (since
+    libraries can't provide the linker script to binaries, petition the `cargo`
+    folks if you want this). Accordingly, I'm giving it the most permissive
+    license that I know of, to make things as simple as possible for everyone.
+    The rest of the content in this repository still falls under the `license`
+    entry specified in `Cargo.toml`.
+
 * **0.11.0:**
-  * **Breaking:** Once again the video memory interface has been updated. It should be simpler to follow now, because video memory consistently uses `VolGrid2dStrided`, rather than using special types for every screenblock style.
+  * **Breaking:** Once again the video memory interface has been updated. It
+    should be simpler to follow now, because video memory consistently uses
+    `VolGrid2dStrided`, rather than using special types for every screenblock
+    style.
 
 * **0.10.0:**
   * **Breaking:** Cleaned up the screenblock interface. Because they're in VRAM,
