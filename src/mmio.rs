@@ -241,13 +241,13 @@ def_mmio!(0x0600_C000 = CHARBLOCK3_8BPP: VolBlock<Tile8, Safe, Safe, 256>; "Char
 
 def_mmio!(0x0600_0000 = TEXT_SCREENBLOCKS: VolGrid2dStrided<TextEntry, Safe, Safe, 32, 32, 32, SCREENBLOCK_INDEX_OFFSET>; "Text mode screenblocks.");
 
-def_mmio!(0x0600_0000 = AFFINE0_SCREENBLOCKS: VolGrid2dStrided<u8, Safe, Safe, 16, 16, 32, SCREENBLOCK_INDEX_OFFSET>; "Affine screenblocks (size 0).");
+def_mmio!(0x0600_0000 = AFFINE0_SCREENBLOCKS: VolGrid2dStrided<u8x2, Safe, Safe, 8, 16, 32, SCREENBLOCK_INDEX_OFFSET>; "Affine screenblocks (size 0).");
 
-def_mmio!(0x0600_0000 = AFFINE1_SCREENBLOCKS: VolGrid2dStrided<u8, Safe, Safe, 32, 32, 32, SCREENBLOCK_INDEX_OFFSET>; "Affine screenblocks (size 1).");
+def_mmio!(0x0600_0000 = AFFINE1_SCREENBLOCKS: VolGrid2dStrided<u8x2, Safe, Safe, 16, 32, 32, SCREENBLOCK_INDEX_OFFSET>; "Affine screenblocks (size 1).");
 
-def_mmio!(0x0600_0000 = AFFINE2_SCREENBLOCKS: VolGrid2dStrided<u8, Safe, Safe, 64, 64, 31, SCREENBLOCK_INDEX_OFFSET>; "Affine screenblocks (size 2).");
+def_mmio!(0x0600_0000 = AFFINE2_SCREENBLOCKS: VolGrid2dStrided<u8x2, Safe, Safe, 32, 64, 31, SCREENBLOCK_INDEX_OFFSET>; "Affine screenblocks (size 2).");
 
-def_mmio!(0x0600_0000 = AFFINE3_SCREENBLOCKS: VolGrid2dStrided<u8, Safe, Safe, 128, 128, 25, SCREENBLOCK_INDEX_OFFSET>; "Affine screenblocks (size 3).");
+def_mmio!(0x0600_0000 = AFFINE3_SCREENBLOCKS: VolGrid2dStrided<u8x2, Safe, Safe, 64, 128, 25, SCREENBLOCK_INDEX_OFFSET>; "Affine screenblocks (size 3).");
 
 def_mmio!(0x0600_0000 = VIDEO3_VRAM: VolGrid2dStrided<Color, Safe, Safe, 240, 160, 2, 0xA000>; "Video mode 3 bitmap");
 
