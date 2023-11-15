@@ -26,7 +26,7 @@
 
 use core::{ffi::c_void, mem::size_of};
 use bitfrob::u8x2;
-use voladdress::{Safe, Unsafe, VolAddress, VolBlock, VolSeries, VolGrid2dStrided};
+use voladdress::{Safe, Unsafe, VolAddress, VolBlock, VolSeries, VolGrid2dStrided, VolGrid2d};
 use crate::prelude::*;
 
 // Note(Lokathor): This macro lets us stick each address at the start of the
@@ -249,7 +249,7 @@ def_mmio!(0x0600_0000 = AFFINE2_SCREENBLOCKS: VolGrid2dStrided<u8x2, Safe, Safe,
 
 def_mmio!(0x0600_0000 = AFFINE3_SCREENBLOCKS: VolGrid2dStrided<u8x2, Safe, Safe, 64, 128, 25, SCREENBLOCK_INDEX_OFFSET>; "Affine screenblocks (size 3).");
 
-def_mmio!(0x0600_0000 = VIDEO3_VRAM: VolGrid2dStrided<Color, Safe, Safe, 240, 160, 2, 0xA000>; "Video mode 3 bitmap");
+def_mmio!(0x0600_0000 = VIDEO3_VRAM: VolGrid2d<Color, Safe, Safe, 240, 160>; "Video mode 3 bitmap");
 
 def_mmio!(0x0600_0000 = VIDEO4_VRAM: VolGrid2dStrided<u8x2, Safe, Safe, 120, 160, 2, 0xA000>; "Video mode 4 palette maps (frames 0 and 1). Each entry is two palette indexes.");
 

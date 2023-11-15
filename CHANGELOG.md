@@ -1,5 +1,9 @@
 # Changelog
 
+* **0.11.2:**
+  * **Soundness:** Fixed the definition of `VIDEO3_VRAM`, now it's the correct
+  type and it will correctly stay in bounds.
+
 * **0.11.1:**
   * Fixed incorrect timer 1/2/3 addresses (classic copy-paste error).
   * Fixed missing argument ordering swap in memset between the libc version and
