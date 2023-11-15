@@ -1,6 +1,6 @@
 # Changelog
 
-* **0.11.2:**
+* **0.11.3:**
   * **Soundness:** Fixed the definition of `VIDEO3_VRAM`, now it's the correct
   type and it will correctly stay in bounds.
 
