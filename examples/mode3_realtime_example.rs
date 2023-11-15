@@ -1,5 +1,5 @@
 /* 
-* Made by Evan Goemer
+* Made by Evan Goemer (@evangoemer)
 * Licenced under CC0
 */
 
