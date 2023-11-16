@@ -70,6 +70,26 @@ where
     <T as Debug>::fmt(&self.read(), f)
   }
 }
+impl<T> Default for GbaCell<T>
+where
+  T: GbaCellSafe + Default,
+{
+  #[inline]
+  #[must_use]
+  fn default() -> Self {
+    Self::new(T::default())
+  }
+}
+impl<T> Clone for GbaCell<T>
+where
+  T: GbaCellSafe + Default,
+{
+  #[inline]
+  #[must_use]
+  fn clone(&self) -> Self {
+    Self::new(self.read())
+  }
+}
 unsafe impl<T> Send for GbaCell<T> {}
 unsafe impl<T> Sync for GbaCell<T> {}
 impl<T> RefUnwindSafe for GbaCell<T> {}
