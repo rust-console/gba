@@ -81,8 +81,6 @@ extern "C" fn main() -> ! {
   IE.write(IrqBits::VBLANK);
   IME.write(true);
 
-  TIMER0_CONTROL.write(TimerControl::new().with_enabled(true));
-
   // bg
   BG_PALETTE.index(1).write(Color::MAGENTA);
   // obj
