@@ -76,7 +76,7 @@ extern "C" fn main() -> ! {
   world[2][3] = b'G';
   world[3][3] = b'0';
 
-  // hardware configuration
+  // interrupt configuration
   DISPSTAT.write(DisplayStatus::new().with_irq_vblank(true));
   IE.write(IrqBits::VBLANK);
   IME.write(true);
