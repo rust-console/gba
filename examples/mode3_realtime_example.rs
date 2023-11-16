@@ -1,6 +1,6 @@
 /* 
 * Made by Evan Goemer (@evangoemer)
-* Licenced under CC0
+* Licenced under MIT
 */
 
 #![no_std]
