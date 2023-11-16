@@ -1,7 +1,7 @@
-/* 
-* Made by Evan Goemer
-* Discord: @evangoemer
-*/
+/*
+ * Made by Evan Goemer
+ * Discord: @evangoemer
+ */
 
 #![no_std]
 #![no_main]
@@ -15,19 +15,19 @@ fn panic_handler(_: &core::panic::PanicInfo) -> ! {
 
 #[no_mangle]
 fn main() {
-    DISPCNT.write(
-        DisplayControl::new().with_video_mode(VideoMode::_3).with_show_bg2(true),
-    );
+  DISPCNT.write(
+    DisplayControl::new().with_video_mode(VideoMode::_3).with_show_bg2(true),
+  );
 
-    let red = 0;
-    let green = 255;
-    let blue = 0;
+  let red = 0;
+  let green = 255;
+  let blue = 0;
 
-    let color = Color::from_rgb(red, green, blue);
+  let color = Color::from_rgb(red, green, blue);
 
-    for y in 0..160 {
-        for x in 0..240 {
-            VIDEO3_VRAM.index(x, y).write(color);
-        }
+  for y in 0..160 {
+    for x in 0..240 {
+      VIDEO3_VRAM.index(x, y).write(color);
     }
+  }
 }
