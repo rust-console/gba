@@ -60,6 +60,7 @@ extern "C" fn main() -> ! {
   creatures[4].x = 72;
   creatures[4].y = 59;
 
+  // indexing with `[y][x]`
   let mut world = [[0_u8; 32]; 32];
   for i in 0..32 {
     world[0][i] = Cga8x8Thick::BOX_HORIZONTAL;
@@ -71,7 +72,6 @@ extern "C" fn main() -> ! {
   world[0][29] = Cga8x8Thick::BOX_UPPER_RIGHT;
   world[19][0] = Cga8x8Thick::BOX_LOWER_LEFT;
   world[19][29] = Cga8x8Thick::BOX_LOWER_RIGHT;
-  //
   world[1][3] = b'B';
   world[2][3] = b'G';
   world[3][3] = b'0';
