@@ -53,6 +53,8 @@ static CREATURE_POSITIONS: [(GbaCell<u16>, GbaCell<u16>); 5] = [
   (GbaCell::new(0), GbaCell::new(0)),
 ];
 
+/// This runs at the start of each vblank period. We just reformat the shared
+/// creature position data into the OAM region.
 extern "C" fn irq_handler(_bits: IrqBits) {
   // update graphics MMIO
   for (i, (creature_pos, attr_addr)) in
@@ -99,7 +101,7 @@ extern "C" fn main() -> ! {
   world[2][3] = b'G';
   world[3][3] = b'0';
 
-  // hardware configuration
+  // interrupt configuration
   RUST_IRQ_HANDLER.write(Some(irq_handler));
   DISPSTAT.write(DisplayStatus::new().with_irq_vblank(true));
   IE.write(IrqBits::VBLANK);
