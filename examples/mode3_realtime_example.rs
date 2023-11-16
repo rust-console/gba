@@ -1,6 +1,6 @@
 /* 
-* Made by Evan Goemer (@evangoemer)
-* Licenced under MIT
+* Made by Evan Goemer
+* Discord: @evangoemer
 */
 
 #![no_std]
