@@ -9,6 +9,13 @@ use core::ffi::c_void;
 ///
 /// * This will *always* copy one byte at a time, making it suitable for use
 ///   with SRAM memory.
+///
+/// ## Safety
+/// * If `byte_count` is zero then the pointers are not used and they can be any value.
+/// * If `byte_count` is non-zero then:
+///   * Both pointers must be valid for the number of bytes given.
+///   * The two regions must either be *entirely* disjoint or *entirely* overlapping.
+///     Partial overlap is not allowed.
 #[inline]
 #[no_mangle]
 #[instruction_set(arm::a32)]
@@ -32,8 +39,14 @@ pub unsafe extern "C" fn __aeabi_memcpy1(
 
 /// Halfword copy between exclusive regions.
 ///
-/// * **Safety:** The pointers must start aligned to 2.
 /// * If the `byte_count` is odd then a single byte copy will happen at the end.
+///
+/// ## Safety
+/// * If `byte_count` is zero then the pointers are not used and they can be any value.
+/// * If `byte_count` is non-zero then:
+///   * Both pointers must be valid for the span used and aligned to 2.
+///   * The two regions must either be *entirely* disjoint or *entirely* overlapping.
+///     Partial overlap is not allowed.
 #[inline]
 #[no_mangle]
 #[instruction_set(arm::a32)]
@@ -62,9 +75,15 @@ pub unsafe extern "C" fn __aeabi_memcpy2(
 
 /// Word copy between exclusive regions.
 ///
-/// * **Safety:** The pointers must start aligned to 4.
 /// * If `byte_count` is not a multiple of 4 then a halfword and/or byte copy
 ///   will happen at the end.
+///
+/// ## Safety
+/// * If `byte_count` is zero then the pointers are not used and they can be any value.
+/// * If `byte_count` is non-zero then:
+///   * Both pointers must be valid for the span used and aligned to 4.
+///   * The two regions must either be *entirely* disjoint or *entirely* overlapping.
+///     Partial overlap is not allowed.
 #[naked]
 #[no_mangle]
 #[instruction_set(arm::a32)]
@@ -127,11 +146,14 @@ pub unsafe extern "C" fn __aeabi_memcpy8(
   __aeabi_memcpy4(dest, src, byte_count);
 }
 
-/// Arbitrary width copy between exclusive regions.
+/// Arbitrary-width copy between exclusive regions.
 ///
-/// * The pointers do not have a minimum alignment.
-/// * The function will automatically use the best type of copy possible, based
-///   on the pointers given.
+/// ## Safety
+/// * If `byte_count` is zero then the pointers are not used and they can be any value.
+/// * If `byte_count` is non-zero then:
+///   * Both pointers must be valid for the span used (no required alignment).
+///   * The two regions must either be *entirely* disjoint or *entirely* overlapping.
+///     Partial overlap is not allowed.
 #[naked]
 #[no_mangle]
 #[instruction_set(arm::a32)]
@@ -189,6 +211,8 @@ pub unsafe extern "C" fn __aeabi_memcpy(
 pub unsafe extern "C" fn memcpy(
   dest: *mut u8, src: *const u8, byte_count: usize,
 ) -> *mut u8 {
+  // I've seen a standard call to `__aeabi_memcpy` give weird codegen,
+  // so we (currently) do the call manually.
   core::arch::asm! {
     bracer::with_pushed_registers!("{{r0, lr}}", {
       "bl {__aeabi_memcpy}",
