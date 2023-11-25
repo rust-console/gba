@@ -359,10 +359,8 @@ pub unsafe extern "C" fn __aeabi_memmove(
   dest: *mut u8, src: *const u8, byte_count: usize,
 ) {
   core::arch::asm! {
-    "cmp    r2, #7", // if count <= (fix+word): just byte copy
-    "ble    {__aeabi_memcpy1}",
+    // when d > s we need to copy back-to-front
     bracer::when!("r0" >=u "r1" [label_id=1] {
-      // when d > s we need to reverse-direction copy
       "add     r0, r0, r2",
       "add     r1, r1, r2",
       "eor     r3, r0, r1",
@@ -388,9 +386,9 @@ pub unsafe extern "C" fn __aeabi_memmove(
       "strb    r3, [r0, #-1]!",
       "b       {reverse_copy_u16}",
     }),
+    // forward copy is a normal memcpy
     "b      {__aeabi_memcpy}",
     __aeabi_memcpy = sym __aeabi_memcpy,
-    __aeabi_memcpy1 = sym __aeabi_memcpy1,
     reverse_copy_u8 = sym reverse_copy_u8,
     reverse_copy_u16 = sym reverse_copy_u16,
     reverse_copy_u32 = sym reverse_copy_u32,
