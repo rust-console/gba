@@ -110,6 +110,7 @@ pub mod video;
 /// If the size of the value held is already a multiple of 4 then this will be
 /// the same size as the wrapped value. Otherwise the compiler will add
 /// sufficient padding bytes on the end to make the size a multiple of 4.
+#[derive(Debug)]
 #[repr(C, align(4))]
 pub struct Align4<T>(pub T);
 
