@@ -25,9 +25,9 @@
 //! declarations are simply incorrect.
 
 use core::{ffi::c_void, mem::size_of};
-use bitfrob::u8x2;
-use voladdress::{Safe, Unsafe, VolAddress, VolBlock, VolSeries, VolGrid2dStrided, VolGrid2d};
 use crate::prelude::*;
+pub use bitfrob::u8x2;
+pub use voladdress::{Safe, Unsafe, VolAddress, VolBlock, VolSeries, VolGrid2dStrided, VolGrid2d};
 
 // Note(Lokathor): This macro lets us stick each address at the start of the
 // definition, which lets us easily keep each declaration in address order.
