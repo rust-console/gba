@@ -77,6 +77,7 @@ impl<const MUL: u32, const ADD: u32> GenericLcg32<MUL, ADD> {
   #[inline]
   pub fn next_u32(&mut self) -> u32 {
     let next_state = self.0.wrapping_mul(MUL).wrapping_add(ADD);
+    self.0 = next_state;
     next_state
   }
 
