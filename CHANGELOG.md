@@ -1,5 +1,11 @@
 # Changelog
 
+* **0.11.5:**
+  * Fixed the random number generator `next` method (https://github.com/rust-console/gba/issues/192).
+  * Added optional support for the `critical-section` crate (https://github.com/rust-console/gba/pull/191)
+  * Put new guidance on effective `build-std` settings in the README (https://github.com/rust-console/gba/issues/187)
+  * The `mmio` module now publicly re-exports the necessary definitions used from other crates (https://github.com/rust-console/gba/issues/173)
+
 * **0.11.3:**
   * **Soundness:** Fixed the definition of `VIDEO3_VRAM`, now it's the correct
   type and it will correctly stay in bounds.
