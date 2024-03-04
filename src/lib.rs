@@ -91,6 +91,8 @@ mod macros;
 pub mod asm_runtime;
 pub mod bios;
 pub mod builtin_art;
+#[cfg(feature = "critical-section")]
+mod critical_section;
 pub mod dma;
 pub mod fixed;
 pub mod gba_cell;
