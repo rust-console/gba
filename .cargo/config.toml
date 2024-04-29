@@ -1,9 +1,9 @@
 [build]
-#target = "thumbv4t-none-eabi"
+target = "thumbv4t-none-eabi"
 
 [unstable]
-#build-std = ["core"]
-#build-std-features = ["compiler-builtins-weak-intrinsics"]
+build-std = ["core"]
+build-std-features = ["compiler-builtins-weak-intrinsics"]
 
 [target.thumbv4t-none-eabi]
 runner = "mgba-qt"
