@@ -1,5 +1,8 @@
 # Changelog
 
+* **0.12.0:**
+  * A totally new version!
+
 * **0.11.5:**
   * Fixed the random number generator `next` method (https://github.com/rust-console/gba/issues/192).
   * Added optional support for the `critical-section` crate (https://github.com/rust-console/gba/pull/191)

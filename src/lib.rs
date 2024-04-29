@@ -1,159 +1,51 @@
 #![no_std]
-#![feature(asm_const)]
-#![feature(naked_functions)]
-#![warn(clippy::missing_inline_in_public_items)]
-#![allow(clippy::let_and_return)]
-#![allow(clippy::result_unit_err)]
-//#![warn(missing_docs)]
+#![warn(missing_docs)]
+#![warn(unsafe_op_in_unsafe_fn)]
+#![cfg_attr(feature = "doc_cfg", feature(doc_cfg))]
 
-//! A crate for GBA development.
+//! A crate for 'raw' style Game Boy Advance (GBA) development, where any code
+//! can access any hardware component at any time, with no special ceremony.
 //!
-//! ## How To Make Your Own GBA Project Using This Crate
+//! * **Note:** If you want a 'managed' hardware style, more like many other
+//!   "embedded-wg" experiences, where hardware access is declared though the
+//!   type system by passing around zero-sized token types, try the
+//!   [agb](https://docs.rs/agb) crate instead.
 //!
-//! This will require the use of Nightly Rust. Any recent-ish version of Nightly
-//! should be fine.
+//! # Crate Features
 //!
-//! [arm-download]:
-//!     https://developer.arm.com/Tools%20and%20Software/GNU%20Toolchain
+//! * `on_gba` (**Default:** enabled): When this feature is used, the crate
+//!   assumes that you're building the crate for, and running the code on, the
+//!   Game Boy Advance. The build target is expected to be `thumbv4t-none-eabi`
+//!   or `armv4t-none-eabi`, any other targets may have a build error. Further,
+//!   the specific device is assumed to be the GBA, which is used to determine
+//!   the safety of all direct hardware access using MMIO. This feature is on by
+//!   default because the primary purpose of this crate is to assist in the
+//!   building of GBA games, but you *can* disable the feature and build the
+//!   crate anyway, such as if you want to use any of the crate's data type
+//!   definitions within a build script on your host machine. When this feature
+//!   is disabled, GBA specific internals of functions *may* be replaced with
+//!   runtime panics when necessary. How much of this crate actually works on
+//!   non-GBA platforms is **not** covered by our SemVer!
+//! * `critical-section` (**Default:** enabled): activates an implementation to
+//!   support for the [critical-section](https://docs.rs/critical-section)
+//!   crate.
+//! * `track_caller` (**Default:** disabled): Causes some functions that can
+//!   panic to add the [track_caller][ref-track-caller] attribute. The attribute
+//!   adds a "secret" function argument to pass the `Location` of the call, so
+//!   it can reduce performance when a function is not inlined (more data has to
+//!   be pushed onto the stack per function call). Suggested for debugging only.
 //!
-//! * **Get The ARM Binutils:** You'll need the ARM version of the GNU binutils
-//!   in your path, specifically the linker (`arm-none-eabi-ld`). Linux folks
-//!   can use the package manager. Mac and Windows folks can use the [ARM
-//!   Website][arm-download].
-//! * **Run `rustup component add rust-src`:** This makes rustup keep the
-//!   standard library source code on hand, which is necessary for `build-std`
-//!   to work.
-//! * **Create A `.cargo/config.toml`:** You'll want to set up a file to provide
-//!   all the right default settings so that a basic `cargo build` and `cargo
-//!   run` will "just work". Something like the following is what you probably
-//!   want.
+//! [ref-track-caller]:
+//!     https://doc.rust-lang.org/reference/attributes/codegen.html#the-track_caller-attribute
 //!
-//! ```toml
-//! [build]
-//! target = "thumbv4t-none-eabi"
+//! # Additional Information
 //!
-//! [unstable]
-//! build-std = ["core"]
-//!
-//! [target.thumbv4t-none-eabi]
-//! runner = "mgba-qt"
-//! rustflags = ["-Clink-arg=-Tlinker_scripts/mono_boot.ld"]
-//! ```
-//!
-//! * **Make Your Executables:** At this point you can make a `bin` or an
-//!   `example` file. Every executable will need to be `#![no_std]` and
-//!   `#![no_main]`. They will also need a `#[panic_handler]` defined, as well
-//!   as a `#[no_mangle] extern "C" fn main() -> ! {}` function, which is what
-//!   the assembly runtime will call to start your Rust program after it fully
-//!   initializes the system. The C ABI must be used because Rust's own ABI is
-//!   not stable.
-//!
-//! ```rust
-//! #![no_std]
-//! #![no_main]
-//!
-//! #[panic_handler]
-//! fn panic_handler(_: &core::panic::PanicInfo) -> ! {
-//!   loop {}
-//! }
-//!
-//! #[no_mangle]
-//! extern "C" fn main() -> ! {
-//!   loop {}
-//! }
-//! ```
-//!
-//! * **Optional: Use `objcopy` and `gbafix`:** The `cargo build` will produce
-//!   ELF files, which mGBA can run directly. If you want to run your program on
-//!   real hardware you'll need to first `objcopy` the raw binary out of the ELF
-//!   into its own file, then Use `gbafix` to give an appropriate header to the
-//!   file. `objcopy` is part of the ARM binutils you already installed, it
-//!   should be named `arm-none-eabi-objcopy`. You can get `gbafix` through
-//!   cargo: `cargo install gbafix`.
-//!
-//! ## Other GBA-related Crates
-//!
-//! This crate provides an API to interact with the GBA that is safe, but with
-//! minimal restrictions on what components can be changed when. If you'd like
-//! an API where the borrow checker provides stronger control over component
-//! access then the [agb](https://docs.rs/agb) crate might be what you want.
-//!
-//! ## Safety
-//!
-//! All safety considerations for the crate assume that you're building for the
-//! `thumbv4t-none-eabi` or `armv4t-none-eabi` targets, using the provided
-//! linker script, and then running the code on a GBA. While it's possible to
-//! break any of these assumptions, if you do that some or all of the code
-//! provided by this crate may become unsound.
+//! * Development Environment Setup
+//! * Project Setup
+//! * Learning GBA Programming
 
-mod macros;
-
-pub mod asm_runtime;
-pub mod bios;
-pub mod builtin_art;
-#[cfg(feature = "critical-section")]
-mod critical_section;
-pub mod dma;
-pub mod fixed;
-pub mod gba_cell;
-pub mod interrupts;
-pub mod keys;
-pub mod mem_fns;
-pub mod mgba;
 pub mod mmio;
-pub mod prelude;
-pub mod random;
-pub mod sound;
-pub mod timers;
-pub mod video;
 
-/// Wraps a value to be aligned to a minimum of 4.
-///
-/// If the size of the value held is already a multiple of 4 then this will be
-/// the same size as the wrapped value. Otherwise the compiler will add
-/// sufficient padding bytes on the end to make the size a multiple of 4.
-#[derive(Debug)]
-#[repr(C, align(4))]
-pub struct Align4<T>(pub T);
-
-impl<const N: usize> Align4<[u8; N]> {
-  /// Views these bytes as a slice of `u32`
-  /// ## Panics
-  /// * If the number of bytes isn't a multiple of 4
-  #[inline]
-  #[must_use]
-  pub fn as_u32_slice(&self) -> &[u32] {
-    assert!(self.0.len() % 4 == 0);
-    // Safety: our struct is aligned to 4, so the pointer will already be
-    // aligned, we only need to check the length
-    unsafe {
-      let data: *const u8 = self.0.as_ptr();
-      let len: usize = self.0.len();
-      core::slice::from_raw_parts(data.cast::<u32>(), len / 4)
-    }
-  }
-
-  /// Views these bytes as a slice of `u16`
-  /// ## Panics
-  /// * If the number of bytes isn't a multiple of 2
-  #[inline]
-  #[must_use]
-  pub fn as_u16_slice(&self) -> &[u16] {
-    assert!(self.0.len() % 2 == 0);
-    // Safety: our struct is aligned to 4, so the pointer will already be
-    // aligned, we only need to check the length
-    unsafe {
-      let data: *const u8 = self.0.as_ptr();
-      let len: usize = self.0.len();
-      core::slice::from_raw_parts(data.cast::<u16>(), len / 2)
-    }
-  }
-}
-
-/// Works like [`include_bytes!`], but the value is wrapped in [`Align4`].
-#[macro_export]
-macro_rules! include_aligned_bytes {
-  ($file:expr $(,)?) => {{
-    Align4(*include_bytes!($file))
-  }};
-}
+#[cfg(feature = "critical-section")]
+#[cfg_attr(feature = "doc_cfg", doc(cfg(feature = "critical-section")))]
+pub mod critical_section;

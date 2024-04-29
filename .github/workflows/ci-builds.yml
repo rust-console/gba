@@ -13,9 +13,6 @@ jobs:
           - { toolchain: nightly }
     steps:
       - uses: actions/checkout@v2
-      
-      - name: Install Apt Dependencies
-        run: sudo apt-get update && sudo apt-get install binutils-arm-none-eabi
 
       - uses: actions-rs/toolchain@v1
         with:
@@ -25,10 +22,15 @@ jobs:
 
       - name: Install Rust Source
         run: rustup component add rust-src
+      
+      - name: Install GNU Binutils
+        run: sudo apt-get update && sudo apt-get install binutils-arm-none-eabi
 
-      - name: Build The Examples
-        uses: actions-rs/cargo@v1
-        with:
-          toolchain: ${{ matrix.rust.toolchain }}
-          command: build
-          args: --examples
+      - name: Build The Examples (Link With GNU, weak compiler intrinsics)
+        run: cargo build --examples
+      
+      - name: Delete the .cargo/config.toml
+        run: rm -fr .cargo/config.toml
+
+      - name: Build The Examples (Link With LLD, strong compiler intrinsics)
+        run: cargo build --examples --target=thumbv4t-none-eabi -Zbuild-std=core -Clink-arg=-Tlinker_scripts/mono_boot.ld

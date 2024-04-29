@@ -1,11 +1,7 @@
 {
-  "rust-analyzer.checkOnSave.allTargets": false,
-  "rust-analyzer.checkOnSave.overrideCommand": [
-    "cargo",
-    "build",
-    "--quiet",
-    "--workspace",
-    "--message-format=json",
+  "rust-analyzer.cargo.allTargets": false,
+  "rust-analyzer.check.command": "build",
+  "rust-analyzer.check.extraArgs": [
     "--lib",
     "--bins",
     "--examples"
