@@ -2,10 +2,7 @@ use core::mem::size_of_val;
 
 use voladdress::{Safe, VolRegion};
 
-use crate::{
-  bios::{BitUnPack, BitUnpackInfo},
-  video::{Tile4, Tile8},
-};
+use crate::video::{Tile4, Tile8};
 
 macro_rules! glyph {
   ($name:ident = $id:expr) => {
@@ -69,19 +66,20 @@ impl Cga8x8Thick {
   /// ## Panics
   /// * Requires at least 256 elements of space within the region.
   #[inline]
+  #[cfg(feature = "on_gba")]
   pub fn bitunpack_4bpp(
     self, b: VolRegion<Tile4, Safe, Safe>, offset_and_touch_zero: u32,
   ) {
     assert!(b.len() >= 256);
     let src = CGA_8X8_THICK.as_ptr();
     let dest = b.index(0).as_usize() as *mut u32;
-    let info = BitUnpackInfo {
+    let info = crate::bios::BitUnpackInfo {
       src_byte_len: size_of_val(&CGA_8X8_THICK) as u16,
       src_elem_width: 1,
       dest_elem_width: 4,
       offset_and_touch_zero,
     };
-    unsafe { BitUnPack(src.cast(), dest, &info) };
+    unsafe { crate::bios::BitUnPack(src.cast(), dest, &info) };
   }
 
   /// Bit unpacks the data (8bpp depth) to the location given.
@@ -92,19 +90,20 @@ impl Cga8x8Thick {
   /// ## Panics
   /// * Requires at least 256 elements of space within the region.
   #[inline]
+  #[cfg(feature = "on_gba")]
   pub fn bitunpack_8bpp(
     self, b: VolRegion<Tile8, Safe, Safe>, offset_and_touch_zero: u32,
   ) {
     assert!(b.len() >= 256);
     let src = CGA_8X8_THICK.as_ptr();
     let dest = b.index(0).as_usize() as *mut u32;
-    let info = BitUnpackInfo {
+    let info = crate::bios::BitUnpackInfo {
       src_byte_len: size_of_val(&CGA_8X8_THICK) as u16,
       src_elem_width: 1,
       dest_elem_width: 8,
       offset_and_touch_zero,
     };
-    unsafe { BitUnPack(src.cast(), dest, &info) };
+    unsafe { crate::bios::BitUnPack(src.cast(), dest, &info) };
   }
 }
 

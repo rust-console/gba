@@ -4,6 +4,7 @@
 #![warn(clippy::missing_inline_in_public_items)]
 #![allow(clippy::let_and_return)]
 #![allow(clippy::result_unit_err)]
+#![allow(unused_imports)]
 //#![warn(missing_docs)]
 
 //! A crate for GBA development.
@@ -88,18 +89,25 @@
 
 mod macros;
 
+#[cfg(feature = "on_gba")]
 pub mod asm_runtime;
+#[cfg(feature = "on_gba")]
 pub mod bios;
 pub mod builtin_art;
 #[cfg(feature = "critical-section")]
 mod critical_section;
+#[cfg(feature = "on_gba")]
 pub mod dma;
 pub mod fixed;
+#[cfg(feature = "on_gba")]
 pub mod gba_cell;
 pub mod interrupts;
 pub mod keys;
+#[cfg(feature = "on_gba")]
 pub mod mem_fns;
+#[cfg(feature = "on_gba")]
 pub mod mgba;
+#[cfg(feature = "on_gba")]
 pub mod mmio;
 pub mod prelude;
 pub mod random;
