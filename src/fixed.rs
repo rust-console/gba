@@ -42,6 +42,7 @@ macro_rules! impl_trait_op_unit {
       type Output = Self;
       #[inline]
       #[must_use]
+      #[cfg_attr(feature = "track_caller", track_caller)]
       fn $op(self) -> Self::Output {
         Self::$op(self)
       }
@@ -54,6 +55,7 @@ macro_rules! impl_trait_op_self_rhs {
       type Output = Self;
       #[inline]
       #[must_use]
+      #[cfg_attr(feature = "track_caller", track_caller)]
       fn $op(self, rhs: Self) -> Self::Output {
         Self::$op(self, rhs)
       }
@@ -64,6 +66,7 @@ macro_rules! impl_trait_op_assign_self_rhs {
   ($t:ty, $trait:ident, $op:ident, $op_assign:ident) => {
     impl<const B: u32> $trait for Fixed<$t, B> {
       #[inline]
+      #[cfg_attr(feature = "track_caller", track_caller)]
       fn $op_assign(&mut self, rhs: Self) {
         *self = self.$op(rhs);
       }
@@ -76,6 +79,7 @@ macro_rules! impl_shift_self_u32 {
       type Output = Self;
       #[inline]
       #[must_use]
+      #[cfg_attr(feature = "track_caller", track_caller)]
       fn $op(self, rhs: u32) -> Self::Output {
         Self::$op(self, rhs)
       }
@@ -86,6 +90,7 @@ macro_rules! impl_shift_assign_self_u32 {
   ($t:ty, $trait:ident, $op:ident, $op_assign:ident) => {
     impl<const B: u32> $trait<u32> for Fixed<$t, B> {
       #[inline]
+      #[cfg_attr(feature = "track_caller", track_caller)]
       fn $op_assign(&mut self, rhs: u32) {
         *self = self.$op(rhs);
       }
@@ -100,6 +105,7 @@ macro_rules! impl_common_fixed_ops {
       /// type.
       #[inline]
       #[must_use]
+      #[cfg_attr(feature = "track_caller", track_caller)]
       pub const fn wrapping_from(i: $t) -> Self {
         Self(i << B)
       }
@@ -107,6 +113,7 @@ macro_rules! impl_common_fixed_ops {
       /// Makes a `Fixed` directly from a raw inner value (no shift).
       #[inline]
       #[must_use]
+      #[cfg_attr(feature = "track_caller", track_caller)]
       pub const fn from_raw(i: $t) -> Self {
         Self(i)
       }
@@ -114,6 +121,7 @@ macro_rules! impl_common_fixed_ops {
       /// Unwraps the inner value directly into the base type (no shift).
       #[inline]
       #[must_use]
+      #[cfg_attr(feature = "track_caller", track_caller)]
       pub const fn into_raw(self) -> $t {
         self.0
       }
@@ -121,6 +129,7 @@ macro_rules! impl_common_fixed_ops {
       /// Bitwise Not.
       #[inline]
       #[must_use]
+      #[cfg_attr(feature = "track_caller", track_caller)]
       pub const fn not(self) -> Self {
         Self(!self.0)
       }
@@ -128,6 +137,7 @@ macro_rules! impl_common_fixed_ops {
       /// Addition.
       #[inline]
       #[must_use]
+      #[cfg_attr(feature = "track_caller", track_caller)]
       pub const fn add(self, rhs: Self) -> Self {
         Self(self.0 + rhs.0)
       }
@@ -135,6 +145,7 @@ macro_rules! impl_common_fixed_ops {
       /// Subtraction.
       #[inline]
       #[must_use]
+      #[cfg_attr(feature = "track_caller", track_caller)]
       pub const fn sub(self, rhs: Self) -> Self {
         Self(self.0 - rhs.0)
       }
@@ -142,6 +153,7 @@ macro_rules! impl_common_fixed_ops {
       /// Remainder.
       #[inline]
       #[must_use]
+      #[cfg_attr(feature = "track_caller", track_caller)]
       pub const fn rem(self, rhs: Self) -> Self {
         Self(self.0 % rhs.0)
       }
@@ -149,6 +161,7 @@ macro_rules! impl_common_fixed_ops {
       /// Bitwise AND.
       #[inline]
       #[must_use]
+      #[cfg_attr(feature = "track_caller", track_caller)]
       pub const fn bitand(self, rhs: Self) -> Self {
         Self(self.0 & rhs.0)
       }
@@ -156,6 +169,7 @@ macro_rules! impl_common_fixed_ops {
       /// Bitwise OR.
       #[inline]
       #[must_use]
+      #[cfg_attr(feature = "track_caller", track_caller)]
       pub const fn bitor(self, rhs: Self) -> Self {
         Self(self.0 | rhs.0)
       }
@@ -163,6 +177,7 @@ macro_rules! impl_common_fixed_ops {
       /// Bitwise XOR.
       #[inline]
       #[must_use]
+      #[cfg_attr(feature = "track_caller", track_caller)]
       pub const fn bitxor(self, rhs: Self) -> Self {
         Self(self.0 ^ rhs.0)
       }
@@ -170,6 +185,7 @@ macro_rules! impl_common_fixed_ops {
       /// Bit-shift Left.
       #[inline]
       #[must_use]
+      #[cfg_attr(feature = "track_caller", track_caller)]
       pub const fn shl(self, rhs: u32) -> Self {
         Self(self.0 << rhs)
       }
@@ -177,6 +193,7 @@ macro_rules! impl_common_fixed_ops {
       /// Bit-shift Right.
       #[inline]
       #[must_use]
+      #[cfg_attr(feature = "track_caller", track_caller)]
       pub const fn shr(self, rhs: u32) -> Self {
         Self(self.0 >> rhs)
       }
@@ -217,6 +234,7 @@ macro_rules! impl_signed_fixed_ops {
       /// Negate.
       #[inline]
       #[must_use]
+      #[cfg_attr(feature = "track_caller", track_caller)]
       pub const fn neg(self) -> Self {
         Self(-self.0)
       }
@@ -224,6 +242,7 @@ macro_rules! impl_signed_fixed_ops {
       /// If the number is negative or not.
       #[inline]
       #[must_use]
+      #[cfg_attr(feature = "track_caller", track_caller)]
       pub const fn is_negative(self) -> bool {
         self.0 < 0
       }
@@ -231,6 +250,7 @@ macro_rules! impl_signed_fixed_ops {
       /// Multiply.
       #[inline]
       #[must_use]
+      #[cfg_attr(feature = "track_caller", track_caller)]
       pub const fn mul(self, rhs: Self) -> Self {
         let raw = (self.0 as i32) * (rhs.0 as i32);
         Self((raw >> B) as $t)
@@ -239,6 +259,7 @@ macro_rules! impl_signed_fixed_ops {
       /// Divide.
       #[inline]
       #[must_use]
+      #[cfg_attr(feature = "track_caller", track_caller)]
       pub const fn div(self, rhs: Self) -> Self {
         let m = (self.0 as i32) * (1 << B);
         let d = m / (rhs.0 as i32);
@@ -248,6 +269,7 @@ macro_rules! impl_signed_fixed_ops {
       /// Fractional part of the value.
       #[inline]
       #[must_use]
+      #[cfg_attr(feature = "track_caller", track_caller)]
       pub const fn fract(self) -> Self {
         let frac_mask = (<$unsigned>::MAX >> (<$t>::BITS - B));
         Self((self.0.unsigned_abs() & frac_mask) as $t)
@@ -256,6 +278,7 @@ macro_rules! impl_signed_fixed_ops {
       /// Whole part of the value.
       #[inline]
       #[must_use]
+      #[cfg_attr(feature = "track_caller", track_caller)]
       pub const fn trunc(self) -> Self {
         Self(((self.0.unsigned_abs() >> B) << B) as $t)
       }
@@ -287,6 +310,7 @@ macro_rules! impl_unsigned_fixed_ops {
       /// Multiply.
       #[inline]
       #[must_use]
+      #[cfg_attr(feature = "track_caller", track_caller)]
       pub const fn mul(self, rhs: Self) -> Self {
         let raw = (self.0 as u32) * (rhs.0 as u32);
         Self((raw >> B) as $t)
@@ -295,6 +319,7 @@ macro_rules! impl_unsigned_fixed_ops {
       /// Divide.
       #[inline]
       #[must_use]
+      #[cfg_attr(feature = "track_caller", track_caller)]
       pub const fn div(self, rhs: Self) -> Self {
         let m = (self.0 as u32) * (1 << B);
         let d = m / (rhs.0 as u32);
@@ -304,6 +329,7 @@ macro_rules! impl_unsigned_fixed_ops {
       /// Fractional part of the value.
       #[inline]
       #[must_use]
+      #[cfg_attr(feature = "track_caller", track_caller)]
       pub const fn fract(self) -> Self {
         Self(self.0 & (<$t>::MAX >> (<$t>::BITS - B)))
       }
@@ -311,6 +337,7 @@ macro_rules! impl_unsigned_fixed_ops {
       /// Whole part of the value.
       #[inline]
       #[must_use]
+      #[cfg_attr(feature = "track_caller", track_caller)]
       pub const fn trunc(self) -> Self {
         Self(self.0 & (<$t>::MAX << B))
       }
