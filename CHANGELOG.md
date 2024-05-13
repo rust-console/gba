@@ -1,8 +1,9 @@
 # Changelog
 
-* **0.12.0:**
-  * A totally new version!
-
+* **0.11.6:**
+  * `on_gba` feature (default: enabled) that signals if the crate is running on a GBA.
+    Limited portions of the crate *can* be used even when not on the GBA (such as in a build script).
+  * `track_caller` added for fixed point math operations
 * **0.11.5:**
   * Fixed the random number generator `next` method (https://github.com/rust-console/gba/issues/192).
   * Added optional support for the `critical-section` crate (https://github.com/rust-console/gba/pull/191)
