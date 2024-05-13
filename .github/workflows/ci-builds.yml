@@ -33,7 +33,7 @@ jobs:
         run: rm -fr .cargo/config.toml
 
       - name: Build The Examples (Link With LLD, strong compiler intrinsics)
-        run: cargo build --examples --target=thumbv4t-none-eabi -Zbuild-std=core -Clink-arg=-Tlinker_scripts/mono_boot.ld
+        run: RUSTFLAGS="-Clink-arg=-Tlinker_scripts/mono_boot.ld" cargo build --examples --target=thumbv4t-none-eabi -Zbuild-std=core
 
       - name: Build The Crate With No Default Features (build script usage simulation)
         run: cargo build --no-default-features
