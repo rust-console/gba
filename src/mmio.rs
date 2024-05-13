@@ -1,13 +1,14 @@
 //! Definitions for Memory-mapped IO (hardware control).
 
-use voladdress::VolAddress;
+#[allow(unused_imports)]
+use voladdress::{Safe, Unsafe, VolAddress};
 
 /// "safe on GBA", which is either Safe or Unsafe according to the `on_gba`
 /// cargo feature.
 #[cfg(feature = "on_gba")]
-type SOGBA = voladdress::Safe;
+type SOGBA = Safe;
 #[cfg(not(feature = "on_gba"))]
-type SOGBA = voladdress::Unsafe;
+type SOGBA = Unsafe;
 
 type PlainAddr<T> = VolAddress<T, SOGBA, SOGBA>;
 
@@ -19,4 +20,7 @@ type PlainAddr<T> = VolAddress<T, SOGBA, SOGBA>;
 ///   pending until this is again set to `true`.
 ///
 /// This defaults to `false`.
+///
+/// Technically there's a two CPU cycle delay between this being written and
+/// interrupts actually being enabled/disabled. In practice, it doesn't matter.
 pub const IME: PlainAddr<bool> = unsafe { VolAddress::new(0x0400_0208) };

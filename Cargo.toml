@@ -7,12 +7,27 @@ edition = "2021"
 license = "Zlib OR Apache-2.0 OR MIT"
 
 [features]
-default = ["on_gba", "critical-section", "doc_cfg"]
+default = ["on_gba"]
 # SEE THE CRATE DOCS FOR SAFETY RELATED INFO REGARDING THIS FEATURE.
 on_gba = []
-# utilize `doc_cfg` where appropriate. requires nightly.
+# utilize `doc_cfg` where appropriate. requires nightly. intended mostly for use
+# during docs.rs documentation generation.
 doc_cfg = []
+# Activates the `track_caller` attribute on various functions. Use of the
+# `track_caller` attribute on a function adds a "secret" extra argument for the
+# `Location` of the caller, which can reduce performance if the function is not
+# inlined (meaning  `Location` is passed via the stack). This is only needed for
+# debugging, and so it's off by default.
 track_caller = []
+# The assembly runtime's irq handler will take extra steps to allow nested
+# interrupts during calls to the Rust interrupt handler, and also the Rust
+# interrupt handler will be called with the CPU in System mode, allowing for
+# full stack usage. If you do not use this feature then the Rust IRQ handler
+# will be called with the CPU in IRQ mode with nested interrupts disabled at the
+# CPU level. IRQ mode still has enough stack space to do any *reasonable* IRQ
+# handling, so you do NOT normally need to use this unless you need nested
+# interrupt support or extremely large stack usage during the handler.
+robust_irq_handler = []
 
 [dependencies]
 voladdress = "1.3.0"
@@ -20,6 +35,7 @@ bitfrob = "1"
 critical-section = { version = "1.1.2", features = [
   "restore-state-bool",
 ], optional = true }
+bytemuck = { version = "1.16.0", optional = true }
 
 [profile.dev]
 opt-level = 3
@@ -38,3 +54,4 @@ incremental = false
 # on the GBA. This is the closest target that docs.rs supports by default and
 # which *also* supports the `instruction_set` attribute to avoid build errors.
 targets = ["armv5te-unknown-linux-gnueabi"]
+features = ["doc_cfg"]
