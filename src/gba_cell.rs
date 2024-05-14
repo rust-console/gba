@@ -71,6 +71,7 @@ unsafe impl<T> GbaCellSafe for fixed::FixedU8<T> {}
 /// A "cell" type suitable to hold a global on the GBA.
 #[repr(transparent)]
 pub struct GbaCell<T>(core::cell::UnsafeCell<T>);
+#[cfg(feature = "on_gba")]
 impl<T> Debug for GbaCell<T>
 where
   T: GbaCellSafe + Debug,
@@ -90,6 +91,7 @@ where
     Self::new(T::default())
   }
 }
+#[cfg(feature = "on_gba")]
 impl<T> Clone for GbaCell<T>
 where
   T: GbaCellSafe + Default,
