@@ -6,7 +6,7 @@ use core::{
   ptr::NonNull,
 };
 
-use crate::Color;
+use crate::video::Color;
 
 /// Marker trait bound for the methods of [`GbaCell`].
 ///
@@ -14,7 +14,7 @@ use crate::Color;
 /// atomically loaded/stored using a single volatile access.
 ///
 /// ## Safety
-/// The type must fit in a single register and have an alignment equal to its
+/// The type must fit in a single register, and have an alignment equal to its
 /// size. Generally that means it should be one of:
 ///
 /// * an 8, 16, or 32 bit integer

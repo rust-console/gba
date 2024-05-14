@@ -55,6 +55,11 @@ pub mod mmio;
 pub mod panic_handlers;
 pub mod per_project_setup;
 pub mod per_system_setup;
+pub mod video;
+
+#[cfg(feature = "critical-section")]
+#[cfg_attr(feature = "doc_cfg", doc(cfg(feature = "critical-section")))]
+pub mod critical_section;
 
 /// `i16` with 8 bits of fixed-point fraction.
 ///
@@ -111,42 +116,3 @@ pub type i16fx14 = crate::gba_fixed::Fixed<i16, 14>;
 #[cfg(not(feature = "fixed"))]
 #[allow(non_camel_case_types)]
 pub type i32fx8 = crate::gba_fixed::Fixed<i32, 8>;
-
-#[cfg(feature = "critical-section")]
-#[cfg_attr(feature = "doc_cfg", doc(cfg(feature = "critical-section")))]
-pub mod critical_section;
-
-/// Declares one of the functions in the [`panic_handlers`] module to be the
-/// handler for your program.
-///
-/// Valid inputs are the name of any of the functions in that module:
-/// * [`empty_loop`][crate::panic_handlers::empty_loop]
-///
-/// There's no special magic here, it just saves you on typing it all out
-/// yourself.
-#[macro_export]
-macro_rules! panic_handler {
-  ($i:ident) => {
-    #[panic_handler]
-    fn panic_handler(info: &core::panic::PanicInfo) -> ! {
-      gba::panic_handlers::$i(info)
-    }
-  };
-}
-
-/// A color value.
-///
-/// This is a bit-packed linear RGB color value with 5 bits per channel:
-/// ```text
-/// 0bX_BBBBB_GGGGG_RRRRR
-/// ```
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[repr(transparent)]
-pub struct Color(pub u16);
-
-#[cfg(feature = "bytemuck")]
-#[cfg_attr(feature = "doc_cfg", doc(cfg(feature = "bytemuck")))]
-unsafe impl bytemuck::Zeroable for Color {}
-#[cfg(feature = "bytemuck")]
-#[cfg_attr(feature = "doc_cfg", doc(cfg(feature = "bytemuck")))]
-unsafe impl bytemuck::Pod for Color {}
