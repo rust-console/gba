@@ -39,4 +39,4 @@ jobs:
         run: RUSTFLAGS="-Clink-arg=-Tlinker_scripts/mono_boot.ld" cargo build --examples --target=thumbv4t-none-eabi -Zbuild-std=core
 
       - name: Build The Crate For Host With No Default Features (build script usage simulation)
-        run: cargo build --no-default-features
+        run: cargo build --no-default-features --lib

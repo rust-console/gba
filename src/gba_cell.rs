@@ -6,7 +6,7 @@ use core::{
   ptr::NonNull,
 };
 
-use crate::video::Color;
+use crate::{video::Color, KeyInput};
 
 /// Marker trait bound for the methods of [`GbaCell`].
 ///
@@ -46,6 +46,7 @@ unsafe impl GbaCellSafe for Option<NonZeroU8> {}
 unsafe impl GbaCellSafe for char {}
 unsafe impl GbaCellSafe for bool {}
 unsafe impl GbaCellSafe for Color {}
+unsafe impl GbaCellSafe for KeyInput {}
 unsafe impl<T> GbaCellSafe for *const T {}
 unsafe impl<T> GbaCellSafe for *mut T {}
 unsafe impl<T> GbaCellSafe for NonNull<T> {}

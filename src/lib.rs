@@ -116,3 +116,16 @@ pub type i16fx14 = crate::gba_fixed::Fixed<i16, 14>;
 #[cfg(not(feature = "fixed"))]
 #[allow(non_camel_case_types)]
 pub type i32fx8 = crate::gba_fixed::Fixed<i32, 8>;
+
+/// Keypad input state.
+#[derive(Clone, Copy, Default)]
+#[repr(transparent)]
+pub struct KeyInput(pub u16);
+impl KeyInput {
+  /// If `a` is pressed (left primary button)
+  #[inline]
+  #[must_use]
+  pub const fn a(self) -> bool {
+    !bitfrob::u16_get_bit(0, self.0)
+  }
+}

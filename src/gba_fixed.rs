@@ -1,5 +1,8 @@
 //! Basic fixed point math module used as a fallback if the `fixed` crate isn't
 //! included.
+//!
+//! Most notably, the fixed point type here uses const generics instead of type
+//! level numbers.
 
 use core::ops::*;
 
@@ -19,6 +22,24 @@ use core::ops::*;
 #[derive(Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[repr(transparent)]
 pub struct Fixed<I, const B: u32>(I);
+
+// TODO: surely there's gotta be a better way to swap between these two fixed
+// point forms?
+
+#[cfg(feature = "fixed")]
+impl From<fixed::FixedI16<fixed::types::extra::U8>> for Fixed<i16, 8> {
+  #[inline]
+  fn from(value: fixed::FixedI16<fixed::types::extra::U8>) -> Self {
+    Self(value.to_bits())
+  }
+}
+#[cfg(feature = "fixed")]
+impl From<Fixed<i16, 8>> for fixed::FixedI16<fixed::types::extra::U8> {
+  #[inline]
+  fn from(value: Fixed<i16, 8>) -> Self {
+    fixed::FixedI16::from_bits(value.0)
+  }
+}
 
 macro_rules! impl_trait_op_unit {
   ($t:ty, $trait:ident, $op:ident) => {
