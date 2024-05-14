@@ -138,6 +138,9 @@ impl KeyInput {
 #[repr(transparent)]
 pub struct IrqBits(u16);
 impl IrqBits {
+  /// The vblank bit.
+  pub const VBLANK: Self = Self::new().with_vblank(true);
+
   /// Makes a new, empty value.
   #[inline]
   pub const fn new() -> Self {
@@ -227,7 +230,6 @@ impl IrqBits {
   pub const fn gamepak(self) -> bool {
     u16_get_bit(13, self.0)
   }
-  /* * * * */
 
   /// Set if vblank triggers an interrupt.
   #[inline]

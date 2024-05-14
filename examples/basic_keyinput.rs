@@ -28,7 +28,8 @@ pub extern "C" fn main() -> ! {
 
   // The body of the game is to just sleep until each vblank (this saves a lot
   // of battery power), then immediately upon waking we just go back to sleep.
-  // The handler is effectively run "during" this wait call.
+  // The handler is effectively run "during" this wait call (after the GBA wakes
+  // up, but before the BIOS function call returns).
   loop {
     VBlankIntrWait();
   }

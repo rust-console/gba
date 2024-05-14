@@ -1,6 +1,13 @@
 #![allow(non_snake_case)]
 
 //! Module for calls to BIOS functions.
+//!
+//! The BIOS functions aren't called using a normal foreign function call (eg:
+//! using the `extern "C"` ABI). Instead, a special instruction `swi`
+//! (software-interrupt) is executed, and an immediate data byte in the
+//! instruction tells the BIOS what function to execute. Because of this, the
+//! BIOS functions have a rather high calls overhead compared to a normal
+//! foreign function.
 
 use crate::IrqBits;
 
@@ -25,22 +32,24 @@ use crate::IrqBits;
 /// * Otherwise, any previous interrupts that match `target_irqs` will cause the
 ///   function to return immediately without waiting for a new interrupt.
 #[inline]
-#[instruction_set(arm::t32)]
+#[cfg_attr(feature = "on_gba", instruction_set(arm::t32))]
 pub fn IntrWait(ignore_existing: bool, target_irqs: IrqBits) {
-  unsafe {
-    core::arch::asm! {
-      "swi #0x04",
-      inout("r0") ignore_existing as u32 => _,
-      inout("r1") target_irqs.0 => _,
-      out("r3") _,
-      options(preserves_flags),
-    }
-  };
+  on_gba_or_unimplemented!(
+    unsafe {
+      core::arch::asm! {
+        "swi #0x04",
+        inout("r0") ignore_existing as u32 => _,
+        inout("r1") target_irqs.0 => _,
+        out("r3") _,
+        options(preserves_flags),
+      }
+    };
+  );
 }
 
 /// `0x05`: Builtin shorthand for [`IntrWait(true, IrqBits::VBLANK)`](IntrWait)
 #[inline]
-#[instruction_set(arm::t32)]
+#[cfg_attr(feature = "on_gba", instruction_set(arm::t32))]
 pub fn VBlankIntrWait() {
   on_gba_or_unimplemented!(
     unsafe {
