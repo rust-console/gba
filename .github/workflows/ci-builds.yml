@@ -29,8 +29,8 @@ jobs:
       - name: Build The Examples (Link With GNU, weak compiler intrinsics)
         run: cargo build --examples
 
-      - name: Check that the `fixed` crate support is fine
-        run: cargo build --examples --features=fixed
+      - name: Check that all our features work
+        run: cargo build --examples --all-features
       
       - name: Delete the .cargo/config.toml
         run: rm -fr .cargo/config.toml
@@ -38,5 +38,5 @@ jobs:
       - name: Build The Examples (Link With LLD, strong compiler intrinsics)
         run: RUSTFLAGS="-Clink-arg=-Tlinker_scripts/mono_boot.ld" cargo build --examples --target=thumbv4t-none-eabi -Zbuild-std=core
 
-      - name: Build The Crate With No Default Features (build script usage simulation)
+      - name: Build The Crate For Host With No Default Features (build script usage simulation)
         run: cargo build --no-default-features
