@@ -39,10 +39,67 @@
 
 pub mod asm_runtime;
 pub mod gba_cell;
+pub mod gba_fixed;
 pub mod mmio;
 pub mod panic_handlers;
 pub mod per_project_setup;
 pub mod per_system_setup;
+
+/// `i16` with 8 bits of fixed-point fraction.
+///
+/// This is used by the affine matrix entries.
+///
+/// * This build of the crate uses the [`fixed`] crate
+#[cfg(feature = "fixed")]
+#[allow(non_camel_case_types)]
+pub type i16fx8 = fixed::FixedI16<fixed::types::extra::U8>;
+
+/// `i16` with 14 bits of fixed-point fraction.
+///
+/// This is used by the [`ArcTan`](crate::bios::ArcTan) and
+/// [`ArcTan2`](crate::bios::ArcTan2) BIOS functions.
+///
+/// * This build of the crate uses the [`fixed`] crate
+#[cfg(feature = "fixed")]
+#[allow(non_camel_case_types)]
+pub type i16fx14 = fixed::FixedI16<fixed::types::extra::U14>;
+
+/// `i32` with 8 bits of fixed-point fraction.
+///
+/// This is used by the background reference point entries.
+///
+/// * This build of the crate uses the [`fixed`] crate
+#[cfg(feature = "fixed")]
+#[allow(non_camel_case_types)]
+pub type i32fx8 = fixed::FixedI32<fixed::types::extra::U8>;
+
+/// `i16` with 8 bits of fixed-point fraction.
+///
+/// This is used by the affine matrix entries.
+///
+/// * This build of the crate uses the [`gba_fixed`] module
+#[cfg(not(feature = "fixed"))]
+#[allow(non_camel_case_types)]
+pub type i16fx8 = crate::gba_fixed::Fixed<i16, 8>;
+
+/// `i16` with 14 bits of fixed-point fraction.
+///
+/// This is used by the [`ArcTan`](crate::bios::ArcTan) and
+/// [`ArcTan2`](crate::bios::ArcTan2) BIOS functions.
+///
+/// * This build of the crate uses the [`gba_fixed`] module
+#[cfg(not(feature = "fixed"))]
+#[allow(non_camel_case_types)]
+pub type i16fx14 = crate::gba_fixed::Fixed<i16, 14>;
+
+/// `i32` with 8 bits of fixed-point fraction.
+///
+/// This is used by the background reference point entries.
+///
+/// * This build of the crate uses the [`gba_fixed`] module
+#[cfg(not(feature = "fixed"))]
+#[allow(non_camel_case_types)]
+pub type i32fx8 = crate::gba_fixed::Fixed<i32, 8>;
 
 #[cfg(feature = "critical-section")]
 #[cfg_attr(feature = "doc_cfg", doc(cfg(feature = "critical-section")))]

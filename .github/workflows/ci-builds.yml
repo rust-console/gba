@@ -28,6 +28,9 @@ jobs:
 
       - name: Build The Examples (Link With GNU, weak compiler intrinsics)
         run: cargo build --examples
+
+      - name: Check that the `fixed` crate support is fine
+        run: cargo build --examples --features=fixed
       
       - name: Delete the .cargo/config.toml
         run: rm -fr .cargo/config.toml
