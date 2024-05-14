@@ -37,6 +37,8 @@
 //! * [Per System Setup][`per_system_setup`]
 //! * [Per Project Setup][`per_project_setup`]
 
+use bitfrob::{u16_get_bit, u16_with_bit};
+
 macro_rules! on_gba_or_unimplemented {
   ($($token_tree:tt)*) => {
     #[cfg(feature="on_gba")]
@@ -49,6 +51,7 @@ macro_rules! on_gba_or_unimplemented {
 }
 
 pub mod asm_runtime;
+pub mod bios;
 pub mod gba_cell;
 pub mod gba_fixed;
 pub mod mmio;
@@ -127,5 +130,109 @@ impl KeyInput {
   #[must_use]
   pub const fn a(self) -> bool {
     !bitfrob::u16_get_bit(0, self.0)
+  }
+}
+
+/// Interrupt bit flags.
+#[derive(Clone, Copy, Default)]
+#[repr(transparent)]
+pub struct IrqBits(u16);
+impl IrqBits {
+  /// Makes a new, empty value.
+  #[inline]
+  pub const fn new() -> Self {
+    Self(0)
+  }
+  /// Vertical-blank
+  #[inline]
+  #[must_use]
+  pub const fn vblank(self) -> bool {
+    u16_get_bit(0, self.0)
+  }
+  /// Horizontal-blank
+  #[inline]
+  #[must_use]
+  pub const fn hblank(self) -> bool {
+    u16_get_bit(1, self.0)
+  }
+  /// Vertical-counter match
+  #[inline]
+  #[must_use]
+  pub const fn vcount(self) -> bool {
+    u16_get_bit(2, self.0)
+  }
+  /// Timer 0 overflow
+  #[inline]
+  #[must_use]
+  pub const fn timer0(self) -> bool {
+    u16_get_bit(3, self.0)
+  }
+  /// Timer 1 overflow
+  #[inline]
+  #[must_use]
+  pub const fn timer1(self) -> bool {
+    u16_get_bit(4, self.0)
+  }
+  /// Timer 2 overflow
+  #[inline]
+  #[must_use]
+  pub const fn timer2(self) -> bool {
+    u16_get_bit(5, self.0)
+  }
+  /// Timer 3 overflow
+  #[inline]
+  #[must_use]
+  pub const fn timer3(self) -> bool {
+    u16_get_bit(6, self.0)
+  }
+  /// Serial port communication
+  #[inline]
+  #[must_use]
+  pub const fn serial(self) -> bool {
+    u16_get_bit(7, self.0)
+  }
+  /// DMA 0 complete
+  #[inline]
+  #[must_use]
+  pub const fn dma0(self) -> bool {
+    u16_get_bit(8, self.0)
+  }
+  /// DMA 1 complete
+  #[inline]
+  #[must_use]
+  pub const fn dma1(self) -> bool {
+    u16_get_bit(9, self.0)
+  }
+  /// DMA 2 complete
+  #[inline]
+  #[must_use]
+  pub const fn dma2(self) -> bool {
+    u16_get_bit(10, self.0)
+  }
+  /// DMA 3 complete
+  #[inline]
+  #[must_use]
+  pub const fn dma3(self) -> bool {
+    u16_get_bit(11, self.0)
+  }
+  /// Keypad match
+  #[inline]
+  #[must_use]
+  pub const fn keypad(self) -> bool {
+    u16_get_bit(12, self.0)
+  }
+  /// Game pak
+  #[inline]
+  #[must_use]
+  pub const fn gamepak(self) -> bool {
+    u16_get_bit(13, self.0)
+  }
+  /* * * * */
+
+  /// Set if vblank triggers an interrupt.
+  #[inline]
+  #[must_use]
+  pub const fn with_vblank(self, vblank: bool) -> Self {
+    Self(u16_with_bit(0, self.0, vblank))
   }
 }

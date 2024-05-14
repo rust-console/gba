@@ -6,7 +6,7 @@
 // cargo feature enabled, and so they should all have the `track_caller`
 // attribute set whenever the `on_gba` feature is *disabled*
 
-use crate::gba_cell::GbaCell;
+use crate::{gba_cell::GbaCell, IrqBits};
 
 /// Inserts a `nop` instruction.
 #[inline(always)]
@@ -250,11 +250,46 @@ global_a32_fn! {_start [] {
   "ldr r1, =0x4317",
   "strh r1, [r0]",
 
-  // TODO: iwram copying
+  /* iwram copy */
+  "_iwram_copy:",
+  "ldr r4, =_iwram_word_copy_count",
+  when!("r4" != "#0" [label_id=1] {
+    "add r3, r12, #0xB0",
+    "mov r5, #(1<<10|1<<15)",
+    "ldr r0, =_iwram_start",
+    "ldr r2, =_iwram_position_in_rom",
+    "str r2, [r3]", /* source */
+    "str r0, [r3, #4]", /* destination */
+    "strh r4, [r3, #8]", /* word count */
+    "strh r5, [r3, #10]", /* set control bits */
+  }),
+  "_iwram_copy_done:",
 
-  // TODO: ewram copying
+  /* ewram copy */
+  "ldr r4, =_ewram_word_copy_count",
+  when!("r4" != "#0" [label_id=1] {
+    "add r3, r12, #0xB0",
+    "mov r5, #(1<<10|1<<15)",
+    "ldr r0, =_ewram_start",
+    "ldr r2, =_ewram_position_in_rom",
+    "str r2, [r3]", /* source */
+    "str r0, [r3, #4]", /* destination */
+    "strh r4, [r3, #8]", /* word count */
+    "strh r5, [r3, #10]", /* set control bits */
+  }),
 
-  // TODO: bss zeroing
+  /* bss zero */
+  "_begin_zeroing:",
+  "ldr r4, =_bss_word_clear_count",
+  when!("r4" != "#0" [label_id=1] {
+    "ldr r0, =_bss_start",
+    "mov r2, #0",
+    "2:",
+    "str r2, [r0], #4",
+    "subs r4, r4, #1",
+    "bne 2b",
+  }),
+  "_end_zeroing:",
 
   // Tell the BIOS about our irq handler
   "ldr r0, =_asm_runtime_irq_handler",
@@ -265,23 +300,31 @@ global_a32_fn! {_start [] {
   // requires a linker shim to call.
   "ldr r0, =main",
   "bx r0",
+  "_literals:",
 
   // TODO: should we soft reset or something if `main` returns?
 }}
 
 #[cfg(not(feature = "robust_irq_handler"))]
 global_a32_fn! {_asm_runtime_irq_handler [iwram=true] {
+  /* At function entry:
+  * r0: holds 0x0400_0000
+  */
+
+  // Put IME into r12 as a base pointer.
+  "add r12, r0, #0x208",
+
   // handle MMIO interrupt system
-  "ldr r0, [r12, #-8]        /* read IE_IF */",
-  "and r0, r0, r0, LSR #16   /* r0 = IE & IF */",
+  "ldr  r0, [r12, #-8]       /* r0 = IE_IF.read() */",
+  "and  r0, r0, r0, LSR #16  /* r0 = IE & IF */",
   "strh r0, [r12, #-6]       /* write IF */",
 
   // Now the interrupt bits are in r0 as a `u16`
 
   // handle BIOS interrupt system
-  "sub r2, r12, #(0x208+8)   /* BIOS_IF address */",
+  "sub  r2, r12, #(0x208+8)  /* r0 = BIOS_IF address */",
   "ldrh r1, [r2]             /* read the `has_occurred` flags */",
-  "orr r1, r1, r0            /* activate the new bits, if any */",
+  "orr  r1, r1, r0           /* activate the new bits, if any */",
   "strh r1, [r2]             /* update the value */",
 
   // Get the user handler fn pointer, call it if non-null.
@@ -299,6 +342,10 @@ global_a32_fn! {_asm_runtime_irq_handler [iwram=true] {
 
 #[cfg(feature = "robust_irq_handler")]
 global_a32_fn! {_asm_runtime_irq_handler [iwram=true] {
+  /* At function entry:
+  * r0: holds 0x0400_0000
+  */
+
   // Suppress IME while this is running. If the user wants to allow for
   // interrupts *during* other interrupts they can enable IME in their handler.
   "add r12, r0, #0x208",
@@ -345,5 +392,5 @@ global_a32_fn! {_asm_runtime_irq_handler [iwram=true] {
 /// The user-provided interrupt request handler function.
 #[no_mangle]
 #[cfg(feature = "on_gba")]
-pub static USER_IRQ_HANDLER: GbaCell<Option<unsafe extern "C" fn(u16)>> =
+pub static USER_IRQ_HANDLER: GbaCell<Option<unsafe extern "C" fn(IrqBits)>> =
   GbaCell::new(None);
