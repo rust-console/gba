@@ -8,17 +8,6 @@
 
 use crate::gba_cell::GbaCell;
 
-macro_rules! on_gba_or_unimplemented {
-  ($($token_tree:tt)*) => {
-    #[cfg(feature="on_gba")]
-    {
-      $($token_tree)*
-    }
-    #[cfg(not(feature="on_gba"))]
-    unimplemented!()
-  }
-}
-
 /// Inserts a `nop` instruction.
 #[inline(always)]
 #[cfg_attr(not(feature = "on_gba"), track_caller)]

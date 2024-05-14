@@ -37,6 +37,17 @@
 //! * [Per System Setup][`per_system_setup`]
 //! * [Per Project Setup][`per_project_setup`]
 
+macro_rules! on_gba_or_unimplemented {
+  ($($token_tree:tt)*) => {
+    #[cfg(feature="on_gba")]
+    {
+      $($token_tree)*
+    }
+    #[cfg(not(feature="on_gba"))]
+    unimplemented!()
+  }
+}
+
 pub mod asm_runtime;
 pub mod gba_cell;
 pub mod gba_fixed;
