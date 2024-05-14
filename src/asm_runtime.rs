@@ -106,7 +106,7 @@ macro_rules! global_a32_fn {
     #[cfg(feature = "on_gba")]
     core::arch::global_asm!{
       a32_code! {
-        concat!(".section .iwram.text.", stringify!($name), ", \"x\" "),
+        concat!(".section .iwram.text.", stringify!($name), ", \"ax\",%progbits "),
         concat!(".global ",stringify!($name)),
         concat!(stringify!($name),":"),
         $( concat!($asm_line, "\n") ),+ ,
@@ -122,7 +122,7 @@ macro_rules! global_a32_fn {
     #[cfg(feature = "on_gba")]
     core::arch::global_asm!{
       a32_code! {
-        concat!(".section .text.", stringify!($name), ", \"x\" "),
+        concat!(".section .text.", stringify!($name), ", \"ax\",%progbits "),
         concat!(".global ",stringify!($name)),
         concat!(stringify!($name),":"),
         $( concat!($asm_line, "\n") ),+ ,
@@ -244,6 +244,7 @@ global_a32_fn! {_start [] {
   "1:",
 
   "mov r12, #0x04000000",
+  "add r3, r12, #0xD4", // DMA3 base address
 
   // Configure WAITCNT to the GBATEK suggested default
   "add r0, r12, #0x204",
@@ -251,35 +252,30 @@ global_a32_fn! {_start [] {
   "strh r1, [r0]",
 
   /* iwram copy */
-  "_iwram_copy:",
-  "ldr r4, =_iwram_word_copy_count",
-  when!("r4" != "#0" [label_id=1] {
-    "add r3, r12, #0xB0",
-    "mov r5, #(1<<10|1<<15)",
-    "ldr r0, =_iwram_start",
-    "ldr r2, =_iwram_position_in_rom",
-    "str r2, [r3]", /* source */
-    "str r0, [r3, #4]", /* destination */
-    "strh r4, [r3, #8]", /* word count */
-    "strh r5, [r3, #10]", /* set control bits */
+  "ldr r0, =_iwram_word_copy_count",
+  when!("r0" != "#0" [label_id=1] {
+    "ldr r1, =_iwram_position_in_rom",
+    "str r1, [r3]",
+    "ldr r1, =_iwram_start",
+    "str r1, [r3, #4]",
+    "strh r0, [r3, #8]",
+    "mov r1, #(1<<10|1<<15)",
+    "strh r1, [r3, #10]",
   }),
-  "_iwram_copy_done:",
 
   /* ewram copy */
   "ldr r4, =_ewram_word_copy_count",
   when!("r4" != "#0" [label_id=1] {
-    "add r3, r12, #0xB0",
-    "mov r5, #(1<<10|1<<15)",
-    "ldr r0, =_ewram_start",
-    "ldr r2, =_ewram_position_in_rom",
-    "str r2, [r3]", /* source */
-    "str r0, [r3, #4]", /* destination */
-    "strh r4, [r3, #8]", /* word count */
-    "strh r5, [r3, #10]", /* set control bits */
+    "ldr r1, =_ewram_position_in_rom",
+    "str r1, [r3]",
+    "ldr r1, =_ewram_start",
+    "str r1, [r3, #4]",
+    "strh r0, [r3, #8]",
+    "mov r1, #(1<<10|1<<15)",
+    "strh r1, [r3, #10]",
   }),
 
   /* bss zero */
-  "_begin_zeroing:",
   "ldr r4, =_bss_word_clear_count",
   when!("r4" != "#0" [label_id=1] {
     "ldr r0, =_bss_start",
@@ -289,7 +285,6 @@ global_a32_fn! {_start [] {
     "subs r4, r4, #1",
     "bne 2b",
   }),
-  "_end_zeroing:",
 
   // Tell the BIOS about our irq handler
   "ldr r0, =_asm_runtime_irq_handler",
@@ -300,7 +295,6 @@ global_a32_fn! {_start [] {
   // requires a linker shim to call.
   "ldr r0, =main",
   "bx r0",
-  "_literals:",
 
   // TODO: should we soft reset or something if `main` returns?
 }}
@@ -346,9 +340,11 @@ global_a32_fn! {_asm_runtime_irq_handler [iwram=true] {
   * r0: holds 0x0400_0000
   */
 
+  // Put IME into r12 as a base pointer.
+  "add r12, r0, #0x208",
+
   // Suppress IME while this is running. If the user wants to allow for
   // interrupts *during* other interrupts they can enable IME in their handler.
-  "add r12, r0, #0x208",
   "mov r3, #0",
   while_swapped! { ptr="r12", val="r3" {
     // handle MMIO interrupt system
