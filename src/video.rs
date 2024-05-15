@@ -11,6 +11,31 @@ use bitfrob::{u16_get_bit, u16_with_bit, u16_with_value};
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[repr(transparent)]
 pub struct Color(pub u16);
+impl Color {
+  /// Total black
+  pub const BLACK: Color = Color(0b0_00000_00000_00000);
+  /// Full red
+  pub const RED: Color = Color(0b0_00000_00000_11111);
+  /// Full green (lime green)
+  pub const GREEN: Color = Color(0b0_00000_11111_00000);
+  /// Full yellow
+  pub const YELLOW: Color = Color(0b0_00000_11111_11111);
+  /// Full blue (dark blue)
+  pub const BLUE: Color = Color(0b0_11111_00000_00000);
+  /// Full magenta (pinkish purple)
+  pub const MAGENTA: Color = Color(0b0_11111_00000_11111);
+  /// Full cyan (bright light blue)
+  pub const CYAN: Color = Color(0b0_11111_11111_00000);
+  /// Full white
+  pub const WHITE: Color = Color(0b0_11111_11111_11111);
+
+  /// Constructs a new color value from the given channel values.
+  #[inline]
+  #[must_use]
+  pub const fn from_rgb(r: u16, g: u16, b: u16) -> Self {
+    Self(r & 0b11111 | (g & 0b11111) << 5 | (b & 0b11111) << 10)
+  }
+}
 
 #[cfg(feature = "bytemuck")]
 #[cfg_attr(feature = "doc_cfg", doc(cfg(feature = "bytemuck")))]
@@ -55,8 +80,8 @@ impl DisplayControl {
   /// However, it gives the display less time for OAM processing, so fewer
   /// objects can be drawn per scanline.
   #[inline]
-  pub const fn with_hblank_oam_free(self, frame1: bool) -> Self {
-    Self(u16_with_bit(5, self.0, frame1))
+  pub const fn with_hblank_oam_free(self, free: bool) -> Self {
+    Self(u16_with_bit(5, self.0, free))
   }
   /// Causes the object vram to act as a strictly linear region of tiles.
   ///
@@ -86,56 +111,56 @@ impl DisplayControl {
   ///   effect, and just keeps consuming tiles linearly. If an object is 2x2
   ///   tiles, starting at index 0, then it would use tiles 0, 1, 2, and 3.
   #[inline]
-  pub const fn with_obj_vram_1d(self, frame1: bool) -> Self {
-    Self(u16_with_bit(6, self.0, frame1))
+  pub const fn with_obj_vram_1d(self, vram_1d: bool) -> Self {
+    Self(u16_with_bit(6, self.0, vram_1d))
   }
   /// When this is set, the display is forced to be blank (white pixels)
   ///
   /// The display won't access any video memory, allowing you to set things up
   /// without any stalls, and the player won't see any intermediate results.
   #[inline]
-  pub const fn with_forced_blank(self, frame1: bool) -> Self {
-    Self(u16_with_bit(7, self.0, frame1))
+  pub const fn with_forced_blank(self, forced: bool) -> Self {
+    Self(u16_with_bit(7, self.0, forced))
   }
   /// Display background layer 0.
   #[inline]
-  pub const fn with_bg0(self, frame1: bool) -> Self {
-    Self(u16_with_bit(8, self.0, frame1))
+  pub const fn with_bg0(self, bg0: bool) -> Self {
+    Self(u16_with_bit(8, self.0, bg0))
   }
   /// Display background layer 1.
   #[inline]
-  pub const fn with_bg1(self, frame1: bool) -> Self {
-    Self(u16_with_bit(9, self.0, frame1))
+  pub const fn with_bg1(self, bg1: bool) -> Self {
+    Self(u16_with_bit(9, self.0, bg1))
   }
   /// Display background layer 2.
   #[inline]
-  pub const fn with_bg2(self, frame1: bool) -> Self {
-    Self(u16_with_bit(10, self.0, frame1))
+  pub const fn with_bg2(self, bg2: bool) -> Self {
+    Self(u16_with_bit(10, self.0, bg2))
   }
   /// Display background layer 3.
   #[inline]
-  pub const fn with_bg3(self, frame1: bool) -> Self {
-    Self(u16_with_bit(11, self.0, frame1))
+  pub const fn with_bg3(self, bg3: bool) -> Self {
+    Self(u16_with_bit(11, self.0, bg3))
   }
   /// Display the objects.
   #[inline]
-  pub const fn with_objects(self, frame1: bool) -> Self {
-    Self(u16_with_bit(12, self.0, frame1))
+  pub const fn with_objects(self, objects: bool) -> Self {
+    Self(u16_with_bit(12, self.0, objects))
   }
   /// Use window 0 as part of the window effect.
   #[inline]
-  pub const fn with_win0(self, frame1: bool) -> Self {
-    Self(u16_with_bit(13, self.0, frame1))
+  pub const fn with_win0(self, win0: bool) -> Self {
+    Self(u16_with_bit(13, self.0, win0))
   }
   /// Use window 1 as part of the window effect.
   #[inline]
-  pub const fn with_win1(self, frame1: bool) -> Self {
-    Self(u16_with_bit(14, self.0, frame1))
+  pub const fn with_win1(self, win1: bool) -> Self {
+    Self(u16_with_bit(14, self.0, win1))
   }
   /// Use the object window as part of the window effect.
   #[inline]
-  pub const fn with_object_window(self, frame1: bool) -> Self {
-    Self(u16_with_bit(15, self.0, frame1))
+  pub const fn with_object_window(self, object_window: bool) -> Self {
+    Self(u16_with_bit(15, self.0, object_window))
   }
 }
 

@@ -1,7 +1,9 @@
 //! Definitions for Memory-mapped IO (hardware control).
 
+use bitfrob::u8x2;
 #[allow(unused_imports)]
-use voladdress::{Safe, Unsafe, VolAddress};
+use voladdress::VolAddress;
+use voladdress::{VolBlock, VolGrid2d, VolGrid2dStrided};
 
 use crate::{
   video::{Color, DisplayControl, DisplayStatus},
@@ -11,9 +13,9 @@ use crate::{
 /// "safe on GBA", which is either Safe or Unsafe according to the `on_gba`
 /// cargo feature.
 #[cfg(feature = "on_gba")]
-type SOGBA = Safe;
+type SOGBA = voladdress::Safe;
 #[cfg(not(feature = "on_gba"))]
-type SOGBA = Unsafe;
+type SOGBA = voladdress::Unsafe;
 
 /// Responds "normally" to read/write, just holds a setting
 type PlainAddr<T> = VolAddress<T, SOGBA, SOGBA>;
@@ -77,3 +79,46 @@ pub const IME: PlainAddr<bool> = unsafe { VolAddress::new(0x0400_0208) };
 /// in a given pixel.
 pub const BACKDROP_COLOR: PlainAddr<Color> =
   unsafe { VolAddress::new(0x0500_0000) };
+
+/// Palette data for the backgrounds
+pub const BG_PALRAM: VolBlock<Color, SOGBA, SOGBA, 256> =
+  unsafe { VolBlock::new(0x0500_0000) };
+
+/// Palette data for the objects.
+pub const OBJ_PALRAM: VolBlock<Color, SOGBA, SOGBA, 256> =
+  unsafe { VolBlock::new(0x0500_0000) };
+
+/// The VRAM's view in Video Mode 3.
+///
+/// Each location is a direct color value.
+pub const MODE3_VRAM: VolGrid2d<Color, SOGBA, SOGBA, 240, 160> =
+  unsafe { VolGrid2d::new(0x0600_0000) };
+
+/// The VRAM's view in Video Mode 4.
+///
+/// Each location is a pair of palette indexes into the background palette.
+/// Because the VRAM can't be written with a single byte, we have to work with
+/// this in units of [`u8x2`]. It's annoying, I know.
+pub const MODE4_VRAM: VolGrid2dStrided<
+  u8x2,
+  SOGBA,
+  SOGBA,
+  { 240 / 2 },
+  160,
+  2,
+  0xA000,
+> = unsafe { VolGrid2dStrided::new(0x0600_0000) };
+
+/// The VRAM's view in Video Mode 5.
+///
+/// Each location is a direct color value, but there's a lower image size to
+/// allow for two frames.
+pub const MODE5_VRAM: VolGrid2dStrided<
+  Color,
+  SOGBA,
+  SOGBA,
+  160,
+  128,
+  2,
+  0xA000,
+> = unsafe { VolGrid2dStrided::new(0x0600_0000) };
