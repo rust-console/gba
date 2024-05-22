@@ -100,12 +100,17 @@ core::arch::global_asm! {
   ".global _start",
   force_a32!{
     "_start:",
+    // space for the rom header to be placed after compilation.
     "b 1f",
     ".space 0xE0",
     "1:",
 
     "mov r12, #0x04000000",
-    "add r3, r12, #0xD4", // Compute the DMA3 base address
+    "add r3, r12, #0xD4",
+
+    // Now
+    // * r12: mmio base
+    // * r3: dma3 base
 
     // Configure WAITCNT to the GBATEK suggested default
     "add r0, r12, #0x204",
@@ -116,11 +121,11 @@ core::arch::global_asm! {
     "ldr r0, =_iwram_word_copy_count",
     when!(("r0" != "#0") {
       "ldr r1, =_iwram_position_in_rom",
-      "str r1, [r3]",
+      "str r1, [r3]",           // src
       "ldr r1, =_iwram_start",
-      "str r1, [r3, #4]",
-      "strh r0, [r3, #8]",
-      "mov r1, #(1<<10|1<<15)",
+      "str r1, [r3, #4]",       // dest
+      "strh r0, [r3, #8]",      // transfers
+      "mov r1, #(1<<10|1<<15)", // 32-bit transfers, enable
       "strh r1, [r3, #10]",
     }),
 
@@ -197,6 +202,9 @@ core::arch::global_asm! {
     "ldr r12, [r12]",
     when!(("r12" != "#0") {
       "mov r0, r1",
+      // we need to save `lr`, and we need to save an even number of registers
+      // to keep the stack aligned to 8 for the C ABI, so we'll also save `r0`,
+      // though it's not actually of use.
       "push {{r0, lr}}",
       a32_fake_blx!("r12"),
       "pop {{r0, lr}}",
