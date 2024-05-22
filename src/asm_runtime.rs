@@ -217,5 +217,6 @@ core::arch::global_asm! {
 }
 
 /// The user-provided interrupt request handler function.
+#[cfg(feature = "on_gba")]
 pub static USER_IRQ_HANDLER: GbaCell<Option<unsafe extern "C" fn(IrqBits)>> =
   GbaCell::new(None);
