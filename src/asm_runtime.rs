@@ -105,7 +105,7 @@ core::arch::global_asm! {
     "1:",
 
     "mov r12, #0x04000000",
-    "add r3, r12, #0xD4", // DMA3 base address
+    "add r3, r12, #0xD4", // Compute the DMA3 base address
 
     // Configure WAITCNT to the GBATEK suggested default
     "add r0, r12, #0x204",
