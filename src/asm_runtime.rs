@@ -7,6 +7,7 @@
 // attribute set whenever the `on_gba` feature is *disabled*
 
 use crate::{gba_cell::GbaCell, IrqBits};
+use bracer::*;
 
 /// Inserts a `nop` instruction.
 #[inline(always)]
@@ -73,20 +74,19 @@ pub unsafe fn swpb(mut ptr: *mut u8, x: u8) -> u8 {
   }
 }
 
+// Proc-macros can't see the target being built for, so we use this declarative
+// macro to determine if we're on a thumb target (and need to force our asm into
+// a32 mode) or if we're not on thumb (and our asm can pass through untouched).
 #[cfg(target_feature = "thumb-mode")]
-macro_rules! a32_code {
+macro_rules! force_a32 {
   ($($asm_line:expr),+ $(,)?) => {
-    concat!(
-      ".code 32\n",
-
+    t32_with_a32_scope! {
       $( concat!($asm_line, "\n") ),+ ,
-
-      ".code 16\n",
-    )
+    }
   }
 }
 #[cfg(not(target_feature = "thumb-mode"))]
-macro_rules! a32_code {
+macro_rules! force_a32 {
   ($($asm_line:expr),+ $(,)?) => {
     concat!(
       $( concat!($asm_line, "\n") ),+ ,
@@ -94,299 +94,120 @@ macro_rules! a32_code {
   }
 }
 
-/// If `on_gba` is enabled, makes a `global_asm` for the function given.
-///
-/// If `on_gba` is disabled, this does nothing.
-macro_rules! global_a32_fn {
-  (
-    $name:ident [iwram=true] {
-      $($asm_line:expr),+ $(,)?
-    }
-  ) => {
-    #[cfg(feature = "on_gba")]
-    core::arch::global_asm!{
-      a32_code! {
-        concat!(".section .iwram.text.", stringify!($name), ", \"ax\",%progbits "),
-        concat!(".global ",stringify!($name)),
-        concat!(stringify!($name),":"),
-        $( concat!($asm_line, "\n") ),+ ,
-        ".pool",
-      }
-    }
-  };
-  (
-    $name:ident [] {
-      $($asm_line:expr),+ $(,)?
-    }
-  ) => {
-    #[cfg(feature = "on_gba")]
-    core::arch::global_asm!{
-      a32_code! {
-        concat!(".section .text.", stringify!($name), ", \"ax\",%progbits "),
-        concat!(".global ",stringify!($name)),
-        concat!(stringify!($name),":"),
-        $( concat!($asm_line, "\n") ),+ ,
-        ".pool",
-      }
-    }
-  };
-}
+#[cfg(feature = "on_gba")]
+core::arch::global_asm! {
+  put_fn_in_section!(".text._start"),
+  ".global _start",
+  force_a32!{
+    "_start:",
+    "b 1f",
+    ".space 0xE0",
+    "1:",
 
-macro_rules! while_swapped {
-  (
-    ptr=$ptr:literal, val=$val:literal {
-      $($asm_line:expr),+ $(,)?
-    }
-  ) => {
-    concat!(
-      concat!("swp ",$val,", ",$val,", [",$ptr,"]\n"),
+    "mov r12, #0x04000000",
+    "add r3, r12, #0xD4", // DMA3 base address
 
-      $( concat!($asm_line, "\n") ),+ ,
+    // Configure WAITCNT to the GBATEK suggested default
+    "add r0, r12, #0x204",
+    "ldr r1, =0x4317",
+    "strh r1, [r0]",
 
-      concat!("swp ",$val,", ",$val,", [",$ptr,"]\n"),
-    )
-  }
-}
-
-macro_rules! with_spsr_held_in {
-  ($reg:literal, {
-    $($asm_line:expr),* $(,)?
-  }) => {
-    concat!(
-      concat!("mrs ", $reg, ", SPSR\n"),
-      $( concat!($asm_line, "\n") ),* ,
-      concat!("msr SPSR, ", $reg, "\n"),
-    )
-  }
-}
-
-macro_rules! set_cpu_control {
-  // CPSR control bits are: `I F T MMMMM`, and T must always be left as 0.
-  // * 0b10011: Supervisor (SVC)
-  // * 0b11111: System (SYS)
-  (System, irq_masked: false, fiq_masked: false) => {
-    "msr CPSR_c, #0b00011111\n"
-  };
-  (Supervisor, irq_masked: true, fiq_masked: false) => {
-    "msr CPSR_c, #0b10010010\n"
-  };
-}
-
-macro_rules! when {
-  ($reg:literal == $op2:literal [label_id=$label:literal] {
-    $($asm_line:expr),* $(,)?
-  }) => {
-    concat!(
-      concat!("cmp ", $reg, ", ", $op2, "\n"),
-      concat!("bne ", $label, "f\n"),
-      $( concat!($asm_line, "\n") ),* ,
-      concat!($label, ":\n"),
-    )
-  };
-  ($reg:literal != $op2:literal [label_id=$label:literal] {
-    $($asm_line:expr),* $(,)?
-  }) => {
-    concat!(
-      concat!("cmp ", $reg, ", ", $op2, "\n"),
-      concat!("beq ", $label, "f\n"),
-      $( concat!($asm_line, "\n") ),* ,
-      concat!($label, ":\n"),
-    )
-  };
-  ($reg:literal >=u $op2:literal [label_id=$label:literal] {
-    $($asm_line:expr),* $(,)?
-  }) => {
-    concat!(
-      concat!("cmp ", $reg, ", ", $op2, "\n"),
-      concat!("bcc ", $label, "f\n"), // cc: Unsigned LT
-      $( concat!($asm_line, "\n") ),* ,
-      concat!($label, ":\n"),
-    )
-  };
-  ($reg:literal <=u $op2:literal [label_id=$label:literal] {
-    $($asm_line:expr),* $(,)?
-  }) => {
-    concat!(
-      concat!("cmp ", $reg, ", ", $op2, "\n"),
-      concat!("bhi ", $label, "f\n"), // hi: Unsigned GT
-      $( concat!($asm_line, "\n") ),* ,
-      concat!($label, ":\n"),
-    )
-  };
-}
-
-/// Sets `lr` properly and then uses `bx` on the register given.
-macro_rules! a32_fake_blx {
-  (reg=$reg_name:expr, label_id=$label:expr) => {
-    concat!(
-      concat!("adr lr, ", $label, "f\n"),
-      concat!("bx ", $reg_name, "\n"),
-      concat!($label, ":\n"),
-    )
-  };
-}
-
-macro_rules! with_pushed_registers {
-  ($reglist:expr, {
-    $($asm_line:expr),* $(,)?
-  }) => {
-    concat!(
-      concat!("push ", $reglist, "\n"),
-      $( concat!($asm_line, "\n") ),* ,
-      concat!("pop ", $reglist, "\n"),
-    )
-  }
-}
-
-global_a32_fn! {_start [] {
-  "b 1f",
-  ".space 0xE0",
-  "1:",
-
-  "mov r12, #0x04000000",
-  "add r3, r12, #0xD4", // DMA3 base address
-
-  // Configure WAITCNT to the GBATEK suggested default
-  "add r0, r12, #0x204",
-  "ldr r1, =0x4317",
-  "strh r1, [r0]",
-
-  /* iwram copy */
-  "ldr r0, =_iwram_word_copy_count",
-  when!("r0" != "#0" [label_id=1] {
-    "ldr r1, =_iwram_position_in_rom",
-    "str r1, [r3]",
-    "ldr r1, =_iwram_start",
-    "str r1, [r3, #4]",
-    "strh r0, [r3, #8]",
-    "mov r1, #(1<<10|1<<15)",
-    "strh r1, [r3, #10]",
-  }),
-
-  /* ewram copy */
-  "ldr r4, =_ewram_word_copy_count",
-  when!("r4" != "#0" [label_id=1] {
-    "ldr r1, =_ewram_position_in_rom",
-    "str r1, [r3]",
-    "ldr r1, =_ewram_start",
-    "str r1, [r3, #4]",
-    "strh r0, [r3, #8]",
-    "mov r1, #(1<<10|1<<15)",
-    "strh r1, [r3, #10]",
-  }),
-
-  /* bss zero */
-  "ldr r4, =_bss_word_clear_count",
-  when!("r4" != "#0" [label_id=1] {
-    "ldr r0, =_bss_start",
-    "mov r2, #0",
-    "2:",
-    "str r2, [r0], #4",
-    "subs r4, r4, #1",
-    "bne 2b",
-  }),
-
-  // Tell the BIOS about our irq handler
-  "ldr r0, =_asm_runtime_irq_handler",
-  "str r0, [r12, #-4]",
-
-  // Note(Lokathor): we do a `bx` instead of a `b` because it saves 4 *entire*
-  // bytes (!), since `main` will usually be a t32 function and thus usually
-  // requires a linker shim to call.
-  "ldr r0, =main",
-  "bx r0",
-
-  // TODO: should we soft reset or something if `main` returns?
-}}
-
-#[cfg(not(feature = "robust_irq_handler"))]
-global_a32_fn! {_asm_runtime_irq_handler [iwram=true] {
-  /* At function entry:
-  * r0: holds 0x0400_0000
-  */
-
-  // Put IME into r12 as a base pointer.
-  "add r12, r0, #0x208",
-
-  // handle MMIO interrupt system
-  "ldr  r0, [r12, #-8]       /* r0 = IE_IF.read() */",
-  "and  r0, r0, r0, LSR #16  /* r0 = IE & IF */",
-  "strh r0, [r12, #-6]       /* write IF */",
-
-  // Now the interrupt bits are in r0 as a `u16`
-
-  // handle BIOS interrupt system
-  "sub  r2, r12, #(0x208+8)  /* r0 = BIOS_IF address */",
-  "ldrh r1, [r2]             /* read the `has_occurred` flags */",
-  "orr  r1, r1, r0           /* activate the new bits, if any */",
-  "strh r1, [r2]             /* update the value */",
-
-  // Get the user handler fn pointer, call it if non-null.
-  "ldr r1, =USER_IRQ_HANDLER",
-  "ldr r1, [r1]",
-  when!("r1" != "#0" [label_id=9] {
-    with_pushed_registers!("{{r0, lr}}", {
-      a32_fake_blx!(reg="r1", label_id=1),
+    /* iwram copy */
+    "ldr r0, =_iwram_word_copy_count",
+    when!(("r0" != "#0") {
+      "ldr r1, =_iwram_position_in_rom",
+      "str r1, [r3]",
+      "ldr r1, =_iwram_start",
+      "str r1, [r3, #4]",
+      "strh r0, [r3, #8]",
+      "mov r1, #(1<<10|1<<15)",
+      "strh r1, [r3, #10]",
     }),
-  }),
 
-  // return to the BIOS
-  "bx lr",
-}}
+    /* ewram copy */
+    "ldr r4, =_ewram_word_copy_count",
+    when!(("r4" != "#0") {
+      "ldr r1, =_ewram_position_in_rom",
+      "str r1, [r3]",
+      "ldr r1, =_ewram_start",
+      "str r1, [r3, #4]",
+      "strh r0, [r3, #8]",
+      "mov r1, #(1<<10|1<<15)",
+      "strh r1, [r3, #10]",
+    }),
 
-#[cfg(feature = "robust_irq_handler")]
-global_a32_fn! {_asm_runtime_irq_handler [iwram=true] {
-  /* At function entry:
-  * r0: holds 0x0400_0000
-  */
+    /* bss zero */
+    "ldr r4, =_bss_word_clear_count",
+    when!(("r4" != "#0") {
+      "ldr r0, =_bss_start",
+      "mov r2, #0",
+      "2:",
+      "str r2, [r0], #4",
+      "subs r4, r4, #1",
+      "bne 2b",
+    }),
 
-  // Put IME into r12 as a base pointer.
-  "add r12, r0, #0x208",
+    // Tell the BIOS about our irq handler
+    "ldr r0, =_asm_runtime_irq_handler",
+    "str r0, [r12, #-4]",
 
-  // Suppress IME while this is running. If the user wants to allow for
-  // interrupts *during* other interrupts they can enable IME in their handler.
-  "mov r3, #0",
-  while_swapped! { ptr="r12", val="r3" {
+    // Note(Lokathor): we do a `bx` instead of a `b` because it saves 4 *entire*
+    // bytes (!), since `main` will usually be a t32 function and thus usually
+    // requires a linker shim to call.
+    "ldr r0, =main",
+    "bx r0",
+
+    // TODO: should we soft reset or something if `main` returns?
+  }
+}
+
+#[cfg(feature = "on_gba")]
+core::arch::global_asm! {
+  put_fn_in_section!(".iwram.text._asm_runtime_irq_handler"),
+  ".global _asm_runtime_irq_handler",
+  force_a32!{
+    "_asm_runtime_irq_handler:",
+
+    // At function entry:
+    // * r0: holds 0x0400_0000
+    //
+    // We're allowed to use the usual C ABI registers.
+
     // handle MMIO interrupt system
-    "ldr r0, [r12, #-8]        /* read IE_IF */",
-    "and r0, r0, r0, LSR #16   /* r0 = IE & IF */",
-    "strh r0, [r12, #-6]       /* write IF */",
+    "add  r12, r0, #0x200",     // 16-bit access offsets can't be too big
+    "ldr  r1, [r12]",           // IE_IF.read32()
+    "and  r1, r1, r1, LSR #16", // IE & IF
+    "strh r1, [r12, #2]",       // write IF
 
-    // Now the interrupt bits are in r0 as a `u16`
+    // Now:
+    // * r0: holds 0x0400_0000
+    // * r1: irq bits
 
     // handle BIOS interrupt system
-    "sub r2, r12, #(0x208+8)   /* BIOS_IF address */",
-    "ldrh r1, [r2]             /* read the `has_occurred` flags */",
-    "orr r1, r1, r0            /* activate the new bits, if any */",
-    "strh r1, [r2]             /* update the value */",
+    "ldrh r2, [r0, #-8]", // read the `has_occurred` flags
+    "orr  r2, r2, r1",    // activate the new bits, if any
+    "strh r2, [r0, #-8]", // update the value
+
+    // Now:
+    // * r0: holds 0x0400_0000
+    // * r1: irq bits
 
     // Get the user handler fn pointer, call it if non-null.
-    "ldr r1, =USER_IRQ_HANDLER",
-    "ldr r1, [r1]",
-    when!("r1" != "#0" [label_id=9] {
-      with_spsr_held_in!("r2", {
-        // We have to preserve:
-        // * r2: spsr
-        // * r3: old IME value
-        // * r12: IME address
-        // * lr: our handler return address
-        with_pushed_registers!("{{r2, r3, r12, lr}}", {
-          // Note(Lokathor): LLVM won't ever leave the stack alignment as less
-          // than 8 so we skip trying to align it to 8 by hand.
-          set_cpu_control!(System, irq_masked: false, fiq_masked: false),
-          a32_fake_blx!(reg="r1", label_id=1),
-          set_cpu_control!(Supervisor, irq_masked: true, fiq_masked: false),
-        }),
-      })
+    "ldr r12, ={USER_IRQ_HANDLER}",
+    "ldr r12, [r12]",
+    when!(("r12" != "#0") {
+      "mov r0, r1",
+      "push {{r0, lr}}",
+      a32_fake_blx!("r12"),
+      "pop {{r0, lr}}",
     }),
-  }},
 
-  // return to the BIOS
-  "bx lr",
-}}
+    // return to the BIOS
+    "bx lr",
+  },
+  USER_IRQ_HANDLER = sym USER_IRQ_HANDLER,
+}
 
 /// The user-provided interrupt request handler function.
-#[no_mangle]
-#[cfg(feature = "on_gba")]
 pub static USER_IRQ_HANDLER: GbaCell<Option<unsafe extern "C" fn(IrqBits)>> =
   GbaCell::new(None);

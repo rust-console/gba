@@ -19,15 +19,6 @@ doc_cfg = []
 # inlined (meaning  `Location` is passed via the stack). This is only needed for
 # debugging, and so it's off by default.
 track_caller = []
-# The assembly runtime's irq handler will take extra steps to allow nested
-# interrupts during calls to the Rust interrupt handler, and also the Rust
-# interrupt handler will be called with the CPU in System mode, allowing for
-# full stack usage. If you do not use this feature then the Rust IRQ handler
-# will be called with the CPU in IRQ mode with nested interrupts disabled at the
-# CPU level. IRQ mode still has enough stack space to do any *reasonable* IRQ
-# handling, so you do NOT normally need to use this unless you need nested
-# interrupt support or extremely large stack usage during the handler.
-robust_irq_handler = []
 
 [dependencies]
 voladdress = "1.4.0"
@@ -37,6 +28,7 @@ critical-section = { version = "1.1.2", features = [
 ], optional = true }
 bytemuck = { version = "1.16.0", optional = true }
 fixed = { version = "1.27.0", default-features = false, optional = true }
+bracer = "0.2.1"
 
 [profile.dev]
 opt-level = 3
