@@ -63,3 +63,20 @@ pub fn VBlankIntrWait() {
     };
   );
 }
+
+/// `0x12` TODO: document this more
+#[inline]
+#[cfg_attr(feature = "on_gba", instruction_set(arm::t32))]
+pub unsafe fn LZ77UnCompReadNormalWrite16bit(src: *const u32, dst: *mut u16) {
+  on_gba_or_unimplemented!(
+    unsafe {
+      core::arch::asm! {
+        "swi #0x12",
+        inout("r0") src => _,
+        inout("r1") dst => _,
+        out("r3") _,
+        options(preserves_flags),
+      }
+    };
+  );
+}

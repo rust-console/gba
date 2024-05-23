@@ -58,6 +58,7 @@ pub mod mmio;
 pub mod panic_handlers;
 pub mod per_project_setup;
 pub mod per_system_setup;
+pub mod sample_art;
 pub mod video;
 
 #[cfg(feature = "critical-section")]
