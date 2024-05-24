@@ -6,7 +6,7 @@ use voladdress::VolAddress;
 use voladdress::{VolBlock, VolGrid2d, VolGrid2dStrided};
 
 use crate::{
-  video::{Color, DisplayControl, DisplayStatus},
+  video::{Color, DisplayControl, DisplayStatus, Tile4bpp},
   IrqBits, KeyInput,
 };
 
@@ -87,6 +87,14 @@ pub const BG_PALRAM: VolBlock<Color, SOGBA, SOGBA, 256> =
 /// Palette data for the objects.
 pub const OBJ_PALRAM: VolBlock<Color, SOGBA, SOGBA, 256> =
   unsafe { VolBlock::new(0x0500_0000) };
+
+/// The VRAM's background tile view, using 4bpp tiles.
+pub const VRAM_BG_TILE4: VolBlock<Tile4bpp, SOGBA, SOGBA, 2048> =
+  unsafe { VolBlock::new(0x0600_0000) };
+
+/// The VRAM's background tile view, using 8bpp tiles.
+pub const VRAM_BG_TILE8: VolBlock<Tile4bpp, SOGBA, SOGBA, 1024> =
+  unsafe { VolBlock::new(0x0600_0000) };
 
 /// The VRAM's view in Video Mode 3.
 ///

@@ -1,13 +1,25 @@
-use crate::{bios::LZ77UnCompReadNormalWrite16bit, mmio::MODE3_VRAM};
+//! Sample art data that the crate uses in examples.
+//!
+//! You can also use this if you think it looks cool.
 
-/// Decompresses the sample font (256 tiles) into VRAM.
-pub fn decompress_sample_font_to_vram_4bpp() {
+use voladdress::{Safe, VolRegion};
+
+use crate::{bios::LZ77UnCompReadNormalWrite16bit, video::Tile4bpp};
+
+/// Decompresses the sample CGA font face into VRAM.
+///
+/// The decompressed data will be 4bpp.
+///
+/// ## Panics
+/// The provided destination needs to be at least 256 tiles, or this will panic.
+pub fn decompress_cga_face_to_vram_4bpp(dest: VolRegion<Tile4bpp, Safe, Safe>) {
+  assert!(dest.len() >= 256);
   // TODO: we should allow inputting *where* in VRAM the tiles go, instead of
   // always using the VRAM base address.
   unsafe {
     LZ77UnCompReadNormalWrite16bit(
       CGA_8X8_THICK_LZ77.as_ptr(),
-      MODE3_VRAM.as_usize() as *mut u16,
+      dest.as_mut_ptr().cast(),
     )
   }
 }

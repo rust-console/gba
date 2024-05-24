@@ -3,8 +3,8 @@
 
 use gba::{
   bios::VBlankIntrWait,
-  mmio::{BG_PALRAM, DISPCNT, DISPSTAT, IE, IME},
-  sample_art::decompress_sample_font_to_vram_4bpp,
+  mmio::{BG_PALRAM, DISPCNT, DISPSTAT, IE, IME, VRAM_BG_TILE4},
+  sample_art::decompress_cga_face_to_vram_4bpp,
   video::{Color, DisplayControl, DisplayStatus},
   IrqBits,
 };
@@ -13,7 +13,8 @@ gba::panic_handler!(empty_loop);
 
 #[no_mangle]
 pub extern "C" fn main() -> ! {
-  decompress_sample_font_to_vram_4bpp();
+  decompress_cga_face_to_vram_4bpp(VRAM_BG_TILE4.as_region());
+
   BG_PALRAM.index(1).write(Color::WHITE);
   // TODO: set up the tilemap to look like something interesting
 

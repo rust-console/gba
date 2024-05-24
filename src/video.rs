@@ -210,3 +210,33 @@ impl DisplayStatus {
     Self(u16_with_value(8, 15, self.0, line as u16))
   }
 }
+
+/// Data for a 4-bit-per-pixel tile.
+///
+/// The tile is 8 pixels wide and 8 pixels tall. Each pixel is 4 bits, giving an
+/// index within the palbank for this tile's visual element. An index of 0 is a
+/// "transparent" pixel. For alignment purposes, all the data is bit packed as
+/// `u32` values.
+///
+/// Generally, you are expected to make tile art on your development machine in
+/// some way, and then pack it into your ROM as a static value. The data is then
+/// copied from ROM into the correct VRAM location at runtime. You are not
+/// expected to manipulate particular pixels within a tile at runtime.
+#[derive(Clone, Copy)]
+#[repr(transparent)]
+pub struct Tile4bpp(pub [u32; 8]);
+
+/// Data for a 8-bit-per-pixel tile.
+///
+/// The tile is 8 pixels wide and 8 pixels tall. Each pixel is 8 bits, giving an
+/// index within the full palette for this tile's visual element. An index of 0
+/// is a "transparent" pixel. For alignment purposes, all the data is bit packed
+/// as `u32` values.
+///
+/// Generally, you are expected to make tile art on your development machine in
+/// some way, and then pack it into your ROM as a static value. The data is then
+/// copied from ROM into the correct VRAM location at runtime. You are not
+/// expected to manipulate particular pixels within a tile at runtime.
+#[derive(Clone, Copy)]
+#[repr(transparent)]
+pub struct Tile8bpp(pub [u32; 16]);
