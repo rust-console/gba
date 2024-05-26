@@ -6,6 +6,15 @@
 #![no_std]
 #![no_main]
 
+use gba::{
+  asm_runtime::USER_IRQ_HANDLER,
+  bios::VBlankIntrWait,
+  gba_cell::GbaCell,
+  mmio::{DISPCNT, DISPSTAT, IE, IME, KEYINPUT, MODE3_VRAM},
+  video::{Color, DisplayControl, DisplayStatus},
+  IrqBits,
+};
+
 const SCREEN_WIDTH: u16 = 240;
 const SCREEN_HEIGHT: u16 = 160;
 
@@ -104,12 +113,10 @@ fn panic_handler(_: &core::panic::PanicInfo) -> ! {
 
 #[no_mangle]
 fn main() -> ! {
-  DISPCNT.write(
-    DisplayControl::new().with_video_mode(VideoMode::_3).with_show_bg2(true),
-  );
+  DISPCNT.write(DisplayControl::new().with_bg_mode(3).with_bg2(true));
 
-  RUST_IRQ_HANDLER.write(Some(draw_sprites));
-  DISPSTAT.write(DisplayStatus::new().with_irq_vblank(true));
+  USER_IRQ_HANDLER.write(Some(draw_sprites));
+  DISPSTAT.write(DisplayStatus::new().with_vblank_irq(true));
   IE.write(IrqBits::VBLANK);
   IME.write(true);
 
@@ -138,10 +145,10 @@ fn main() -> ! {
 }
 
 extern "C" fn draw_sprites(_bits: IrqBits) {
-  unsafe {
-    let p = VIDEO3_VRAM.as_usize() as *mut u8;
-    __aeabi_memset(p, 240 * 160 * 2, 0)
-  }
+  MODE3_VRAM
+    .into_block::<{ 240 * 160 }>()
+    .iter()
+    .for_each(|a| a.write(Color::BLACK));
 
   draw_rect(
     SPRITE_POSITIONS[0].read(),
@@ -169,7 +176,7 @@ extern "C" fn draw_sprites(_bits: IrqBits) {
 fn draw_rect(x: u16, y: u16, width: u16, height: u16, color: Color) {
   for i in 0..width {
     for j in 0..height {
-      VIDEO3_VRAM.index((x + i) as usize, (y + j) as usize).write(color);
+      MODE3_VRAM.index((x + i) as usize, (y + j) as usize).write(color);
     }
   }
 }
