@@ -6,13 +6,15 @@
 #![no_std]
 #![no_main]
 
+use core::ptr::addr_of;
+
 use gba::{
   asm_runtime::USER_IRQ_HANDLER,
   bios::VBlankIntrWait,
   gba_cell::GbaCell,
   mmio::{
     DISPCNT, DISPSTAT, DMA3_CONTROL, DMA3_DESTINATION, DMA3_SOURCE,
-    DMA3_TRANSFER_COUNT, IE, IME, KEYINPUT, MODE3_VRAM,
+    DMA3_TRANSFER_COUNT, IE, IME, KEYINPUT, MODE3_VRAM, OBJ_PALRAM,
   },
   video::{Color, DisplayControl, DisplayStatus},
   IrqBits, KeyInput,
@@ -147,8 +149,8 @@ fn main() -> ! {
 extern "C" fn draw_sprites(_bits: IrqBits) {
   unsafe {
     // Clear VRAM using DMA3
-    let x = &0_u32;
-    DMA3_SOURCE.write((x as *const u32).cast());
+    let x: u32 = 0 * OBJ_PALRAM.index(0).read().0 as u32;
+    DMA3_SOURCE.write(addr_of!(x).cast());
     DMA3_DESTINATION.write(MODE3_VRAM.as_usize() as *mut _);
     DMA3_TRANSFER_COUNT.write(240 * 160 / 2);
     DMA3_CONTROL.write(1 << 15 | 1 << 10 | 2 << 7);
