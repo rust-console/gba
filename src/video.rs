@@ -2,6 +2,8 @@
 
 use bitfrob::{u16_get_bit, u16_with_bit, u16_with_value};
 
+use crate::{mem::_bulk_set_util, mmio::MODE3_VRAM};
+
 /// A color value.
 ///
 /// This is a bit-packed linear RGB color value with 5 bits per channel:
@@ -240,3 +242,14 @@ pub struct Tile4bpp(pub [u32; 8]);
 #[derive(Clone, Copy, Default)]
 #[repr(transparent)]
 pub struct Tile8bpp(pub [u32; 16]);
+
+/// Clears the Mode 3 bitmap background to the given color.
+#[inline]
+pub fn mode3_clear_to(color: Color) {
+  let c: u32 = color.0 as u32 | ((color.0 as u32) << 16);
+  // Safety: the mode 3 base address is aligned to 4, and valid to write for the
+  // given number of bytes.
+  unsafe {
+    _bulk_set_util(MODE3_VRAM.as_usize() as *mut u32, 260 * 140 * 2, c, c)
+  };
+}

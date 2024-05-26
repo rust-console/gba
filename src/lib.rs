@@ -46,14 +46,18 @@ macro_rules! on_gba_or_unimplemented {
       $($token_tree)*
     }
     #[cfg(not(feature="on_gba"))]
-    unimplemented!()
+    {
+      unimplemented!()
+    }
   }
 }
 
 pub mod asm_runtime;
 pub mod bios;
+pub mod dma;
 pub mod gba_cell;
 pub mod gba_fixed;
+pub mod mem;
 pub mod mmio;
 pub mod panic_handlers;
 pub mod per_project_setup;
