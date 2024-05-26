@@ -25,7 +25,7 @@ use crate::IrqBits;
 /// to fire then this function will loop forever without returning.
 ///
 /// This function uses a special BIOS variable to track what interrupts have
-/// occured recently.
+/// occurred recently.
 /// * If `ignore_existing` is set, then any previous interrupts (since
 ///   `IntrWait` was last called) that match `target_irqs` are *ignored* and
 ///   this function will wait for a new target interrupt to occur.
