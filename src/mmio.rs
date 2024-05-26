@@ -1,9 +1,11 @@
 //! Definitions for Memory-mapped IO (hardware control).
 
+use core::ffi::c_void;
+
 use bitfrob::u8x2;
 #[allow(unused_imports)]
 use voladdress::VolAddress;
-use voladdress::{VolBlock, VolGrid2d, VolGrid2dStrided};
+use voladdress::{Unsafe, VolBlock, VolGrid2d, VolGrid2dStrided};
 
 use crate::{
   video::{Color, DisplayControl, DisplayStatus, Tile4bpp},
@@ -21,6 +23,8 @@ type SOGBA = voladdress::Unsafe;
 type PlainAddr<T> = VolAddress<T, SOGBA, SOGBA>;
 /// Read-only addr
 type RoAddr<T> = VolAddress<T, SOGBA, ()>;
+/// Write-only addr
+type WoAddr<T> = VolAddress<T, (), SOGBA>;
 
 /// Display Control setting.
 ///
@@ -42,6 +46,15 @@ pub const DISPSTAT: PlainAddr<DisplayStatus> =
 ///
 /// Values of 160 to 227 indicate that a vertical blank line is happening.
 pub const VCOUNT: RoAddr<u8> = unsafe { VolAddress::new(0x0400_0006) };
+
+pub const DMA3_SOURCE: WoAddr<*const c_void> =
+  unsafe { VolAddress::new(0x0400_00D4) };
+pub const DMA3_DESTINATION: WoAddr<*mut c_void> =
+  unsafe { VolAddress::new(0x0400_00D8) };
+pub const DMA3_TRANSFER_COUNT: WoAddr<u16> =
+  unsafe { VolAddress::new(0x0400_00DC) };
+pub const DMA3_CONTROL: VolAddress<u16, SOGBA, Unsafe> =
+  unsafe { VolAddress::new(0x0400_00DE) };
 
 /// Key Input (read-only).
 ///

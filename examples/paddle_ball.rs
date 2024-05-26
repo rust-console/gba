@@ -10,9 +10,12 @@ use gba::{
   asm_runtime::USER_IRQ_HANDLER,
   bios::VBlankIntrWait,
   gba_cell::GbaCell,
-  mmio::{DISPCNT, DISPSTAT, IE, IME, KEYINPUT, MODE3_VRAM},
+  mmio::{
+    DISPCNT, DISPSTAT, DMA3_CONTROL, DMA3_DESTINATION, DMA3_SOURCE,
+    DMA3_TRANSFER_COUNT, IE, IME, KEYINPUT, MODE3_VRAM,
+  },
   video::{Color, DisplayControl, DisplayStatus},
-  IrqBits,
+  IrqBits, KeyInput,
 };
 
 const SCREEN_WIDTH: u16 = 240;
@@ -39,8 +42,7 @@ impl Paddle {
     Self { x, y }
   }
 
-  fn update(&mut self) {
-    let keys = KEYINPUT.read();
+  fn update(&mut self, keys: KeyInput) {
     if keys.up() && self.y > 1 {
       self.y -= 1;
     }
@@ -106,10 +108,7 @@ static SPRITE_POSITIONS: [GbaCell<u16>; 6] = [
   GbaCell::new(0),
 ];
 
-#[panic_handler]
-fn panic_handler(_: &core::panic::PanicInfo) -> ! {
-  loop {}
-}
+gba::panic_handler!(empty_loop);
 
 #[no_mangle]
 fn main() -> ! {
@@ -129,8 +128,9 @@ fn main() -> ! {
   let mut ball = Ball::new(SCREEN_WIDTH as u16 / 2, SCREEN_HEIGHT as u16 / 2);
 
   loop {
-    left_paddle.update();
-    right_paddle.update();
+    let keys = KEYINPUT.read();
+    left_paddle.update(keys);
+    right_paddle.update(keys);
     ball.update(&left_paddle, &right_paddle);
 
     SPRITE_POSITIONS[0].write(left_paddle.x);
@@ -145,31 +145,35 @@ fn main() -> ! {
 }
 
 extern "C" fn draw_sprites(_bits: IrqBits) {
-  MODE3_VRAM
-    .into_block::<{ 240 * 160 }>()
-    .iter()
-    .for_each(|a| a.write(Color::BLACK));
+  unsafe {
+    // Clear VRAM using DMA3
+    let x = &0_u32;
+    DMA3_SOURCE.write((x as *const u32).cast());
+    DMA3_DESTINATION.write(MODE3_VRAM.as_usize() as *mut _);
+    DMA3_TRANSFER_COUNT.write(240 * 160 / 2);
+    DMA3_CONTROL.write(1 << 15 | 1 << 10 | 2 << 7);
+  }
 
   draw_rect(
     SPRITE_POSITIONS[0].read(),
     SPRITE_POSITIONS[1].read(),
     PADDLE_WIDTH,
     PADDLE_HEIGHT,
-    Color::WHITE,
+    Color::RED,
   );
   draw_rect(
     SPRITE_POSITIONS[2].read(),
     SPRITE_POSITIONS[3].read(),
     PADDLE_WIDTH,
     PADDLE_HEIGHT,
-    Color::WHITE,
+    Color::GREEN,
   );
   draw_rect(
     SPRITE_POSITIONS[4].read(),
     SPRITE_POSITIONS[5].read(),
     BALL_SIZE,
     BALL_SIZE,
-    Color::WHITE,
+    Color::CYAN,
   );
 }
 
