@@ -48,7 +48,7 @@ unsafe impl bytemuck::Pod for Color {}
 ///
 /// The video mode is the most important property here. It controls how most
 /// other display-related things will act.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Default)]
 #[repr(transparent)]
 pub struct DisplayControl(u16);
 impl DisplayControl {
@@ -165,7 +165,7 @@ impl DisplayControl {
 }
 
 /// Gives info about the display state and sets display interrupts.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Default)]
 #[repr(transparent)]
 pub struct DisplayStatus(u16);
 impl DisplayStatus {
@@ -222,7 +222,7 @@ impl DisplayStatus {
 /// some way, and then pack it into your ROM as a static value. The data is then
 /// copied from ROM into the correct VRAM location at runtime. You are not
 /// expected to manipulate particular pixels within a tile at runtime.
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Default)]
 #[repr(transparent)]
 pub struct Tile4bpp(pub [u32; 8]);
 
@@ -237,6 +237,6 @@ pub struct Tile4bpp(pub [u32; 8]);
 /// some way, and then pack it into your ROM as a static value. The data is then
 /// copied from ROM into the correct VRAM location at runtime. You are not
 /// expected to manipulate particular pixels within a tile at runtime.
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Default)]
 #[repr(transparent)]
 pub struct Tile8bpp(pub [u32; 16]);
