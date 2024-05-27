@@ -31,13 +31,13 @@
 //! not using don't appear on the screen. Otherwise, you'll end up with
 //! un-configured objects appearing in the upper left corner of the display.
 
-use super::*;
+use bitfrob::{u16_with_bit, u16_with_region, u16_with_value};
 
 /// How the object should be displayed.
 ///
 /// Bit 9 of Attr0 changes meaning depending on Bit 8, so this merges the two
 /// bits into a single property.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Clone, Copy, Default)]
 #[repr(u16)]
 pub enum ObjDisplayStyle {
   /// The default, non-affine display
@@ -52,7 +52,7 @@ pub enum ObjDisplayStyle {
 }
 
 /// What special effect the object interacts with
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Clone, Copy, Default)]
 #[repr(u16)]
 pub enum ObjEffectMode {
   /// The default, no special effect interaction
@@ -76,7 +76,7 @@ pub enum ObjEffectMode {
 /// | 1 | 16x16 | 32x8 | 8x32 |
 /// | 2 | 32x32 | 32x16 | 16x32 |
 /// | 3 | 64x64 | 64x32 | 32x64 |
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Clone, Copy, Default)]
 #[repr(u16)]
 #[allow(missing_docs)]
 pub enum ObjShape {
@@ -87,48 +87,136 @@ pub enum ObjShape {
 }
 
 /// Object Attributes, field 0 of the entry.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Clone, Copy, Default)]
 #[repr(transparent)]
 pub struct ObjAttr0(u16);
 impl ObjAttr0 {
-  pub_const_fn_new_zeroed!();
-  u16_int_field!(0 - 7, y, with_y);
-  u16_enum_field!(8 - 9: ObjDisplayStyle, style, with_style);
-  u16_enum_field!(10 - 11: ObjEffectMode, mode, with_mode);
-  u16_bool_field!(12, mosaic, with_mosaic);
-  u16_bool_field!(13, bpp8, with_bpp8);
-  u16_enum_field!(14 - 15: ObjShape, shape, with_shape);
+  /// A new blank attr 0.
+  #[inline]
+  pub const fn new() -> Self {
+    Self(0)
+  }
+  /// Sets the `y` position of this object
+  #[inline]
+  pub const fn with_y(self, y: u16) -> Self {
+    Self(u16_with_value(0, 7, self.0, y as u16))
+  }
+  /// The object's display styling.
+  #[inline]
+  pub const fn with_style(self, style: ObjDisplayStyle) -> Self {
+    Self(u16_with_region(8, 9, self.0, style as u16))
+  }
+  /// The special effect mode of the object, if any.
+  #[inline]
+  pub const fn with_effect(self, effect: ObjEffectMode) -> Self {
+    Self(u16_with_region(10, 11, self.0, effect as u16))
+  }
+  /// If the object should use the mosaic effect.
+  #[inline]
+  pub const fn with_mosaic(self, mosaic: bool) -> Self {
+    Self(u16_with_bit(12, self.0, mosaic))
+  }
+  /// If the object draws using 8-bits-per-pixel.
+  #[inline]
+  pub const fn with_bpp8(self, bpp8: bool) -> Self {
+    Self(u16_with_bit(13, self.0, bpp8))
+  }
+  /// The object's shape
+  #[inline]
+  pub const fn with_shape(self, shape: ObjShape) -> Self {
+    Self(u16_with_region(14, 15, self.0, shape as u16))
+  }
 }
 
 /// Object Attributes, field 1 of the entry.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Clone, Copy, Default)]
 #[repr(transparent)]
 pub struct ObjAttr1(u16);
 impl ObjAttr1 {
-  pub_const_fn_new_zeroed!();
-  u16_int_field!(0 - 8, x, with_x);
-  u16_int_field!(9 - 13, affine_index, with_affine_index);
-  u16_bool_field!(12, hflip, with_hflip);
-  u16_bool_field!(13, vflip, with_vflip);
-  u16_int_field!(14 - 15, size, with_size);
+  /// A new blank attr 1.
+  #[inline]
+  pub const fn new() -> Self {
+    Self(0)
+  }
+  /// Sets the `x` position of this object
+  #[inline]
+  pub const fn with_x(self, x: u16) -> Self {
+    Self(u16_with_value(0, 8, self.0, x as u16))
+  }
+  /// The affine index of the object.
+  #[inline]
+  pub const fn with_affine_index(self, index: u16) -> Self {
+    Self(u16_with_value(9, 13, self.0, index as u16))
+  }
+  /// If the object is horizontally flipped
+  #[inline]
+  pub const fn with_hflip(self, hflip: bool) -> Self {
+    Self(u16_with_bit(12, self.0, hflip))
+  }
+  /// If the object is vertically flipped
+  #[inline]
+  pub const fn with_vflip(self, vflip: bool) -> Self {
+    Self(u16_with_bit(13, self.0, vflip))
+  }
+  /// The object's size
+  ///
+  /// The size you set here, combined with the shape of the object, determines
+  /// the object's actual area.
+  ///
+  /// | Size | Square|   Horizontal|  Vertical|
+  /// |:-:|:-:|:-:|:-:|
+  /// | 0 |  8x8    |  16x8   |     8x16 |
+  /// | 1 |  16x16  |  32x8   |     8x32 |
+  /// | 2 |  32x32  |  32x16  |     16x32 |
+  /// | 3 |  64x64  |  64x32  |     32x64 |
+  #[inline]
+  pub const fn with_size(self, size: u16) -> Self {
+    Self(u16_with_value(14, 15, self.0, size as u16))
+  }
 }
 
 /// Object Attributes, field 2 of the entry.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Clone, Copy, Default)]
 #[repr(transparent)]
 pub struct ObjAttr2(u16);
 impl ObjAttr2 {
-  pub_const_fn_new_zeroed!();
-  u16_int_field!(0 - 9, tile_id, with_tile_id);
-  u16_int_field!(10 - 11, priority, with_priority);
-  u16_int_field!(12 - 15, palbank, with_palbank);
+  /// A new blank attr 2.
+  #[inline]
+  pub const fn new() -> Self {
+    Self(0)
+  }
+  /// The base tile id of the object.
+  ///
+  /// All other tiles in the object are automatically selected using the
+  /// following tiles, according to if
+  /// [`with_obj_vram_1d`][crate::video::DisplayControl::with_obj_vram_1d] it
+  /// set or not.
+  #[inline]
+  pub const fn with_tile_id(self, id: u16) -> Self {
+    Self(u16_with_value(0, 9, self.0, id as u16))
+  }
+  /// Sets the object's priority sorting.
+  ///
+  /// Lower priority objects are closer to the viewer, and will appear in front
+  /// other objects that have *higher* priority, and in front of backgrounds of
+  /// *equal or higher* priority. If two objects have the same priority, the
+  /// lower index object is shown.
+  #[inline]
+  pub const fn with_priority(self, priority: u16) -> Self {
+    Self(u16_with_value(10, 11, self.0, priority as u16))
+  }
+  /// Sets the palbank value of this object.
+  #[inline]
+  pub const fn with_palbank(self, palbank: u16) -> Self {
+    Self(u16_with_value(12, 15, self.0, palbank as u16))
+  }
 }
 
 /// Object Attributes.
 ///
 /// The fields of this struct are all `pub` so that you can simply alter them as
 /// you wish. Some "setter" methods are also provided as a shorthand.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Clone, Copy, Default)]
 #[repr(C)]
 pub struct ObjAttr(pub ObjAttr0, pub ObjAttr1, pub ObjAttr2);
 #[allow(missing_docs)]

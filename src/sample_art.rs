@@ -24,6 +24,132 @@ pub fn decompress_cga_face_to_vram_4bpp(dest: VolRegion<Tile4bpp, Safe, Safe>) {
   }
 }
 
+/// An empty type that just serves as a namespace for constants.
+pub struct Cga;
+#[allow(missing_docs)]
+impl Cga {
+  //
+  pub const BLANK: u8 = 0x00;
+  pub const EMPTY_FACE: u8 = 0x01;
+  pub const FULL_FACE: u8 = 0x02;
+  pub const HEART: u8 = 0x03;
+  pub const DIAMOND: u8 = 0x04;
+  pub const CLUB: u8 = 0x05;
+  pub const SPADE: u8 = 0x06;
+  pub const CENTER_DOT: u8 = 0x07;
+  pub const INVERT_CENTER_DOT: u8 = 0x08;
+  pub const RING: u8 = 0x09;
+  pub const INVERT_RING: u8 = 0x0A;
+  pub const MALE: u8 = 0x0B;
+  pub const FEMALE: u8 = 0x0C;
+  pub const MUSIC_NOTE: u8 = 0x0D;
+  pub const DOUBLE_MUSIC_NOTE: u8 = 0x0E;
+  pub const STAR: u8 = 0x0F;
+  //
+  pub const TRIANGLE_RIGHT: u8 = 0x10;
+  pub const TRIANGLE_LEFT: u8 = 0x11;
+  pub const ARROW_UP_DOWN: u8 = 0x12;
+  pub const DOUBLE_EXCLAMATION: u8 = 0x13;
+  pub const PARAGRAPH: u8 = 0x14;
+  pub const SUBSECTION: u8 = 0x15;
+  pub const UNDERLINE: u8 = 0x16;
+  pub const ARROW_UP_DOWN_UNDERLINED: u8 = 0x17;
+  pub const ARROW_UP: u8 = 0x18;
+  pub const ARROW_DOWN: u8 = 0x19;
+  pub const ARROW_RIGHT: u8 = 0x1A;
+  pub const ARROW_LEFT: u8 = 0x1B;
+  pub const CORNER_THING: u8 = 0x1C;
+  pub const ARROW_LEFT_RIGHT: u8 = 0x1D;
+  pub const TRIANGLE_UP: u8 = 0x1E;
+  pub const TRIANGLE_DOWN: u8 = 0x1F;
+  //
+  pub const DELETE: u8 = 0x7F;
+  //
+  pub const QUARTER_COVER: u8 = 0xB0;
+  pub const HALF_COVER: u8 = 0xB1;
+  pub const THREE_QUARTER_COVER: u8 = 0xB2;
+  pub const UP_DOWN: u8 = 0xB3;
+  pub const UP_LEFT_DOWN: u8 = 0xB4;
+  pub const UP_LEFT2_DOWN: u8 = 0xB5;
+  pub const UP2_LEFT_DOWN2: u8 = 0xB6;
+  pub const LEFT_DOWN2: u8 = 0xB7;
+  pub const LEFT2_DOWN: u8 = 0xB8;
+  pub const UP2_LEFT2_DOWN2: u8 = 0xB9;
+  pub const UP2_DOWN2: u8 = 0xBA;
+  pub const LEFT2_DOWN2: u8 = 0xBB;
+  pub const UP2_LEFT2: u8 = 0xBC;
+  pub const UP2_LEFT: u8 = 0xBD;
+  pub const UP_LEFT2: u8 = 0xBE;
+  pub const LEFT_DOWN: u8 = 0xBF;
+  //
+  pub const UP_RIGHT: u8 = 0xC0;
+  pub const UP_LEFT_RIGHT: u8 = 0xC1;
+  pub const LEFT_DOWN_RIGHT: u8 = 0xC2;
+  pub const UP_DOWN_RIGHT: u8 = 0xC3;
+  pub const LEFT_RIGHT: u8 = 0xC4;
+  pub const UP_LEFT_DOWN_RIGHT: u8 = 0xC5;
+  pub const UP_DOWN_RIGHT2: u8 = 0xC6;
+  pub const UP2_DOWN2_RIGHT: u8 = 0xC7;
+  pub const UP2_RIGHT2: u8 = 0xC8;
+  pub const DOWN2_RIGHT2: u8 = 0xC9;
+  pub const UP2_LEFT2_RIGHT2: u8 = 0xCA;
+  pub const LEFT2_DOWN2_RIGHT2: u8 = 0xCB;
+  pub const UP2_DOWN2_RIGHT2: u8 = 0xCC;
+  pub const LEFT2_RIGHT2: u8 = 0xCD;
+  pub const UP2_LEFT2_DOWN2_RIGHT2: u8 = 0xCE;
+  pub const UP_LEFT2_RIGHT2: u8 = 0xCF;
+  //
+  pub const UP2_LEFT_RIGHT: u8 = 0xD0;
+  pub const LEFT2_DOWN_RIGHT2: u8 = 0xD1;
+  pub const LEFT_DOWN2_RIGHT: u8 = 0xD2;
+  pub const UP2_RIGHT: u8 = 0xD3;
+  pub const UP_RIGHT2: u8 = 0xD4;
+  pub const DOWN_RIGHT2: u8 = 0xD5;
+  pub const DOWN2_RIGHT: u8 = 0xD6;
+  pub const UP2_RIGHT_DOWN2_LEFT: u8 = 0xD7;
+  pub const UP_LEFT2_DOWN_RIGHT2: u8 = 0xD8;
+  pub const UP_LEFT: u8 = 0xD9;
+  pub const DOWN_RIGHT: u8 = 0xDA;
+  pub const SOLID: u8 = 0xDB;
+  pub const HALF_BOTTOM: u8 = 0xDC;
+  pub const HALF_LEFT: u8 = 0xDD;
+  pub const HALF_RIGHT: u8 = 0xDE;
+  pub const HALF_TOP: u8 = 0xDF;
+  //
+  pub const ALPHA: u8 = 0xE0;
+  pub const BETA: u8 = 0xE1;
+  pub const GAMMA: u8 = 0xE2;
+  pub const PI: u8 = 0xE3;
+  pub const SIGMA: u8 = 0xE4;
+  pub const SIGMA_LOWERCASE: u8 = 0xE5;
+  pub const MU_LOWERCASE: u8 = 0xE6;
+  pub const GAMMA_LOWERCASE: u8 = 0xE7;
+  pub const PHI: u8 = 0xE8;
+  pub const THETA: u8 = 0xE9;
+  pub const OMEGA: u8 = 0xEA;
+  pub const DELTA_LOWERCASE: u8 = 0xEB;
+  pub const INFINITY: u8 = 0xEC;
+  pub const NOT_INFINITY: u8 = 0xED;
+  pub const EPSILON: u8 = 0xEE;
+  pub const HOOP: u8 = 0xEF;
+  //
+  pub const TRIPLE_LINES: u8 = 0xF0;
+  pub const PLUS_UNDERLINED: u8 = 0xF1;
+  pub const GREATER_THAN_UNDERLINED: u8 = 0xF2;
+  pub const LESS_THAN_UNDERLINED: u8 = 0xF3;
+  pub const HOOK_HIGH: u8 = 0xF4;
+  pub const HOOK_LOW: u8 = 0xF5;
+  pub const DIVISION: u8 = 0xF6;
+  pub const APPROXIMATE: u8 = 0xF7;
+  pub const DEGREE: u8 = 0xF8;
+  pub const CENTER_SQUARE: u8 = 0xF9;
+  pub const CENTER_HALF_SQUARE: u8 = 0xFA;
+  pub const SQUARE_ROOT: u8 = 0xFB;
+  pub const N_EXPONENT: u8 = 0xFC;
+  pub const SQUARED: u8 = 0xFD;
+  pub const LARGE_CENTER_SQUARE: u8 = 0xFE;
+}
+
 static CGA_8X8_THICK_LZ77: [u32; 421] = [
   0x00200010, 0xF0000030, 0x10059001, 0x42011111, 0x01060001, 0x20101001,
   0x111E1107, 0x01100110, 0x1B101A00, 0x73111F10, 0x10010011, 0x00081019,

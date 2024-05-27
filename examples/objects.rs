@@ -1,17 +1,21 @@
 #![no_std]
 #![no_main]
 
-use gba::prelude::*;
+use gba::{
+  asm_runtime::USER_IRQ_HANDLER,
+  bios::VBlankIntrWait,
+  gba_cell::GbaCell,
+  mmio::{
+    obj_palbank, BG0CNT, BG_PALRAM, DISPCNT, DISPSTAT, IE, IME, KEYINPUT,
+    OBJ_ATTR0, OBJ_ATTR_ALL, TEXT_SCREENBLOCKS, VRAM_BG_TILE4, VRAM_OBJ_TILE4,
+  },
+  obj::{ObjAttr, ObjAttr0, ObjDisplayStyle},
+  sample_art::{decompress_cga_face_to_vram_4bpp, Cga},
+  video::{BackgroundControl, Color, DisplayControl, DisplayStatus, TextEntry},
+  IrqBits,
+};
 
-#[panic_handler]
-fn panic_handler(info: &core::panic::PanicInfo) -> ! {
-  #[cfg(debug_assertions)]
-  if let Ok(mut logger) = MgbaBufferedLogger::try_new(MgbaMessageLevel::Fatal) {
-    use core::fmt::Write;
-    writeln!(logger, "{info}").ok();
-  }
-  loop {}
-}
+gba::panic_handler!(mgba_log_err);
 
 #[derive(Debug, Clone, Copy, Default)]
 struct Position {
@@ -88,27 +92,27 @@ extern "C" fn main() -> ! {
   // indexing with `[y][x]`
   let mut world = [[0_u8; 32]; 32];
   for i in 0..32 {
-    world[0][i] = Cga8x8Thick::BOX_HORIZONTAL;
-    world[19][i] = Cga8x8Thick::BOX_HORIZONTAL;
-    world[i][0] = Cga8x8Thick::BOX_VERTICAL;
-    world[i][29] = Cga8x8Thick::BOX_VERTICAL;
+    world[0][i] = Cga::LEFT_RIGHT;
+    world[19][i] = Cga::LEFT_RIGHT;
+    world[i][0] = Cga::UP_DOWN;
+    world[i][29] = Cga::UP_DOWN;
   }
-  world[0][0] = Cga8x8Thick::BOX_UPPER_LEFT;
-  world[0][29] = Cga8x8Thick::BOX_UPPER_RIGHT;
-  world[19][0] = Cga8x8Thick::BOX_LOWER_LEFT;
-  world[19][29] = Cga8x8Thick::BOX_LOWER_RIGHT;
+  world[0][0] = Cga::DOWN_RIGHT;
+  world[0][29] = Cga::LEFT_DOWN;
+  world[19][0] = Cga::UP_RIGHT;
+  world[19][29] = Cga::UP_LEFT;
   world[1][3] = b'B';
   world[2][3] = b'G';
   world[3][3] = b'0';
 
   // interrupt configuration
-  RUST_IRQ_HANDLER.write(Some(irq_handler));
-  DISPSTAT.write(DisplayStatus::new().with_irq_vblank(true));
+  USER_IRQ_HANDLER.write(Some(irq_handler));
+  DISPSTAT.write(DisplayStatus::new().with_vblank_irq(true));
   IE.write(IrqBits::VBLANK);
   IME.write(true);
 
   // bg
-  BG_PALETTE.index(1).write(Color::MAGENTA);
+  BG_PALRAM.index(1).write(Color::MAGENTA);
   // obj
   let colors =
     [Color::CYAN, Color::GREEN, Color::RED, Color::BLUE, Color::YELLOW];
@@ -116,8 +120,8 @@ extern "C" fn main() -> ! {
     obj_palbank(pal).index(1).write(*color);
   }
 
-  Cga8x8Thick.bitunpack_4bpp(CHARBLOCK0_4BPP.as_region(), 0);
-  Cga8x8Thick.bitunpack_4bpp(OBJ_TILES.as_region(), 0);
+  decompress_cga_face_to_vram_4bpp(VRAM_BG_TILE4.as_region());
+  decompress_cga_face_to_vram_4bpp(VRAM_OBJ_TILE4.as_region());
 
   BG0CNT.write(BackgroundControl::new().with_screenblock(8));
   let screenblock = TEXT_SCREENBLOCKS.get_frame(8).unwrap();
@@ -132,7 +136,7 @@ extern "C" fn main() -> ! {
   let no_display = ObjAttr0::new().with_style(ObjDisplayStyle::NotDisplayed);
   OBJ_ATTR0.iter().skip(creatures.len()).for_each(|va| va.write(no_display));
 
-  DISPCNT.write(DisplayControl::new().with_show_obj(true).with_show_bg0(true));
+  DISPCNT.write(DisplayControl::new().with_objects(true).with_bg0(true));
 
   let mut l_was_pressed = false;
   let mut r_was_pressed = false;

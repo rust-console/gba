@@ -5,12 +5,16 @@ use core::ffi::c_void;
 use bitfrob::u8x2;
 #[allow(unused_imports)]
 use voladdress::VolAddress;
-use voladdress::{Unsafe, VolBlock, VolGrid2d, VolGrid2dStrided};
+use voladdress::{Unsafe, VolBlock, VolGrid2d, VolGrid2dStrided, VolSeries};
 
 use crate::{
   dma::DmaControl,
   mgba::MgbaLogLevel,
-  video::{Color, DisplayControl, DisplayStatus, Tile4bpp},
+  obj::{ObjAttr, ObjAttr0, ObjAttr1, ObjAttr2},
+  video::{
+    BackgroundControl, Color, DisplayControl, DisplayStatus, TextEntry,
+    Tile4bpp,
+  },
   IrqBits, KeyInput,
 };
 
@@ -48,6 +52,22 @@ pub const DISPSTAT: PlainAddr<DisplayStatus> =
 ///
 /// Values of 160 to 227 indicate that a vertical blank line is happening.
 pub const VCOUNT: RoAddr<u8> = unsafe { VolAddress::new(0x0400_0006) };
+
+/// Background 0 controls
+pub const BG0CNT: PlainAddr<BackgroundControl> =
+  unsafe { VolAddress::new(0x0400_0008) };
+
+/// Background 1 controls
+pub const BG1CNT: PlainAddr<BackgroundControl> =
+  unsafe { VolAddress::new(0x0400_000A) };
+
+/// Background 2 controls
+pub const BG2CNT: PlainAddr<BackgroundControl> =
+  unsafe { VolAddress::new(0x0400_000C) };
+
+/// Background 3 controls
+pub const BG3CNT: PlainAddr<BackgroundControl> =
+  unsafe { VolAddress::new(0x0400_000E) };
 
 /// Source address for DMA3.
 ///
@@ -199,7 +219,24 @@ pub const BG_PALRAM: VolBlock<Color, SOGBA, SOGBA, 256> =
 
 /// Palette data for the objects.
 pub const OBJ_PALRAM: VolBlock<Color, SOGBA, SOGBA, 256> =
-  unsafe { VolBlock::new(0x0500_0000) };
+  unsafe { VolBlock::new(0x0500_0200) };
+
+/// Gets the block for a specific palbank.
+///
+/// ## Panics
+/// * If the `bank` requested is 16 or greater this will panic.
+#[inline]
+#[must_use]
+#[cfg_attr(feature = "track_caller", track_caller)]
+pub const fn obj_palbank(bank: usize) -> VolBlock<Color, SOGBA, SOGBA, 16> {
+  let u = OBJ_PALRAM.index(bank * 16).as_usize();
+  unsafe { VolBlock::new(u) }
+}
+
+/// The VRAM byte offset per screenblock index.
+///
+/// This is the same for all background types and sizes.
+pub const SCREENBLOCK_INDEX_OFFSET: usize = 2 * 1_024;
 
 /// The VRAM's background tile view, using 4bpp tiles.
 pub const VRAM_BG_TILE4: VolBlock<Tile4bpp, SOGBA, SOGBA, 2048> =
@@ -208,6 +245,25 @@ pub const VRAM_BG_TILE4: VolBlock<Tile4bpp, SOGBA, SOGBA, 2048> =
 /// The VRAM's background tile view, using 8bpp tiles.
 pub const VRAM_BG_TILE8: VolBlock<Tile4bpp, SOGBA, SOGBA, 1024> =
   unsafe { VolBlock::new(0x0600_0000) };
+
+/// The text mode screenblocks.
+pub const TEXT_SCREENBLOCKS: VolGrid2dStrided<
+  TextEntry,
+  SOGBA,
+  SOGBA,
+  32,
+  32,
+  32,
+  SCREENBLOCK_INDEX_OFFSET,
+> = unsafe { VolGrid2dStrided::new(0x0600_0000) };
+
+/// The VRAM's object tile view, using 4bpp tiles.
+pub const VRAM_OBJ_TILE4: VolBlock<Tile4bpp, SOGBA, SOGBA, 1024> =
+  unsafe { VolBlock::new(0x0601_0000) };
+
+/// The VRAM's object tile view, using 8bpp tiles.
+pub const VRAM_OBJ_TILE8: VolBlock<Tile4bpp, SOGBA, SOGBA, 512> =
+  unsafe { VolBlock::new(0x0601_0000) };
 
 /// The VRAM's view in Video Mode 3.
 ///
@@ -243,3 +299,39 @@ pub const MODE5_VRAM: VolGrid2dStrided<
   2,
   0xA000,
 > = unsafe { VolGrid2dStrided::new(0x0600_0000) };
+
+/// The combined object attributes.
+pub const OBJ_ATTR_ALL: VolSeries<
+  ObjAttr,
+  SOGBA,
+  SOGBA,
+  128,
+  { core::mem::size_of::<[i16; 4]>() },
+> = unsafe { VolSeries::new(0x0700_0000) };
+
+/// The object 0th attributes.
+pub const OBJ_ATTR0: VolSeries<
+  ObjAttr0,
+  SOGBA,
+  SOGBA,
+  128,
+  { core::mem::size_of::<[i16; 4]>() },
+> = unsafe { VolSeries::new(0x0700_0000) };
+
+/// The object 1st attributes.
+pub const OBJ_ATTR1: VolSeries<
+  ObjAttr1,
+  SOGBA,
+  SOGBA,
+  128,
+  { core::mem::size_of::<[i16; 4]>() },
+> = unsafe { VolSeries::new(0x0700_0000 + 2) };
+
+/// The object 2nd attributes.
+pub const OBJ_ATTR2: VolSeries<
+  ObjAttr2,
+  SOGBA,
+  SOGBA,
+  128,
+  { core::mem::size_of::<[i16; 4]>() },
+> = unsafe { VolSeries::new(0x0700_0000 + 4) };

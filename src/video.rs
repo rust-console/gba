@@ -211,6 +211,92 @@ impl DisplayStatus {
   }
 }
 
+/// Background layer control data.
+#[derive(Debug, Clone, Copy, Default)]
+#[repr(transparent)]
+pub struct BackgroundControl(u16);
+impl BackgroundControl {
+  /// Makes a new, empty value.
+  #[inline]
+  pub const fn new() -> Self {
+    Self(0)
+  }
+  /// Sets the background's priority sorting.
+  ///
+  /// Lower priority backgrounds are closer to the viewer, and will appear in
+  /// front other objects that have *higher* priority, and in front of
+  /// backgrounds of *higher* priority. If two backgrounds have the same
+  /// priority the lower numbered background is shown.
+  #[inline]
+  pub const fn with_priority(self, priority: u8) -> Self {
+    Self(u16_with_value(0, 1, self.0, priority as u16))
+  }
+  /// The base charblock value for this background.
+  #[inline]
+  pub const fn with_charblock(self, charblock: u8) -> Self {
+    Self(u16_with_value(2, 3, self.0, charblock as u16))
+  }
+  /// If this background uses the mosaic effect.
+  #[inline]
+  pub const fn with_mosaic(self, mosaic: bool) -> Self {
+    Self(u16_with_bit(6, self.0, mosaic))
+  }
+  /// Sets the background to 8-bits-per-pixel
+  #[inline]
+  pub const fn with_bpp8(self, bpp8: bool) -> Self {
+    Self(u16_with_bit(7, self.0, bpp8))
+  }
+  /// Sets the screenblock which lays out these tiles.
+  #[inline]
+  pub const fn with_screenblock(self, screenblock: u8) -> Self {
+    Self(u16_with_value(8, 12, self.0, screenblock as u16))
+  }
+  /// If affine pixels that go out of the background's area
+  #[inline]
+  pub const fn with_affine_wrap(self, wrap: bool) -> Self {
+    Self(u16_with_bit(13, self.0, wrap))
+  }
+  /// The background's size.
+  #[inline]
+  pub const fn with_size(self, size: u8) -> Self {
+    Self(u16_with_value(14, 15, self.0, size as u16))
+  }
+}
+
+/// Textual tile mode entry.
+#[derive(Debug, Clone, Copy, Default)]
+#[repr(transparent)]
+pub struct TextEntry(u16);
+impl TextEntry {
+  /// Makes a new, empty value.
+  #[inline]
+  pub const fn new() -> Self {
+    Self(0)
+  }
+  /// The tile ID
+  #[inline]
+  pub const fn with_tile(self, id: u16) -> Self {
+    Self(u16_with_value(0, 9, self.0, id))
+  }
+  /// If the tile should be horizontally flipped
+  #[inline]
+  pub const fn with_hflip(self, hflip: bool) -> Self {
+    Self(u16_with_bit(10, self.0, hflip))
+  }
+  /// If the tile should be vertically flipped.
+  #[inline]
+  pub const fn with_vflip(self, vflip: bool) -> Self {
+    Self(u16_with_bit(11, self.0, vflip))
+  }
+  /// The palbank for this tile.
+  ///
+  /// Only used if the background is set for 4bpp.
+  #[inline]
+  pub const fn with_palbank(self, palbank: u16) -> Self {
+    Self(u16_with_value(12, 15, self.0, palbank))
+  }
+}
+
 /// Data for a 4-bit-per-pixel tile.
 ///
 /// The tile is 8 pixels wide and 8 pixels tall. Each pixel is 4 bits, giving an
