@@ -113,7 +113,7 @@ static SPRITE_POSITIONS: [GbaCell<u16>; 6] = [
   GbaCell::new(0),
 ];
 
-gba::panic_handler!(empty_loop);
+gba::panic_handler!(mgba_log_err);
 
 #[no_mangle]
 fn main() -> ! {
