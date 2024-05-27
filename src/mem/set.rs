@@ -9,7 +9,7 @@
 /// * `dest` must be aligned to 4 and writable for `byte_count` bytes.
 #[inline(never)]
 #[cfg_attr(feature = "on_gba", instruction_set(arm::a32))]
-#[cfg_attr(feature = "on_gba", link_section = ".iwram._bulk_set_util")]
+#[cfg_attr(feature = "on_gba", link_section = ".iwram.bulk_memory_set")]
 pub unsafe extern "C" fn bulk_memory_set(
   mut dest: *mut u32, mut byte_count: usize, r2: u32, r3: u32,
 ) {
