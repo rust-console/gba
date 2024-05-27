@@ -1,8 +1,17 @@
 //!
 
+use core::{ffi::c_void, ptr::addr_of};
+
 use bitfrob::{u16_get_bit, u16_with_bit, u16_with_value};
 
-use crate::{mem::_bulk_set_util, mmio::MODE3_VRAM};
+use crate::{
+  asm_runtime::nop,
+  dma::{DmaControl, DmaSrcAddr},
+  mmio::{
+    DMA3_CONTROL, DMA3_DESTINATION, DMA3_SOURCE, DMA3_TRANSFER_COUNT,
+    MODE3_VRAM,
+  },
+};
 
 /// A color value.
 ///
@@ -243,13 +252,32 @@ pub struct Tile4bpp(pub [u32; 8]);
 #[repr(transparent)]
 pub struct Tile8bpp(pub [u32; 16]);
 
-/// Clears the Mode 3 bitmap background to the given color.
-#[inline]
-pub fn mode3_clear_to(color: Color) {
-  let c: u32 = color.0 as u32 | ((color.0 as u32) << 16);
-  // Safety: the mode 3 base address is aligned to 4, and valid to write for the
-  // given number of bytes.
-  unsafe {
-    _bulk_set_util(MODE3_VRAM.as_usize() as *mut u32, 260 * 140 * 2, c, c)
-  };
+pub struct Mode3;
+impl Mode3 {
+  pub const WIDTH: u16 = 240;
+  pub const HEIGHT: u16 = 160;
+
+  /// Clears the Mode 3 bitmap background to the given color.
+  pub fn dma3_clear_to(self, color: Color) {
+    let c: u32 = color.0 as u32 | ((color.0 as u32) << 16);
+    let src: *const c_void = addr_of!(c).cast();
+    unsafe {
+      // clear any previous setting
+      DMA3_CONTROL.write(DmaControl::new());
+      // configure and run
+      debug_assert!((src as usize) < 0x0800_0000);
+      DMA3_SOURCE.write(src);
+      DMA3_DESTINATION.write(MODE3_VRAM.as_usize() as _);
+      DMA3_TRANSFER_COUNT.write(Self::WIDTH * Self::HEIGHT / 2);
+      DMA3_CONTROL.write(
+        DmaControl::new()
+          .with_u32_transfer(true)
+          .with_src_addr(DmaSrcAddr::Fixed)
+          .with_enabled(true),
+      );
+      nop();
+      nop();
+      nop();
+    };
+  }
 }

@@ -5,19 +5,19 @@
 
 #![no_std]
 #![no_main]
+#![allow(unused)]
 
 use gba::{
   asm_runtime::USER_IRQ_HANDLER,
   bios::VBlankIntrWait,
   gba_cell::GbaCell,
-  mem::__aeabi_memclr,
   mmio::{DISPCNT, DISPSTAT, IE, IME, KEYINPUT, MODE3_VRAM},
-  video::{mode3_clear_to, Color, DisplayControl, DisplayStatus},
+  video::{Color, DisplayControl, DisplayStatus, Mode3},
   IrqBits, KeyInput,
 };
 
-const SCREEN_WIDTH: u16 = 240;
-const SCREEN_HEIGHT: u16 = 160;
+const SCREEN_WIDTH: u16 = Mode3::WIDTH;
+const SCREEN_HEIGHT: u16 = Mode3::HEIGHT;
 
 const PADDLE_WIDTH: u16 = 4;
 const PADDLE_HEIGHT: u16 = 20;
@@ -106,7 +106,7 @@ static SPRITE_POSITIONS: [GbaCell<u16>; 6] = [
   GbaCell::new(0),
 ];
 
-gba::panic_handler!(empty_loop);
+gba::panic_handler!(mgba_log_error);
 
 #[no_mangle]
 fn main() -> ! {
@@ -143,7 +143,7 @@ fn main() -> ! {
 }
 
 extern "C" fn draw_sprites(_bits: IrqBits) {
-  mode3_clear_to(Color::BLACK);
+  Mode3.dma3_clear_to(Color::BLACK);
 
   draw_rect(
     SPRITE_POSITIONS[0].read(),

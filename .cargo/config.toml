@@ -7,6 +7,7 @@ build-std = ["core"]
 [target.thumbv4t-none-eabi]
 runner = "mgba-qt"
 rustflags = [
+  "-Zub-checks=no",
   "-Clinker=arm-none-eabi-ld",
   "-Clink-arg=-Tlinker_scripts/mono_boot.ld",
 ]

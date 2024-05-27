@@ -83,7 +83,7 @@ impl DmaControl {
   pub const fn with_repeat(self, repeat: bool) -> Self {
     Self(u16_with_bit(9, self.0, repeat))
   }
-  /// If the DMA unit should transfer `u32` data (otherwise it's `u16)
+  /// If the DMA unit should transfer `u32` data (otherwise it's `u16`)
   #[inline]
   pub const fn with_u32_transfer(self, u32: bool) -> Self {
     Self(u16_with_bit(10, self.0, u32))
@@ -179,7 +179,7 @@ pub enum DmaStart {
 /// * The two regions must not overlap.
 /// * `count` must not be 0.
 #[inline(never)]
-pub unsafe fn dma3_u32_copy(src: *const u32, dest: *mut u32, count: usize) {
+pub unsafe fn dma3_copy_u32(src: *const u32, dest: *mut u32, count: usize) {
   on_gba_or_unimplemented!(
     const CONTROL: DmaControl =
       DmaControl::new().with_u32_transfer(true).with_enabled(true);
@@ -213,6 +213,6 @@ pub fn dma3_copy_tile4(
   // The requirements for the source to be readable and the destination to be
   // writable are satisfied by the data types of the input values.
   unsafe {
-    dma3_u32_copy(src.as_ptr().cast(), dest.as_mut_ptr().cast(), src.len() * 8)
+    dma3_copy_u32(src.as_ptr().cast(), dest.as_mut_ptr().cast(), src.len() * 8)
   };
 }

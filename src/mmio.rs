@@ -9,7 +9,8 @@ use voladdress::{Unsafe, VolBlock, VolGrid2d, VolGrid2dStrided};
 
 use crate::{
   dma::DmaControl,
-  video::{Color, DisplayControl, DisplayStatus, Tile4bpp},
+  mgba::MgbaMessageLevel,
+  video::{Color, DisplayControl, DisplayStatus, Mode3, Tile4bpp},
   IrqBits, KeyInput,
 };
 
@@ -24,6 +25,8 @@ type SOGBA = voladdress::Unsafe;
 type PlainAddr<T> = VolAddress<T, SOGBA, SOGBA>;
 /// Read-only addr
 type RoAddr<T> = VolAddress<T, SOGBA, ()>;
+/// Write-only addr
+type WoAddr<T> = VolAddress<T, (), SOGBA>;
 
 /// Display Control setting.
 ///
@@ -166,6 +169,23 @@ pub const IF: PlainAddr<IrqBits> = unsafe { VolAddress::new(0x0400_0202) };
 /// interrupts actually being enabled/disabled. In practice, it doesn't matter.
 pub const IME: PlainAddr<bool> = unsafe { VolAddress::new(0x0400_0208) };
 
+// mGBA Logging
+
+/// The buffer to put logging messages into.
+///
+/// The first 0 in the buffer is the end of each message.
+pub const MGBA_LOG_BUFFER: VolBlock<u8, SOGBA, SOGBA, 256> =
+  unsafe { VolBlock::new(0x04FF_F600) };
+
+/// Write to this each time you want to reset a message (it also resets the
+/// buffer).
+pub const MGBA_LOG_SEND: WoAddr<MgbaMessageLevel> =
+  unsafe { VolAddress::new(0x04FF_F700) };
+
+/// Allows you to attempt to activate mGBA logging.
+pub const MGBA_LOG_ENABLE: PlainAddr<u16> =
+  unsafe { VolAddress::new(0x04FF_F780) };
+
 /// The backdrop color is the color shown when no *other* element is displayed
 /// in a given pixel.
 pub const BACKDROP_COLOR: PlainAddr<Color> =
@@ -187,11 +207,16 @@ pub const VRAM_BG_TILE4: VolBlock<Tile4bpp, SOGBA, SOGBA, 2048> =
 pub const VRAM_BG_TILE8: VolBlock<Tile4bpp, SOGBA, SOGBA, 1024> =
   unsafe { VolBlock::new(0x0600_0000) };
 
-/// The VRAM's view in Video Mode 3.
+/// The VRAM's view in Video Mode 3 (240 x 160).
 ///
 /// Each location is a direct color value.
-pub const MODE3_VRAM: VolGrid2d<Color, SOGBA, SOGBA, 240, 160> =
-  unsafe { VolGrid2d::new(0x0600_0000) };
+pub const MODE3_VRAM: VolGrid2d<
+  Color,
+  SOGBA,
+  SOGBA,
+  { Mode3::WIDTH as usize },
+  { Mode3::HEIGHT as usize },
+> = unsafe { VolGrid2d::new(0x0600_0000) };
 
 /// The VRAM's view in Video Mode 4.
 ///
