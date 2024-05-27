@@ -57,8 +57,10 @@ pub enum MgbaLogLevel {
 /// Returns if mGBA logging is possible.
 #[inline]
 pub fn mgba_logging_available() -> bool {
-  // the `_start` function writes the request, so here we just check success.
-  MGBA_LOG_ENABLE.read() == MGBA_LOGGING_ENABLE_RESPONSE
+  on_gba_or_unimplemented!(
+    // the `_start` function writes the request, so here we just check success.
+    return MGBA_LOG_ENABLE.read() == MGBA_LOGGING_ENABLE_RESPONSE;
+  );
 }
 
 /// A logger for sending out messages to the mGBA debug log interface.
@@ -108,8 +110,10 @@ impl MgbaLogger {
 
   #[inline]
   fn flush(&mut self) {
-    MGBA_LOG_SEND.write(self.message_level);
-    self.byte_count = 0;
+    on_gba_or_unimplemented!(
+      MGBA_LOG_SEND.write(self.message_level);
+      self.byte_count = 0;
+    );
   }
 }
 impl Drop for MgbaLogger {
@@ -123,18 +127,20 @@ impl Drop for MgbaLogger {
 impl core::fmt::Write for MgbaLogger {
   #[inline]
   fn write_str(&mut self, s: &str) -> core::fmt::Result {
-    for b in s.as_bytes().iter().copied() {
-      if b == b'\n' {
-        self.flush();
-      } else {
-        MGBA_LOG_BUFFER.index(self.byte_count as usize).write(b);
-        if self.byte_count == u8::MAX {
+    on_gba_or_unimplemented!(
+      for b in s.as_bytes().iter().copied() {
+        if b == b'\n' {
           self.flush();
         } else {
-          self.byte_count += 1;
+          MGBA_LOG_BUFFER.index(self.byte_count as usize).write(b);
+          if self.byte_count == u8::MAX {
+            self.flush();
+          } else {
+            self.byte_count += 1;
+          }
         }
       }
-    }
-    Ok(())
+      return Ok(());
+    );
   }
 }
