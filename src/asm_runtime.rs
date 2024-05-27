@@ -117,9 +117,14 @@ core::arch::global_asm! {
     "ldr r1, =0x4317",
     "strh r1, [r0]",
 
+    // activate mGBA logging, when available
+    "ldr r0, =0x04FFF780",
+    "ldr r1, =0xC0DE",
+    "strh r1, [r0]",
+
     /* iwram copy */
     "ldr r0, =_iwram_word_copy_count",
-    when!(("r0" != "#0") {
+    when!(("r0" != "#0")[1] {
       "ldr r1, =_iwram_position_in_rom",
       "str r1, [r3]",           // src
       "ldr r1, =_iwram_start",
@@ -131,7 +136,7 @@ core::arch::global_asm! {
 
     /* ewram copy */
     "ldr r4, =_ewram_word_copy_count",
-    when!(("r4" != "#0") {
+    when!(("r4" != "#0")[1] {
       "ldr r1, =_ewram_position_in_rom",
       "str r1, [r3]",
       "ldr r1, =_ewram_start",
@@ -143,7 +148,7 @@ core::arch::global_asm! {
 
     /* bss zero */
     "ldr r4, =_bss_word_clear_count",
-    when!(("r4" != "#0") {
+    when!(("r4" != "#0")[1] {
       "ldr r0, =_bss_start",
       "mov r2, #0",
       "2:",
@@ -200,7 +205,7 @@ core::arch::global_asm! {
     // Get the user handler fn pointer, call it if non-null.
     "ldr r12, ={USER_IRQ_HANDLER}",
     "ldr r12, [r12]",
-    when!(("r12" != "#0") {
+    when!(("r12" != "#0")[1] {
       "mov r0, r1",
       // we need to save `lr`, and we need to save an even number of registers
       // to keep the stack aligned to 8 for the C ABI, so we'll also save `r0`,
