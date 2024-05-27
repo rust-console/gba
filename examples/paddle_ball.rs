@@ -5,7 +5,6 @@
 
 #![no_std]
 #![no_main]
-#![allow(unused)]
 
 use core::ptr::addr_of;
 
@@ -63,17 +62,18 @@ impl Ball {
   }
 
   fn update(&mut self, paddle1: &Paddle, paddle2: &Paddle) {
+    // top/bottom bounce
     if self.y <= 0 || self.y + BALL_SIZE >= SCREEN_HEIGHT {
       self.dy = -self.dy;
     }
 
+    // paddle bounce
     if self.x + BALL_SIZE >= paddle1.x
       && self.x <= paddle1.x + PADDLE_WIDTH
       && self.y + BALL_SIZE >= paddle1.y
       && self.y <= paddle1.y + PADDLE_HEIGHT
     {
       self.dx = -self.dx;
-      self.dy = -self.dy;
     }
 
     if self.x + BALL_SIZE >= paddle2.x
@@ -82,9 +82,9 @@ impl Ball {
       && self.y <= paddle2.y + PADDLE_HEIGHT
     {
       self.dx = -self.dx;
-      self.dy = -self.dy;
     }
 
+    // off the edges
     if self.x + BALL_SIZE <= 1 + BALL_SIZE {
       self.x = SCREEN_WIDTH / 2 - BALL_SIZE / 2;
       self.y = SCREEN_HEIGHT / 2 - BALL_SIZE / 2;
@@ -98,6 +98,7 @@ impl Ball {
       self.dx = -1;
       self.dy = 1;
     }
+
     self.x = (self.x as i16 + self.dx) as u16;
     self.y = (self.y as i16 + self.dy) as u16;
   }
