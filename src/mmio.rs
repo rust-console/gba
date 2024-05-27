@@ -9,6 +9,7 @@ use voladdress::{Unsafe, VolBlock, VolGrid2d, VolGrid2dStrided};
 
 use crate::{
   dma::DmaControl,
+  mgba::MgbaLogLevel,
   video::{Color, DisplayControl, DisplayStatus, Tile4bpp},
   IrqBits, KeyInput,
 };
@@ -24,6 +25,8 @@ type SOGBA = voladdress::Unsafe;
 type PlainAddr<T> = VolAddress<T, SOGBA, SOGBA>;
 /// Read-only addr
 type RoAddr<T> = VolAddress<T, SOGBA, ()>;
+/// Write-only addr
+type WoAddr<T> = VolAddress<T, (), SOGBA>;
 
 /// Display Control setting.
 ///
@@ -165,6 +168,25 @@ pub const IF: PlainAddr<IrqBits> = unsafe { VolAddress::new(0x0400_0202) };
 /// Technically there's a two CPU cycle delay between this being written and
 /// interrupts actually being enabled/disabled. In practice, it doesn't matter.
 pub const IME: PlainAddr<bool> = unsafe { VolAddress::new(0x0400_0208) };
+
+/// The buffer to put logging messages into.
+///
+/// The first `\0` in the buffer is the end of each message.
+pub const MGBA_LOG_BUFFER: VolBlock<u8, SOGBA, SOGBA, 256> =
+  unsafe { VolBlock::new(0x04FF_F600) };
+
+/// Write to this each time you want to send out the current buffer content.
+///
+/// It also resets the buffer content.
+pub const MGBA_LOG_SEND: WoAddr<MgbaLogLevel> =
+  unsafe { VolAddress::new(0x04FFF700) };
+
+/// Allows you to enable/disable mGBA logging.
+///
+/// This is enabled by default by the assembly runtime, so you don't normally
+/// need to touch this.
+pub const MGBA_LOG_ENABLE: PlainAddr<u16> =
+  unsafe { VolAddress::new(0x04FF_F780) };
 
 /// The backdrop color is the color shown when no *other* element is displayed
 /// in a given pixel.

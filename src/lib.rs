@@ -56,6 +56,7 @@ pub mod dma;
 pub mod gba_cell;
 pub mod gba_fixed;
 pub mod mem;
+pub mod mgba;
 pub mod mmio;
 pub mod panic_handlers;
 pub mod per_project_setup;
