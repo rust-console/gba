@@ -1,7 +1,5 @@
 //! Various panic handler functions that you might find useful.
 
-use crate::mgba::{MgbaBufferedLogger, MgbaMessageLevel};
-
 /// Declares one of the functions in the
 /// [`panic_handlers`](crate::panic_handlers) module to be the handler for your
 /// program.
@@ -24,15 +22,5 @@ macro_rules! panic_handler {
 /// Just performs an empty `loop`
 #[inline]
 pub fn empty_loop(_: &core::panic::PanicInfo) -> ! {
-  loop {}
-}
-
-/// Attempts to log the info to the mGBA debug output at the "error" level.
-#[inline]
-pub fn mgba_log_error(info: &core::panic::PanicInfo) -> ! {
-  use core::fmt::Write;
-  if let Ok(mut logger) = MgbaBufferedLogger::try_new(MgbaMessageLevel::Error) {
-    writeln!(logger, "{info}").ok();
-  }
   loop {}
 }

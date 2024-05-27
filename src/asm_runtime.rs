@@ -105,7 +105,6 @@ core::arch::global_asm! {
     ".space 0xE0",
     "1:",
 
-    // reg setup.
     "mov r12, #0x04000000",
     "add r3, r12, #0xD4",
 
@@ -116,11 +115,6 @@ core::arch::global_asm! {
     // Configure WAITCNT to the GBATEK suggested default
     "add r0, r12, #0x204",
     "ldr r1, =0x4317",
-    "strh r1, [r0]",
-
-    // Request mGBA logging be activated.
-    "ldr r0, =0x04FFF780",
-    "ldr r1, =0xC0DE",
     "strh r1, [r0]",
 
     /* iwram copy */

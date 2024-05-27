@@ -1,7 +1,6 @@
 #![no_std]
-#![allow(unused_mut)]
 #![cfg_attr(not(feature = "on_gba"), allow(unused))]
-//#![warn(missing_docs)]
+#![warn(missing_docs)]
 #![warn(unsafe_op_in_unsafe_fn)]
 #![cfg_attr(feature = "doc_cfg", feature(doc_cfg))]
 
@@ -47,9 +46,7 @@ macro_rules! on_gba_or_unimplemented {
       $($token_tree)*
     }
     #[cfg(not(feature="on_gba"))]
-    {
-      unimplemented!()
-    }
+    unimplemented!()
   }
 }
 
@@ -58,8 +55,6 @@ pub mod bios;
 pub mod dma;
 pub mod gba_cell;
 pub mod gba_fixed;
-pub mod mem;
-pub mod mgba;
 pub mod mmio;
 pub mod panic_handlers;
 pub mod per_project_setup;

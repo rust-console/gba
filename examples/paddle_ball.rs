@@ -7,17 +7,23 @@
 #![no_main]
 #![allow(unused)]
 
+use core::ptr::addr_of;
+
 use gba::{
   asm_runtime::USER_IRQ_HANDLER,
   bios::VBlankIntrWait,
+  dma::{DmaControl, DmaSrcAddr},
   gba_cell::GbaCell,
-  mmio::{DISPCNT, DISPSTAT, IE, IME, KEYINPUT, MODE3_VRAM},
-  video::{Color, DisplayControl, DisplayStatus, Mode3},
+  mmio::{
+    DISPCNT, DISPSTAT, DMA3_CONTROL, DMA3_DESTINATION, DMA3_SOURCE,
+    DMA3_TRANSFER_COUNT, IE, IME, KEYINPUT, MODE3_VRAM, OBJ_PALRAM,
+  },
+  video::{Color, DisplayControl, DisplayStatus},
   IrqBits, KeyInput,
 };
 
-const SCREEN_WIDTH: u16 = Mode3::WIDTH;
-const SCREEN_HEIGHT: u16 = Mode3::HEIGHT;
+const SCREEN_WIDTH: u16 = 240;
+const SCREEN_HEIGHT: u16 = 160;
 
 const PADDLE_WIDTH: u16 = 4;
 const PADDLE_HEIGHT: u16 = 20;
@@ -106,7 +112,7 @@ static SPRITE_POSITIONS: [GbaCell<u16>; 6] = [
   GbaCell::new(0),
 ];
 
-gba::panic_handler!(mgba_log_error);
+gba::panic_handler!(empty_loop);
 
 #[no_mangle]
 fn main() -> ! {
@@ -143,7 +149,19 @@ fn main() -> ! {
 }
 
 extern "C" fn draw_sprites(_bits: IrqBits) {
-  Mode3.dma3_clear_to(Color::BLACK);
+  unsafe {
+    let color = OBJ_PALRAM.index(0).read();
+    let c: u32 = color.0 as u32 | (color.0 as u32) << 16;
+    DMA3_SOURCE.write(addr_of!(c).cast());
+    DMA3_DESTINATION.write(MODE3_VRAM.as_usize() as _);
+    DMA3_TRANSFER_COUNT.write(SCREEN_WIDTH * SCREEN_HEIGHT / 2);
+    DMA3_CONTROL.write(
+      DmaControl::new()
+        .with_src_addr(DmaSrcAddr::Fixed)
+        .with_u32_transfer(true)
+        .with_enabled(true),
+    );
+  }
 
   draw_rect(
     SPRITE_POSITIONS[0].read(),
