@@ -13,7 +13,7 @@
 #[inline]
 #[link_section = ".iwram.__aeabi_memcpy1"]
 #[cfg_attr(feature = "no_mangle_memcpy", no_mangle)]
-#[cfg_addr(feature = "on_gba", instruction_set(arm::a32))]
+#[cfg_attr(feature = "on_gba", instruction_set(arm::a32))]
 pub unsafe extern "C" fn __aeabi_memcpy1(
   dest: *mut u8, src: *const u8, byte_count: usize,
 ) {
