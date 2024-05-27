@@ -1,15 +1,19 @@
 #![no_std]
 #![no_main]
+#![allow(unused)]
+
+use core::ptr::{addr_of, addr_of_mut};
 
 use gba::{
   asm_runtime::USER_IRQ_HANDLER,
   bios::VBlankIntrWait,
+  mgba::{MgbaLogLevel, MgbaLogger},
   mmio::{BACKDROP_COLOR, DISPCNT, DISPSTAT, IE, IME, KEYINPUT},
   video::{Color, DisplayControl, DisplayStatus},
   IrqBits,
 };
 
-gba::panic_handler!(empty_loop);
+gba::panic_handler!(mgba_log_err);
 
 #[no_mangle]
 pub extern "C" fn main() -> ! {
