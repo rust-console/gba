@@ -62,6 +62,7 @@ pub mod obj;
 pub mod panic_handlers;
 pub mod per_project_setup;
 pub mod per_system_setup;
+pub mod random;
 pub mod sample_art;
 pub mod video;
 
