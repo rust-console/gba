@@ -1,8 +1,8 @@
+#![allow(unused_imports)]
 /*
  * Made by Evan Goemer
  * Discord: @evangoemer
  */
-
 #![no_std]
 #![no_main]
 
@@ -172,8 +172,7 @@ extern "C" fn draw_sprites(_bits: IrqBits) {
       * SCREEN_HEIGHT as usize
       * core::mem::size_of::<Color>();
     let r2 = 0;
-    let r3 = 0;
-    bulk_memory_set(dest, byte_count, r2, r3);
+    bulk_memory_set(dest, byte_count, r2);
   }
 
   draw_rect(
