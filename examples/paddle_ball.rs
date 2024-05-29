@@ -13,6 +13,7 @@ use gba::{
   bios::VBlankIntrWait,
   dma::{DmaControl, DmaSrcAddr},
   gba_cell::GbaCell,
+  mem::bulk_memory_set,
   mmio::{
     DISPCNT, DISPSTAT, DMA3_CONTROL, DMA3_DESTINATION, DMA3_SOURCE,
     DMA3_TRANSFER_COUNT, IE, IME, KEYINPUT, MODE3_VRAM, OBJ_PALRAM,
@@ -150,6 +151,7 @@ fn main() -> ! {
 }
 
 extern "C" fn draw_sprites(_bits: IrqBits) {
+  /*
   unsafe {
     let color = OBJ_PALRAM.index(0).read();
     let c: u32 = color.0 as u32 | (color.0 as u32) << 16;
@@ -162,6 +164,16 @@ extern "C" fn draw_sprites(_bits: IrqBits) {
         .with_u32_transfer(true)
         .with_enabled(true),
     );
+  }
+  // */
+  unsafe {
+    let dest = MODE3_VRAM.as_usize() as *mut u32;
+    let byte_count = SCREEN_WIDTH as usize
+      * SCREEN_HEIGHT as usize
+      * core::mem::size_of::<Color>();
+    let r2 = 0;
+    let r3 = 0;
+    bulk_memory_set(dest, byte_count, r2, r3);
   }
 
   draw_rect(
