@@ -198,6 +198,7 @@ extern "C" fn draw_sprites(_bits: IrqBits) {
   );
 }
 
+#[inline(never)]
 fn draw_rect(x: u16, y: u16, width: u16, height: u16, color: Color) {
   for i in 0..width {
     for j in 0..height {
