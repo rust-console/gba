@@ -10,4 +10,5 @@ rustflags = [
   "-Zub-checks=no",
   "-Clinker=arm-none-eabi-ld",
   "-Clink-arg=-Tlinker_scripts/mono_boot.ld",
+  "-Ctarget-cpu=arm7tdmi",
 ]

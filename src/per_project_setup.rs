@@ -28,6 +28,12 @@
 //! `rustflags` argument with `-Clink-arg=-T<path>`, using the script's path
 //! relative to our project root.
 //!
+//! You can also set `-Ctarget-cpu=arm7tdmi`, because that is the specific CPU
+//! of the GBA, though I'm not sure that LLVM really does much with the
+//! information. In my very limited testing, I didn't see any different code
+//! generated when setting the CPU compared to not doing it, but I do it just in
+//! case it helps somehow, because it doesn't hurt.
+//!
 //! [github_script]:
 //!     https://github.com/rust-console/gba/blob/main/linker_scripts/mono_boot.ld
 //!
@@ -44,6 +50,7 @@
 //! rustflags = [
 //!   "-Clinker=arm-none-eabi-ld",
 //!   "-Clink-arg=-Tlinker_scripts/mono_boot.ld",
+//!   "-Ctarget-cpu=arm7tdmi",
 //! ]
 //! ```
 //!
