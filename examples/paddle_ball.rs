@@ -144,36 +144,25 @@ fn main() -> ! {
 extern "C" fn draw_sprites(_bits: IrqBits) {
   Mode3.clear_to(Color::BLACK);
 
-  draw_rect(
+  Mode3.fill_rect_clipped(
     SPRITE_POSITIONS[0].read(),
     SPRITE_POSITIONS[1].read(),
     PADDLE_WIDTH,
     PADDLE_HEIGHT,
     Color::RED,
   );
-  draw_rect(
+  Mode3.fill_rect_clipped(
     SPRITE_POSITIONS[2].read(),
     SPRITE_POSITIONS[3].read(),
     PADDLE_WIDTH,
     PADDLE_HEIGHT,
     Color::GREEN,
   );
-  draw_rect(
+  Mode3.fill_rect_clipped(
     SPRITE_POSITIONS[4].read(),
     SPRITE_POSITIONS[5].read(),
     BALL_SIZE,
     BALL_SIZE,
     Color::CYAN,
   );
-}
-
-// we out-line this because otherwise `draw_sprites` overloads the stack when it
-// holds 3 copies of this function.
-#[inline(never)]
-fn draw_rect(x: u16, y: u16, width: u16, height: u16, color: Color) {
-  for i in 0..width {
-    for j in 0..height {
-      MODE3_VRAM.index((x + i) as usize, (y + j) as usize).write(color);
-    }
-  }
 }

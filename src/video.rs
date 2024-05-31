@@ -2,6 +2,8 @@
 
 use bitfrob::{u16_get_bit, u16_with_bit, u16_with_value};
 
+use crate::mmio::MODE3_VRAM;
+
 /// A color value.
 ///
 /// This is a bit-packed linear RGB color value with 5 bits per channel:
@@ -332,14 +334,17 @@ pub struct Tile8bpp(pub [u32; 16]);
 pub struct Mode3;
 impl Mode3 {
   /// Width, in pixels, of the Mode 3 bitmap.
-  pub const WIDTH: usize = 240;
+  pub const WIDTH_USIZE: usize = 240;
 
   /// Height, in pixels, of the Mode 3 bitmap.
-  pub const HEIGHT: usize = 160;
+  pub const HEIGHT_USIZE: usize = 160;
 
-  /// The size, in bytes, of the Mode 3 bitmap.
-  pub const BYTES: usize =
-    Self::WIDTH * Self::HEIGHT * core::mem::size_of::<Color>();
+  /// The size, in bytes, of one scanline of the Mode 3 bitmap.
+  pub const BYTES_PER_ROW: usize =
+    core::mem::size_of::<[Color; Mode3::WIDTH_USIZE]>();
+
+  /// The size, in bytes, of the whole Mode 3 bitmap.
+  pub const BYTES_TOTAL: usize = Self::BYTES_PER_ROW * Self::HEIGHT_USIZE;
 
   /// Clears the entire bitmap to a color of your choosing.
   #[cfg_attr(feature = "on_gba", instruction_set(arm::a32))]
@@ -380,5 +385,38 @@ impl Mode3 {
         options(nostack),
       )
     });
+  }
+
+  /// Fills the given rectangle, clipped to the bounds of the bitmap.
+  #[cfg_attr(feature = "on_gba", instruction_set(arm::a32))]
+  pub fn fill_rect_clipped(
+    self, x: u16, y: u16, width: u16, height: u16, color: Color,
+  ) {
+    on_gba_or_unimplemented!(
+      let x_start = x.min(Self::WIDTH_USIZE as u16);
+      let x_end = x.saturating_add(width).min(Self::WIDTH_USIZE as u16);
+      let x_count = x_end - x_start;
+      let y_start = y.min(Self::HEIGHT_USIZE as u16);
+      let y_end = y.saturating_add(height).min(Self::HEIGHT_USIZE as u16);
+      let y_count = y_end - y_start;
+      // base
+      let mut p = MODE3_VRAM.as_usize() as *mut Color;
+      // go to start y
+      p = unsafe { p.byte_add(Self::BYTES_PER_ROW * (y_start as u16 as usize)) };
+      // go to start x
+      p = unsafe { p.add(x_start as u16 as usize) };
+      let mut y_remaining = y_count;
+      while y_remaining > 0 {
+        let mut within_row = p;
+        let mut x_remaining = x_count;
+        while x_remaining > 0 {
+          unsafe { within_row.write_volatile(color) };
+          within_row = unsafe { within_row.add(1) };
+          x_remaining -= 1;
+        }
+        p = unsafe { p.byte_add(Self::BYTES_PER_ROW) };
+        y_remaining -= 1;
+      }
+    );
   }
 }
