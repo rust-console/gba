@@ -1,24 +1,15 @@
-#![allow(unused_imports)]
-/*
- * Made by Evan Goemer
- * Discord: @evangoemer
- */
 #![no_std]
 #![no_main]
 
-use core::ptr::addr_of;
+//! Made by Evan Goemer, Discord: @evangoemer
 
 use gba::{
   asm_runtime::USER_IRQ_HANDLER,
   bios::VBlankIntrWait,
-  dma::{DmaControl, DmaSrcAddr},
   gba_cell::GbaCell,
   mem::bulk_memory_set,
-  mmio::{
-    DISPCNT, DISPSTAT, DMA3_CONTROL, DMA3_DESTINATION, DMA3_SOURCE,
-    DMA3_TRANSFER_COUNT, IE, IME, KEYINPUT, MODE3_VRAM, OBJ_PALRAM,
-  },
-  video::{Color, DisplayControl, DisplayStatus},
+  mmio::{DISPCNT, DISPSTAT, IE, IME, KEYINPUT, MODE3_VRAM},
+  video::{Color, DisplayControl, DisplayStatus, Mode3},
   IrqBits, KeyInput,
 };
 
@@ -151,29 +142,7 @@ fn main() -> ! {
 }
 
 extern "C" fn draw_sprites(_bits: IrqBits) {
-  /*
-  unsafe {
-    let color = OBJ_PALRAM.index(0).read();
-    let c: u32 = color.0 as u32 | (color.0 as u32) << 16;
-    DMA3_SOURCE.write(addr_of!(c).cast());
-    DMA3_DESTINATION.write(MODE3_VRAM.as_usize() as _);
-    DMA3_TRANSFER_COUNT.write(SCREEN_WIDTH * SCREEN_HEIGHT / 2);
-    DMA3_CONTROL.write(
-      DmaControl::new()
-        .with_src_addr(DmaSrcAddr::Fixed)
-        .with_u32_transfer(true)
-        .with_enabled(true),
-    );
-  }
-  // */
-  unsafe {
-    let dest = MODE3_VRAM.as_usize() as *mut u32;
-    let byte_count = SCREEN_WIDTH as usize
-      * SCREEN_HEIGHT as usize
-      * core::mem::size_of::<Color>();
-    let r2 = 0;
-    bulk_memory_set(dest, byte_count, r2);
-  }
+  Mode3.clear_to(Color::BLACK);
 
   draw_rect(
     SPRITE_POSITIONS[0].read(),
@@ -198,6 +167,8 @@ extern "C" fn draw_sprites(_bits: IrqBits) {
   );
 }
 
+// we out-line this because otherwise `draw_sprites` overloads the stack when it
+// holds 3 copies of this function.
 #[inline(never)]
 fn draw_rect(x: u16, y: u16, width: u16, height: u16, color: Color) {
   for i in 0..width {
