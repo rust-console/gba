@@ -312,7 +312,7 @@ impl TextEntry {
 /// expected to manipulate particular pixels within a tile at runtime.
 #[derive(Clone, Copy, Default)]
 #[repr(transparent)]
-pub struct Tile4bpp(pub [u32; 8]);
+pub struct Tile4(pub [u32; 8]);
 
 /// Data for a 8-bit-per-pixel tile.
 ///
@@ -327,7 +327,7 @@ pub struct Tile4bpp(pub [u32; 8]);
 /// expected to manipulate particular pixels within a tile at runtime.
 #[derive(Clone, Copy, Default)]
 #[repr(transparent)]
-pub struct Tile8bpp(pub [u32; 16]);
+pub struct Tile8(pub [u32; 16]);
 
 /// A zero-sized type that gives a namespace for Mode 3 related things.
 #[derive(Clone, Copy)]

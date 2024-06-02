@@ -12,8 +12,7 @@ use crate::{
   mgba::MgbaLogLevel,
   obj::{ObjAttr, ObjAttr0, ObjAttr1, ObjAttr2},
   video::{
-    BackgroundControl, Color, DisplayControl, DisplayStatus, TextEntry,
-    Tile4bpp,
+    BackgroundControl, Color, DisplayControl, DisplayStatus, TextEntry, Tile4,
   },
   IrqBits, KeyInput,
 };
@@ -239,11 +238,11 @@ pub const fn obj_palbank(bank: usize) -> VolBlock<Color, SOGBA, SOGBA, 16> {
 pub const SCREENBLOCK_INDEX_OFFSET: usize = 2 * 1_024;
 
 /// The VRAM's background tile view, using 4bpp tiles.
-pub const VRAM_BG_TILE4: VolBlock<Tile4bpp, SOGBA, SOGBA, 2048> =
+pub const VRAM_BG_TILE4: VolBlock<Tile4, SOGBA, SOGBA, 2048> =
   unsafe { VolBlock::new(0x0600_0000) };
 
 /// The VRAM's background tile view, using 8bpp tiles.
-pub const VRAM_BG_TILE8: VolBlock<Tile4bpp, SOGBA, SOGBA, 1024> =
+pub const VRAM_BG_TILE8: VolBlock<Tile4, SOGBA, SOGBA, 1024> =
   unsafe { VolBlock::new(0x0600_0000) };
 
 /// The text mode screenblocks.
@@ -258,11 +257,11 @@ pub const TEXT_SCREENBLOCKS: VolGrid2dStrided<
 > = unsafe { VolGrid2dStrided::new(0x0600_0000) };
 
 /// The VRAM's object tile view, using 4bpp tiles.
-pub const VRAM_OBJ_TILE4: VolBlock<Tile4bpp, SOGBA, SOGBA, 1024> =
+pub const VRAM_OBJ_TILE4: VolBlock<Tile4, SOGBA, SOGBA, 1024> =
   unsafe { VolBlock::new(0x0601_0000) };
 
 /// The VRAM's object tile view, using 8bpp tiles.
-pub const VRAM_OBJ_TILE8: VolBlock<Tile4bpp, SOGBA, SOGBA, 512> =
+pub const VRAM_OBJ_TILE8: VolBlock<Tile4, SOGBA, SOGBA, 512> =
   unsafe { VolBlock::new(0x0601_0000) };
 
 /// The VRAM's view in Video Mode 3.

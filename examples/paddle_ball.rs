@@ -7,8 +7,7 @@ use gba::{
   asm_runtime::USER_IRQ_HANDLER,
   bios::VBlankIntrWait,
   gba_cell::GbaCell,
-  mem::bulk_memory_set,
-  mmio::{DISPCNT, DISPSTAT, IE, IME, KEYINPUT, MODE3_VRAM},
+  mmio::{DISPCNT, DISPSTAT, IE, IME, KEYINPUT},
   video::{Color, DisplayControl, DisplayStatus, Mode3},
   IrqBits, KeyInput,
 };

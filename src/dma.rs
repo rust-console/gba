@@ -47,7 +47,7 @@ use voladdress::{Safe, VolRegion};
 
 use crate::{
   mmio::{DMA3_CONTROL, DMA3_DESTINATION, DMA3_SOURCE, DMA3_TRANSFER_COUNT},
-  video::Tile4bpp,
+  video::Tile4,
 };
 
 /// Controls the activity of a DMA unit.
@@ -201,9 +201,7 @@ pub unsafe fn dma3_copy_u32(src: *const u32, dest: *mut u32, count: usize) {
 /// ## Panics
 /// * The `src` and `dest` must have the same length.
 #[inline]
-pub fn dma3_copy_tile4(
-  src: &[Tile4bpp], dest: VolRegion<Tile4bpp, Safe, Safe>,
-) {
+pub fn dma3_copy_tile4(src: &[Tile4], dest: VolRegion<Tile4, Safe, Safe>) {
   assert_eq!(src.len(), dest.len());
   if src.len() == 0 {
     return;

@@ -20,8 +20,10 @@
 //! [ObjAttr2].
 //!
 //! When you've got an object's data configured how you want, use either the
-//! [`OBJ_ATTR_ALL`] control (to write all fields at once) or the [`OBJ_ATTR0`],
-//! [`OBJ_ATTR1`], and/or [`OBJ_ATTR2`] controls (to write just some of the
+//! [`OBJ_ATTR_ALL`][crate::mmio::OBJ_ATTR_ALL] control (to write all fields at
+//! once) or the [`OBJ_ATTR0`][crate::mmio::OBJ_ATTR0],
+//! [`OBJ_ATTR1`][crate::mmio::OBJ_ATTR1], and/or
+//! [`OBJ_ATTR2`][crate::mmio::OBJ_ATTR2] controls (to write just some of the
 //! fields).
 //!
 //! **Note:** When the GBA first boots, the object layer will be off but the

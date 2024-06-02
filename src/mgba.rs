@@ -8,7 +8,7 @@
 //!
 //! Logging is not always available. Obviously the mGBA output buffer can't be
 //! used if the game isn't running within the mGBA emulator.
-//! [`MgbaBufferedLogger::try_new`] will fail to make a logger when logging
+//! [`MgbaLogger::try_new`] will fail to make a logger when logging
 //! isn't available. You can also call [`mgba_logging_available`] directly to
 //! check if mGBA logging is possible.
 //!

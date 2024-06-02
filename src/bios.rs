@@ -64,6 +64,50 @@ pub fn VBlankIntrWait() {
   );
 }
 
+/// `0x09`: Arc tangent.
+///
+/// * **Returns:** The output is in the range +/- `pi/2`, but accuracy is worse
+///   outside of +/- `pi/4`.
+#[inline]
+#[instruction_set(arm::t32)]
+pub fn ArcTan(theta: crate::i16fx14) -> crate::i16fx14 {
+  let mut i = theta.into_raw();
+  unsafe {
+    core::arch::asm! {
+      "swi #0x09",
+      inout("r0") i,
+      out("r1") _,
+      out("r3") _,
+      options(pure, nomem, preserves_flags),
+    }
+  };
+  crate::i16fx14::from_raw(i)
+}
+
+/// `0x0A`: The "2-argument arctangent" ([atan2][wp-atan2]).
+///
+/// [wp-atan2]: https://en.wikipedia.org/wiki/Atan2
+///
+/// * **Returns:** The angle of the input vector, with `u16::MAX` being
+///   equivalent to `2pi`.
+#[inline]
+#[instruction_set(arm::t32)]
+pub fn ArcTan2(x: crate::i16fx14, y: crate::i16fx14) -> u16 {
+  let x = x.into_raw();
+  let y = y.into_raw();
+  let output: u16;
+  unsafe {
+    core::arch::asm! {
+      "swi #0x0A",
+      inout("r0") x => output,
+      inout("r1") y => _,
+      out("r3") _,
+      options(pure, nomem, preserves_flags),
+    }
+  };
+  output
+}
+
 /// `0x12` TODO: document this more
 #[inline]
 #[cfg_attr(feature = "on_gba", instruction_set(arm::t32))]

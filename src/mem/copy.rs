@@ -32,3 +32,40 @@ pub unsafe extern "C" fn __aeabi_memcpy1(
     }
   });
 }
+
+/// Copies eight `u32` at a time to `dest` from `src`
+///
+/// Particularly, this is the size of one [`Tile4`][crate::video::Tile4], half a
+/// [`Tile8`][crate::video::Tile8], or one complete palbank of
+/// [`Color`][crate::video::Color] values.
+///
+/// ## Safety
+/// * As with all copying routines, the source must be readable for the size you
+///   specify, and the destination must be writable for the size you specify.
+/// * Both pointers must be aligned to 4.
+#[link_section = ".iwram.copy_u32x8_unchecked"]
+#[cfg_attr(feature = "on_gba", instruction_set(arm::a32))]
+pub unsafe fn copy_u32x8_unchecked(
+  mut dest: *mut u32, mut src: *const u32, mut count: usize,
+) {
+  while count > 0 {
+    on_gba_or_unimplemented!(unsafe {
+      core::arch::asm!(
+        "ldm {src}!, {{r3,r4,r5,r7, r8,r9,r10,r12}}",
+        "stm {dest}!, {{r3,r4,r5,r7, r8,r9,r10,r12}}",
+        dest = inout(reg) dest,
+        src = inout(reg) src,
+        out("r3") _,
+        out("r4") _,
+        out("r5") _,
+        out("r7") _,
+        out("r8") _,
+        out("r9") _,
+        out("r10") _,
+        out("r12") _,
+        options(nostack)
+      )
+    });
+    count -= 1;
+  }
+}
