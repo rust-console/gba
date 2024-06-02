@@ -19,13 +19,6 @@ doc_cfg = []
 # inlined (meaning  `Location` is passed via the stack). This is only needed for
 # debugging, and so it's off by default.
 track_caller = []
-# Applies the `no_mangle` attribute to the `memcpy` family of functions, causing
-# them to override the same intrinsics from the `compiler_builtins` crate. When
-# using this you will need to set cargo's `build-std-features` list to include
-# "compiler-builtins-weak-intrinsics"
-no_mangle_memcpy = []
-# As above, but for `memset` and `memclr` fns.
-no_mangle_memset = []
 
 [dependencies]
 voladdress = "1.4.0"
@@ -35,7 +28,7 @@ critical-section = { version = "1.1.2", features = [
 ], optional = true }
 bytemuck = { version = "1.16.0", optional = true }
 fixed = { version = "1.27.0", default-features = false, optional = true }
-bracer = "0.3.0"
+bracer = "0.3.1"
 
 [profile.dev]
 opt-level = 3
