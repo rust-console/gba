@@ -171,17 +171,31 @@ core::arch::global_asm! {
   }
 }
 
+// This "default" IRQ handler
+// * Assumes that `IntrWait` support is desired.
+// * Calls the user handler function in System mode.
+// * Does NOT support nested interrupts at all.
 #[cfg(feature = "on_gba")]
 core::arch::global_asm! {
   put_fn_in_section!(".iwram.text._asm_runtime_irq_handler"),
   ".global _asm_runtime_irq_handler",
   force_a32!{
     "_asm_runtime_irq_handler:",
-
-    // At function entry:
-    // * r0: holds 0x0400_0000
-    //
     // We're allowed to use the usual C ABI registers.
+
+    // Note(Lokathor): So the trouble here is that we want to 16-bit access
+    // BASE+0x200 and also BASE-8. Immediate offsets for 16-bit access can't be
+    // that large of a range. So we'll have to actually do an `add` or `sub` to
+    // put the correct offset from our base pointer into a register. Also, our
+    // base pointer is in `r0`, but we need to pass the bits to the user
+    // function in `r0` when we do that call. The compromise here is that we'll
+    // keep our base address in `r0`, manipulate the bits in `r1`, and then if
+    // we're actually doing a call to a user fn we can move the bits down to
+    // `r0` after we don't need the base pointer anymore. This seems to be the
+    // way that has the least register shuffling.
+
+    // Assumed:
+    // * r0: 0x0400_0000 (set by the BIOS)
 
     // handle MMIO interrupt system
     "add  r12, r0, #0x200",     // 16-bit access offsets can't be too big
@@ -190,16 +204,16 @@ core::arch::global_asm! {
     "strh r1, [r12, #2]",       // write IF
 
     // Now:
-    // * r0: holds 0x0400_0000
+    // * r0: 0x0400_0000
     // * r1: irq bits
 
-    // handle BIOS interrupt system
+    // handle BIOS IntrWait system
     "ldrh r2, [r0, #-8]", // read the `has_occurred` flags
     "orr  r2, r2, r1",    // activate the new bits, if any
     "strh r2, [r0, #-8]", // update the value
 
     // Now:
-    // * r0: holds 0x0400_0000
+    // * r0: 0x0400_0000
     // * r1: irq bits
 
     // Get the user handler fn pointer, call it if non-null.
@@ -207,12 +221,13 @@ core::arch::global_asm! {
     "ldr r12, [r12]",
     when!(("r12" != "#0")[1] {
       "mov r0, r1",
-      // we need to save `lr`, and we need to save an even number of registers
-      // to keep the stack aligned to 8 for the C ABI, so we'll also save `r0`,
-      // though it's not actually of use.
-      "push {{r0, lr}}",
+      a32_read_spsr_to!("r3"),
+      "push {{r3, lr}}",
+      a32_set_cpu_control!(System, irq_masked = true, fiq_masked = true),
       a32_fake_blx!("r12"),
-      "pop {{r0, lr}}",
+      a32_set_cpu_control!(IRQ, irq_masked = false, fiq_masked = false),
+      "pop {{r3, lr}}",
+      a32_write_spsr_from!("r3"),
     }),
 
     // return to the BIOS
