@@ -65,7 +65,7 @@ pub fn VBlankIntrWait() {
 /// * **Returns:** The output is in the range +/- `pi/2`, but accuracy is worse
 ///   outside of +/- `pi/4`.
 #[inline]
-#[instruction_set(arm::t32)]
+#[cfg_attr(feature = "on_gba", instruction_set(arm::t32))]
 pub fn ArcTan(theta: crate::i16fx14) -> crate::i16fx14 {
   let mut i = theta.to_bits();
   on_gba_or_unimplemented!(unsafe {
@@ -87,7 +87,7 @@ pub fn ArcTan(theta: crate::i16fx14) -> crate::i16fx14 {
 /// * **Returns:** The angle of the input vector, with `u16::MAX` being
 ///   equivalent to `2pi`.
 #[inline]
-#[instruction_set(arm::t32)]
+#[cfg_attr(feature = "on_gba", instruction_set(arm::t32))]
 pub fn ArcTan2(x: crate::i16fx14, y: crate::i16fx14) -> u16 {
   let x = x.to_bits();
   let y = y.to_bits();
