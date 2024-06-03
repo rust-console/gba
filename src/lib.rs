@@ -315,10 +315,88 @@ impl IrqBits {
     u16_get_bit(13, self.0)
   }
 
-  /// Set if vblank triggers an interrupt.
+  /// Set the vblank bit.
   #[inline]
   #[must_use]
   pub const fn with_vblank(self, vblank: bool) -> Self {
     Self(u16_with_bit(0, self.0, vblank))
+  }
+  /// Set the hblank bit.
+  #[inline]
+  #[must_use]
+  pub const fn with_hblank(self, hblank: bool) -> Self {
+    Self(u16_with_bit(1, self.0, hblank))
+  }
+  /// Set the vcount bit.
+  #[inline]
+  #[must_use]
+  pub const fn with_vcount(self, vcount: bool) -> Self {
+    Self(u16_with_bit(2, self.0, vcount))
+  }
+  /// Set the timer0 bit.
+  #[inline]
+  #[must_use]
+  pub const fn with_timer0(self, timer0: bool) -> Self {
+    Self(u16_with_bit(3, self.0, timer0))
+  }
+  /// Set the timer1 bit.
+  #[inline]
+  #[must_use]
+  pub const fn with_timer1(self, timer1: bool) -> Self {
+    Self(u16_with_bit(4, self.0, timer1))
+  }
+  /// Set the timer2 bit.
+  #[inline]
+  #[must_use]
+  pub const fn with_timer2(self, timer2: bool) -> Self {
+    Self(u16_with_bit(5, self.0, timer2))
+  }
+  /// Set the timer3 bit.
+  #[inline]
+  #[must_use]
+  pub const fn with_timer3(self, timer3: bool) -> Self {
+    Self(u16_with_bit(6, self.0, timer3))
+  }
+  /// Set the serial bit.
+  #[inline]
+  #[must_use]
+  pub const fn with_serial(self, serial: bool) -> Self {
+    Self(u16_with_bit(7, self.0, serial))
+  }
+  /// Set the dma0 bit.
+  #[inline]
+  #[must_use]
+  pub const fn with_dma0(self, dma0: bool) -> Self {
+    Self(u16_with_bit(8, self.0, dma0))
+  }
+  /// Set the dma1 bit.
+  #[inline]
+  #[must_use]
+  pub const fn with_dma1(self, dma1: bool) -> Self {
+    Self(u16_with_bit(9, self.0, dma1))
+  }
+  /// Set the dma2 bit.
+  #[inline]
+  #[must_use]
+  pub const fn with_dma2(self, dma2: bool) -> Self {
+    Self(u16_with_bit(10, self.0, dma2))
+  }
+  /// Set the dma3 bit.
+  #[inline]
+  #[must_use]
+  pub const fn with_dma3(self, dma3: bool) -> Self {
+    Self(u16_with_bit(11, self.0, dma3))
+  }
+  /// Set the keypad bit.
+  #[inline]
+  #[must_use]
+  pub const fn with_keypad(self, keypad: bool) -> Self {
+    Self(u16_with_bit(12, self.0, keypad))
+  }
+  /// Set the gamepak bit.
+  #[inline]
+  #[must_use]
+  pub const fn with_gamepak(self, gamepak: bool) -> Self {
+    Self(u16_with_bit(13, self.0, gamepak))
   }
 }
