@@ -45,6 +45,21 @@ pub fn IntrWait(ignore_existing: bool, target_irqs: IrqBits) {
   });
 }
 
+/// As [`IntrWait`], but using the `a32` instruction set.
+#[inline]
+#[cfg_attr(feature = "on_gba", instruction_set(arm::a32))]
+pub fn a32_IntrWait(ignore_existing: bool, target_irqs: IrqBits) {
+  on_gba_or_unimplemented!(unsafe {
+    core::arch::asm! {
+      "swi #(0x04 << 24)",
+      inout("r0") ignore_existing as u32 => _,
+      inout("r1") target_irqs.0 => _,
+      out("r3") _,
+      options(preserves_flags),
+    }
+  });
+}
+
 /// `0x05`: Builtin shorthand for [`IntrWait(true, IrqBits::VBLANK)`](IntrWait)
 #[inline]
 #[cfg_attr(feature = "on_gba", instruction_set(arm::t32))]
@@ -52,6 +67,21 @@ pub fn VBlankIntrWait() {
   on_gba_or_unimplemented!(unsafe {
     core::arch::asm! {
       "swi #0x05",
+      out("r0") _,
+      out("r1") _,
+      out("r3") _,
+      options(preserves_flags),
+    }
+  });
+}
+
+/// As [`VBlankIntrWait`], but using the `a32` instruction set.
+#[inline]
+#[cfg_attr(feature = "on_gba", instruction_set(arm::t32))]
+pub fn a32_VBlankIntrWait() {
+  on_gba_or_unimplemented!(unsafe {
+    core::arch::asm! {
+      "swi #(0x05 << 24)",
       out("r0") _,
       out("r1") _,
       out("r3") _,
