@@ -2,7 +2,7 @@
 
 use critical_section::{set_impl, Impl, RawRestoreState};
 
-use crate::mmio::IME;
+use crate::irq::IME;
 
 struct GbaCriticalSection;
 #[cfg(feature = "on_gba")]
