@@ -3,10 +3,12 @@
 
 use gba::{
   bios::VBlankIntrWait,
-  mmio::{BG_PALRAM, DISPCNT, DISPSTAT, IE, IME, VRAM_BG_TILE4},
+  irq::{IrqBits, IE, IME},
   sample_art::decompress_cga_face_to_vram_4bpp,
-  video::{Color, DisplayControl, DisplayStatus},
-  IrqBits,
+  video::{
+    Color, DisplayControl, DisplayStatus, BG_PALRAM, DISPCNT, DISPSTAT,
+    VRAM_BG_TILE4,
+  },
 };
 
 gba::panic_handler!(empty_loop);

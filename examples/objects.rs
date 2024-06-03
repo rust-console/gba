@@ -5,14 +5,15 @@ use gba::{
   asm_runtime::USER_IRQ_HANDLER,
   bios::VBlankIntrWait,
   gba_cell::GbaCell,
-  mmio::{
-    obj_palbank, BG0CNT, BG_PALRAM, DISPCNT, DISPSTAT, IE, IME, KEYINPUT,
-    OBJ_ATTR0, OBJ_ATTR_ALL, TEXT_SCREENBLOCKS, VRAM_BG_TILE4, VRAM_OBJ_TILE4,
-  },
-  obj::{ObjAttr, ObjAttr0, ObjDisplayStyle},
+  irq::{IrqBits, IE, IME},
+  keys::KEYINPUT,
   sample_art::{decompress_cga_face_to_vram_4bpp, Cga},
-  video::{BackgroundControl, Color, DisplayControl, DisplayStatus, TextEntry},
-  IrqBits,
+  video::{
+    obj_palbank, BackgroundControl, Color, DisplayControl, DisplayStatus,
+    ObjAttr, ObjAttr0, ObjDisplayStyle, TextEntry, BG0CNT, BG_PALRAM, DISPCNT,
+    DISPSTAT, OBJ_ATTR0, OBJ_ATTR_ALL, TEXT_SCREENBLOCKS, VRAM_BG_TILE4,
+    VRAM_OBJ_TILE4,
+  },
 };
 
 gba::panic_handler!(mgba_log_err);

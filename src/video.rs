@@ -1,8 +1,11 @@
 //! Module for screen-related types and functions.
 
-use bitfrob::{u16_get_bit, u16_with_bit, u16_with_value};
+use bitfrob::{
+  u16_get_bit, u16_with_bit, u16_with_region, u16_with_value, u8x2,
+};
+use voladdress::{VolBlock, VolGrid2d, VolGrid2dStrided, VolSeries};
 
-use crate::mmio::MODE3_VRAM;
+use super::*;
 
 /// A color value.
 ///
@@ -381,7 +384,7 @@ impl Mode3 {
         in("r7") x,
         in("r8") x,
         count = inout(reg) 240 => _,
-        ptr = inout(reg) crate::mmio::MODE3_VRAM.as_usize() => _,
+        ptr = inout(reg) MODE3_VRAM.as_usize() => _,
         options(nostack),
       )
     });
@@ -420,3 +423,382 @@ impl Mode3 {
     );
   }
 }
+
+/// The backdrop color is the color shown when no *other* element is displayed
+/// in a given pixel.
+pub const BACKDROP_COLOR: PlainAddr<Color> =
+  unsafe { VolAddress::new(0x0500_0000) };
+
+/// Palette data for the backgrounds
+pub const BG_PALRAM: VolBlock<Color, SOGBA, SOGBA, 256> =
+  unsafe { VolBlock::new(0x0500_0000) };
+
+/// Palette data for the objects.
+pub const OBJ_PALRAM: VolBlock<Color, SOGBA, SOGBA, 256> =
+  unsafe { VolBlock::new(0x0500_0200) };
+
+/// Gets the block for a specific palbank.
+///
+/// ## Panics
+/// * If the `bank` requested is 16 or greater this will panic.
+#[inline]
+#[must_use]
+#[cfg_attr(feature = "track_caller", track_caller)]
+pub const fn obj_palbank(bank: usize) -> VolBlock<Color, SOGBA, SOGBA, 16> {
+  let u = OBJ_PALRAM.index(bank * 16).as_usize();
+  unsafe { VolBlock::new(u) }
+}
+
+/// The VRAM byte offset per screenblock index.
+///
+/// This is the same for all background types and sizes.
+pub const SCREENBLOCK_INDEX_OFFSET: usize = 2 * 1_024;
+
+/// The VRAM's background tile view, using 4bpp tiles.
+pub const VRAM_BG_TILE4: VolBlock<Tile4, SOGBA, SOGBA, 2048> =
+  unsafe { VolBlock::new(0x0600_0000) };
+
+/// The VRAM's background tile view, using 8bpp tiles.
+pub const VRAM_BG_TILE8: VolBlock<Tile4, SOGBA, SOGBA, 1024> =
+  unsafe { VolBlock::new(0x0600_0000) };
+
+/// The text mode screenblocks.
+pub const TEXT_SCREENBLOCKS: VolGrid2dStrided<
+  TextEntry,
+  SOGBA,
+  SOGBA,
+  32,
+  32,
+  32,
+  SCREENBLOCK_INDEX_OFFSET,
+> = unsafe { VolGrid2dStrided::new(0x0600_0000) };
+
+/// The VRAM's object tile view, using 4bpp tiles.
+pub const VRAM_OBJ_TILE4: VolBlock<Tile4, SOGBA, SOGBA, 1024> =
+  unsafe { VolBlock::new(0x0601_0000) };
+
+/// The VRAM's object tile view, using 8bpp tiles.
+pub const VRAM_OBJ_TILE8: VolBlock<Tile4, SOGBA, SOGBA, 512> =
+  unsafe { VolBlock::new(0x0601_0000) };
+
+/// The VRAM's view in Video Mode 3.
+///
+/// Each location is a direct color value.
+pub const MODE3_VRAM: VolGrid2d<Color, SOGBA, SOGBA, 240, 160> =
+  unsafe { VolGrid2d::new(0x0600_0000) };
+
+/// The VRAM's view in Video Mode 4.
+///
+/// Each location is a pair of palette indexes into the background palette.
+/// Because the VRAM can't be written with a single byte, we have to work with
+/// this in units of [`u8x2`]. It's annoying, I know.
+pub const MODE4_VRAM: VolGrid2dStrided<
+  u8x2,
+  SOGBA,
+  SOGBA,
+  { 240 / 2 },
+  160,
+  2,
+  0xA000,
+> = unsafe { VolGrid2dStrided::new(0x0600_0000) };
+
+/// The VRAM's view in Video Mode 5.
+///
+/// Each location is a direct color value, but there's a lower image size to
+/// allow for two frames.
+pub const MODE5_VRAM: VolGrid2dStrided<
+  Color,
+  SOGBA,
+  SOGBA,
+  160,
+  128,
+  2,
+  0xA000,
+> = unsafe { VolGrid2dStrided::new(0x0600_0000) };
+
+/// The combined object attributes.
+pub const OBJ_ATTR_ALL: VolSeries<
+  ObjAttr,
+  SOGBA,
+  SOGBA,
+  128,
+  { core::mem::size_of::<[i16; 4]>() },
+> = unsafe { VolSeries::new(0x0700_0000) };
+
+/// The object 0th attributes.
+pub const OBJ_ATTR0: VolSeries<
+  ObjAttr0,
+  SOGBA,
+  SOGBA,
+  128,
+  { core::mem::size_of::<[i16; 4]>() },
+> = unsafe { VolSeries::new(0x0700_0000) };
+
+/// The object 1st attributes.
+pub const OBJ_ATTR1: VolSeries<
+  ObjAttr1,
+  SOGBA,
+  SOGBA,
+  128,
+  { core::mem::size_of::<[i16; 4]>() },
+> = unsafe { VolSeries::new(0x0700_0000 + 2) };
+
+/// The object 2nd attributes.
+pub const OBJ_ATTR2: VolSeries<
+  ObjAttr2,
+  SOGBA,
+  SOGBA,
+  128,
+  { core::mem::size_of::<[i16; 4]>() },
+> = unsafe { VolSeries::new(0x0700_0000 + 4) };
+
+/// How the object should be displayed.
+///
+/// Bit 9 of Attr0 changes meaning depending on Bit 8, so this merges the two
+/// bits into a single property.
+#[derive(Debug, Clone, Copy, Default)]
+#[repr(u16)]
+pub enum ObjDisplayStyle {
+  /// The default, non-affine display
+  #[default]
+  Normal = 0 << 8,
+  /// Affine display
+  Affine = 1 << 8,
+  /// The object is *not* displayed at all.
+  NotDisplayed = 2 << 8,
+  /// Shows the object using Affine style but double sized.
+  DoubleSizeAffine = 3 << 8,
+}
+
+/// What special effect the object interacts with
+#[derive(Debug, Clone, Copy, Default)]
+#[repr(u16)]
+pub enum ObjEffectMode {
+  /// The default, no special effect interaction
+  #[default]
+  Normal = 0 << 10,
+  /// The object counts as a potential 1st target for alpha blending,
+  /// regardless of the actual blend control settings register configuration.
+  SemiTransparent = 1 << 10,
+  /// The object is not displayed. Instead, all non-transparent pixels in this
+  /// object become part of the "OBJ Window" mask.
+  Window = 2 << 10,
+}
+
+/// The shape of an object.
+///
+/// The object's actual display area also depends on its `size` setting:
+///
+/// | Size | Square | Horizontal | Vertical |
+/// |:-:|:-:|:-:|:-:|
+/// | 0 | 8x8 | 16x8 | 8x16 |
+/// | 1 | 16x16 | 32x8 | 8x32 |
+/// | 2 | 32x32 | 32x16 | 16x32 |
+/// | 3 | 64x64 | 64x32 | 32x64 |
+#[derive(Debug, Clone, Copy, Default)]
+#[repr(u16)]
+#[allow(missing_docs)]
+pub enum ObjShape {
+  #[default]
+  Square = 0 << 14,
+  Horizontal = 1 << 14,
+  Vertical = 2 << 14,
+}
+
+/// Object Attributes, field 0 of the entry.
+#[derive(Debug, Clone, Copy, Default)]
+#[repr(transparent)]
+pub struct ObjAttr0(u16);
+impl ObjAttr0 {
+  /// A new blank attr 0.
+  #[inline]
+  pub const fn new() -> Self {
+    Self(0)
+  }
+  /// Sets the `y` position of this object
+  #[inline]
+  pub const fn with_y(self, y: u16) -> Self {
+    Self(u16_with_value(0, 7, self.0, y as u16))
+  }
+  /// The object's display styling.
+  #[inline]
+  pub const fn with_style(self, style: ObjDisplayStyle) -> Self {
+    Self(u16_with_region(8, 9, self.0, style as u16))
+  }
+  /// The special effect mode of the object, if any.
+  #[inline]
+  pub const fn with_effect(self, effect: ObjEffectMode) -> Self {
+    Self(u16_with_region(10, 11, self.0, effect as u16))
+  }
+  /// If the object should use the mosaic effect.
+  #[inline]
+  pub const fn with_mosaic(self, mosaic: bool) -> Self {
+    Self(u16_with_bit(12, self.0, mosaic))
+  }
+  /// If the object draws using 8-bits-per-pixel.
+  #[inline]
+  pub const fn with_bpp8(self, bpp8: bool) -> Self {
+    Self(u16_with_bit(13, self.0, bpp8))
+  }
+  /// The object's shape
+  #[inline]
+  pub const fn with_shape(self, shape: ObjShape) -> Self {
+    Self(u16_with_region(14, 15, self.0, shape as u16))
+  }
+}
+
+/// Object Attributes, field 1 of the entry.
+#[derive(Debug, Clone, Copy, Default)]
+#[repr(transparent)]
+pub struct ObjAttr1(u16);
+impl ObjAttr1 {
+  /// A new blank attr 1.
+  #[inline]
+  pub const fn new() -> Self {
+    Self(0)
+  }
+  /// Sets the `x` position of this object
+  #[inline]
+  pub const fn with_x(self, x: u16) -> Self {
+    Self(u16_with_value(0, 8, self.0, x as u16))
+  }
+  /// The affine index of the object.
+  #[inline]
+  pub const fn with_affine_index(self, index: u16) -> Self {
+    Self(u16_with_value(9, 13, self.0, index as u16))
+  }
+  /// If the object is horizontally flipped
+  #[inline]
+  pub const fn with_hflip(self, hflip: bool) -> Self {
+    Self(u16_with_bit(12, self.0, hflip))
+  }
+  /// If the object is vertically flipped
+  #[inline]
+  pub const fn with_vflip(self, vflip: bool) -> Self {
+    Self(u16_with_bit(13, self.0, vflip))
+  }
+  /// The object's size
+  ///
+  /// The size you set here, combined with the shape of the object, determines
+  /// the object's actual area.
+  ///
+  /// | Size | Square|   Horizontal|  Vertical|
+  /// |:-:|:-:|:-:|:-:|
+  /// | 0 |  8x8    |  16x8   |     8x16 |
+  /// | 1 |  16x16  |  32x8   |     8x32 |
+  /// | 2 |  32x32  |  32x16  |     16x32 |
+  /// | 3 |  64x64  |  64x32  |     32x64 |
+  #[inline]
+  pub const fn with_size(self, size: u16) -> Self {
+    Self(u16_with_value(14, 15, self.0, size as u16))
+  }
+}
+
+/// Object Attributes, field 2 of the entry.
+#[derive(Debug, Clone, Copy, Default)]
+#[repr(transparent)]
+pub struct ObjAttr2(u16);
+impl ObjAttr2 {
+  /// A new blank attr 2.
+  #[inline]
+  pub const fn new() -> Self {
+    Self(0)
+  }
+  /// The base tile id of the object.
+  ///
+  /// All other tiles in the object are automatically selected using the
+  /// following tiles, according to if
+  /// [`with_obj_vram_1d`][crate::video::DisplayControl::with_obj_vram_1d] it
+  /// set or not.
+  #[inline]
+  pub const fn with_tile_id(self, id: u16) -> Self {
+    Self(u16_with_value(0, 9, self.0, id as u16))
+  }
+  /// Sets the object's priority sorting.
+  ///
+  /// Lower priority objects are closer to the viewer, and will appear in front
+  /// other objects that have *higher* priority, and in front of backgrounds of
+  /// *equal or higher* priority. If two objects have the same priority, the
+  /// lower index object is shown.
+  #[inline]
+  pub const fn with_priority(self, priority: u16) -> Self {
+    Self(u16_with_value(10, 11, self.0, priority as u16))
+  }
+  /// Sets the palbank value of this object.
+  #[inline]
+  pub const fn with_palbank(self, palbank: u16) -> Self {
+    Self(u16_with_value(12, 15, self.0, palbank as u16))
+  }
+}
+
+/// Object Attributes.
+///
+/// The fields of this struct are all `pub` so that you can simply alter them as
+/// you wish. Some "setter" methods are also provided as a shorthand.
+#[derive(Debug, Clone, Copy, Default)]
+#[repr(C)]
+pub struct ObjAttr(pub ObjAttr0, pub ObjAttr1, pub ObjAttr2);
+#[allow(missing_docs)]
+impl ObjAttr {
+  #[inline]
+  pub const fn new() -> Self {
+    Self(ObjAttr0::new(), ObjAttr1::new(), ObjAttr2::new())
+  }
+  #[inline]
+  pub fn set_y(&mut self, y: u16) {
+    self.0 = self.0.with_y(y);
+  }
+  #[inline]
+  pub fn set_style(&mut self, style: ObjDisplayStyle) {
+    self.0 = self.0.with_style(style);
+  }
+  #[inline]
+  pub fn set_x(&mut self, x: u16) {
+    self.1 = self.1.with_x(x);
+  }
+  #[inline]
+  pub fn set_tile_id(&mut self, id: u16) {
+    self.2 = self.2.with_tile_id(id);
+  }
+  #[inline]
+  pub fn set_palbank(&mut self, palbank: u16) {
+    self.2 = self.2.with_palbank(palbank);
+  }
+}
+
+/// Display Control setting.
+///
+/// This sets what background mode is active, as well as various related
+/// details.
+///
+/// Unlike most MMIO, this doesn't have an "all 0" state at boot. The
+/// `forced_blank` bit it left set by the BIOS's startup routine.
+pub const DISPCNT: PlainAddr<DisplayControl> =
+  unsafe { VolAddress::new(0x0400_0000) };
+
+/// Display Status setting.
+///
+/// Gives info on the display state, and controls display-based interrupts.
+pub const DISPSTAT: PlainAddr<DisplayStatus> =
+  unsafe { VolAddress::new(0x0400_0004) };
+
+/// The current scanline that the display is working on.
+///
+/// Values of 160 to 227 indicate that a vertical blank line is happening.
+pub const VCOUNT: RoAddr<u8> = unsafe { VolAddress::new(0x0400_0006) };
+
+/// Background 0 controls
+pub const BG0CNT: PlainAddr<BackgroundControl> =
+  unsafe { VolAddress::new(0x0400_0008) };
+
+/// Background 1 controls
+pub const BG1CNT: PlainAddr<BackgroundControl> =
+  unsafe { VolAddress::new(0x0400_000A) };
+
+/// Background 2 controls
+pub const BG2CNT: PlainAddr<BackgroundControl> =
+  unsafe { VolAddress::new(0x0400_000C) };
+
+/// Background 3 controls
+pub const BG3CNT: PlainAddr<BackgroundControl> =
+  unsafe { VolAddress::new(0x0400_000E) };

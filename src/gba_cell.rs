@@ -6,7 +6,7 @@ use core::{
   ptr::NonNull,
 };
 
-use crate::{video::Color, IrqBits, KeyInput};
+use crate::{irq::IrqBits, keys::KeyInput, video::Color};
 
 /// Marker trait bound for the methods of [`GbaCell`].
 ///

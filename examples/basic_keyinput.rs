@@ -7,10 +7,12 @@ use core::ptr::{addr_of, addr_of_mut};
 use gba::{
   asm_runtime::USER_IRQ_HANDLER,
   bios::VBlankIntrWait,
+  irq::{IrqBits, IE, IME},
+  keys::KEYINPUT,
   mgba::{MgbaLogLevel, MgbaLogger},
-  mmio::{BACKDROP_COLOR, DISPCNT, DISPSTAT, IE, IME, KEYINPUT},
-  video::{Color, DisplayControl, DisplayStatus},
-  IrqBits,
+  video::{
+    Color, DisplayControl, DisplayStatus, BACKDROP_COLOR, DISPCNT, DISPSTAT,
+  },
 };
 
 gba::panic_handler!(mgba_log_err);

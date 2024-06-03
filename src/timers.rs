@@ -1,5 +1,6 @@
 //! Timer related data types.
 
+use super::*;
 use bitfrob::{u8_with_bit, u8_with_region};
 
 /// Control bits for one of the GBA's four timers.
@@ -47,3 +48,41 @@ pub enum CpusPerTick {
   _256 = 2,
   _1024 = 3,
 }
+
+/// Timer0's current counter value.
+pub const TIMER0_COUNTER: RoAddr<u16> = unsafe { VolAddress::new(0x0400_0100) };
+/// Timer1's current counter value.
+pub const TIMER1_COUNTER: RoAddr<u16> = unsafe { VolAddress::new(0x0400_0104) };
+/// Timer2's current counter value.
+pub const TIMER2_COUNTER: RoAddr<u16> = unsafe { VolAddress::new(0x0400_0108) };
+/// Timer3's current counter value.
+pub const TIMER3_COUNTER: RoAddr<u16> = unsafe { VolAddress::new(0x0400_010C) };
+
+/// The value for Timer0 to reload on overflow on when the `start` bit is newly
+/// set.
+pub const TIMER0_RELOAD: WoAddr<u16> = unsafe { VolAddress::new(0x0400_0100) };
+/// The value for Timer1 to reload on overflow on when the `start` bit is newly
+/// set.
+pub const TIMER1_RELOAD: WoAddr<u16> = unsafe { VolAddress::new(0x0400_0104) };
+/// The value for Timer2 to reload on overflow on when the `start` bit is newly
+/// set.
+pub const TIMER2_RELOAD: WoAddr<u16> = unsafe { VolAddress::new(0x0400_0108) };
+/// The value for Timer3 to reload on overflow on when the `start` bit is newly
+/// set.
+pub const TIMER3_RELOAD: WoAddr<u16> = unsafe { VolAddress::new(0x0400_010C) };
+
+/// Control bits for Timer 0.
+pub const TIMER0_CONTROL: PlainAddr<TimerControl> =
+  unsafe { VolAddress::new(0x0400_0102) };
+
+/// Control bits for Timer 1.
+pub const TIMER1_CONTROL: PlainAddr<TimerControl> =
+  unsafe { VolAddress::new(0x0400_0106) };
+
+/// Control bits for Timer 2.
+pub const TIMER2_CONTROL: PlainAddr<TimerControl> =
+  unsafe { VolAddress::new(0x0400_010A) };
+
+/// Control bits for Timer 3.
+pub const TIMER3_CONTROL: PlainAddr<TimerControl> =
+  unsafe { VolAddress::new(0x0400_010E) };

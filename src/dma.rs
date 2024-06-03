@@ -42,13 +42,13 @@
 //! Using the DMA units is equivalent to playing around with raw pointers. It
 //! must be handled very carefully, or memory corruption can occur.
 
-use bitfrob::{u16_with_bit, u16_with_region};
-use voladdress::{Safe, VolRegion};
+use core::ffi::c_void;
 
-use crate::{
-  mmio::{DMA3_CONTROL, DMA3_DESTINATION, DMA3_SOURCE, DMA3_TRANSFER_COUNT},
-  video::Tile4,
-};
+use bitfrob::{u16_with_bit, u16_with_region};
+use video::Tile4;
+use voladdress::{Safe, Unsafe, VolRegion};
+
+use super::*;
 
 /// Controls the activity of a DMA unit.
 #[derive(Debug, Clone, Copy, Default)]
@@ -214,3 +214,91 @@ pub fn dma3_copy_tile4(src: &[Tile4], dest: VolRegion<Tile4, Safe, Safe>) {
     dma3_copy_u32(src.as_ptr().cast(), dest.as_mut_ptr().cast(), src.len() * 8)
   };
 }
+
+/// Source address for DMA3.
+///
+/// The correct pointer type depends on the transfer mode used.
+pub const DMA0_SOURCE: VolAddress<*const c_void, (), Unsafe> =
+  unsafe { VolAddress::new(0x0400_00B0) };
+
+/// Destination address for DMA3.
+///
+/// The correct pointer type depends on the transfer mode used.
+pub const DMA0_DESTINATION: VolAddress<*mut c_void, (), Unsafe> =
+  unsafe { VolAddress::new(0x0400_00B4) };
+
+/// The number of transfers desired.
+///
+/// A value of 0 indicates the maximum number of transfers: `0x4000`
+pub const DMA0_TRANSFER_COUNT: VolAddress<u16, (), Unsafe> =
+  unsafe { VolAddress::new(0x0400_00B8) };
+
+/// DMA3 Control Bits.
+pub const DMA0_CONTROL: VolAddress<DmaControl, SOGBA, Unsafe> =
+  unsafe { VolAddress::new(0x0400_00BA) };
+
+/// Source address for DMA3.
+///
+/// The correct pointer type depends on the transfer mode used.
+pub const DMA1_SOURCE: VolAddress<*const c_void, (), Unsafe> =
+  unsafe { VolAddress::new(0x0400_00BC) };
+
+/// Destination address for DMA3.
+///
+/// The correct pointer type depends on the transfer mode used.
+pub const DMA1_DESTINATION: VolAddress<*mut c_void, (), Unsafe> =
+  unsafe { VolAddress::new(0x0400_00C0) };
+
+/// The number of transfers desired.
+///
+/// A value of 0 indicates the maximum number of transfers: `0x4000`
+pub const DMA1_TRANSFER_COUNT: VolAddress<u16, (), Unsafe> =
+  unsafe { VolAddress::new(0x0400_00C4) };
+
+/// DMA3 Control Bits.
+pub const DMA1_CONTROL: VolAddress<DmaControl, SOGBA, Unsafe> =
+  unsafe { VolAddress::new(0x0400_00C6) };
+
+/// Source address for DMA3.
+///
+/// The correct pointer type depends on the transfer mode used.
+pub const DMA2_SOURCE: VolAddress<*const c_void, (), Unsafe> =
+  unsafe { VolAddress::new(0x0400_00C8) };
+
+/// Destination address for DMA3.
+///
+/// The correct pointer type depends on the transfer mode used.
+pub const DMA2_DESTINATION: VolAddress<*mut c_void, (), Unsafe> =
+  unsafe { VolAddress::new(0x0400_00CC) };
+
+/// The number of transfers desired.
+///
+/// A value of 0 indicates the maximum number of transfers: `0x4000`
+pub const DMA2_TRANSFER_COUNT: VolAddress<u16, (), Unsafe> =
+  unsafe { VolAddress::new(0x0400_00D0) };
+
+/// DMA3 Control Bits.
+pub const DMA2_CONTROL: VolAddress<DmaControl, SOGBA, Unsafe> =
+  unsafe { VolAddress::new(0x0400_00D2) };
+
+/// Source address for DMA3.
+///
+/// The correct pointer type depends on the transfer mode used.
+pub const DMA3_SOURCE: VolAddress<*const c_void, (), Unsafe> =
+  unsafe { VolAddress::new(0x0400_00D4) };
+
+/// Destination address for DMA3.
+///
+/// The correct pointer type depends on the transfer mode used.
+pub const DMA3_DESTINATION: VolAddress<*mut c_void, (), Unsafe> =
+  unsafe { VolAddress::new(0x0400_00D8) };
+
+/// The number of transfers desired.
+///
+/// A value of 0 indicates the maximum number of transfers: `0x1_0000`
+pub const DMA3_TRANSFER_COUNT: VolAddress<u16, (), Unsafe> =
+  unsafe { VolAddress::new(0x0400_00DC) };
+
+/// DMA3 Control Bits.
+pub const DMA3_CONTROL: VolAddress<DmaControl, SOGBA, Unsafe> =
+  unsafe { VolAddress::new(0x0400_00DE) };

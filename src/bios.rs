@@ -9,7 +9,7 @@
 //! BIOS functions have a rather high calls overhead compared to a normal
 //! foreign function.
 
-use crate::IrqBits;
+use crate::irq::IrqBits;
 
 /// `0x04`: Waits for a specific interrupt type(s) to happen.
 ///

@@ -38,6 +38,7 @@
 //! * [Per Project Setup][`per_project_setup`]
 
 use bitfrob::{u16_get_bit, u16_with_bit};
+use voladdress::VolAddress;
 
 macro_rules! on_gba_or_unimplemented {
   ($($token_tree:tt)*) => {
@@ -55,10 +56,10 @@ pub mod bios;
 pub mod dma;
 pub mod gba_cell;
 pub mod gba_fixed;
+pub mod irq;
+pub mod keys;
 pub mod mem;
 pub mod mgba;
-pub mod mmio;
-pub mod obj;
 pub mod panic_handlers;
 pub mod per_project_setup;
 pub mod per_system_setup;
@@ -66,6 +67,20 @@ pub mod random;
 pub mod sample_art;
 pub mod timers;
 pub mod video;
+
+/// "safe on GBA", which is either Safe or Unsafe according to the `on_gba`
+/// cargo feature.
+#[cfg(feature = "on_gba")]
+type SOGBA = voladdress::Safe;
+#[cfg(not(feature = "on_gba"))]
+type SOGBA = voladdress::Unsafe;
+
+/// Responds "normally" to read/write, just holds a setting
+type PlainAddr<T> = VolAddress<T, SOGBA, SOGBA>;
+/// Read-only addr
+type RoAddr<T> = VolAddress<T, SOGBA, ()>;
+/// Write-only addr
+type WoAddr<T> = VolAddress<T, (), SOGBA>;
 
 #[cfg(feature = "critical-section")]
 #[cfg_attr(feature = "doc_cfg", doc(cfg(feature = "critical-section")))]
@@ -126,278 +141,3 @@ pub type i16fx14 = crate::gba_fixed::Fixed<i16, 14>;
 #[cfg(not(feature = "fixed"))]
 #[allow(non_camel_case_types)]
 pub type i32fx8 = crate::gba_fixed::Fixed<i32, 8>;
-
-/// Keypad input state.
-#[derive(Clone, Copy, Default)]
-#[repr(transparent)]
-pub struct KeyInput(pub u16);
-impl KeyInput {
-  /// If `a` is pressed (left primary button)
-  #[inline]
-  #[must_use]
-  pub const fn a(self) -> bool {
-    !bitfrob::u16_get_bit(0, self.0)
-  }
-  /// If `b` is pressed (right primary button)
-  #[inline]
-  #[must_use]
-  pub const fn b(self) -> bool {
-    !bitfrob::u16_get_bit(1, self.0)
-  }
-  /// If `select` is pressed (lower/left secondary button)
-  #[inline]
-  #[must_use]
-  pub const fn select(self) -> bool {
-    !bitfrob::u16_get_bit(2, self.0)
-  }
-  /// If `start` is pressed (upper/right secondary button)
-  #[inline]
-  #[must_use]
-  pub const fn start(self) -> bool {
-    !bitfrob::u16_get_bit(3, self.0)
-  }
-  /// If `right` is pressed (d-pad)
-  #[inline]
-  #[must_use]
-  pub const fn right(self) -> bool {
-    !bitfrob::u16_get_bit(4, self.0)
-  }
-  /// If `left` is pressed (d-pad)
-  #[inline]
-  #[must_use]
-  pub const fn left(self) -> bool {
-    !bitfrob::u16_get_bit(5, self.0)
-  }
-  /// If `up` is pressed (d-pad)
-  #[inline]
-  #[must_use]
-  pub const fn up(self) -> bool {
-    !bitfrob::u16_get_bit(6, self.0)
-  }
-  /// If `down` is pressed (d-pad)
-  #[inline]
-  #[must_use]
-  pub const fn down(self) -> bool {
-    !bitfrob::u16_get_bit(7, self.0)
-  }
-  /// If `r` is pressed (right shoulder button)
-  #[inline]
-  #[must_use]
-  pub const fn r(self) -> bool {
-    !bitfrob::u16_get_bit(8, self.0)
-  }
-  /// If `l` is pressed (left shoulder button)
-  #[inline]
-  #[must_use]
-  pub const fn l(self) -> bool {
-    !bitfrob::u16_get_bit(9, self.0)
-  }
-  /// Delta X of the d-pad. right +1, left -1.
-  #[inline]
-  #[must_use]
-  pub const fn dx(self) -> i8 {
-    if self.right() {
-      1
-    } else if self.left() {
-      -1
-    } else {
-      0
-    }
-  }
-  /// Delta Y of the d-pad. up +1, down -1.
-  #[inline]
-  #[must_use]
-  pub const fn dy(self) -> i8 {
-    if self.up() {
-      1
-    } else if self.down() {
-      -1
-    } else {
-      0
-    }
-  }
-}
-
-/// Interrupt bit flags.
-#[derive(Clone, Copy, Default)]
-#[repr(transparent)]
-pub struct IrqBits(u16);
-impl IrqBits {
-  /// The vblank bit.
-  pub const VBLANK: Self = Self::new().with_vblank(true);
-
-  /// Makes a new, empty value.
-  #[inline]
-  pub const fn new() -> Self {
-    Self(0)
-  }
-  /// Vertical-blank
-  #[inline]
-  #[must_use]
-  pub const fn vblank(self) -> bool {
-    u16_get_bit(0, self.0)
-  }
-  /// Horizontal-blank
-  #[inline]
-  #[must_use]
-  pub const fn hblank(self) -> bool {
-    u16_get_bit(1, self.0)
-  }
-  /// Vertical-counter match
-  #[inline]
-  #[must_use]
-  pub const fn vcount(self) -> bool {
-    u16_get_bit(2, self.0)
-  }
-  /// Timer 0 overflow
-  #[inline]
-  #[must_use]
-  pub const fn timer0(self) -> bool {
-    u16_get_bit(3, self.0)
-  }
-  /// Timer 1 overflow
-  #[inline]
-  #[must_use]
-  pub const fn timer1(self) -> bool {
-    u16_get_bit(4, self.0)
-  }
-  /// Timer 2 overflow
-  #[inline]
-  #[must_use]
-  pub const fn timer2(self) -> bool {
-    u16_get_bit(5, self.0)
-  }
-  /// Timer 3 overflow
-  #[inline]
-  #[must_use]
-  pub const fn timer3(self) -> bool {
-    u16_get_bit(6, self.0)
-  }
-  /// Serial port communication
-  #[inline]
-  #[must_use]
-  pub const fn serial(self) -> bool {
-    u16_get_bit(7, self.0)
-  }
-  /// DMA 0 complete
-  #[inline]
-  #[must_use]
-  pub const fn dma0(self) -> bool {
-    u16_get_bit(8, self.0)
-  }
-  /// DMA 1 complete
-  #[inline]
-  #[must_use]
-  pub const fn dma1(self) -> bool {
-    u16_get_bit(9, self.0)
-  }
-  /// DMA 2 complete
-  #[inline]
-  #[must_use]
-  pub const fn dma2(self) -> bool {
-    u16_get_bit(10, self.0)
-  }
-  /// DMA 3 complete
-  #[inline]
-  #[must_use]
-  pub const fn dma3(self) -> bool {
-    u16_get_bit(11, self.0)
-  }
-  /// Keypad match
-  #[inline]
-  #[must_use]
-  pub const fn keypad(self) -> bool {
-    u16_get_bit(12, self.0)
-  }
-  /// Game pak
-  #[inline]
-  #[must_use]
-  pub const fn gamepak(self) -> bool {
-    u16_get_bit(13, self.0)
-  }
-
-  /// Set the vblank bit.
-  #[inline]
-  #[must_use]
-  pub const fn with_vblank(self, vblank: bool) -> Self {
-    Self(u16_with_bit(0, self.0, vblank))
-  }
-  /// Set the hblank bit.
-  #[inline]
-  #[must_use]
-  pub const fn with_hblank(self, hblank: bool) -> Self {
-    Self(u16_with_bit(1, self.0, hblank))
-  }
-  /// Set the vcount bit.
-  #[inline]
-  #[must_use]
-  pub const fn with_vcount(self, vcount: bool) -> Self {
-    Self(u16_with_bit(2, self.0, vcount))
-  }
-  /// Set the timer0 bit.
-  #[inline]
-  #[must_use]
-  pub const fn with_timer0(self, timer0: bool) -> Self {
-    Self(u16_with_bit(3, self.0, timer0))
-  }
-  /// Set the timer1 bit.
-  #[inline]
-  #[must_use]
-  pub const fn with_timer1(self, timer1: bool) -> Self {
-    Self(u16_with_bit(4, self.0, timer1))
-  }
-  /// Set the timer2 bit.
-  #[inline]
-  #[must_use]
-  pub const fn with_timer2(self, timer2: bool) -> Self {
-    Self(u16_with_bit(5, self.0, timer2))
-  }
-  /// Set the timer3 bit.
-  #[inline]
-  #[must_use]
-  pub const fn with_timer3(self, timer3: bool) -> Self {
-    Self(u16_with_bit(6, self.0, timer3))
-  }
-  /// Set the serial bit.
-  #[inline]
-  #[must_use]
-  pub const fn with_serial(self, serial: bool) -> Self {
-    Self(u16_with_bit(7, self.0, serial))
-  }
-  /// Set the dma0 bit.
-  #[inline]
-  #[must_use]
-  pub const fn with_dma0(self, dma0: bool) -> Self {
-    Self(u16_with_bit(8, self.0, dma0))
-  }
-  /// Set the dma1 bit.
-  #[inline]
-  #[must_use]
-  pub const fn with_dma1(self, dma1: bool) -> Self {
-    Self(u16_with_bit(9, self.0, dma1))
-  }
-  /// Set the dma2 bit.
-  #[inline]
-  #[must_use]
-  pub const fn with_dma2(self, dma2: bool) -> Self {
-    Self(u16_with_bit(10, self.0, dma2))
-  }
-  /// Set the dma3 bit.
-  #[inline]
-  #[must_use]
-  pub const fn with_dma3(self, dma3: bool) -> Self {
-    Self(u16_with_bit(11, self.0, dma3))
-  }
-  /// Set the keypad bit.
-  #[inline]
-  #[must_use]
-  pub const fn with_keypad(self, keypad: bool) -> Self {
-    Self(u16_with_bit(12, self.0, keypad))
-  }
-  /// Set the gamepak bit.
-  #[inline]
-  #[must_use]
-  pub const fn with_gamepak(self, gamepak: bool) -> Self {
-    Self(u16_with_bit(13, self.0, gamepak))
-  }
-}

@@ -7,9 +7,9 @@ use gba::{
   asm_runtime::USER_IRQ_HANDLER,
   bios::VBlankIntrWait,
   gba_cell::GbaCell,
-  mmio::{DISPCNT, DISPSTAT, IE, IME, KEYINPUT},
-  video::{Color, DisplayControl, DisplayStatus, Mode3},
-  IrqBits, KeyInput,
+  irq::{IrqBits, IE, IME},
+  keys::{KeyInput, KEYINPUT},
+  video::{Color, DisplayControl, DisplayStatus, Mode3, DISPCNT, DISPSTAT},
 };
 
 const SCREEN_WIDTH: u16 = 240;

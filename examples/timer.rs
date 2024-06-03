@@ -5,10 +5,11 @@ use gba::{
   asm_runtime::USER_IRQ_HANDLER,
   bios::VBlankIntrWait,
   gba_cell::GbaCell,
-  mmio::{BACKDROP_COLOR, DISPCNT, DISPSTAT, IE, IME, TIMER0_CONTROL},
-  timers::{CpusPerTick, TimerControl},
-  video::{Color, DisplayControl, DisplayStatus},
-  IrqBits,
+  irq::{IrqBits, IE, IME},
+  timers::{CpusPerTick, TimerControl, TIMER0_CONTROL},
+  video::{
+    Color, DisplayControl, DisplayStatus, BACKDROP_COLOR, DISPCNT, DISPSTAT,
+  },
 };
 
 static OVERFLOWS: GbaCell<u32> = GbaCell::new(0);

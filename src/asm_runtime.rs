@@ -6,7 +6,8 @@
 // cargo feature enabled, and so they should all have the `track_caller`
 // attribute set whenever the `on_gba` feature is *disabled*
 
-use crate::{gba_cell::GbaCell, IrqBits};
+use crate::gba_cell::GbaCell;
+
 use bracer::*;
 
 /// Inserts a `nop` instruction.
@@ -215,5 +216,6 @@ core::arch::global_asm! {
 
 /// The user-provided interrupt request handler function.
 #[cfg(feature = "on_gba")]
-pub static USER_IRQ_HANDLER: GbaCell<Option<unsafe extern "C" fn(IrqBits)>> =
-  GbaCell::new(None);
+pub static USER_IRQ_HANDLER: GbaCell<
+  Option<unsafe extern "C" fn(crate::irq::IrqBits)>,
+> = GbaCell::new(None);

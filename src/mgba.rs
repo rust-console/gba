@@ -30,7 +30,9 @@
 //! logs at that message level and also implicitly zeroes the message buffer so
 //! that it's ready for the next message.
 
-use crate::mmio::{MGBA_LOG_BUFFER, MGBA_LOG_ENABLE, MGBA_LOG_SEND};
+use voladdress::VolBlock;
+
+use super::*;
 
 /// This is what you write to [`MGBA_LOG_ENABLE`] to signal to the emulator that
 /// you want to do logging.
@@ -144,3 +146,22 @@ impl core::fmt::Write for MgbaLogger {
     );
   }
 }
+
+/// The buffer to put logging messages into.
+///
+/// The first `\0` in the buffer is the end of each message.
+pub const MGBA_LOG_BUFFER: VolBlock<u8, SOGBA, SOGBA, 256> =
+  unsafe { VolBlock::new(0x04FF_F600) };
+
+/// Write to this each time you want to send out the current buffer content.
+///
+/// It also resets the buffer content.
+pub const MGBA_LOG_SEND: WoAddr<MgbaLogLevel> =
+  unsafe { VolAddress::new(0x04FFF700) };
+
+/// Allows you to enable/disable mGBA logging.
+///
+/// This is enabled by default by the assembly runtime, so you don't normally
+/// need to touch this.
+pub const MGBA_LOG_ENABLE: PlainAddr<u16> =
+  unsafe { VolAddress::new(0x04FF_F780) };

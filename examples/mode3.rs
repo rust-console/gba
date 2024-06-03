@@ -3,9 +3,11 @@
 
 use gba::{
   bios::VBlankIntrWait,
-  mmio::{DISPCNT, DISPSTAT, IE, IME, KEYINPUT, MODE3_VRAM},
-  video::{Color, DisplayControl, DisplayStatus},
-  IrqBits,
+  irq::{IrqBits, IE, IME},
+  keys::KEYINPUT,
+  video::{
+    Color, DisplayControl, DisplayStatus, DISPCNT, DISPSTAT, MODE3_VRAM,
+  },
 };
 
 gba::panic_handler!(empty_loop);
