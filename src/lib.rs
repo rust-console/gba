@@ -64,6 +64,7 @@ pub mod per_project_setup;
 pub mod per_system_setup;
 pub mod random;
 pub mod sample_art;
+pub mod timers;
 pub mod video;
 
 #[cfg(feature = "critical-section")]
