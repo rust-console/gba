@@ -183,44 +183,21 @@ core::arch::global_asm! {
     "_asm_runtime_irq_handler:",
     // We're allowed to use the usual C ABI registers.
 
-    // Note(Lokathor): So the trouble here is that we want to 16-bit access
-    // BASE+0x200 and also BASE-8. Immediate offsets for 16-bit access can't be
-    // that large of a range. So we'll have to actually do an `add` or `sub` to
-    // put the correct offset from our base pointer into a register. Also, our
-    // base pointer is in `r0`, but we need to pass the bits to the user
-    // function in `r0` when we do that call. The compromise here is that we'll
-    // keep our base address in `r0`, manipulate the bits in `r1`, and then if
-    // we're actually doing a call to a user fn we can move the bits down to
-    // `r0` after we don't need the base pointer anymore. This seems to be the
-    // way that has the least register shuffling.
-
-    // Assumed:
-    // * r0: 0x0400_0000 (set by the BIOS)
-
+    /* A fox wizard told me how to do this one */
     // handle MMIO interrupt system
-    "add  r12, r0, #0x200",     // 16-bit access offsets can't be too big
-    "ldr  r1, [r12]",           // IE_IF.read32()
-    "and  r1, r1, r1, LSR #16", // IE & IF
-    "strh r1, [r12, #2]",       // write IF
-
-    // Now:
-    // * r0: 0x0400_0000
-    // * r1: irq bits
-
+    "mov  r12, 0x04000000",     // load r12 with a 1 cycle value
+    "ldr  r0, [r12, #0x200]!",  // load IE_IF with r12 writeback
+    "and  r0, r0, r0, LSR #16", // bits = IE & IF
+    "strh r0, [r12, #2]",       // write16 to just IF
     // handle BIOS IntrWait system
-    "ldrh r2, [r0, #-8]", // read the `has_occurred` flags
-    "orr  r2, r2, r1",    // activate the new bits, if any
-    "strh r2, [r0, #-8]", // update the value
-
-    // Now:
-    // * r0: 0x0400_0000
-    // * r1: irq bits
+    "ldr  r1, [r12, #-0x208]!", // load BIOS_IF_?? with r12 writeback
+    "orr  r1, r1, r0",          // mark `bits` as `has_occurred`
+    "strh r1, [r12]",           // write16 to just BIOS_IF
 
     // Get the user handler fn pointer, call it if non-null.
     "ldr r12, ={USER_IRQ_HANDLER}",
     "ldr r12, [r12]",
     when!(("r12" != "#0")[1] {
-      "mov r0, r1",
       a32_read_spsr_to!("r3"),
       "push {{r3, lr}}",
       a32_set_cpu_control!(System, irq_masked = true, fiq_masked = true),
