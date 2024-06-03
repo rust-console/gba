@@ -1,6 +1,13 @@
 //! Hardware interrupt handling
 
 use super::*;
+use crate::gba_cell::GbaCell;
+
+/// The user-provided interrupt request handler function.
+#[cfg(feature = "on_gba")]
+pub static USER_IRQ_HANDLER: GbaCell<
+  Option<unsafe extern "C" fn(crate::irq::IrqBits)>,
+> = GbaCell::new(None);
 
 /// Interrupt bit flags.
 #[derive(Clone, Copy, Default)]

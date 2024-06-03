@@ -3,6 +3,7 @@
 use bitfrob::{
   u16_get_bit, u16_with_bit, u16_with_region, u16_with_value, u8x2,
 };
+use mem::set_u32x80_unchecked;
 use voladdress::{VolBlock, VolGrid2d, VolGrid2dStrided, VolSeries};
 
 use super::*;
@@ -350,44 +351,10 @@ impl Mode3 {
   pub const BYTES_TOTAL: usize = Self::BYTES_PER_ROW * Self::HEIGHT_USIZE;
 
   /// Clears the entire bitmap to a color of your choosing.
-  #[cfg_attr(feature = "on_gba", instruction_set(arm::a32))]
-  #[cfg_attr(feature = "on_gba", link_section = ".iwram.mode3.clear_to")]
+  #[inline]
   pub fn clear_to(color: Color) {
-    on_gba_or_unimplemented!(unsafe {
-      let x: u32 = color.0 as u32 | ((color.0 as u32) << 16);
-      // now we spam out that `u32`, 10 stm per loop, 8 times per stm.
-      core::arch::asm!(
-        "1:",
-        "stm  {ptr}!, {{r0-r5,r7-r8}}",
-        "stm  {ptr}!, {{r0-r5,r7-r8}}",
-        "stm  {ptr}!, {{r0-r5,r7-r8}}",
-        "stm  {ptr}!, {{r0-r5,r7-r8}}",
-        "stm  {ptr}!, {{r0-r5,r7-r8}}",
-        "stm  {ptr}!, {{r0-r5,r7-r8}}",
-        "stm  {ptr}!, {{r0-r5,r7-r8}}",
-        "stm  {ptr}!, {{r0-r5,r7-r8}}",
-        "stm  {ptr}!, {{r0-r5,r7-r8}}",
-        "stm  {ptr}!, {{r0-r5,r7-r8}}",
-        "subs {count}, {count}, #1",
-        "bne 1b",
-
-        // The assembler will give us a warning (that we can't easily disable)
-        // if the reg_list for `stm` doesn't give the registers in order from
-        // low to high, so we just manually pick registers. The count register
-        // and the pointer register can be anything else.
-        in("r0") x,
-        in("r1") x,
-        in("r2") x,
-        in("r3") x,
-        in("r4") x,
-        in("r5") x,
-        in("r7") x,
-        in("r8") x,
-        count = inout(reg) 240 => _,
-        ptr = inout(reg) MODE3_VRAM.as_usize() => _,
-        options(nostack),
-      )
-    });
+    let x: u32 = color.0 as u32 | ((color.0 as u32) << 16);
+    unsafe { set_u32x80_unchecked(MODE3_VRAM.as_usize() as _, x, 240) };
   }
 
   /// Fills the given rectangle, clipped to the bounds of the bitmap.

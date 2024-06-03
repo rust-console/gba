@@ -51,7 +51,7 @@ macro_rules! on_gba_or_unimplemented {
   }
 }
 
-pub mod asm_runtime;
+pub mod asm;
 pub mod bios;
 pub mod dma;
 pub mod gba_cell;

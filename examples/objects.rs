@@ -2,10 +2,9 @@
 #![no_main]
 
 use gba::{
-  asm_runtime::USER_IRQ_HANDLER,
   bios::VBlankIntrWait,
   gba_cell::GbaCell,
-  irq::{IrqBits, IE, IME},
+  irq::{IrqBits, IE, IME, USER_IRQ_HANDLER},
   keys::KEYINPUT,
   sample_art::{decompress_cga_face_to_vram_4bpp, Cga},
   video::{

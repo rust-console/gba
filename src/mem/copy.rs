@@ -32,11 +32,16 @@ pub unsafe extern "C" fn copy_u8_unchecked(
   });
 }
 
-/// Copies `[u32; 8]` sized blocks, to `dest` from `src`
+/// Copies `[u32; 8]` sized chunks, to `dest` from `src`
 ///
-/// Particularly, this is the size of one [`Tile4`][crate::video::Tile4], half a
-/// [`Tile8`][crate::video::Tile8], or one complete palbank of
-/// [`Color`][crate::video::Color] values.
+/// Particularly, this helps with:
+/// * [`Tile4`][crate::video::Tile4] (one loop per tile).
+/// * [`Tile8`][crate::video::Tile8] (two loops per tile).
+/// * A palbank of [`Color`][crate::video::Color] values (one loop per palbank).
+/// * A text mode screenblock (64 loops per screenblock).
+///
+/// This will, in general, be slightly faster than a generic `memcpy`, but
+/// slightly slower than using DMA.
 ///
 /// ## Safety
 /// * As with all copying routines, the source must be readable for the size you

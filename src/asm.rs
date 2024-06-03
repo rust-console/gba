@@ -1,17 +1,28 @@
 #![allow(unused_macros)]
 
-//! Assembly runtime and support functions for the GBA.
-
-// Note(Lokathor): Functions here will *definitely* panic without the `on_gba`
-// cargo feature enabled, and so they should all have the `track_caller`
-// attribute set whenever the `on_gba` feature is *disabled*
-
-use crate::gba_cell::GbaCell;
+//! Assembly support.
+//!
+//! ## Startup Code
+//!
+//! This module includes the `_start` function as well as the default
+//! `_asm_runtime_irq_handler` that it sets. Both of which are defined within
+//! [`global_asm!`][inline_asm] blocks. They are not intended to be called
+//! directly from Rust, and so foreign function definitions for them are not
+//! exposed to Rust in this module.
+//!
+//! [inline_asm]:
+//!     https://doc.rust-lang.org/nightly/reference/inline-assembly.html
+//!
+//! ## Assembly Helpers
+//!
+//! This module also includes a number of functions to allow you to force the
+//! generation of particular assembly instructions that Rust and/or LLVM does
+//! not otherwise make easy to generate.
 
 use bracer::*;
 
 /// Inserts a `nop` instruction.
-#[inline(always)]
+#[inline]
 #[cfg_attr(not(feature = "on_gba"), track_caller)]
 pub fn nop() {
   on_gba_or_unimplemented! {
@@ -29,7 +40,6 @@ pub fn nop() {
 /// This both reads and writes `ptr`, so all the usual rules of that apply.
 #[inline]
 #[cfg_attr(feature = "on_gba", instruction_set(arm::a32))]
-#[cfg_attr(not(feature = "on_gba"), track_caller)]
 pub unsafe fn swp(mut ptr: *mut u32, x: u32) -> u32 {
   on_gba_or_unimplemented! {
     let output: u32;
@@ -55,7 +65,6 @@ pub unsafe fn swp(mut ptr: *mut u32, x: u32) -> u32 {
 /// This both reads and writes `ptr`, so all the usual rules of that apply.
 #[inline]
 #[cfg_attr(feature = "on_gba", instruction_set(arm::a32))]
-#[cfg_attr(not(feature = "on_gba"), track_caller)]
 pub unsafe fn swpb(mut ptr: *mut u8, x: u8) -> u8 {
   on_gba_or_unimplemented! {
     let output: u8;
@@ -69,6 +78,50 @@ pub unsafe fn swpb(mut ptr: *mut u8, x: u8) -> u8 {
         output = lateout(reg) output,
         input = in(reg) x,
         addr = inlateout(reg) ptr,
+      }
+    }
+    output
+  }
+}
+
+/// Loads a `u16` pointer offset by `bytes`
+///
+/// ## Safety
+/// This is similar to `ptr.byte_add(bytes).read()`, and thus has all the same
+/// safety requirements.
+#[inline]
+#[cfg_attr(feature = "on_gba", instruction_set(arm::a32))]
+pub unsafe fn a32_load_u16_reg_offset(ptr: *mut u16, bytes: usize) -> u16 {
+  on_gba_or_unimplemented! {
+    let output: u16;
+    unsafe {
+      core::arch::asm! {
+        "ldrh {output}, [{ptr}, {bytes}]",
+        output = lateout(reg) output,
+        ptr = in(reg) ptr,
+        bytes = in(reg) bytes,
+      }
+    }
+    output
+  }
+}
+
+/// Loads an `i16` pointer offset by `bytes`
+///
+/// ## Safety
+/// This is similar to `ptr.byte_add(bytes).read()`, and thus has all the same
+/// safety requirements.
+#[inline]
+#[cfg_attr(feature = "on_gba", instruction_set(arm::a32))]
+pub unsafe fn a32_load_i16_reg_offset(ptr: *mut i16, bytes: usize) -> i16 {
+  on_gba_or_unimplemented! {
+    let output: i16;
+    unsafe {
+      core::arch::asm! {
+        "ldrsh {output}, [{ptr}, {bytes}]",
+        output = lateout(reg) output,
+        ptr = in(reg) ptr,
+        bytes = in(reg) bytes,
       }
     }
     output
@@ -211,11 +264,5 @@ core::arch::global_asm! {
     // return to the BIOS
     "bx lr",
   },
-  USER_IRQ_HANDLER = sym USER_IRQ_HANDLER,
+  USER_IRQ_HANDLER = sym crate::irq::USER_IRQ_HANDLER,
 }
-
-/// The user-provided interrupt request handler function.
-#[cfg(feature = "on_gba")]
-pub static USER_IRQ_HANDLER: GbaCell<
-  Option<unsafe extern "C" fn(crate::irq::IrqBits)>,
-> = GbaCell::new(None);

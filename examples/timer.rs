@@ -2,10 +2,9 @@
 #![no_main]
 
 use gba::{
-  asm_runtime::USER_IRQ_HANDLER,
   bios::VBlankIntrWait,
   gba_cell::GbaCell,
-  irq::{IrqBits, IE, IME},
+  irq::{IrqBits, IE, IME, USER_IRQ_HANDLER},
   timers::{CpusPerTick, TimerControl, TIMER0_CONTROL},
   video::{
     Color, DisplayControl, DisplayStatus, BACKDROP_COLOR, DISPCNT, DISPSTAT,

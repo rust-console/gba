@@ -5,9 +5,8 @@
 use core::ptr::{addr_of, addr_of_mut};
 
 use gba::{
-  asm_runtime::USER_IRQ_HANDLER,
   bios::VBlankIntrWait,
-  irq::{IrqBits, IE, IME},
+  irq::{IrqBits, IE, IME, USER_IRQ_HANDLER},
   keys::KEYINPUT,
   mgba::{MgbaLogLevel, MgbaLogger},
   video::{

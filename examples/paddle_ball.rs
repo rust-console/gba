@@ -4,10 +4,9 @@
 //! Made by Evan Goemer, Discord: @evangoemer
 
 use gba::{
-  asm_runtime::USER_IRQ_HANDLER,
   bios::VBlankIntrWait,
   gba_cell::GbaCell,
-  irq::{IrqBits, IE, IME},
+  irq::{IrqBits, IE, IME, USER_IRQ_HANDLER},
   keys::{KeyInput, KEYINPUT},
   video::{Color, DisplayControl, DisplayStatus, Mode3, DISPCNT, DISPSTAT},
 };
