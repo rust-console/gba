@@ -11,7 +11,7 @@ use gba::{
   IrqBits,
 };
 
-static SECONDS: GbaCell<u32> = GbaCell::new(0);
+static OVERFLOWS: GbaCell<u32> = GbaCell::new(0);
 
 gba::panic_handler!(mgba_log_err);
 
@@ -26,18 +26,18 @@ extern "C" fn main() -> ! {
     TimerControl::new()
       .with_enabled(true)
       .with_send_irq(true)
-      // .with_cpus_per_tick(CpusPerTick::_64),
+      .with_cpus_per_tick(CpusPerTick::_64),
   );
 
   DISPCNT.write(DisplayControl::new().with_bg_mode(3));
   loop {
     VBlankIntrWait();
-    BACKDROP_COLOR.write(Color(SECONDS.read() as u16));
+    BACKDROP_COLOR.write(Color(OVERFLOWS.read() as u16));
   }
 }
 
 extern "C" fn irq_handler(bits: IrqBits) {
   if bits.timer0() {
-    SECONDS.write(SECONDS.read().wrapping_add(1));
+    OVERFLOWS.write(OVERFLOWS.read().wrapping_add(1));
   }
 }
