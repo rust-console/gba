@@ -17,7 +17,7 @@ use crate::irq::IrqBits;
 /// occur. This can create a significant savings of the battery while you're
 /// waiting, so use this function when possible.
 ///
-/// **Important:** This function forces [`IME`](crate::mmio::IME) on.
+/// **Important:** This function forces [`IME`](crate::irq::IME) on.
 ///
 /// Your interrupt handler (if any) will be run before this function returns.
 ///
