@@ -292,14 +292,14 @@ macro_rules! impl_signed_fixed_ops {
     impl<const B: u32> core::fmt::Debug for Fixed<$t, B> {
       #[inline]
       fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
-        let whole: $t = self.trunc().into_raw() >> B;
-        let fract: $t = self.fract().into_raw();
+        let whole: $t = self.trunc().to_bits() >> B;
+        let fract: $t = self.fract().to_bits();
         let divisor: $t = 1 << B;
         if self.is_negative() {
           let whole = whole.unsigned_abs();
-          write!(f, "-({whole}+{fract}/{divisor})")
+          write!(f, "-({whole}+({fract}/{divisor}))")
         } else {
-          write!(f, "{whole}+{fract}/{divisor}")
+          write!(f, "{whole}+({fract}/{divisor})")
         }
       }
     }
@@ -350,10 +350,10 @@ macro_rules! impl_unsigned_fixed_ops {
     impl<const B: u32> core::fmt::Debug for Fixed<$t, B> {
       #[inline]
       fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
-        let whole: $t = self.trunc().into_raw() >> B;
-        let fract: $t = self.fract().into_raw();
+        let whole: $t = self.trunc().to_bits() >> B;
+        let fract: $t = self.fract().to_bits();
         let divisor: $t = 1 << B;
-        write!(f, "{whole}+{fract}/{divisor}")
+        write!(f, "{whole}+({fract}/{divisor})")
       }
     }
   };
