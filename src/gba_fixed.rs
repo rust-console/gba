@@ -119,7 +119,7 @@ macro_rules! impl_common_fixed_ops {
       #[inline]
       #[must_use]
       #[cfg_attr(feature = "track_caller", track_caller)]
-      pub const fn from_raw(i: $t) -> Self {
+      pub const fn from_bits(i: $t) -> Self {
         Self(i)
       }
 
@@ -127,7 +127,7 @@ macro_rules! impl_common_fixed_ops {
       #[inline]
       #[must_use]
       #[cfg_attr(feature = "track_caller", track_caller)]
-      pub const fn into_raw(self) -> $t {
+      pub const fn to_bits(self) -> $t {
         self.0
       }
 

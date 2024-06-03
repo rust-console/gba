@@ -71,7 +71,7 @@ pub fn VBlankIntrWait() {
 #[inline]
 #[instruction_set(arm::t32)]
 pub fn ArcTan(theta: crate::i16fx14) -> crate::i16fx14 {
-  let mut i = theta.into_raw();
+  let mut i = theta.to_bits();
   unsafe {
     core::arch::asm! {
       "swi #0x09",
@@ -81,7 +81,7 @@ pub fn ArcTan(theta: crate::i16fx14) -> crate::i16fx14 {
       options(pure, nomem, preserves_flags),
     }
   };
-  crate::i16fx14::from_raw(i)
+  crate::i16fx14::from_bits(i)
 }
 
 /// `0x0A`: The "2-argument arctangent" ([atan2][wp-atan2]).
@@ -93,8 +93,8 @@ pub fn ArcTan(theta: crate::i16fx14) -> crate::i16fx14 {
 #[inline]
 #[instruction_set(arm::t32)]
 pub fn ArcTan2(x: crate::i16fx14, y: crate::i16fx14) -> u16 {
-  let x = x.into_raw();
-  let y = y.into_raw();
+  let x = x.to_bits();
+  let y = y.to_bits();
   let output: u16;
   unsafe {
     core::arch::asm! {
