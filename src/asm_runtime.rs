@@ -225,7 +225,7 @@ core::arch::global_asm! {
       "push {{r3, lr}}",
       a32_set_cpu_control!(System, irq_masked = true, fiq_masked = true),
       a32_fake_blx!("r12"),
-      a32_set_cpu_control!(IRQ, irq_masked = false, fiq_masked = false),
+      a32_set_cpu_control!(IRQ, irq_masked = true, fiq_masked = true),
       "pop {{r3, lr}}",
       a32_write_spsr_from!("r3"),
     }),
