@@ -34,34 +34,30 @@ use crate::IrqBits;
 #[inline]
 #[cfg_attr(feature = "on_gba", instruction_set(arm::t32))]
 pub fn IntrWait(ignore_existing: bool, target_irqs: IrqBits) {
-  on_gba_or_unimplemented!(
-    unsafe {
-      core::arch::asm! {
-        "swi #0x04",
-        inout("r0") ignore_existing as u32 => _,
-        inout("r1") target_irqs.0 => _,
-        out("r3") _,
-        options(preserves_flags),
-      }
-    };
-  );
+  on_gba_or_unimplemented!(unsafe {
+    core::arch::asm! {
+      "swi #0x04",
+      inout("r0") ignore_existing as u32 => _,
+      inout("r1") target_irqs.0 => _,
+      out("r3") _,
+      options(preserves_flags),
+    }
+  });
 }
 
 /// `0x05`: Builtin shorthand for [`IntrWait(true, IrqBits::VBLANK)`](IntrWait)
 #[inline]
 #[cfg_attr(feature = "on_gba", instruction_set(arm::t32))]
 pub fn VBlankIntrWait() {
-  on_gba_or_unimplemented!(
-    unsafe {
-      core::arch::asm! {
-        "swi #0x05",
-        out("r0") _,
-        out("r1") _,
-        out("r3") _,
-        options(preserves_flags),
-      }
-    };
-  );
+  on_gba_or_unimplemented!(unsafe {
+    core::arch::asm! {
+      "swi #0x05",
+      out("r0") _,
+      out("r1") _,
+      out("r3") _,
+      options(preserves_flags),
+    }
+  });
 }
 
 /// `0x09`: Arc tangent.
@@ -72,7 +68,7 @@ pub fn VBlankIntrWait() {
 #[instruction_set(arm::t32)]
 pub fn ArcTan(theta: crate::i16fx14) -> crate::i16fx14 {
   let mut i = theta.to_bits();
-  unsafe {
+  on_gba_or_unimplemented!(unsafe {
     core::arch::asm! {
       "swi #0x09",
       inout("r0") i,
@@ -80,7 +76,7 @@ pub fn ArcTan(theta: crate::i16fx14) -> crate::i16fx14 {
       out("r3") _,
       options(pure, nomem, preserves_flags),
     }
-  };
+  });
   crate::i16fx14::from_bits(i)
 }
 
@@ -96,7 +92,7 @@ pub fn ArcTan2(x: crate::i16fx14, y: crate::i16fx14) -> u16 {
   let x = x.to_bits();
   let y = y.to_bits();
   let output: u16;
-  unsafe {
+  on_gba_or_unimplemented!(unsafe {
     core::arch::asm! {
       "swi #0x0A",
       inout("r0") x => output,
@@ -104,7 +100,7 @@ pub fn ArcTan2(x: crate::i16fx14, y: crate::i16fx14) -> u16 {
       out("r3") _,
       options(pure, nomem, preserves_flags),
     }
-  };
+  });
   output
 }
 
@@ -112,15 +108,13 @@ pub fn ArcTan2(x: crate::i16fx14, y: crate::i16fx14) -> u16 {
 #[inline]
 #[cfg_attr(feature = "on_gba", instruction_set(arm::t32))]
 pub unsafe fn LZ77UnCompReadNormalWrite16bit(src: *const u32, dst: *mut u16) {
-  on_gba_or_unimplemented!(
-    unsafe {
-      core::arch::asm! {
-        "swi #0x12",
-        inout("r0") src => _,
-        inout("r1") dst => _,
-        out("r3") _,
-        options(preserves_flags),
-      }
-    };
-  );
+  on_gba_or_unimplemented!(unsafe {
+    core::arch::asm! {
+      "swi #0x12",
+      inout("r0") src => _,
+      inout("r1") dst => _,
+      out("r3") _,
+      options(preserves_flags),
+    }
+  });
 }
