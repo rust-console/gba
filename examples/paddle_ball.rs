@@ -141,23 +141,23 @@ fn main() -> ! {
 }
 
 extern "C" fn draw_sprites(_bits: IrqBits) {
-  Mode3.clear_to(Color::BLACK);
+  Mode3::clear_to(Color::BLACK);
 
-  Mode3.fill_rect_clipped(
+  Mode3::fill_rect_clipped(
     SPRITE_POSITIONS[0].read(),
     SPRITE_POSITIONS[1].read(),
     PADDLE_WIDTH,
     PADDLE_HEIGHT,
     Color::RED,
   );
-  Mode3.fill_rect_clipped(
+  Mode3::fill_rect_clipped(
     SPRITE_POSITIONS[2].read(),
     SPRITE_POSITIONS[3].read(),
     PADDLE_WIDTH,
     PADDLE_HEIGHT,
     Color::GREEN,
   );
-  Mode3.fill_rect_clipped(
+  Mode3::fill_rect_clipped(
     SPRITE_POSITIONS[4].read(),
     SPRITE_POSITIONS[5].read(),
     BALL_SIZE,

@@ -349,7 +349,7 @@ impl Mode3 {
   /// Clears the entire bitmap to a color of your choosing.
   #[cfg_attr(feature = "on_gba", instruction_set(arm::a32))]
   #[cfg_attr(feature = "on_gba", link_section = ".iwram.mode3.clear_to")]
-  pub fn clear_to(self, color: Color) {
+  pub fn clear_to(color: Color) {
     on_gba_or_unimplemented!(unsafe {
       let x: u32 = color.0 as u32 | ((color.0 as u32) << 16);
       // now we spam out that `u32`, 10 stm per loop, 8 times per stm.
@@ -390,7 +390,7 @@ impl Mode3 {
   /// Fills the given rectangle, clipped to the bounds of the bitmap.
   #[cfg_attr(feature = "on_gba", instruction_set(arm::a32))]
   pub fn fill_rect_clipped(
-    self, x: u16, y: u16, width: u16, height: u16, color: Color,
+    x: u16, y: u16, width: u16, height: u16, color: Color,
   ) {
     on_gba_or_unimplemented!(
       let x_start = x.min(Self::WIDTH_USIZE as u16);
