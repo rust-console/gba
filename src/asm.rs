@@ -4,11 +4,11 @@
 //!
 //! ## Startup Code
 //!
-//! This module includes the `_start` function as well as the default
-//! `_asm_runtime_irq_handler` that it sets. Both of which are defined within
-//! [`global_asm!`][inline_asm] blocks. They are not intended to be called
-//! directly from Rust, and so foreign function definitions for them are not
-//! exposed to Rust in this module.
+//! When the `on_gba` feature is active, this module includes the `_start`
+//! function as well as the default `_asm_runtime_irq_handler` that it sets.
+//! Both of which are defined within [`global_asm!`][inline_asm] blocks. They
+//! are not intended to be called directly from Rust, and so foreign function
+//! definitions for them are not exposed to Rust in this module.
 //!
 //! [inline_asm]:
 //!     https://doc.rust-lang.org/nightly/reference/inline-assembly.html
