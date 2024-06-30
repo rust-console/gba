@@ -15,7 +15,7 @@ impl TimerControl {
   }
   /// The number of CPU cycles per timer tick.
   #[inline]
-  pub const fn with_cpus_per_tick(self, cpus: CpusPerTick) -> Self {
+  pub const fn with_cycles_per_tick(self, cpus: CpusPerTick) -> Self {
     Self(u8_with_region(0, 1, self.0, cpus as u8))
   }
   /// If the timer should *only* tick when the lower-number timer overflows.
@@ -24,7 +24,7 @@ impl TimerControl {
   ///   instead tick once per overflow of Timer (N-1).
   /// * This has no effect for Timer 0, since it has no lower numbered timer.
   #[inline]
-  pub const fn cascade_ticks(self, cascade: bool) -> Self {
+  pub const fn with_cascade_ticks(self, cascade: bool) -> Self {
     Self(u8_with_bit(2, self.0, cascade))
   }
   /// If an overflow of this timer should send an interrupt.

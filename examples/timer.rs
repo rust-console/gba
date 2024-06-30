@@ -26,7 +26,7 @@ extern "C" fn main() -> ! {
     TimerControl::new()
       .with_enabled(true)
       .with_send_irq(true)
-      .with_cpus_per_tick(CpusPerTick::_64),
+      .with_cycles_per_tick(CpusPerTick::_64),
   );
 
   DISPCNT.write(DisplayControl::new().with_bg_mode(3));
