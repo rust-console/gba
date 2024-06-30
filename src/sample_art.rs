@@ -25,6 +25,12 @@ pub fn decompress_cga_face_to_vram_4bpp(dest: VolRegion<Tile4, Safe, Safe>) {
 }
 
 /// An empty type that just serves as a namespace for constants.
+///
+/// The CGA data is 256 tiles with character tiles that match with ASCII where
+/// appropriate. If you want to write something, `ch as u8` will give you the
+/// correct index value for any printable ascii character.
+///
+/// The constants here give names to the *other* tiles in the CGA dataset.
 pub struct Cga;
 #[allow(missing_docs)]
 impl Cga {
