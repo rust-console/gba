@@ -64,9 +64,12 @@ pub extern "C" fn main() -> ! {
         .with_frame1_active(frame > 0),
     );
 
-    // we have to do some silly dancing here because we can't write just a `u8`
-    // in VRAM. We have to read a `u8x2` combo, update part of it, then write it
-    // back to VRAM.
+    // We have to do some silly dancing here because we can't write just a `u8`
+    // in VRAM. 8-bit writes in VRAM get duplicated across the aligned 16-bit
+    // chunk. Instead, we have to read a `u8x2` combo, update part of it, then
+    // write it back to VRAM. Normally, you probably wouldn't use Mode 4 at all
+    // for a program like this, but it keeps the Mode 4 demo closer to how the
+    // Mode 3 demo works.
     let addr = MODE4_VRAM
       .get_frame(frame)
       .unwrap()
