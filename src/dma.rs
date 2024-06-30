@@ -98,7 +98,11 @@ impl DmaControl {
   pub const fn with_irq(self, irq: bool) -> Self {
     Self(u16_with_bit(14, self.0, irq))
   }
-  /// If the DMA unit is enabled.
+  /// If the DMA unit should be enabled.
+  ///
+  /// When a configuration with an "enabled" flag set is written to the DMA's
+  /// control, the DMA still won't *actually* start until the appropriate start
+  /// time.
   #[inline]
   pub const fn with_enabled(self, enabled: bool) -> Self {
     Self(u16_with_bit(15, self.0, enabled))
