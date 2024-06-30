@@ -5,7 +5,7 @@ target = "thumbv4t-none-eabi"
 build-std = ["core"]
 
 [target.thumbv4t-none-eabi]
-runner = "mgba-qt"
+runner = ["mgba-qt", "-C", "logToStdout=1", "-C", "logLevel.gba.debug=127"]
 rustflags = [
   "-Zub-checks=no",
   "-Clinker=arm-none-eabi-ld",

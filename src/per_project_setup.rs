@@ -46,8 +46,9 @@
 //! build-std = ["core"]
 //!
 //! [target.thumbv4t-none-eabi]
-//! runner = "mgba-qt"
+//! runner = ["mgba-qt", "-C", "logToStdout=1", "-C", "logLevel.gba.debug=127"]
 //! rustflags = [
+//!   "-Zub-checks=no",
 //!   "-Clinker=arm-none-eabi-ld",
 //!   "-Clink-arg=-Tlinker_scripts/mono_boot.ld",
 //!   "-Ctarget-cpu=arm7tdmi",
