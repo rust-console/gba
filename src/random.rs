@@ -1,6 +1,10 @@
-// Note(Lokathor): We have a generic LCG type below, but for now we can hide the
-// process of having to pick what multiplier and increment to use behind a
-// newtype that selects some default constants.
+//! Randomization routines that will work well enough on the GBA.
+//!
+//! Randomization is basically about a trade off between time taken to produce
+//! each next output and the quality of that output. Most modern randomization
+//! libraries do 64-bit randomization and aim to be extremely unpredictable.
+//! That's basically overkill on the GBA. The random generators here are 32-bit,
+//! and they are relatively simple while maintaining reasonable output.
 
 /// A [Linear Congruential Generator][wp-lcg] with 32-bits of output.
 ///

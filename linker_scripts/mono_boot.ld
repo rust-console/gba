@@ -1,6 +1,6 @@
 /* THIS LINKER SCRIPT FILE IS RELEASED TO THE PUBLIC DOMAIN (SPDX: CC0-1.0) */
 
-ENTRY(__start)
+ENTRY(_start)
 
 MEMORY {
   ewram (w!x) : ORIGIN = 0x2000000, LENGTH = 256K
@@ -11,7 +11,7 @@ MEMORY {
 SECTIONS {
   .text : {
     /* be sure that the ROM header is the very first */
-    *(.text.gba_rom_header);
+    *(.text._start);
     *(.text .text.*);
     . = ALIGN(4);
   } >rom = 0x00
@@ -22,42 +22,42 @@ SECTIONS {
   } >rom = 0x00
 
   . = ALIGN(4);
-  __iwram_position_in_rom = .;
+  _iwram_position_in_rom = .;
   .data : {
-    __iwram_start = ABSOLUTE(.);
+    _iwram_start = ABSOLUTE(.);
     
     *(.data .data.*);
     *(.iwram .iwram.*);
     . = ALIGN(4);
     
-    __iwram_end = ABSOLUTE(.);
+    _iwram_end = ABSOLUTE(.);
   } >iwram AT>rom = 0x00
 
   . = ALIGN(4);
-  __ewram_position_in_rom = __iwram_position_in_rom + (__iwram_end - __iwram_start);
+  _ewram_position_in_rom = _iwram_position_in_rom + (_iwram_end - _iwram_start);
   .ewram : {
-    __ewram_start = ABSOLUTE(.);
+    _ewram_start = ABSOLUTE(.);
     
     *(.ewram .ewram.*);
     . = ALIGN(4);
     
-    __ewram_end = ABSOLUTE(.);
+    _ewram_end = ABSOLUTE(.);
   } >ewram AT>rom = 0x00
 
   . = ALIGN(4);
-  __bss_position_in_rom = __ewram_position_in_rom + (__ewram_end - __ewram_start);
+  _bss_position_in_rom = _ewram_position_in_rom + (_ewram_end - _ewram_start);
   .bss : {
-    __bss_start = ABSOLUTE(.);
+    _bss_start = ABSOLUTE(.);
 
     *(.bss .bss.*);
     . = ALIGN(4);
 
-    __bss_end = ABSOLUTE(.);
+    _bss_end = ABSOLUTE(.);
   } >iwram
 
-  __iwram_word_copy_count = (__iwram_end - __iwram_start) / 4;
-  __ewram_word_copy_count = (__ewram_end - __ewram_start) / 4;
-  __bss_word_clear_count = (__bss_end - __bss_start) / 4;
+  _iwram_word_copy_count = (_iwram_end - _iwram_start) / 4;
+  _ewram_word_copy_count = (_ewram_end - _ewram_start) / 4;
+  _bss_word_clear_count = (_bss_end - _bss_start) / 4;
 
   /* rust-lld demands we keep the `section header string table` */
   .shstrtab        0 : { *(.shstrtab) }

@@ -1,108 +1,88 @@
-//! Module to interface with the GBA's four timer units.
-//!
-//! Similar to the background layers and DMA units, there are four timer units
-//! and they're numbered 0 through 3.
-//!
-//! There's two hardware addresses that control each timer.
-//! * The timer's high address is the [`TimerControl`] bits.
-//! * The timer's low address is a `u16` which *reads* the timer's "count"
-//!   value, but *writes* the timer's "reload" value. In this crate we actually
-//!   represent that as two separate MMIO controls for improved code clarity.
-//!   Just be aware that in mGBA's debugger and in other documentation you'll
-//!   see it as a single address.
-//!
-//! When a timer is disabled, it will continue to read the count value that it
-//! stopped at.
-//!
-//! ## Reloading
-//!
-//! When the timer goes from disabled to enabled, or when the timer overflows,
-//! the last set reload value is copied to the counter value.
-//!
-//! ## Ticking
-//!
-//! When a timer is enabled, the timer will tick every so often. Each tick
-//! increases the counter value by 1. The rate at which the timer ticks depends
-//! on the timer's configuration:
-//!
-//! * If the `cascade` bit is set the timer will tick once per overflow of the
-//!   next lower timer. For example, if timer 3 is set to cascade, it will tick
-//!   once per overflow of timer 2. Note that timer 0 ignores the cascade bit,
-//!   since it doesn't have a "next lower" timer.
-//! * Otherwise, the timer ticks every one or more CPU cycles, according to the
-//!   [`TimerScale`] set in the `scale` field.
-//!
-//! ## Overflows
-//!
-//! When a timer would tick *above* `u16::MAX` then an overflow occurs. This can
-//! trigger an interrupt, and will also cause the timer to copy its reload value
-//! into its counter.
-//!
-//! If you want a timer to overflow every `x` ticks (where `x` is non-zero),
-//! then use the [`wrapping_neg`](u16::wrapping_neg) method to easily get the
-//! right reload value to set:
-//!
-//! ```
-//! # use gba::prelude::*;
-//! let x = 7_u16;
-//! TIMER0_RELOAD.write(x.wrapping_neg());
-//! ```
-//!
-//! ## Using Cascade To Pause A Timer
-//!
-//! When a timer goes from disabled to enabled it will reset the counter value
-//! to the reload value. If you want to temporarily pause a timer *without*
-//! having the counter value get reset when you resume the timer you can instead
-//! set the `cascade` bit of the timer while the next lower timer is
-//! **disabled**. This keeps the timer "active" but prevents it from ticking.
-//! When you turn off cascade mode the timer will resume ticking from the
-//! current counter value.
-//!
-//! Note that this doesn't work for timer 0, because that timer ignores the
-//! cascade bit.
+//! Timer related data types.
 
-use crate::macros::{pub_const_fn_new_zeroed, u16_bool_field, u16_enum_field};
+use super::*;
+use bitfrob::{u8_with_bit, u8_with_region};
 
-/// A number of CPU cycles per timer tick.
-///
-/// * The GBA's CPU runs at 16,777,216 cycles per second (16.78 Mhz).
-/// * The GBA's PPU outputs one pixel per 4 CPU cycles.
-/// * It takes 280,896 cycles for one full frame (when you add up all the draw
-///   and blank periods).
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[repr(u16)]
-pub enum TimerScale {
-  /// Approximately 59.6 nanoseconds
-  #[default]
+/// Control bits for one of the GBA's four timers.
+#[derive(Debug, Clone, Copy)]
+#[repr(transparent)]
+pub struct TimerControl(u8);
+impl TimerControl {
+  /// A new, zeroed value.
+  #[inline]
+  pub const fn new() -> Self {
+    Self(0)
+  }
+  /// The number of CPU cycles per timer tick.
+  #[inline]
+  pub const fn with_cycles_per_tick(self, cpus: CpusPerTick) -> Self {
+    Self(u8_with_region(0, 1, self.0, cpus as u8))
+  }
+  /// If the timer should *only* tick when the lower-number timer overflows.
+  ///
+  /// * When set, this **overrides** the `cpus_per_tick` value and Timer N will
+  ///   instead tick once per overflow of Timer (N-1).
+  /// * This has no effect for Timer 0, since it has no lower numbered timer.
+  #[inline]
+  pub const fn with_cascade_ticks(self, cascade: bool) -> Self {
+    Self(u8_with_bit(2, self.0, cascade))
+  }
+  /// If an overflow of this timer should send an interrupt.
+  #[inline]
+  pub const fn with_send_irq(self, irq: bool) -> Self {
+    Self(u8_with_bit(6, self.0, irq))
+  }
+  /// If this timer is enabled.
+  #[inline]
+  pub const fn with_enabled(self, enabled: bool) -> Self {
+    Self(u8_with_bit(7, self.0, enabled))
+  }
+}
+
+/// How many CPU cycles per timer tick.
+#[repr(u8)]
+#[allow(missing_docs)]
+pub enum CpusPerTick {
   _1 = 0,
-  /// Approximately 3.815 microseconds
   _64 = 1,
-  /// Approximately 15.26 microseconds
-  ///
-  /// **Hint:** With a reload value of 0, this timer scale will overflow
-  /// exactly once per second.
   _256 = 2,
-  /// Approximately 61.04 microseconds
-  ///
-  /// **Hint:** With a reload value of `0x4000_u16.wrapping_neg()`,
-  /// this timer scale will overflow exactly once per second.
   _1024 = 3,
 }
 
-/// Timer configuration bits.
-///
-/// * `scale` is how many CPU cycles per tick
-/// * `cascade` will override the prescale value and instead tick the timer once
-///   per overflow of the next lower timer. Timer 0 ignores the cascade bit.
-/// * `overflow_irq` will cause an IRQ to be sent each overflow.
-/// * `enabled` makes the timer tick.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[repr(transparent)]
-pub struct TimerControl(u16);
-impl TimerControl {
-  pub_const_fn_new_zeroed!();
-  u16_enum_field!(0 - 1: TimerScale, scale, with_scale);
-  u16_bool_field!(2, cascade, with_cascade);
-  u16_bool_field!(6, overflow_irq, with_overflow_irq);
-  u16_bool_field!(7, enabled, with_enabled);
-}
+/// Timer0's current counter value.
+pub const TIMER0_COUNTER: RoAddr<u16> = unsafe { VolAddress::new(0x0400_0100) };
+/// Timer1's current counter value.
+pub const TIMER1_COUNTER: RoAddr<u16> = unsafe { VolAddress::new(0x0400_0104) };
+/// Timer2's current counter value.
+pub const TIMER2_COUNTER: RoAddr<u16> = unsafe { VolAddress::new(0x0400_0108) };
+/// Timer3's current counter value.
+pub const TIMER3_COUNTER: RoAddr<u16> = unsafe { VolAddress::new(0x0400_010C) };
+
+/// The value for Timer0 to reload on overflow on when the `start` bit is newly
+/// set.
+pub const TIMER0_RELOAD: WoAddr<u16> = unsafe { VolAddress::new(0x0400_0100) };
+/// The value for Timer1 to reload on overflow on when the `start` bit is newly
+/// set.
+pub const TIMER1_RELOAD: WoAddr<u16> = unsafe { VolAddress::new(0x0400_0104) };
+/// The value for Timer2 to reload on overflow on when the `start` bit is newly
+/// set.
+pub const TIMER2_RELOAD: WoAddr<u16> = unsafe { VolAddress::new(0x0400_0108) };
+/// The value for Timer3 to reload on overflow on when the `start` bit is newly
+/// set.
+pub const TIMER3_RELOAD: WoAddr<u16> = unsafe { VolAddress::new(0x0400_010C) };
+
+/// Control bits for Timer 0.
+pub const TIMER0_CONTROL: PlainAddr<TimerControl> =
+  unsafe { VolAddress::new(0x0400_0102) };
+
+/// Control bits for Timer 1.
+pub const TIMER1_CONTROL: PlainAddr<TimerControl> =
+  unsafe { VolAddress::new(0x0400_0106) };
+
+/// Control bits for Timer 2.
+pub const TIMER2_CONTROL: PlainAddr<TimerControl> =
+  unsafe { VolAddress::new(0x0400_010A) };
+
+/// Control bits for Timer 3.
+pub const TIMER3_CONTROL: PlainAddr<TimerControl> =
+  unsafe { VolAddress::new(0x0400_010E) };

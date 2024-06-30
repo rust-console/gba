@@ -1,23 +1,10 @@
+//! Basic fixed point math module used as a fallback if the `fixed` crate isn't
+//! included.
+//!
+//! Most notably, the fixed point type here uses const generics instead of type
+//! level numbers.
+
 use core::ops::*;
-
-/// `i16` with 8 bits of fixed-point fraction.
-///
-/// This is used by the affine matrix entries.
-#[allow(non_camel_case_types)]
-pub type i16fx8 = Fixed<i16, 8>;
-
-/// `i16` with 14 bits of fixed-point fraction.
-///
-/// This is used by the [`ArcTan`](crate::bios::ArcTan) and
-/// [`ArcTan2`](crate::bios::ArcTan2) BIOS functions.
-#[allow(non_camel_case_types)]
-pub type i16fx14 = Fixed<i16, 14>;
-
-/// `i32` with 8 bits of fixed-point fraction.
-///
-/// This is used by the background reference point entries.
-#[allow(non_camel_case_types)]
-pub type i32fx8 = Fixed<i32, 8>;
 
 /// A [fixed-point][wp-fp] number. This transparently wraps an integer with a
 /// const generic for how many bits are fractional.
@@ -35,6 +22,24 @@ pub type i32fx8 = Fixed<i32, 8>;
 #[derive(Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[repr(transparent)]
 pub struct Fixed<I, const B: u32>(I);
+
+// TODO: surely there's gotta be a better way to swap between these two fixed
+// point forms?
+
+#[cfg(feature = "fixed")]
+impl From<fixed::FixedI16<fixed::types::extra::U8>> for Fixed<i16, 8> {
+  #[inline]
+  fn from(value: fixed::FixedI16<fixed::types::extra::U8>) -> Self {
+    Self(value.to_bits())
+  }
+}
+#[cfg(feature = "fixed")]
+impl From<Fixed<i16, 8>> for fixed::FixedI16<fixed::types::extra::U8> {
+  #[inline]
+  fn from(value: Fixed<i16, 8>) -> Self {
+    fixed::FixedI16::from_bits(value.0)
+  }
+}
 
 macro_rules! impl_trait_op_unit {
   ($t:ty, $trait:ident, $op:ident) => {
@@ -114,7 +119,7 @@ macro_rules! impl_common_fixed_ops {
       #[inline]
       #[must_use]
       #[cfg_attr(feature = "track_caller", track_caller)]
-      pub const fn from_raw(i: $t) -> Self {
+      pub const fn from_bits(i: $t) -> Self {
         Self(i)
       }
 
@@ -122,7 +127,7 @@ macro_rules! impl_common_fixed_ops {
       #[inline]
       #[must_use]
       #[cfg_attr(feature = "track_caller", track_caller)]
-      pub const fn into_raw(self) -> $t {
+      pub const fn to_bits(self) -> $t {
         self.0
       }
 
@@ -287,14 +292,14 @@ macro_rules! impl_signed_fixed_ops {
     impl<const B: u32> core::fmt::Debug for Fixed<$t, B> {
       #[inline]
       fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
-        let whole: $t = self.trunc().into_raw() >> B;
-        let fract: $t = self.fract().into_raw();
+        let whole: $t = self.trunc().to_bits() >> B;
+        let fract: $t = self.fract().to_bits();
         let divisor: $t = 1 << B;
         if self.is_negative() {
           let whole = whole.unsigned_abs();
-          write!(f, "-({whole}+{fract}/{divisor})")
+          write!(f, "-({whole}+({fract}/{divisor}))")
         } else {
-          write!(f, "{whole}+{fract}/{divisor}")
+          write!(f, "{whole}+({fract}/{divisor})")
         }
       }
     }
@@ -345,10 +350,10 @@ macro_rules! impl_unsigned_fixed_ops {
     impl<const B: u32> core::fmt::Debug for Fixed<$t, B> {
       #[inline]
       fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
-        let whole: $t = self.trunc().into_raw() >> B;
-        let fract: $t = self.fract().into_raw();
+        let whole: $t = self.trunc().to_bits() >> B;
+        let fract: $t = self.fract().to_bits();
         let divisor: $t = 1 << B;
-        write!(f, "{whole}+{fract}/{divisor}")
+        write!(f, "{whole}+({fract}/{divisor})")
       }
     }
   };

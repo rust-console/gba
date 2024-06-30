@@ -1,167 +1,143 @@
 #![no_std]
-#![feature(asm_const)]
-#![feature(naked_functions)]
-#![warn(clippy::missing_inline_in_public_items)]
-#![allow(clippy::let_and_return)]
-#![allow(clippy::result_unit_err)]
-#![allow(unused_imports)]
-//#![warn(missing_docs)]
+#![cfg_attr(not(feature = "on_gba"), allow(unused))]
+#![warn(missing_docs)]
+#![warn(unsafe_op_in_unsafe_fn)]
+#![cfg_attr(feature = "doc_cfg", feature(doc_cfg))]
 
-//! A crate for GBA development.
+//! A crate for 'raw' style Game Boy Advance (GBA) development, where any code
+//! can access any hardware component at any time, with no special ceremony.
 //!
-//! ## How To Make Your Own GBA Project Using This Crate
+//! * **Note:** If you want a 'managed' hardware style, more like many other
+//!   "embedded-wg" experiences, where hardware access is declared though the
+//!   type system by passing around zero-sized token types, try the
+//!   [agb](https://docs.rs/agb) crate instead.
 //!
-//! This will require the use of Nightly Rust. Any recent-ish version of Nightly
-//! should be fine.
+//! # This Is Intended For The Game Boy Advance
 //!
-//! [arm-download]:
-//!     https://developer.arm.com/Tools%20and%20Software/GNU%20Toolchain
+//! When the `on_gba` crate feature is used, the crate assumes that you're
+//! building the crate for, and also running the code on, the Game Boy Advance.
+//! The build target is expected to be `thumbv4t-none-eabi` or
+//! `armv4t-none-eabi`, and any other targets might have a build error. Further,
+//! the specific device you run the code on is assumed to be the GBA (or a GBA
+//! emulator). These facts are used by the `unsafe` code in this crate.
 //!
-//! * **Get The ARM Binutils:** You'll need the ARM version of the GNU binutils
-//!   in your path, specifically the linker (`arm-none-eabi-ld`). Linux folks
-//!   can use the package manager. Mac and Windows folks can use the [ARM
-//!   Website][arm-download].
-//! * **Run `rustup component add rust-src`:** This makes rustup keep the
-//!   standard library source code on hand, which is necessary for `build-std`
-//!   to work.
-//! * **Create A `.cargo/config.toml`:** You'll want to set up a file to provide
-//!   all the right default settings so that a basic `cargo build` and `cargo
-//!   run` will "just work". Something like the following is what you probably
-//!   want.
+//! This crate feature is **on by default** because the primary purpose of this
+//! crate is to assist in the building of GBA games, but you *can* disable the
+//! feature and build the crate anyway. How much of this crate actually works on
+//! non-GBA platforms is **not** covered by our SemVer! Building and using the
+//! crate without the `on_gba` feature is intended for non-GBA code that wants
+//! the data type definitions the crate provides, such as a build script running
+//! on your development machine. Without the `on_gba` feature enabled, any GBA
+//! specific functions that "don't make sense" outside of a GBA context (such as
+//! functions using inline assembly) will just be `unimplemented!()`, and
+//! calling them will trigger a panic.
 //!
-//! ```toml
-//! [build]
-//! target = "thumbv4t-none-eabi"
-//!
-//! [unstable]
-//! build-std = ["core"]
-//!
-//! [target.thumbv4t-none-eabi]
-//! runner = "mgba-qt"
-//! rustflags = ["-Clink-arg=-Tlinker_scripts/mono_boot.ld"]
-//! ```
-//!
-//! * **Make Your Executables:** At this point you can make a `bin` or an
-//!   `example` file. Every executable will need to be `#![no_std]` and
-//!   `#![no_main]`. They will also need a `#[panic_handler]` defined, as well
-//!   as a `#[no_mangle] extern "C" fn main() -> ! {}` function, which is what
-//!   the assembly runtime will call to start your Rust program after it fully
-//!   initializes the system. The C ABI must be used because Rust's own ABI is
-//!   not stable.
-//!
-//! ```rust
-//! #![no_std]
-//! #![no_main]
-//!
-//! #[panic_handler]
-//! fn panic_handler(_: &core::panic::PanicInfo) -> ! {
-//!   loop {}
-//! }
-//!
-//! #[no_mangle]
-//! extern "C" fn main() -> ! {
-//!   loop {}
-//! }
-//! ```
-//!
-//! * **Optional: Use `objcopy` and `gbafix`:** The `cargo build` will produce
-//!   ELF files, which mGBA can run directly. If you want to run your program on
-//!   real hardware you'll need to first `objcopy` the raw binary out of the ELF
-//!   into its own file, then Use `gbafix` to give an appropriate header to the
-//!   file. `objcopy` is part of the ARM binutils you already installed, it
-//!   should be named `arm-none-eabi-objcopy`. You can get `gbafix` through
-//!   cargo: `cargo install gbafix`.
-//!
-//! ## Other GBA-related Crates
-//!
-//! This crate provides an API to interact with the GBA that is safe, but with
-//! minimal restrictions on what components can be changed when. If you'd like
-//! an API where the borrow checker provides stronger control over component
-//! access then the [agb](https://docs.rs/agb) crate might be what you want.
-//!
-//! ## Safety
-//!
-//! All safety considerations for the crate assume that you're building for the
-//! `thumbv4t-none-eabi` or `armv4t-none-eabi` targets, using the provided
-//! linker script, and then running the code on a GBA. While it's possible to
-//! break any of these assumptions, if you do that some or all of the code
-//! provided by this crate may become unsound.
+//! If you're not familiar with GBA programming some explanations are provided
+//! on separate pages:
+//! * [Per System Setup][`per_system_setup`]
+//! * [Per Project Setup][`per_project_setup`]
 
-mod macros;
+use bitfrob::{u16_get_bit, u16_with_bit};
+use voladdress::VolAddress;
 
-#[cfg(feature = "on_gba")]
-pub mod asm_runtime;
-#[cfg(feature = "on_gba")]
+macro_rules! on_gba_or_unimplemented {
+  ($($token_tree:tt)*) => {
+    #[cfg(feature="on_gba")]
+    {
+      $($token_tree)*
+    }
+    #[cfg(not(feature="on_gba"))]
+    unimplemented!()
+  }
+}
+
+pub mod asm;
 pub mod bios;
-pub mod builtin_art;
-#[cfg(feature = "critical-section")]
-mod critical_section;
-#[cfg(feature = "on_gba")]
 pub mod dma;
-pub mod fixed;
-#[cfg(feature = "on_gba")]
 pub mod gba_cell;
-pub mod interrupts;
+pub mod gba_fixed;
+pub mod irq;
 pub mod keys;
-#[cfg(feature = "on_gba")]
-pub mod mem_fns;
-#[cfg(feature = "on_gba")]
+pub mod mem;
 pub mod mgba;
-#[cfg(feature = "on_gba")]
-pub mod mmio;
-pub mod prelude;
+pub mod panic_handlers;
+pub mod per_project_setup;
+pub mod per_system_setup;
 pub mod random;
-pub mod sound;
+pub mod sample_art;
 pub mod timers;
 pub mod video;
 
-/// Wraps a value to be aligned to a minimum of 4.
+/// "safe on GBA", which is either Safe or Unsafe according to the `on_gba`
+/// cargo feature.
+#[cfg(feature = "on_gba")]
+type SOGBA = voladdress::Safe;
+#[cfg(not(feature = "on_gba"))]
+type SOGBA = voladdress::Unsafe;
+
+/// Responds "normally" to read/write, just holds a setting
+type PlainAddr<T> = VolAddress<T, SOGBA, SOGBA>;
+/// Read-only addr
+type RoAddr<T> = VolAddress<T, SOGBA, ()>;
+/// Write-only addr
+type WoAddr<T> = VolAddress<T, (), SOGBA>;
+
+#[cfg(feature = "critical-section")]
+#[cfg_attr(feature = "doc_cfg", doc(cfg(feature = "critical-section")))]
+pub mod critical_section;
+
+/// `i16` with 8 bits of fixed-point fraction.
 ///
-/// If the size of the value held is already a multiple of 4 then this will be
-/// the same size as the wrapped value. Otherwise the compiler will add
-/// sufficient padding bytes on the end to make the size a multiple of 4.
-#[derive(Debug)]
-#[repr(C, align(4))]
-pub struct Align4<T>(pub T);
+/// This is used by the affine matrix entries.
+///
+/// * This build of the crate uses the [`fixed`] crate
+#[cfg(feature = "fixed")]
+#[allow(non_camel_case_types)]
+pub type i16fx8 = fixed::FixedI16<fixed::types::extra::U8>;
 
-impl<const N: usize> Align4<[u8; N]> {
-  /// Views these bytes as a slice of `u32`
-  /// ## Panics
-  /// * If the number of bytes isn't a multiple of 4
-  #[inline]
-  #[must_use]
-  pub fn as_u32_slice(&self) -> &[u32] {
-    assert!(self.0.len() % 4 == 0);
-    // Safety: our struct is aligned to 4, so the pointer will already be
-    // aligned, we only need to check the length
-    unsafe {
-      let data: *const u8 = self.0.as_ptr();
-      let len: usize = self.0.len();
-      core::slice::from_raw_parts(data.cast::<u32>(), len / 4)
-    }
-  }
+/// `i16` with 14 bits of fixed-point fraction.
+///
+/// This is used by the [`ArcTan`](crate::bios::ArcTan) and
+/// [`ArcTan2`](crate::bios::ArcTan2) BIOS functions.
+///
+/// * This build of the crate uses the [`fixed`] crate
+#[cfg(feature = "fixed")]
+#[allow(non_camel_case_types)]
+pub type i16fx14 = fixed::FixedI16<fixed::types::extra::U14>;
 
-  /// Views these bytes as a slice of `u16`
-  /// ## Panics
-  /// * If the number of bytes isn't a multiple of 2
-  #[inline]
-  #[must_use]
-  pub fn as_u16_slice(&self) -> &[u16] {
-    assert!(self.0.len() % 2 == 0);
-    // Safety: our struct is aligned to 4, so the pointer will already be
-    // aligned, we only need to check the length
-    unsafe {
-      let data: *const u8 = self.0.as_ptr();
-      let len: usize = self.0.len();
-      core::slice::from_raw_parts(data.cast::<u16>(), len / 2)
-    }
-  }
-}
+/// `i32` with 8 bits of fixed-point fraction.
+///
+/// This is used by the background reference point entries.
+///
+/// * This build of the crate uses the [`fixed`] crate
+#[cfg(feature = "fixed")]
+#[allow(non_camel_case_types)]
+pub type i32fx8 = fixed::FixedI32<fixed::types::extra::U8>;
 
-/// Works like [`include_bytes!`], but the value is wrapped in [`Align4`].
-#[macro_export]
-macro_rules! include_aligned_bytes {
-  ($file:expr $(,)?) => {{
-    Align4(*include_bytes!($file))
-  }};
-}
+/// `i16` with 8 bits of fixed-point fraction.
+///
+/// This is used by the affine matrix entries.
+///
+/// * This build of the crate uses the [`gba_fixed`] module
+#[cfg(not(feature = "fixed"))]
+#[allow(non_camel_case_types)]
+pub type i16fx8 = crate::gba_fixed::Fixed<i16, 8>;
+
+/// `i16` with 14 bits of fixed-point fraction.
+///
+/// This is used by the [`ArcTan`](crate::bios::ArcTan) and
+/// [`ArcTan2`](crate::bios::ArcTan2) BIOS functions.
+///
+/// * This build of the crate uses the [`gba_fixed`] module
+#[cfg(not(feature = "fixed"))]
+#[allow(non_camel_case_types)]
+pub type i16fx14 = crate::gba_fixed::Fixed<i16, 14>;
+
+/// `i32` with 8 bits of fixed-point fraction.
+///
+/// This is used by the background reference point entries.
+///
+/// * This build of the crate uses the [`gba_fixed`] module
+#[cfg(not(feature = "fixed"))]
+#[allow(non_camel_case_types)]
+pub type i32fx8 = crate::gba_fixed::Fixed<i32, 8>;

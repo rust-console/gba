@@ -1,164 +1,308 @@
-//! Module for interfacing with the GBA's Direct Memory Access units.
+//! Module for the GBA's Direct Memory Access (DMA) units.
 //!
-//! The GBA has four DMA units, numbered from 0 to 3. They can be used for
-//! extremely efficient memory transfers, and they can also be set to
-//! automatically transfer in response to select events.
+//! ## Basics
 //!
-//! Whenever a DMA unit is active, the CPU does not operate at all. Not even
-//! hardware interrupts will occur while a DMA is running. The interrupt will
-//! instead happen after the DMA transfer is done. When it's critical that an
-//! interrupt be handled exactly on time (such as when using serial interrupts)
-//! then you should avoid any large DMA transfers.
+//! The GBA has 4 DMA units, numbered 0 through 3. They all work in a similar
+//! way, but they each have slightly different limitations and intended use.
 //!
-//! In any situation when more than one DMA unit would be active at the same
-//! time, the lower-numbered DMA unit runs first.
+//! When any DMA is active, the CPU itself is paused. It won't execute code, and
+//! it won't even handle interrupts. Once the DMA is completed normal CPU
+//! operations will continue, and only then will any pending interrupts be
+//! handled. If you need all interrupts to be handled as quickly as possible
+//! (such as serial port interrupts when it's active) then you should not use
+//! DMA during that time.
 //!
-//! Each DMA unit is controlled by 4 different MMIO addresses, as follows
-//! (replace `x` with the DMA unit's number):
-//! * `DMAx_SRC` and `DMAx_DEST`: source and destination address. DMA 0 can only
-//!   use internal memory, DMA 1 and 2 can read from the gamepak but not write
-//!   to it, and DMA 3 can even write to the gamepak (when the gamepak itself
-//!   supports that). In all cases, SRAM cannot be accessed. The addresses of a
-//!   transfer should always be aliged to the element size.
-//! * `DMAx_COUNT`: Number of elements to transfer. The number of elements is
-//!   either a 14-bit (DMA 0/1/2) or 16-bit (DMA3) number. If the count is set
-//!   to 0 then the transfer will instead copy one more than the normal maximum
-//!   of that number's range (DMA 0/1/2: 16_384, DMA 3: 65_536).
-//! * `DMAx_CONTROL`: Configuration bits for the transfer, see [`DmaControl`].
+//! Similarly, if more than one DMA is set to be active at the same time, the
+//! lower numbered DMA unit "wins" and will perform its operation first, then
+//! the higher number DMA will run.
+//!
+//! The DMA units can transfer data using various configurations. The most
+//! common uses of DMA are:
+//!
+//! 1) Copying large quantities of data, either from ROM into RAM or between two
+//!    different regions of RAM. The DMA units are faster at copying data than
+//!    even the most efficient CPU-based copy loops.
+//! 2) Copying data at special moments. The DMA units can be set to run at
+//!    either horizontal or vertical blank time, or when the sound FIFO buffer
+//!    runs out.
+//!
+//! ## Unit Differences
+//!
+//! * DMA 0 can only transfer between memory on the GBA itself, it cannot access
+//!   ROM or SRAM. It's usually used for smaller, very high priority transfers.
+//! * DMA 1 and 2 can transfer from ROM memory. These units are intended to be
+//!   used with the FIFO sound buffers, so that playback of a sound can happen
+//!   smoothly regardless of the current position of the CPU within the program.
+//! * DMA 3 can transfer from ROM, and also into ROM if the game cart supports
+//!   that. This DMA unit is the one usually used for loading graphical data
+//!   from ROM into VRAM.
 //!
 //! ## Safety
 //!
-//! The DMA units are the least safe part of the GBA and should be used with
-//! caution.
-//!
-//! Because Rust doesn't have a fully precise memory model, and because LLVM is
-//! a little fuzzy about the limits of what a volatile address access can do,
-//! you are advised to **not** use DMA to alter any memory that is part of
-//! Rust's compilation (stack variables, static variables, etc).
-//!
-//! You are advised to only use the DMA units to transfer data into VRAM,
-//! PALRAM, OAM, and MMIO controls (eg: the FIFO sound buffers).
-//!
-//! In the future the situation may improve.
+//! Using the DMA units is equivalent to playing around with raw pointers. It
+//! must be handled very carefully, or memory corruption can occur.
 
-use crate::macros::{pub_const_fn_new_zeroed, u16_bool_field, u16_enum_field};
+use core::ffi::c_void;
 
-/// Sets the change in destination address after each transfer.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[repr(u16)]
-pub enum DestAddrControl {
-  /// Increases the address by one element (`addr = addr.add(1)`)
-  #[default]
-  Increment = 0 << 5,
-  /// Decreases the address by one element (`addr = addr.sub(1)`)
-  Decrement = 1 << 5,
-  /// The address does not change.
-  Fixed = 2 << 5,
-  /// The address increases by one element per transfer, and also returns to
-  /// its initial value when the DMA unit restarts.
-  IncReload = 3 << 5,
-}
+use bitfrob::{u16_with_bit, u16_with_region};
+use video::Tile4;
+use voladdress::{Safe, Unsafe, VolRegion};
 
-/// Sets the change in source address after each transfer.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[repr(u16)]
-pub enum SrcAddrControl {
-  /// Increases the address by one element (`addr = addr.add(1)`)
-  #[default]
-  Increment = 0 << 7,
-  /// Decreases the address by one element (`addr = addr.sub(1)`)
-  Decrement = 1 << 7,
-  /// The address does not change.
-  Fixed = 2 << 7,
-}
+use super::*;
 
-/// When the DMA unit should start doing work.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[repr(u16)]
-pub enum DmaStartTime {
-  /// The DMA unit should start immediately.
-  ///
-  /// When this is used, there is actually a 2 CPU cycle delay before the
-  /// transfer begins.
-  #[default]
-  Immediate = 0 << 12,
-  /// Transfer when vertical blank starts.
-  VBlank = 1 << 12,
-  /// Transfer when horizontal blank starts.
-  HBlank = 2 << 12,
-  /// Transfer at a special time according to which DMA unit you use this with:
-  /// * 0: The `Special` start time is illegal to use with DMA0.
-  /// * 1 or 2: When the associated sound FIFO buffer is empty
-  /// * 3: Video capture.
-  Special = 3 << 12,
-}
-
-/// DMA control configuration.
-///
-/// * `dest_addr_control`: How the destination address changes per element
-///   transferred.
-/// * `src_addr_control`: How the source address changes per element
-///   transferred.
-/// * `repeat`: If the DMA should automatically trigger again at the next start
-///   time (vblank, hblank, or special). Caution: if you use `repeat` in
-///   combination with the `Immediate` start time then the DMA will run over and
-///   over and lock up the system.
-/// * `transfer_32bit`: When set the DMA will transfer in 32-bit elements.
-///   Otherwise, it will transfer in 16-bit elements. In general, you should
-///   always transfer using 32-bit units when possible.
-/// * `start_time`: When the DMA unit should begin a transfer.
-/// * `irq_after`: If the end of the DMA transfer should send a hardware
-///   interrupt.
-/// * `enabled`: If the DMA unit is active.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
+/// Controls the activity of a DMA unit.
+#[derive(Debug, Clone, Copy, Default)]
 #[repr(transparent)]
 pub struct DmaControl(u16);
 impl DmaControl {
-  pub_const_fn_new_zeroed!();
-  u16_enum_field!(
-    5 - 6: DestAddrControl,
-    dest_addr_control,
-    with_dest_addr_control
-  );
-  u16_enum_field!(
-    7 - 8: SrcAddrControl,
-    src_addr_control,
-    with_src_addr_control
-  );
-  u16_bool_field!(9, repeat, with_repeat);
-  u16_bool_field!(10, transfer_32bit, with_transfer_32bit);
-  u16_enum_field!(12 - 13: DmaStartTime, start_time, with_start_time);
-  u16_bool_field!(14, irq_after, with_irq_after);
-  u16_bool_field!(15, enabled, with_enabled);
-
-  /// Unwrap this value into its raw `u16` form.
+  /// Makes a new, empty value.
   #[inline]
-  #[must_use]
-  pub const fn to_u16(self) -> u16 {
+  pub const fn new() -> Self {
+    Self(0)
+  }
+  /// Unwrap the raw bits.
+  #[inline]
+  pub const fn into_u16(self) -> u16 {
     self.0
+  }
+  /// Sets the DMA destination address control, see [`DmaDestAddr`]
+  #[inline]
+  pub const fn with_dest_addr(self, dest: DmaDestAddr) -> Self {
+    Self(u16_with_region(5, 6, self.0, dest as u16))
+  }
+  /// Sets the DMA source address control, see [`DmaSrcAddr`].
+  ///
+  /// When transferring from ROM, this setting is **ignored** and the DMA unit
+  /// will just act as if `Increment` is set.
+  #[inline]
+  pub const fn with_src_addr(self, src: DmaSrcAddr) -> Self {
+    Self(u16_with_region(7, 8, self.0, src as u16))
+  }
+  /// If the DMA unit should repeat again at the next start timing.
+  #[inline]
+  pub const fn with_repeat(self, repeat: bool) -> Self {
+    Self(u16_with_bit(9, self.0, repeat))
+  }
+  /// If the DMA unit should transfer `u32` data (otherwise it's `u16`)
+  #[inline]
+  pub const fn with_u32_transfer(self, u32: bool) -> Self {
+    Self(u16_with_bit(10, self.0, u32))
+  }
+  /// Sets the start timing of the DMA activity, see [`DmaStart`]
+  #[inline]
+  pub const fn with_start_time(self, start: DmaStart) -> Self {
+    Self(u16_with_region(12, 13, self.0, start as u16))
+  }
+  /// If this DMA unit should send an IRQ after it completes the transfer.
+  #[inline]
+  pub const fn with_irq(self, irq: bool) -> Self {
+    Self(u16_with_bit(14, self.0, irq))
+  }
+  /// If the DMA unit should be enabled.
+  ///
+  /// When a configuration with an "enabled" flag set is written to the DMA's
+  /// control, the DMA still won't *actually* start until the appropriate start
+  /// time.
+  #[inline]
+  pub const fn with_enabled(self, enabled: bool) -> Self {
+    Self(u16_with_bit(15, self.0, enabled))
   }
 }
 
-/// Uses `stm` to set all parts of a DMA as a single instruction.
+/// DMA Destination address settings.
+#[derive(Debug, Clone, Copy, Default)]
+#[repr(u16)]
+pub enum DmaDestAddr {
+  /// After each transfer, the destination moves 1 element forward.
+  #[default]
+  Increment = 0 << 5,
+  /// After each transfer, the destination moves 1 element backward.
+  Decrement = 1 << 5,
+  /// After each transfer, the destination does not change.
+  Fixed = 2 << 5,
+  /// After each transfer, the destination moves 1 element forward.
+  ///
+  /// **Also**, when beginning a repeated DMA cycle, the destination address
+  /// reloads to the initial value that was set by the user.
+  IncReload = 3 << 5,
+}
+/// DMA Source address settings.
 ///
-/// * `dma_id` is 0, 1, 2, or 3 (this is debug asserted).
-/// * `src` address for the transfer
-/// * `dest` address for the transfer
-/// * `count_ctrl` is the count in the low half and control in the upper half
-#[inline]
-#[allow(dead_code)]
-// we may make this pub in the future, until then this is basically a note
-unsafe fn stm_dma(
-  dma_id: usize, src: *const u8, dest: *mut u8, count_ctrl: u32,
-) {
-  debug_assert!(dma_id < 4);
-  let dma_addr = 0x0400_00B0 + dma_id * 0xC;
-  core::arch::asm!(
-    "stm r0, {{r1, r2, r3}}",
-    in("r0") dma_addr,
-    in("r1") src,
-    in("r2") dest,
-    in("r3") count_ctrl,
-    options(nostack, preserves_flags)
+/// When transferring from ROM, this setting is **ignored** and the DMA unit
+/// will just act as if `Increment` is set.
+#[derive(Debug, Clone, Copy, Default)]
+#[repr(u16)]
+pub enum DmaSrcAddr {
+  /// After each transfer, the source address moves 1 element forward.
+  #[default]
+  Increment = 0 << 7,
+  /// After each transfer, the source address moves 1 element backward.
+  Decrement = 1 << 7,
+  /// After each transfer, the destination does not change.
+  Fixed = 2 << 7,
+}
+/// When the DMA unit should begin transferring data.
+#[derive(Debug, Clone, Copy, Default)]
+#[repr(u16)]
+pub enum DmaStart {
+  /// Makes the DMA unit run "right away".
+  ///
+  /// There's actually a 2 CPU cycle lag between enabling a DMA with
+  /// `Immediate` timing and it actually activating.
+  #[default]
+  Immediate = 0 << 12,
+  /// The DMA unit will start at Vertical Blank.
+  ///
+  /// The DMA will end up running *before* the IRQ handler.
+  VBlank = 1 << 12,
+  /// The DMA unit will start at Horizontal Blank.
+  ///
+  /// The DMA will end up running *before* the IRQ handler.
+  HBlank = 2 << 12,
+  /// The DMA will run with a special timing depending on what DMA unit it is.
+  ///
+  /// * This cannot be used with DMA 0.
+  /// * For DMA 1 and 2 it runs when the FIFO buffer runs out.
+  /// * For DMA 3 this is how you do Video Capture (which isn't currently
+  ///   supported by this crate).
+  Special = 3 << 12,
+}
+
+/// Copies `u32` data using DMA 3.
+///
+/// Works like the
+/// [`copy_nonoverlapping`][core::intrinsics::copy_nonoverlapping] function, but
+/// it's performed using DMA 3.
+///
+/// ## Safety
+/// * The number of `u32` values to copy must be `<= 0x1_0000` (65,536). This is
+///   trivially true under all normal conditions, since this is the size of
+///   EWRAM, which is the largest non-ROM memory region.
+/// * `src` must be aligned and readable for `count` elements.
+/// * `dest` must be aligned and writable for `count` elements.
+/// * The two regions must not overlap.
+/// * `count` must not be 0.
+#[inline(never)]
+pub unsafe fn dma3_copy_u32(src: *const u32, dest: *mut u32, count: usize) {
+  on_gba_or_unimplemented!(
+    const CONTROL: DmaControl =
+      DmaControl::new().with_u32_transfer(true).with_enabled(true);
+    debug_assert!(count <= u16::MAX as usize);
+    unsafe {
+      DMA3_SOURCE.write(src.cast());
+      DMA3_DESTINATION.write(dest.cast());
+      DMA3_TRANSFER_COUNT.write(count as u16);
+      DMA3_CONTROL.write(CONTROL);
+      // Assumption: because this function is `inline(never)`, the time to
+      // return to the caller is enough to ensure that the DMA controls aren't
+      // used before the DMA's 2 cycle "immediate activation" delay is over.
+    }
   );
 }
+
+/// Copies [`Tile4`] data using DMA3.
+///
+/// ## Panics
+/// * The `src` and `dest` must have the same length.
+#[inline]
+pub fn dma3_copy_tile4(src: &[Tile4], dest: VolRegion<Tile4, Safe, Safe>) {
+  assert_eq!(src.len(), dest.len());
+  if src.len() == 0 {
+    return;
+  }
+  // Safety: There's no writable region of memory that has more tiles that the
+  // maximum transfer size of DMA3, so the length will never exceed our limit.
+  // The requirements for the source to be readable and the destination to be
+  // writable are satisfied by the data types of the input values.
+  unsafe {
+    dma3_copy_u32(src.as_ptr().cast(), dest.as_mut_ptr().cast(), src.len() * 8)
+  };
+}
+
+/// Source address for DMA3.
+///
+/// The correct pointer type depends on the transfer mode used.
+pub const DMA0_SOURCE: VolAddress<*const c_void, (), Unsafe> =
+  unsafe { VolAddress::new(0x0400_00B0) };
+
+/// Destination address for DMA3.
+///
+/// The correct pointer type depends on the transfer mode used.
+pub const DMA0_DESTINATION: VolAddress<*mut c_void, (), Unsafe> =
+  unsafe { VolAddress::new(0x0400_00B4) };
+
+/// The number of transfers desired.
+///
+/// A value of 0 indicates the maximum number of transfers: `0x4000`
+pub const DMA0_TRANSFER_COUNT: VolAddress<u16, (), Unsafe> =
+  unsafe { VolAddress::new(0x0400_00B8) };
+
+/// DMA3 Control Bits.
+pub const DMA0_CONTROL: VolAddress<DmaControl, SOGBA, Unsafe> =
+  unsafe { VolAddress::new(0x0400_00BA) };
+
+/// Source address for DMA3.
+///
+/// The correct pointer type depends on the transfer mode used.
+pub const DMA1_SOURCE: VolAddress<*const c_void, (), Unsafe> =
+  unsafe { VolAddress::new(0x0400_00BC) };
+
+/// Destination address for DMA3.
+///
+/// The correct pointer type depends on the transfer mode used.
+pub const DMA1_DESTINATION: VolAddress<*mut c_void, (), Unsafe> =
+  unsafe { VolAddress::new(0x0400_00C0) };
+
+/// The number of transfers desired.
+///
+/// A value of 0 indicates the maximum number of transfers: `0x4000`
+pub const DMA1_TRANSFER_COUNT: VolAddress<u16, (), Unsafe> =
+  unsafe { VolAddress::new(0x0400_00C4) };
+
+/// DMA3 Control Bits.
+pub const DMA1_CONTROL: VolAddress<DmaControl, SOGBA, Unsafe> =
+  unsafe { VolAddress::new(0x0400_00C6) };
+
+/// Source address for DMA3.
+///
+/// The correct pointer type depends on the transfer mode used.
+pub const DMA2_SOURCE: VolAddress<*const c_void, (), Unsafe> =
+  unsafe { VolAddress::new(0x0400_00C8) };
+
+/// Destination address for DMA3.
+///
+/// The correct pointer type depends on the transfer mode used.
+pub const DMA2_DESTINATION: VolAddress<*mut c_void, (), Unsafe> =
+  unsafe { VolAddress::new(0x0400_00CC) };
+
+/// The number of transfers desired.
+///
+/// A value of 0 indicates the maximum number of transfers: `0x4000`
+pub const DMA2_TRANSFER_COUNT: VolAddress<u16, (), Unsafe> =
+  unsafe { VolAddress::new(0x0400_00D0) };
+
+/// DMA3 Control Bits.
+pub const DMA2_CONTROL: VolAddress<DmaControl, SOGBA, Unsafe> =
+  unsafe { VolAddress::new(0x0400_00D2) };
+
+/// Source address for DMA3.
+///
+/// The correct pointer type depends on the transfer mode used.
+pub const DMA3_SOURCE: VolAddress<*const c_void, (), Unsafe> =
+  unsafe { VolAddress::new(0x0400_00D4) };
+
+/// Destination address for DMA3.
+///
+/// The correct pointer type depends on the transfer mode used.
+pub const DMA3_DESTINATION: VolAddress<*mut c_void, (), Unsafe> =
+  unsafe { VolAddress::new(0x0400_00D8) };
+
+/// The number of transfers desired.
+///
+/// A value of 0 indicates the maximum number of transfers: `0x1_0000`
+pub const DMA3_TRANSFER_COUNT: VolAddress<u16, (), Unsafe> =
+  unsafe { VolAddress::new(0x0400_00DC) };
+
+/// DMA3 Control Bits.
+pub const DMA3_CONTROL: VolAddress<DmaControl, SOGBA, Unsafe> =
+  unsafe { VolAddress::new(0x0400_00DE) };

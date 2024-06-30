@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.12
+* A totally new version!
+
+## 0.11 and older
+
 * **0.11.6:**
   * `on_gba` feature (default: enabled) that signals if the crate is running on a GBA.
     Limited portions of the crate *can* be used even when not on the GBA (such as in a build script).
