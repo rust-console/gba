@@ -143,15 +143,8 @@ impl<const N: usize> Align4<[u8; N]> {
   /// * If the number of bytes isn't a multiple of 4
   #[inline]
   #[must_use]
-  pub fn as_u32_slice(&self) -> &[u32] {
-    assert!(self.0.len() % 4 == 0);
-    // Safety: our struct is aligned to 4, so the pointer will already be
-    // aligned, we only need to check the length
-    unsafe {
-      let data: *const u8 = self.0.as_ptr();
-      let len: usize = self.0.len();
-      core::slice::from_raw_parts(data.cast::<u32>(), len / 4)
-    }
+  pub const fn as_u32_slice(&self) -> &[u32] {
+    self.as_slice()
   }
 
   /// Views these bytes as a slice of `u16`
@@ -159,15 +152,26 @@ impl<const N: usize> Align4<[u8; N]> {
   /// * If the number of bytes isn't a multiple of 2
   #[inline]
   #[must_use]
-  pub fn as_u16_slice(&self) -> &[u16] {
-    assert!(self.0.len() % 2 == 0);
-    // Safety: our struct is aligned to 4, so the pointer will already be
-    // aligned, we only need to check the length
-    unsafe {
-      let data: *const u8 = self.0.as_ptr();
-      let len: usize = self.0.len();
-      core::slice::from_raw_parts(data.cast::<u16>(), len / 2)
+  pub const fn as_u16_slice(&self) -> &[u16] {
+    self.as_slice()
+  }
+
+  /// Views these bytes as a slice of `T`
+  /// ## Panics
+  /// * If the number of bytes isn't a multiple of T
+  /// * If the alignment of T isn't 4, 2, or 1
+  #[inline]
+  #[must_use]
+  pub const fn as_slice<T: Sized>(&self) -> &[T] {
+    const {
+      assert!(N % size_of::<T>() == 0);
+      assert!(
+        align_of::<T>() == 4 || align_of::<T>() == 2 || align_of::<T>() == 1
+      );
     }
+    let data: *const u8 = self.0.as_ptr();
+    let len = const { N / size_of::<T>() };
+    unsafe { core::slice::from_raw_parts(data.cast::<T>(), len) }
   }
 }
 
