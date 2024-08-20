@@ -1,11 +1,9 @@
 #![no_std]
-#![feature(asm_const)]
 #![feature(naked_functions)]
 #![warn(clippy::missing_inline_in_public_items)]
 #![allow(clippy::let_and_return)]
 #![allow(clippy::result_unit_err)]
 #![allow(unused_imports)]
-//#![warn(missing_docs)]
 
 //! A crate for GBA development.
 //!
