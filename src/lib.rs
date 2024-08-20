@@ -35,8 +35,11 @@
 //! build-std = ["core"]
 //!
 //! [target.thumbv4t-none-eabi]
-//! runner = "mgba-qt"
-//! rustflags = ["-Clink-arg=-Tlinker_scripts/mono_boot.ld"]
+//! runner = "mgba-qt" # sets the emulator to run bins/examples with
+//! rustflags = [
+//!   "-Clinker=arm-none-eabi-ld", # uses the ARM linker
+//!   "-Clink-arg=-Tlinker_scripts/mono_boot.ld", # sets the link script
+//! ]
 //! ```
 //!
 //! * **Make Your Executables:** At this point you can make a `bin` or an
