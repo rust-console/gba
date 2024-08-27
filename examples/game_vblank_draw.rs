@@ -1,7 +1,7 @@
 #![no_std]
 #![no_main]
 
-use gba::prelude::*;
+use gba::{prelude::*, RUST_IRQ_HANDLER};
 
 #[panic_handler]
 fn panic_handler(info: &core::panic::PanicInfo) -> ! {

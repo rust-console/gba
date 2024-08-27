@@ -6,7 +6,7 @@
 #![no_std]
 #![no_main]
 
-use gba::{mem_fns::__aeabi_memset, prelude::*};
+use gba::{prelude::*, RUST_IRQ_HANDLER};
 
 const SCREEN_WIDTH: u16 = 240;
 const SCREEN_HEIGHT: u16 = 160;
