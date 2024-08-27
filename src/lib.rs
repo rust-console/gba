@@ -87,10 +87,12 @@
 //! break any of these assumptions, if you do that some or all of the code
 //! provided by this crate may become unsound.
 
+use prelude::{GbaCell, IrqFn};
+
 mod macros;
 
 #[cfg(feature = "on_gba")]
-pub mod asm_runtime;
+mod asm_runtime;
 #[cfg(feature = "on_gba")]
 pub mod bios;
 pub mod builtin_art;
@@ -114,6 +116,10 @@ pub mod random;
 pub mod sound;
 pub mod timers;
 pub mod video;
+
+/// The function pointer that the assembly runtime calls when an interrupt
+/// occurs.
+pub static RUST_IRQ_HANDLER: GbaCell<Option<IrqFn>> = GbaCell::new(None);
 
 /// Wraps a value to be aligned to a minimum of 4.
 ///
