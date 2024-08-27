@@ -90,7 +90,7 @@ pub fn VBlankIntrWait() {
 #[inline]
 #[instruction_set(arm::t32)]
 pub fn ArcTan(theta: i16fx14) -> i16fx14 {
-  let mut i = theta.into_raw();
+  let mut i = theta.to_bits();
   unsafe {
     core::arch::asm! {
       "swi #0x09",
@@ -100,7 +100,7 @@ pub fn ArcTan(theta: i16fx14) -> i16fx14 {
       options(pure, nomem, preserves_flags),
     }
   };
-  i16fx14::from_raw(i)
+  i16fx14::from_bits(i)
 }
 
 /// `0x0A`: The "2-argument arctangent" ([atan2][wp-atan2]).
@@ -112,9 +112,9 @@ pub fn ArcTan(theta: i16fx14) -> i16fx14 {
 #[inline]
 #[instruction_set(arm::t32)]
 pub fn ArcTan2(x: i16fx14, y: i16fx14) -> u16 {
-  let x = x.into_raw();
-  let y = y.into_raw();
-  let output: u16;
+  let x: i16 = x.to_bits();
+  let y: i16 = y.to_bits();
+  let output: i16;
   unsafe {
     core::arch::asm! {
       "swi #0x0A",
@@ -124,7 +124,7 @@ pub fn ArcTan2(x: i16fx14, y: i16fx14) -> u16 {
       options(pure, nomem, preserves_flags),
     }
   };
-  output
+  output as u16
 }
 
 /// Used to provide info to a call of the [`BitUnPack`] function.

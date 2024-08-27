@@ -1,5 +1,16 @@
 # Changelog
 
+* **0.12.0**
+  * Adds an optional dependency on the [fixed](https://docs.rs/fixed) crate.
+  * The `i16fx8`, `i16fx14`, and `i32fx8` type aliases will alias either the `gba`
+    crate's internal fixed point type (feature off) or they will alias the
+    appropriate type from the `fixed` (feature on). The two type are bit
+    compatible, though the version in the `fixed` crate is more complete in the
+    methods provided.
+  * **Breaking:** The `gba` crate's internal fixed type had some conversion
+    methods renamed so that they would match the appropriate methods for the
+    same operation in the `fixed` crate.
+
 * **0.11.6:**
   * `on_gba` feature (default: enabled) that signals if the crate is running on a GBA.
     Limited portions of the crate *can* be used even when not on the GBA (such as in a build script).
