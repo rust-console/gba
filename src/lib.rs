@@ -1,5 +1,4 @@
 #![no_std]
-#![feature(naked_functions)]
 #![warn(clippy::missing_inline_in_public_items)]
 #![allow(clippy::let_and_return)]
 #![allow(clippy::result_unit_err)]
@@ -104,8 +103,8 @@ pub mod fixed;
 pub mod gba_cell;
 pub mod interrupts;
 pub mod keys;
-#[cfg(feature = "on_gba")]
-pub mod mem_fns;
+// #[cfg(feature = "on_gba")]
+// pub mod mem_fns;
 #[cfg(feature = "on_gba")]
 pub mod mgba;
 #[cfg(feature = "on_gba")]
