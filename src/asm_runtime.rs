@@ -24,12 +24,32 @@ const DMA3_OFFSET: usize = DMA3_SRC.as_usize() - 0x0400_0000;
 const IME_OFFSET: usize = IME.as_usize() - 0x0400_0000;
 const WAITCNT_OFFSET: usize = WAITCNT.as_usize() - 0x0400_0000;
 
+// Proc-macros can't see the target being built for, so we use this declarative
+// macro to determine if we're on a thumb target (and need to force our asm into
+// a32 mode) or if we're not on thumb (and our asm can pass through untouched).
+#[cfg(target_feature = "thumb-mode")]
+macro_rules! force_a32 {
+  ($($asm_line:expr),+ $(,)?) => {
+    bracer::t32_with_a32_scope! {
+      $( concat!($asm_line, "\n") ),+ ,
+    }
+  }
+}
+#[cfg(not(target_feature = "thumb-mode"))]
+macro_rules! force_a32 {
+  ($($asm_line:expr),+ $(,)?) => {
+    concat!(
+      $( concat!($asm_line, "\n") ),+ ,
+    )
+  }
+}
+
 core::arch::global_asm! {
   bracer::put_fn_in_section!(".text.gba_rom_header"),
   ".global __start",
   "__start:",
-  bracer::t32_with_a32_scope!{
 
+  force_a32!{
     // space for the header
     "b 1f",
     ".space 0xE0",
@@ -111,8 +131,7 @@ core::arch::global_asm! {
   // On Entry: r0 = 0x0400_0000 (mmio_base)
   "__runtime_irq_handler:",
 
-  bracer::t32_with_a32_scope!{
-
+  force_a32!{
     /* swap IME off, user can turn it back on if they want */
     "add r12, r0, #{ime_offset}",
     "mov r3, #0",
