@@ -6,7 +6,7 @@
 #![no_std]
 #![no_main]
 
-use gba::{prelude::*, RUST_IRQ_HANDLER};
+use gba::{mem::set_u32x80_unchecked, prelude::*, RUST_IRQ_HANDLER};
 
 const SCREEN_WIDTH: u16 = 240;
 const SCREEN_HEIGHT: u16 = 160;
@@ -141,8 +141,8 @@ fn main() -> ! {
 
 extern "C" fn draw_sprites(_bits: IrqBits) {
   unsafe {
-    let p = VIDEO3_VRAM.as_usize() as *mut u8;
-    __aeabi_memset(p, 240 * 160 * 2, 0)
+    let p = VIDEO3_VRAM.as_usize() as *mut u32;
+    set_u32x80_unchecked(p, 0_u32, 240_usize);
   }
 
   draw_rect(

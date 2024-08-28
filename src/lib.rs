@@ -105,8 +105,7 @@ pub mod fixed;
 pub mod gba_cell;
 pub mod interrupts;
 pub mod keys;
-// #[cfg(feature = "on_gba")]
-// pub mod mem_fns;
+pub mod mem;
 #[cfg(feature = "on_gba")]
 pub mod mgba;
 #[cfg(feature = "on_gba")]

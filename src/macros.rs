@@ -1,6 +1,18 @@
 #![allow(unused_macros)]
 #![allow(unused_imports)]
 
+macro_rules! on_gba_or_unimplemented {
+  ($($token_tree:tt)*) => {
+    #[cfg(feature="on_gba")]
+    {
+      $($token_tree)*
+    }
+    #[cfg(not(feature="on_gba"))]
+    unimplemented!()
+  }
+}
+pub(crate) use on_gba_or_unimplemented;
+
 macro_rules! pub_const_fn_new_zeroed {
   () => {
     #[inline]

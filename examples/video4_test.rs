@@ -1,7 +1,7 @@
 #![no_std]
 #![no_main]
 
-use gba::prelude::*;
+use gba::{mem::copy_u32x8_unchecked, prelude::*};
 
 #[panic_handler]
 fn panic_handler(info: &core::panic::PanicInfo) -> ! {
@@ -15,14 +15,8 @@ fn panic_handler(info: &core::panic::PanicInfo) -> ! {
 
 #[no_mangle]
 fn main() -> ! {
-  let a = TEXT_SCREENBLOCKS.get_frame(0).unwrap().as_usize();
-  unsafe {
-    __aeabi_memcpy(
-      a as _,
-      INDEXES.as_ptr().cast(),
-      core::mem::size_of_val(INDEXES) as _,
-    )
-  };
+  let a = TEXT_SCREENBLOCKS.get_frame(0).unwrap().as_usize() as *mut [u32; 8];
+  unsafe { copy_u32x8_unchecked(a, INDEXES.as_ptr().cast(), 64) };
   BG_PALETTE.iter().zip(PALETTE.iter()).for_each(|(va, i)| {
     va.write(Color(*i));
   });
