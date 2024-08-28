@@ -36,14 +36,16 @@ pub unsafe extern "C" fn copy_u8_unchecked(
 
 /// Copies `[u32; 8]` sized chunks, to `dest` from `src`
 ///
+/// This will, in general, be slightly faster than a generic `memcpy`, but
+/// slightly slower than using DMA.
+///
 /// Particularly, this helps with:
 /// * [`Tile4`][crate::video::Tile4] (one loop per tile).
 /// * [`Tile8`][crate::video::Tile8] (two loops per tile).
 /// * A palbank of [`Color`][crate::video::Color] values (one loop per palbank).
 /// * A text mode screenblock (64 loops per screenblock).
-///
-/// This will, in general, be slightly faster than a generic `memcpy`, but
-/// slightly slower than using DMA.
+/// * A Mode 3 bitmap (2400 loops).
+/// * A Mode 4 bitmap (1200 loops).
 ///
 /// ## Safety
 /// * As with all copying routines, the source must be readable for the size you
@@ -65,6 +67,10 @@ pub unsafe fn copy_u32x8_unchecked(
       "stmge {dest}!, {{r3,r4,r5,r7, r8,r9,r12,lr}}",
       "bgt   1b",
 
+      // Note(Lokathor): LLVM will always put `lr` on the stack as part of the
+      // push/pop for the function, even if we don't use `lr`, so we might as
+      // well use `lr`, because if we use a different register (such as `r10`)
+      // that would only add to the amount of push/pop LLVM does.
       count = inout(reg) count => _,
       dest = inout(reg) dest => _,
       src = inout(reg) src => _,
@@ -75,10 +81,6 @@ pub unsafe fn copy_u32x8_unchecked(
       out("r8") _,
       out("r9") _,
       out("r12") _,
-      // Note(Lokathor): LLVM will always put `lr` on the stack as part of the
-      // push/pop for the function, even if we don't use `lr`, so we might as
-      // well use `lr`, because if we use a different register (such as `r10`)
-      // that would only add to the amount of push/pop LLVM does.
       out("lr") _,
       options(nostack)
     )

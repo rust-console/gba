@@ -15,8 +15,8 @@ fn panic_handler(info: &core::panic::PanicInfo) -> ! {
 
 #[no_mangle]
 fn main() -> ! {
-  let a = TEXT_SCREENBLOCKS.get_frame(0).unwrap().as_usize() as *mut [u32; 8];
-  unsafe { copy_u32x8_unchecked(a, INDEXES.as_ptr().cast(), 64) };
+  let a = VIDEO4_VRAM.get_frame(0).unwrap().as_usize() as *mut [u32; 8];
+  unsafe { copy_u32x8_unchecked(a, INDEXES.as_ptr().cast(), 1200) };
   BG_PALETTE.iter().zip(PALETTE.iter()).for_each(|(va, i)| {
     va.write(Color(*i));
   });

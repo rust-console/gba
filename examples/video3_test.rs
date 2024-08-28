@@ -15,8 +15,8 @@ fn panic_handler(info: &core::panic::PanicInfo) -> ! {
 
 #[no_mangle]
 fn main() -> ! {
-  let a = TEXT_SCREENBLOCKS.get_frame(0).unwrap().as_usize();
-  unsafe { copy_u32x8_unchecked(a as _, PIXELS.as_ptr().cast(), 64) };
+  let a = TEXT_SCREENBLOCKS.get_frame(0).unwrap().as_usize() as *mut [u32; 8];
+  unsafe { copy_u32x8_unchecked(a, PIXELS.as_ptr().cast(), 2400_usize) };
   DISPCNT.write(
     DisplayControl::new().with_video_mode(VideoMode::_3).with_show_bg2(true),
   );
