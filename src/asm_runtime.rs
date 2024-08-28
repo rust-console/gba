@@ -105,7 +105,7 @@ core::arch::global_asm! {
     // Enable mGBA logging, which is harmless when not in mGBA
     "ldr r0, ={mgba_log_enable}",
     "ldr r1, ={mgba_logging_enable_request}",
-    "str r1, [r0]",
+    "strh r1, [r0]",
 
     // Call the `main` function (defined by the user's program)
     "ldr r0, =main",
