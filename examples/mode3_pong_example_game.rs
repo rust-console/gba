@@ -60,7 +60,7 @@ impl Ball {
       && self.y <= paddle1.y + PADDLE_HEIGHT
     {
       self.dx = -self.dx;
-      self.dy = -self.dy;
+      self.dy = self.dy;
     }
 
     if self.x + BALL_SIZE >= paddle2.x
@@ -69,7 +69,7 @@ impl Ball {
       && self.y <= paddle2.y + PADDLE_HEIGHT
     {
       self.dx = -self.dx;
-      self.dy = -self.dy;
+      self.dy = self.dy;
     }
 
     if self.x + BALL_SIZE <= 1 + BALL_SIZE {
