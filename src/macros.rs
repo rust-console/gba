@@ -8,7 +8,7 @@ macro_rules! on_gba_or_unimplemented {
       $($token_tree)*
     }
     #[cfg(not(feature="on_gba"))]
-    unimplemented!()
+    unimplemented!("Called code required to be on the GBA without `on_gba` enabled.")
   }
 }
 pub(crate) use on_gba_or_unimplemented;
