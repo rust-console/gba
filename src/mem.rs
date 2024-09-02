@@ -97,7 +97,7 @@ pub unsafe fn copy_u32x8_unchecked(
 #[cfg_attr(feature = "on_gba", instruction_set(arm::a32))]
 #[cfg_attr(feature = "on_gba", link_section = ".iwram.set_u32x80_unchecked")]
 pub unsafe extern "C" fn set_u32x80_unchecked(
-  dest: *mut u32, word: u32, count: usize,
+  dest: *mut [u32; 80], word: u32, count: usize,
 ) {
   on_gba_or_unimplemented!(unsafe {
     core::arch::asm!(
