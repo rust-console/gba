@@ -1,15 +1,41 @@
 # Changelog
 
-* **0.12.0**
-  * Adds an optional dependency on the [fixed](https://docs.rs/fixed) crate.
-  * The `i16fx8`, `i16fx14`, and `i32fx8` type aliases will alias either the `gba`
-    crate's internal fixed point type (feature off) or they will alias the
-    appropriate type from the `fixed` (feature on). The two type are bit
-    compatible, though the version in the `fixed` crate is more complete in the
-    methods provided.
-  * **Breaking:** The `gba` crate's internal fixed type had some conversion
-    methods renamed so that they would match the appropriate methods for the
-    same operation in the `fixed` crate.
+#### 0.13.0
+
+* **Breaking:** Removes all `#[naked]` functions from the crate (because this is
+  a Nightly feature with no clear timeline to stabilization).
+* The crate's assembly runtime, which is what is used before calling into
+  `main`, and what handles the interrupt calls from the BIOS, had been replaced
+  with `global_asm!`.
+* The AEABI memory copy and set functions have been removed. In their place
+  there are functions that are more custom tailored to the three primary actual
+  uses of the memory functions on the GBA: reading/writing SRAM, copying ROM
+  into VRAM, and clearing VRAM.
+* The AEABI division functions have been removed.
+* The `compiler-builtins` crate still provides the general memory operation and
+  division functions, so those tasks can still be performed when necessary.
+  However, if you're using memory ops or division ops so often that they're a
+  program bottleneck, usually you want to look carefully at your implementation
+  of those functions and try to design them to serve your own common case as
+  best as possible.
+* Safe abstractions have been added on top of the new memory functions so that
+  all the `example/` files can do their thing without using any `unsafe`. This
+  includes adding new types for `Video3Bitmap` and `Video4Indexmap`, so that
+  static image data can be included into your program in a well-checked way.
+
+#### 0.12.0
+
+* Adds an optional dependency on the [fixed](https://docs.rs/fixed) crate.
+* The `i16fx8`, `i16fx14`, and `i32fx8` type aliases will alias either the `gba`
+  crate's internal fixed point type (feature off) or they will alias the
+  appropriate type from the `fixed` (feature on). The two type are bit
+  compatible, though the version in the `fixed` crate is more complete in the
+  methods provided.
+* **Breaking:** The `gba` crate's internal fixed type had some conversion
+  methods renamed so that they would match the appropriate methods for the
+  same operation in the `fixed` crate.
+
+#### Older
 
 * **0.11.6:**
   * `on_gba` feature (default: enabled) that signals if the crate is running on a GBA.
