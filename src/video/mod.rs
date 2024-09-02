@@ -329,7 +329,7 @@ impl TextEntry {
 pub fn video3_clear_to(c: Color) {
   let u = u32::from(c.0) << 16 | u32::from(c.0);
   unsafe {
-    let p = VIDEO3_VRAM.as_usize() as *mut u32;
+    let p = VIDEO3_VRAM.as_usize() as *mut _;
     set_u32x80_unchecked(p, u, 240_usize);
   }
 }
