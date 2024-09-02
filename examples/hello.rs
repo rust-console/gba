@@ -2,7 +2,7 @@
 #![no_main]
 
 use core::fmt::Write;
-use gba::{prelude::*, RUST_IRQ_HANDLER};
+use gba::prelude::*;
 
 #[panic_handler]
 fn panic_handler(info: &core::panic::PanicInfo) -> ! {
