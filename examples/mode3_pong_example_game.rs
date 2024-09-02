@@ -6,7 +6,7 @@
 #![no_std]
 #![no_main]
 
-use gba::{mem::set_u32x80_unchecked, prelude::*};
+use gba::prelude::*;
 
 const SCREEN_WIDTH: u16 = 240;
 const SCREEN_HEIGHT: u16 = 160;

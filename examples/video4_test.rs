@@ -1,7 +1,7 @@
 #![no_std]
 #![no_main]
 
-use gba::{mem::copy_u32x8_unchecked, prelude::*};
+use gba::prelude::*;
 
 #[panic_handler]
 fn panic_handler(info: &core::panic::PanicInfo) -> ! {
