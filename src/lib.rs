@@ -1,8 +1,8 @@
 #![no_std]
-#![warn(clippy::missing_inline_in_public_items)]
+#![allow(unused_imports)]
 #![allow(clippy::let_and_return)]
 #![allow(clippy::result_unit_err)]
-#![allow(unused_imports)]
+#![warn(clippy::missing_inline_in_public_items)]
 
 //! A crate for GBA development.
 //!
