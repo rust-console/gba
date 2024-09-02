@@ -1,7 +1,7 @@
 #![no_std]
 #![no_main]
 
-use gba::{mem_fns::__aeabi_memcpy, prelude::*};
+use gba::{mem::copy_u32x8_unchecked, prelude::*};
 
 #[panic_handler]
 fn panic_handler(info: &core::panic::PanicInfo) -> ! {
@@ -15,14 +15,7 @@ fn panic_handler(info: &core::panic::PanicInfo) -> ! {
 
 #[no_mangle]
 fn main() -> ! {
-  let a = TEXT_SCREENBLOCKS.get_frame(0).unwrap().as_usize();
-  unsafe {
-    __aeabi_memcpy(
-      a as _,
-      INDEXES.as_ptr().cast(),
-      core::mem::size_of_val(INDEXES) as _,
-    )
-  };
+  video4_set_indexmap(&INDEXES, 0);
   BG_PALETTE.iter().zip(PALETTE.iter()).for_each(|(va, i)| {
     va.write(Color(*i));
   });
@@ -32,7 +25,9 @@ fn main() -> ! {
   loop {}
 }
 
-pub const INDEXES: &[u8] = &[
+pub const PALETTE: &[u16] = &[0x77DE, 0x2E06, 0x27BE, 0x61C5, 0x2518];
+
+pub static INDEXES: Video4Indexmap = Video4Indexmap([
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -1510,6 +1505,4 @@ pub const INDEXES: &[u8] = &[
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-];
-
-pub const PALETTE: &[u16] = &[0x77DE, 0x2E06, 0x27BE, 0x61C5, 0x2518];
+]);

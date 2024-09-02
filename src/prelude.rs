@@ -3,6 +3,7 @@
 #[cfg(feature = "on_gba")]
 pub use crate::{
   asm_runtime::*, bios::*, dma::*, gba_cell::*, mgba::*, mmio::*,
+  RUST_IRQ_HANDLER,
 };
 
 pub use crate::{
