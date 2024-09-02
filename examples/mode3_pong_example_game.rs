@@ -141,10 +141,7 @@ fn main() -> ! {
 
 #[link_section = ".iwram.draw_sprites"]
 extern "C" fn draw_sprites(_bits: IrqBits) {
-  unsafe {
-    let p = VIDEO3_VRAM.as_usize() as *mut u32;
-    set_u32x80_unchecked(p, 0_u32, 240_usize);
-  }
+  video3_clear_to(Color::BLACK);
 
   draw_rect(
     SPRITE_POSITIONS[0].read(),

@@ -97,11 +97,16 @@
 //! sort your object entries so that any lower priority objects are also the
 //! lower index objects.
 
-use crate::macros::{
-  pub_const_fn_new_zeroed, u16_bool_field, u16_enum_field, u16_int_field,
-};
+use bytemuck::{Pod, TransparentWrapper, Zeroable};
+
 #[allow(unused_imports)]
 use crate::prelude::*;
+use crate::{
+  macros::{
+    pub_const_fn_new_zeroed, u16_bool_field, u16_enum_field, u16_int_field,
+  },
+  mem::{copy_u32x8_unchecked, set_u32x80_unchecked},
+};
 
 pub mod obj;
 
@@ -133,6 +138,10 @@ impl Color {
     Self(r & 0b11111 | (g & 0b11111) << 5 | (b & 0b11111) << 10)
   }
 }
+
+unsafe impl Zeroable for Color {}
+unsafe impl Pod for Color {}
+unsafe impl TransparentWrapper<u16> for Color {}
 
 /// The video mode controls how each background layer will operate.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -314,4 +323,52 @@ impl TextEntry {
   pub const fn from_tile(id: u16) -> Self {
     Self(id & 0b11_1111_1111)
   }
+}
+
+#[inline]
+pub fn video3_clear_to(c: Color) {
+  let u = u32::from(c.0) << 16 | u32::from(c.0);
+  unsafe {
+    let p = VIDEO3_VRAM.as_usize() as *mut u32;
+    set_u32x80_unchecked(p, u, 240_usize);
+  }
+}
+
+#[repr(C, align(4))]
+pub struct Video3Bitmap(pub [Color; 240 * 160]);
+impl Video3Bitmap {
+  /// Wraps an array of raw color bit data as a Video Mode 3 bitmap.
+  ///
+  /// This is intended for generating static values at compile time. You should
+  /// not attempt to call this function at runtime, because the argument to the
+  /// function is larger than the GBA's stack space.
+  #[inline]
+  #[must_use]
+  pub const fn new_from_u16(bits: [u16; 240 * 160]) -> Self {
+    Self(unsafe { core::mem::transmute(bits) })
+  }
+}
+
+#[inline]
+pub fn video3_set_bitmap(bitmap: &Video3Bitmap) {
+  let p = VIDEO3_VRAM.as_usize() as *mut _;
+  unsafe {
+    copy_u32x8_unchecked(p, bitmap as *const _ as *const _, 2400_usize)
+  };
+}
+
+#[repr(C, align(4))]
+pub struct Video4Indexmap(pub [u8; 240 * 160]);
+
+/// Sets the indexmap of the frame requested.
+///
+/// ## Panics
+/// Only frames 0 and 1 exist, if `frame` is 2 or more this will panic.
+#[inline]
+pub fn video4_set_indexmap(indexes: &Video4Indexmap, frame: usize) {
+  let p = VIDEO4_VRAM.get_frame(usize::from(frame)).unwrap().as_usize()
+    as *mut [u32; 8];
+  unsafe {
+    copy_u32x8_unchecked(p, indexes as *const _ as *const _, 1200_usize)
+  };
 }

@@ -1,7 +1,7 @@
 #![no_std]
 #![no_main]
 
-use gba::{mem::copy_u32x8_unchecked, prelude::*};
+use gba::prelude::*;
 
 #[panic_handler]
 fn panic_handler(info: &core::panic::PanicInfo) -> ! {
@@ -15,15 +15,14 @@ fn panic_handler(info: &core::panic::PanicInfo) -> ! {
 
 #[no_mangle]
 fn main() -> ! {
-  let a = TEXT_SCREENBLOCKS.get_frame(0).unwrap().as_usize() as *mut [u32; 8];
-  unsafe { copy_u32x8_unchecked(a, PIXELS.as_ptr().cast(), 2400_usize) };
+  video3_set_bitmap(&BITMAP);
   DISPCNT.write(
     DisplayControl::new().with_video_mode(VideoMode::_3).with_show_bg2(true),
   );
   loop {}
 }
 
-pub const PIXELS: &[u16] = &[
+pub static BITMAP: Video3Bitmap = Video3Bitmap::new_from_u16([
   0x77DE, 0x77DE, 0x77DE, 0x77DE, 0x77DE, 0x77DE, 0x77DE, 0x77DE, 0x77DE,
   0x77DE, 0x77DE, 0x77DE, 0x77DE, 0x77DE, 0x77DE, 0x77DE, 0x77DE, 0x77DE,
   0x77DE, 0x77DE, 0x77DE, 0x77DE, 0x77DE, 0x77DE, 0x77DE, 0x77DE, 0x77DE,
@@ -4291,4 +4290,4 @@ pub const PIXELS: &[u16] = &[
   0x77DE, 0x77DE, 0x77DE, 0x77DE, 0x77DE, 0x77DE, 0x77DE, 0x77DE, 0x77DE,
   0x77DE, 0x77DE, 0x77DE, 0x77DE, 0x77DE, 0x77DE, 0x77DE, 0x77DE, 0x77DE,
   0x77DE, 0x77DE, 0x77DE, 0x77DE, 0x77DE, 0x77DE,
-];
+]);
