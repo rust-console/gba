@@ -126,7 +126,7 @@ core::arch::global_asm! {
 
 // This handler DOES NOT allow nested interrupts at this time.
 core::arch::global_asm! {
-  bracer::put_fn_in_section!(".text.gba_rom_header"),
+  bracer::put_fn_in_section!(".iwram.__runtime_irq_handler"),
   ".global __runtime_irq_handler",
   // On Entry: r0 = 0x0400_0000 (mmio_base)
   // We're allowed to use the usual C ABI registers.
