@@ -1,5 +1,13 @@
 # Changelog
 
+#### 0.13.1
+
+* Adjusted the assembly runtime code to resolve a bug that occurred on real
+  hardware but not in emulation. The change was to use the System mode stack
+  instead of the IRQ mode stack when calling the user code's assembly handler.
+  Exactly why this previously caused a problem with actual hardware is unknown,
+  but it did, and now we've got a fix.
+
 #### 0.13.0
 
 * **Breaking:** Removes all `#[naked]` functions from the crate (because this is
