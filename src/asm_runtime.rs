@@ -149,11 +149,11 @@ core::arch::global_asm! {
     "ldr r12, [r12]",
     bracer::when!(("r12" != "#0")[1] {
       bracer::a32_read_spsr_to!("r3"),
-      "push {{r3, lr}}",
       bracer::a32_set_cpu_control!(System, irq_masked = true, fiq_masked = true),
+      "push {{r3, lr}}",
       bracer::a32_fake_blx!("r12"),
-      bracer::a32_set_cpu_control!(IRQ, irq_masked = true, fiq_masked = true),
       "pop {{r3, lr}}",
+      bracer::a32_set_cpu_control!(IRQ, irq_masked = true, fiq_masked = true),
       bracer::a32_write_spsr_from!("r3"),
     }),
 
