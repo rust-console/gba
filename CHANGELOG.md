@@ -1,5 +1,9 @@
 # Changelog
 
+#### 0.13.2
+
+* Fix type alias typo in the `gba::fixed` module when using the `fixed` feature.
+
 #### 0.13.1
 
 * Adjusted the assembly runtime code to resolve a bug that occurred on real
