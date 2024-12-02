@@ -50,7 +50,7 @@ pub type i16fx8 = ::fixed::FixedI32<::fixed::types::extra::U8>;
 ///   type from the `fixed` crate.
 #[allow(non_camel_case_types)]
 #[cfg(feature = "fixed")]
-pub type i16fx14 = ::fixed::FixedI32<::fixed::types::extra::U14>;
+pub type i16fx14 = ::fixed::FixedI16<::fixed::types::extra::U14>;
 
 /// `i32` with 8 bits of fixed-point fraction.
 ///
