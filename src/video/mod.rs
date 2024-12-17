@@ -326,6 +326,7 @@ impl TextEntry {
 }
 
 #[inline]
+#[cfg(feature = "on_gba")]
 pub fn video3_clear_to(c: Color) {
   let u = u32::from(c.0) << 16 | u32::from(c.0);
   unsafe {
@@ -350,6 +351,7 @@ impl Video3Bitmap {
 }
 
 #[inline]
+#[cfg(feature = "on_gba")]
 pub fn video3_set_bitmap(bitmap: &Video3Bitmap) {
   let p = VIDEO3_VRAM.as_usize() as *mut _;
   unsafe {
@@ -365,6 +367,7 @@ pub struct Video4Indexmap(pub [u8; 240 * 160]);
 /// ## Panics
 /// Only frames 0 and 1 exist, if `frame` is 2 or more this will panic.
 #[inline]
+#[cfg(feature = "on_gba")]
 pub fn video4_set_indexmap(indexes: &Video4Indexmap, frame: usize) {
   let p = VIDEO4_VRAM.get_frame(usize::from(frame)).unwrap().as_usize()
     as *mut [u32; 8];
