@@ -13,7 +13,7 @@ jobs:
           - { toolchain: nightly }
     steps:
       - uses: actions/checkout@v2
-      
+
       - name: Install Apt Dependencies
         run: sudo apt-get update && sudo apt-get install binutils-arm-none-eabi
 
@@ -32,3 +32,10 @@ jobs:
           toolchain: ${{ matrix.rust.toolchain }}
           command: build
           args: --examples
+
+      - name: Check compilation succeeds when not on the GBA (check to prevent complaints about missing things)
+        uses: actions-rs/cargo@v1
+        with:
+          toolchain: ${{ matrix.rust.toolchain }}
+          command: check
+          args: --no-default-features
