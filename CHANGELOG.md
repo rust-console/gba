@@ -1,5 +1,9 @@
 # Changelog
 
+#### 0.13.3
+
+* Added `TextEntry::to_u16`
+
 #### 0.13.2
 
 * Fix type alias typo in the `gba::fixed` module when using the `fixed` feature.
