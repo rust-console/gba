@@ -323,6 +323,13 @@ impl TextEntry {
   pub const fn from_tile(id: u16) -> Self {
     Self(id & 0b11_1111_1111)
   }
+
+  /// Unwrap this value into its raw `u16` form.
+  #[inline]
+  #[must_use]
+  pub const fn to_u16(self) -> u16 {
+    self.0
+  }
 }
 
 #[inline]
