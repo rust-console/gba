@@ -238,7 +238,7 @@ mod aeabi_mem_fns {
   pub unsafe extern "C" fn __aeabi_memcpy4(
     dest: *mut u32, src: *const u32, byte_count: usize,
   ) {
-    core::arch::asm! {
+    core::arch::naked_asm! {
       bracer::when!(("r2" >=u "#32") [2] {
         "push {{r4-r9}}",
         "1:",
@@ -275,7 +275,6 @@ mod aeabi_mem_fns {
       "ldrbmi r3, [r1], #1",
       "strbmi r3, [r0], #1",
       "bx     lr",
-      options(noreturn),
     }
   }
 
@@ -309,7 +308,7 @@ mod aeabi_mem_fns {
   pub unsafe extern "C" fn __aeabi_memcpy(
     dest: *mut u8, src: *const u8, byte_count: usize,
   ) {
-    core::arch::asm! {
+    core::arch::naked_asm! {
       "cmp    r2, #7", // if count <= (fix+word): just byte copy
       "ble    {__aeabi_memcpy1}",
 
@@ -341,7 +340,6 @@ mod aeabi_mem_fns {
       __aeabi_memcpy4 = sym __aeabi_memcpy4,
       __aeabi_memcpy2 = sym __aeabi_memcpy2,
       __aeabi_memcpy1 = sym __aeabi_memcpy1,
-      options(noreturn)
     }
   }
 
@@ -361,13 +359,12 @@ mod aeabi_mem_fns {
   ) -> *mut u8 {
     // I've seen a standard call to `__aeabi_memcpy` give weird codegen,
     // so we (currently) do the call manually.
-    core::arch::asm! {
+    core::arch::naked_asm! {
       "push {{r0, lr}}",
       "bl {__aeabi_memcpy}",
       "pop {{r0, lr}}",
       "bx lr",
       __aeabi_memcpy = sym __aeabi_memcpy,
-      options(noreturn)
     }
   }
 
@@ -427,7 +424,7 @@ mod aeabi_mem_fns {
   unsafe extern "C" fn reverse_copy_u32(
     dest: *mut u32, src: *const u32, byte_count: usize,
   ) {
-    core::arch::asm! {
+    core::arch::naked_asm! {
       bracer::when!(("r2" >=u "#32") [2] {
         "push {{r4-r9}}",
         "1:",
@@ -463,7 +460,6 @@ mod aeabi_mem_fns {
       "ldrbmi  r3, [r1, #-1]!",
       "strbmi  r3, [r0, #-1]!",
       "bx      lr",
-      options(noreturn),
     }
   }
 
@@ -508,7 +504,7 @@ mod aeabi_mem_fns {
   pub unsafe extern "C" fn __aeabi_memmove(
     dest: *mut u8, src: *const u8, byte_count: usize,
   ) {
-    core::arch::asm! {
+    core::arch::naked_asm! {
       // when d > s we need to copy back-to-front
       bracer::when!(("r0" >=u "r1") [1] {
         "add     r0, r0, r2",
@@ -542,7 +538,6 @@ mod aeabi_mem_fns {
       reverse_copy_u8 = sym reverse_copy_u8,
       reverse_copy_u16 = sym reverse_copy_u16,
       reverse_copy_u32 = sym reverse_copy_u32,
-      options(noreturn),
     }
   }
 
@@ -561,13 +556,12 @@ mod aeabi_mem_fns {
   pub unsafe extern "C" fn memmove(
     dest: *mut u8, src: *const u8, byte_count: usize,
   ) -> *mut u8 {
-    core::arch::asm! {
+    core::arch::naked_asm! {
       "push {{r0, lr}}",
       "bl {__aeabi_memmove}",
       "pop {{r0, lr}}",
       "bx lr",
       __aeabi_memmove = sym __aeabi_memmove,
-      options(noreturn)
     }
   }
 
@@ -612,7 +606,7 @@ mod aeabi_mem_fns {
   pub unsafe extern "C" fn __aeabi_memset(
     dest: *mut u8, byte_count: usize, byte: i32,
   ) {
-    core::arch::asm! {
+    core::arch::naked_asm! {
       bracer::when!(("r1" >=u "#8") [7] {
         // duplicate the byte across all of r2 and r3
         "and    r2, r2, #0xFF",
@@ -666,7 +660,6 @@ mod aeabi_mem_fns {
       "strbcs r2, [r0], #1",
       "bgt    9b",
       "bx     lr",
-      options(noreturn)
     }
   }
 
@@ -686,7 +679,7 @@ mod aeabi_mem_fns {
   pub unsafe extern "C" fn memset(
     dest: *mut u8, byte: i32, byte_count: usize,
   ) -> *mut u8 {
-    core::arch::asm! {
+    core::arch::naked_asm! {
       "push {{r0, lr}}",
       "mov r3, r2",
       "mov r2, r1",
@@ -695,7 +688,6 @@ mod aeabi_mem_fns {
       "pop {{r0, lr}}",
       "bx lr",
       __aeabi_memset = sym __aeabi_memset,
-      options(noreturn)
     }
   }
 
@@ -747,7 +739,7 @@ mod aeabi_mem_fns {
   #[instruction_set(arm::a32)]
   #[link_section = ".iwram.aeabi.uread4"]
   unsafe extern "C" fn __aeabi_uread4(address: *const c_void) -> u32 {
-    core::arch::asm!(
+    core::arch::naked_asm!(
       "ldrb r2, [r0]",
       "ldrb r3, [r0, #1]",
       "orr  r2, r2, r3, lsl #8",
@@ -757,7 +749,6 @@ mod aeabi_mem_fns {
       "orr  r2, r2, r3, lsl #24",
       "mov  r0, r2",
       "bx   lr",
-      options(noreturn),
     )
   }
 
@@ -771,7 +762,7 @@ mod aeabi_mem_fns {
   #[instruction_set(arm::a32)]
   #[link_section = ".iwram.aeabi.uwrite4"]
   unsafe extern "C" fn __aeabi_uwrite4(value: u32, address: *mut c_void) {
-    core::arch::asm!(
+    core::arch::naked_asm!(
       "strb r0, [r1]",
       "lsr  r2, r0, #8",
       "strb r2, [r1, #1]",
@@ -780,7 +771,6 @@ mod aeabi_mem_fns {
       "lsr  r2, r2, #8",
       "strb r2, [r1, #3]",
       "bx   lr",
-      options(noreturn),
     )
   }
 
@@ -794,7 +784,7 @@ mod aeabi_mem_fns {
   #[instruction_set(arm::a32)]
   #[link_section = ".iwram.aeabi.uread8"]
   unsafe extern "C" fn __aeabi_uread8(address: *const c_void) -> u64 {
-    core::arch::asm!(
+    core::arch::naked_asm!(
       "ldrb r1, [r0, #4]",
       "ldrb r2, [r0, #5]",
       "orr  r1, r1, r2, lsl #8",
@@ -804,7 +794,6 @@ mod aeabi_mem_fns {
       "orr  r1, r1, r2, lsl #24",
       "b    {__aeabi_uread4}",
       __aeabi_uread4 = sym __aeabi_uread4,
-      options(noreturn),
     )
   }
 
@@ -818,7 +807,7 @@ mod aeabi_mem_fns {
   #[instruction_set(arm::a32)]
   #[link_section = ".iwram.aeabi.uwrite8"]
   unsafe extern "C" fn __aeabi_uwrite8(value: u64, address: *mut c_void) {
-    core::arch::asm!(
+    core::arch::naked_asm!(
       "strb r0, [r2]",
       "lsr  r3, r0, #8",
       "strb r3, [r2, #1]",
@@ -834,7 +823,6 @@ mod aeabi_mem_fns {
       "lsr  r3, r3, #8",
       "strb r3, [r2, #7]",
       "bx   lr",
-      options(noreturn),
     )
   }
 }
