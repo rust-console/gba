@@ -1,4 +1,6 @@
 #![no_std]
+#![cfg_attr(feature = "aeabi_mem_fns", feature(naked_functions))]
+#![allow(unused_mut)]
 #![allow(unused_imports)]
 #![allow(clippy::let_and_return)]
 #![allow(clippy::result_unit_err)]
