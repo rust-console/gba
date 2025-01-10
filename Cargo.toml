@@ -11,6 +11,10 @@ default = ["track_caller", "on_gba"]
 track_caller = []
 on_gba = []
 fixed = ["dep:fixed"]
+# Provide the ARM AEABI memory functions, requires Nightly because they're
+# written as naked functions for efficiency. They're `no_mangle` and they're
+# placed in IWRAM.
+aeabi_mem_fns = []
 
 [dependencies]
 voladdress = "1.3.0"

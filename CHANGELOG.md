@@ -1,5 +1,13 @@
 # Changelog
 
+#### 0.14.0
+
+* **Break:** `copy_u32x8_unchecked` is an `extern "C"` fn now.
+* new cargo feature `aeabi_mem_fns` causes the appropriate functions to be
+  generated. They're still written as `#[naked]` functions, so they require
+  nightly. It turns out that rust has so many implicit memcpy calls that it did
+  make a performance difference.
+
 #### 0.13.3
 
 * Added `TextEntry::to_u16`
