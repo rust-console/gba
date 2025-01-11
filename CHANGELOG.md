@@ -1,5 +1,11 @@
 # Changelog
 
+#### 0.14.1
+
+* Fixed the `#[naked]` functions to use `naked_asm!` instead of `asm!`, which
+  means that they now work on newer Nightly compilers but not older Nightly
+  compilers.
+
 #### 0.14.0
 
 * **Break:** `copy_u32x8_unchecked` is an `extern "C"` fn now.
