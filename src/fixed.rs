@@ -353,6 +353,15 @@ macro_rules! impl_signed_fixed_ops {
       }
     }
     impl_trait_op_unit!($t, Neg, neg);
+
+    impl<const B: u32> core::fmt::Display for Fixed<$t, B> {
+      fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+        if self.to_bits() < 0 {
+          f.write_str("-")?;
+        }
+        fixed_fmt_abs::<B>(f, self.to_bits().abs() as u32)
+      }
+    }
   };
 }
 impl_signed_fixed_ops!(i8, u8);
@@ -397,8 +406,29 @@ macro_rules! impl_unsigned_fixed_ops {
         Self(self.0 & (<$t>::MAX << B))
       }
     }
+
+    impl<const B: u32> core::fmt::Display for Fixed<$t, B> {
+      fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+        fixed_fmt_abs::<B>(f, self.to_bits() as u32)
+      }
+    }
   };
 }
 impl_unsigned_fixed_ops!(u8);
 impl_unsigned_fixed_ops!(u16);
 impl_unsigned_fixed_ops!(u32);
+
+fn fixed_fmt_abs<const B: u32>(
+  f: &mut core::fmt::Formatter, abs: u32,
+) -> core::fmt::Result {
+  let width = f.width().unwrap_or(0);
+  let precision = f.precision().unwrap_or(const { ((B as usize) + 1) / 3 });
+  let fract = abs & ((1 << B) - 1);
+  let fract_dec = fract
+    .checked_mul(10u32.pow(precision as u32))
+    .map(|x| x >> B)
+    .unwrap_or_else(|| {
+      (fract as u64 * 10u64.pow(precision as u32) >> B) as u32
+    });
+  write!(f, "{:width$}.{:0precision$}", abs >> B, fract_dec)
+}
