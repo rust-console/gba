@@ -164,7 +164,7 @@ impl<const N: usize> Align4<[u8; N]> {
   #[must_use]
   pub const fn as_slice<T: Sized>(&self) -> &[T] {
     const {
-      assert!(N % size_of::<T>() == 0);
+      assert!(N % (size_of::<T>() + (size_of::<T>() % align_of::<T>())) == 0);
       assert!(
         align_of::<T>() == 4 || align_of::<T>() == 2 || align_of::<T>() == 1
       );
