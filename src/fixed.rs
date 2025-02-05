@@ -274,6 +274,14 @@ impl_common_fixed_ops!(u32);
 macro_rules! impl_signed_fixed_ops {
   ($t:ty, $unsigned:ty) => {
     impl<const B: u32> Fixed<$t, B> {
+      /// Absolute value.
+      #[inline]
+      #[must_use]
+      #[cfg_attr(feature = "track_caller", track_caller)]
+      pub const fn abs(self) -> Self {
+        Self(self.0.abs())
+      }
+
       /// Negate.
       #[inline]
       #[must_use]
