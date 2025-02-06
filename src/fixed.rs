@@ -424,11 +424,71 @@ fn fixed_fmt_abs<const B: u32>(
   let width = f.width().unwrap_or(0);
   let precision = f.precision().unwrap_or(const { ((B as usize) + 1) / 3 });
   let fract = abs & ((1 << B) - 1);
-  let fract_dec = fract
-    .checked_mul(10u32.pow(precision as u32))
-    .map(|x| x >> B)
-    .unwrap_or_else(|| {
-      (fract as u64 * 10u64.pow(precision as u32) >> B) as u32
-    });
+  let fract_dec = 10u32
+    .checked_pow(precision as u32)
+    .and_then(|digits| fract.checked_mul(digits))
+    .map(|x| (x >> B) as u64)
+    .unwrap_or_else(|| (fract as u64 * 10u64.pow(precision as u32) >> B));
   write!(f, "{:width$}.{:0precision$}", abs >> B, fract_dec)
+}
+
+#[cfg(test)]
+mod test {
+  use crate::fixed::{i16fx14, i32fx8};
+  use core::{fmt::Write, str};
+
+  struct WriteBuf<const N: usize>([u8; N], usize);
+  impl<'a, const N: usize> Default for WriteBuf<N> {
+    fn default() -> Self {
+      Self([0u8; N], 0)
+    }
+  }
+  impl<const N: usize> Write for WriteBuf<N> {
+    fn write_str(&mut self, s: &str) -> core::fmt::Result {
+      let src = s.as_bytes();
+      let len = (self.0.len() - self.1).min(src.len());
+      self.0[self.1..self.1 + len].copy_from_slice(&src[..len]);
+      self.1 += len;
+      if len < src.len() {
+        Err(core::fmt::Error)
+      } else {
+        Ok(())
+      }
+    }
+  }
+  impl<const N: usize> WriteBuf<N> {
+    fn take(&mut self) -> &str {
+      let len = self.1;
+      self.1 = 0;
+      str::from_utf8(&self.0[..len]).unwrap()
+    }
+  }
+
+  #[test_case]
+  fn decimal_display() {
+    let mut wbuf = WriteBuf::<16>::default();
+
+    let x = i32fx8::from_bits(0x12345678);
+
+    write!(&mut wbuf, "{x}").unwrap();
+    assert_eq!(wbuf.take(), "1193046.468");
+
+    write!(&mut wbuf, "{x:9.1}").unwrap();
+    assert_eq!(wbuf.take(), "  1193046.4");
+
+    write!(&mut wbuf, "{x:1.6}").unwrap();
+    assert_eq!(wbuf.take(), "1193046.468750");
+
+    let x = x.neg();
+    write!(&mut wbuf, "{x}").unwrap();
+    assert_eq!(wbuf.take(), "-1193046.468");
+
+    let x = i16fx14::from_bits(0x6544 as i16);
+    write!(&mut wbuf, "{x}").unwrap();
+    assert_eq!(wbuf.take(), "1.58227");
+
+    let x = x.neg();
+    write!(&mut wbuf, "{x:.10}").unwrap();
+    assert_eq!(wbuf.take(), "-1.5822753906");
+  }
 }
