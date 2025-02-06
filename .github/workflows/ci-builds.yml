@@ -39,3 +39,19 @@ jobs:
           toolchain: ${{ matrix.rust.toolchain }}
           command: check
           args: --no-default-features
+
+      - name: Install mgba-test-runner
+        uses: actions-rs/cargo@v1
+        with:
+          toolchain: ${{ matrix.rust.toolchain }}
+          command: install
+          # newer revisions don't build on aarch64, at least, because of a c_char mishap
+          args: --git https://github.com/agbrs/agb --rev a7f9fdf01118a7a77d4dcf72f2b74a1961458b36 mgba-test-runner
+
+      - name: Run unit tests
+        uses: actions-rs/cargo@v1
+        env:
+          CARGO_TARGET_THUMBV4T_NONE_EABI_RUNNER: mgba-test-runner
+        with:
+          toolchain: ${{ matrix.rust.toolchain }}
+          command: test
