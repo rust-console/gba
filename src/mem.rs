@@ -1,3 +1,5 @@
+#![cfg_attr(not(feature = "on_gba"), allow(unused_variables))]
+
 use crate::macros::on_gba_or_unimplemented;
 
 /// Copies `u8` at a time between exclusive regions.
