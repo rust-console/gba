@@ -299,8 +299,9 @@ mod test {
   use super::Align4;
 
   #[test_case]
-  fn align4_as_u16_slice() {
+  fn align4_as_u16_u32_slice() {
     let a = Align4([0u8, 1u8, 2u8, 3u8]);
     assert_eq!(a.as_u16_slice(), &[0x100_u16.to_le(), 0x302_u16.to_le()]);
+    assert_eq!(a.as_u32_slice(), &[0x3020100_u32.to_le()]);
   }
 }
