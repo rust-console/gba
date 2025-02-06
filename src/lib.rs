@@ -327,9 +327,15 @@ mod test {
     struct ThreeHalfWords(u16, u16, u16);
 
     assert_eq!(
-      Align4([0x11u8, 0x11u8, 0x22u8, 0x22u8, 0x33u8, 0x33u8])
-        .as_slice::<ThreeHalfWords>(),
-      &[ThreeHalfWords(0x1111, 0x2222, 0x3333)]
+      Align4([
+        0x11u8, 0x11u8, 0x22u8, 0x22u8, 0x33u8, 0x33u8, 0x44u8, 0x44u8, 0x55u8,
+        0x55u8, 0x66u8, 0x66u8
+      ])
+      .as_slice::<ThreeHalfWords>(),
+      &[
+        ThreeHalfWords(0x1111, 0x2222, 0x3333),
+        ThreeHalfWords(0x4444, 0x5555, 0x6666)
+      ]
     );
   }
 }
