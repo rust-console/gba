@@ -308,4 +308,28 @@ mod test {
     assert_eq!(a.as_u16_slice(), &[0x100_u16.to_le(), 0x302_u16.to_le()]);
     assert_eq!(a.as_u32_slice(), &[0x3020100_u32.to_le()]);
   }
+
+  #[test_case]
+  fn align4_as_generic() {
+    // with padding
+    #[repr(C, align(4))]
+    #[derive(PartialEq, Debug)]
+    struct FiveByte([u8; 5]);
+
+    assert_eq!(
+      Align4(*b"hello...world...").as_slice::<FiveByte>(),
+      &[FiveByte(*b"hello"), FiveByte(*b"world")]
+    );
+
+    // and without
+    #[repr(C, align(2))]
+    #[derive(PartialEq, Debug)]
+    struct ThreeHalfWords(u16, u16, u16);
+
+    assert_eq!(
+      Align4([0x11u8, 0x11u8, 0x22u8, 0x22u8, 0x33u8, 0x33u8])
+        .as_slice::<ThreeHalfWords>(),
+      &[ThreeHalfWords(0x1111, 0x2222, 0x3333)]
+    );
+  }
 }
