@@ -309,6 +309,7 @@ mod test {
     assert_eq!(a.as_u32_slice(), &[0x3020100_u32.to_le()]);
   }
 
+
   #[test_case]
   fn align4_as_generic() {
     // with padding
@@ -334,8 +335,9 @@ mod test {
       .as_slice::<ThreeHalfWords>(),
       &[
         ThreeHalfWords(0x1111, 0x2222, 0x3333),
-        ThreeHalfWords(0x4444, 0x5555, 0x6666)
+        ThreeHalfWords(0x4444 0x5555, 0x6666)
       ]
     );
   }
+
 }

@@ -186,7 +186,7 @@ def_mmio!(0x0400_0158 = JOYSTAT: VolAddress<u8, Safe, Safe>);
 
 def_mmio!(0x0400_0200 = IE: VolAddress<IrqBits, Safe, Safe>; "Interrupts Enabled: sets which interrupts will be accepted when a subsystem fires an interrupt");
 def_mmio!(0x0400_0202 = IF: VolAddress<IrqBits, Safe, Safe>; "Interrupts Flagged: reads which interrupts are pending, writing bit(s) will clear a pending interrupt.");
-def_mmio!(0x0400_0204 = WAITCNT: VolAddress<u16, Safe, Unsafe>; "Wait state control for interfacing with the ROM.\n\nThis can make reading the ROM give garbage when it's mis-configured!");
+def_mmio!(0x0400_0204 = WAITCNT: VolAddress<WaitstateControl, Safe, Unsafe>; "Wait state control for interfacing with the ROM.\n\nThis can make reading the ROM give garbage when it's mis-configured!");
 def_mmio!(0x0400_0208 = IME: VolAddress<bool, Safe, Safe>; "Interrupt Master Enable: Allows turning on/off all interrupts with a single access.");
 
 // mGBA Logging
