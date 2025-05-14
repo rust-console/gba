@@ -429,7 +429,12 @@ fn fixed_fmt_abs<const B: u32>(
     .unwrap_or_else(|| (fract as u64 * 10u64.pow(precision as u32) >> B));
   let mut ones = (abs >> B) as i32;
   if neg {
-    ones = ones.neg()
+    if ones != 0 {
+      ones = ones.neg()
+    } else {
+      let width = width.saturating_sub(2);
+      return write!(f, "{:width$}-0.{fract_dec:0precision$}", "");
+    }
   }
   write!(f, "{ones:width$}.{fract_dec:0precision$}")
 }
@@ -495,5 +500,9 @@ mod test {
 
     write!(&mut wbuf, "{x:9.1}").unwrap();
     assert_eq!(wbuf.take(), "     -1.5");
+
+    let x = x.add(i16fx14::wrapping_from(1));
+    write!(&mut wbuf, "{x:9.2}").unwrap();
+    assert_eq!(wbuf.take(), "    -0.58");
   }
 }
