@@ -356,10 +356,8 @@ macro_rules! impl_signed_fixed_ops {
 
     impl<const B: u32> core::fmt::Display for Fixed<$t, B> {
       fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
-        if self.to_bits() < 0 {
-          f.write_str("-")?;
-        }
-        fixed_fmt_abs::<B>(f, self.to_bits().abs() as u32)
+        let neg = self.to_bits() < 0;
+        fixed_fmt_abs::<B>(f, self.to_bits().abs() as u32, neg)
       }
     }
   };
@@ -409,7 +407,7 @@ macro_rules! impl_unsigned_fixed_ops {
 
     impl<const B: u32> core::fmt::Display for Fixed<$t, B> {
       fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
-        fixed_fmt_abs::<B>(f, self.to_bits() as u32)
+        fixed_fmt_abs::<B>(f, self.to_bits() as u32, false)
       }
     }
   };
@@ -419,17 +417,21 @@ impl_unsigned_fixed_ops!(u16);
 impl_unsigned_fixed_ops!(u32);
 
 fn fixed_fmt_abs<const B: u32>(
-  f: &mut core::fmt::Formatter, abs: u32,
+  f: &mut core::fmt::Formatter, abs: u32, neg: bool,
 ) -> core::fmt::Result {
-  let width = f.width().unwrap_or(0);
   let precision = f.precision().unwrap_or(const { ((B as usize) + 1) / 3 });
+  let width = f.width().unwrap_or(0).saturating_sub(precision + 1);
   let fract = abs & ((1 << B) - 1);
   let fract_dec = 10u32
     .checked_pow(precision as u32)
     .and_then(|digits| fract.checked_mul(digits))
     .map(|x| (x >> B) as u64)
     .unwrap_or_else(|| (fract as u64 * 10u64.pow(precision as u32) >> B));
-  write!(f, "{:width$}.{:0precision$}", abs >> B, fract_dec)
+  let mut ones = (abs >> B) as i32;
+  if neg {
+    ones = ones.neg()
+  }
+  write!(f, "{ones:width$}.{fract_dec:0precision$}")
 }
 
 #[cfg(test)]
@@ -473,7 +475,7 @@ mod test {
     write!(&mut wbuf, "{x}").unwrap();
     assert_eq!(wbuf.take(), "1193046.468");
 
-    write!(&mut wbuf, "{x:9.1}").unwrap();
+    write!(&mut wbuf, "{x:11.1}").unwrap();
     assert_eq!(wbuf.take(), "  1193046.4");
 
     write!(&mut wbuf, "{x:1.6}").unwrap();
@@ -490,5 +492,8 @@ mod test {
     let x = x.neg();
     write!(&mut wbuf, "{x:.10}").unwrap();
     assert_eq!(wbuf.take(), "-1.5822753906");
+
+    write!(&mut wbuf, "{x:9.1}").unwrap();
+    assert_eq!(wbuf.take(), "     -1.5");
   }
 }
