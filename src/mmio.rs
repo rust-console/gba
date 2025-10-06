@@ -264,7 +264,7 @@ def_mmio!(0x0700_0000 = OBJ_ATTR0: VolSeries<ObjAttr0, Safe, Safe, 128, {size_of
 def_mmio!(0x0700_0002 = OBJ_ATTR1: VolSeries<ObjAttr1, Safe, Safe, 128, {size_of::<[u16;4]>()}>; "Object attributes 1.");
 def_mmio!(0x0700_0004 = OBJ_ATTR2: VolSeries<ObjAttr2, Safe, Safe, 128, {size_of::<[u16;4]>()}>; "Object attributes 2.");
 
-def_mmio!(0x0700_0000 = OBJ_ATTR_ALL: VolSeries<ObjAttr, Safe, Safe, 128, {size_of::<[u16;4]>()}>; "Object attributes (all in one).");
+def_mmio!(0x0700_0000 = OBJ_ATTR_ALL: VolSeries<ObjAttr, Safe, (), 128, {size_of::<[u16;4]>()}>; "Object attributes (all in one), read-only.");
 
 def_mmio!(0x0700_0006 = AFFINE_PARAM_A: VolSeries<i16fx8, Safe, Safe, 32, {size_of::<[u16;16]>()}>; "Affine parameters A.");
 def_mmio!(0x0700_000E = AFFINE_PARAM_B: VolSeries<i16fx8, Safe, Safe, 32, {size_of::<[u16;16]>()}>; "Affine parameters B.");
