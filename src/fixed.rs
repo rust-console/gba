@@ -241,6 +241,24 @@ macro_rules! impl_common_fixed_ops {
         Self(self.0 >> rhs)
       }
     }
+
+    impl<const B: u32> core::fmt::Debug for Fixed<$t, B> {
+      fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+        let raw: $t = self.to_bits();
+        write!(
+          f,
+          concat!(
+            "Fixed::<",
+            stringify!($t),
+            ",{}>::from_bits({:#x}_u32 as ",
+            stringify!($t),
+            ")"
+          ),
+          B, raw
+        )
+      }
+    }
+
     impl_trait_op_unit!($t, Not, not);
     impl_trait_op_self_rhs!($t, Add, add);
     impl_trait_op_self_rhs!($t, Sub, sub);
@@ -335,18 +353,11 @@ macro_rules! impl_signed_fixed_ops {
       }
     }
     impl_trait_op_unit!($t, Neg, neg);
-    impl<const B: u32> core::fmt::Debug for Fixed<$t, B> {
-      #[inline]
+
+    impl<const B: u32> core::fmt::Display for Fixed<$t, B> {
       fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
-        let whole: $t = self.trunc().to_bits() >> B;
-        let fract: $t = self.fract().to_bits();
-        let divisor: $t = 1 << B;
-        if self.is_negative() {
-          let whole = whole.unsigned_abs();
-          write!(f, "-({whole}+{fract}/{divisor})")
-        } else {
-          write!(f, "{whole}+{fract}/{divisor}")
-        }
+        let neg = self.to_bits() < 0;
+        fixed_fmt_abs::<B>(f, self.to_bits().abs() as u32, neg)
       }
     }
   };
@@ -393,13 +404,10 @@ macro_rules! impl_unsigned_fixed_ops {
         Self(self.0 & (<$t>::MAX << B))
       }
     }
-    impl<const B: u32> core::fmt::Debug for Fixed<$t, B> {
-      #[inline]
+
+    impl<const B: u32> core::fmt::Display for Fixed<$t, B> {
       fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
-        let whole: $t = self.trunc().to_bits() >> B;
-        let fract: $t = self.fract().to_bits();
-        let divisor: $t = 1 << B;
-        write!(f, "{whole}+{fract}/{divisor}")
+        fixed_fmt_abs::<B>(f, self.to_bits() as u32, false)
       }
     }
   };
@@ -407,3 +415,94 @@ macro_rules! impl_unsigned_fixed_ops {
 impl_unsigned_fixed_ops!(u8);
 impl_unsigned_fixed_ops!(u16);
 impl_unsigned_fixed_ops!(u32);
+
+fn fixed_fmt_abs<const B: u32>(
+  f: &mut core::fmt::Formatter, abs: u32, neg: bool,
+) -> core::fmt::Result {
+  let precision = f.precision().unwrap_or(const { ((B as usize) + 1) / 3 });
+  let width = f.width().unwrap_or(0).saturating_sub(precision + 1);
+  let fract = abs & ((1 << B) - 1);
+  let fract_dec = 10u32
+    .checked_pow(precision as u32)
+    .and_then(|digits| fract.checked_mul(digits))
+    .map(|x| (x >> B) as u64)
+    .unwrap_or_else(|| (fract as u64 * 10u64.pow(precision as u32) >> B));
+  let mut ones = (abs >> B) as i32;
+  if neg {
+    if ones != 0 {
+      ones = ones.neg()
+    } else {
+      let width = width.saturating_sub(2);
+      return write!(f, "{:width$}-0.{fract_dec:0precision$}", "");
+    }
+  }
+  write!(f, "{ones:width$}.{fract_dec:0precision$}")
+}
+
+#[cfg(test)]
+mod test {
+  use crate::fixed::{i16fx14, i32fx8};
+  use core::{fmt::Write, str};
+
+  struct WriteBuf<const N: usize>([u8; N], usize);
+  impl<'a, const N: usize> Default for WriteBuf<N> {
+    fn default() -> Self {
+      Self([0u8; N], 0)
+    }
+  }
+  impl<const N: usize> Write for WriteBuf<N> {
+    fn write_str(&mut self, s: &str) -> core::fmt::Result {
+      let src = s.as_bytes();
+      let len = (self.0.len() - self.1).min(src.len());
+      self.0[self.1..self.1 + len].copy_from_slice(&src[..len]);
+      self.1 += len;
+      if len < src.len() {
+        Err(core::fmt::Error)
+      } else {
+        Ok(())
+      }
+    }
+  }
+  impl<const N: usize> WriteBuf<N> {
+    fn take(&mut self) -> &str {
+      let len = self.1;
+      self.1 = 0;
+      str::from_utf8(&self.0[..len]).unwrap()
+    }
+  }
+
+  #[test_case]
+  fn decimal_display() {
+    let mut wbuf = WriteBuf::<16>::default();
+
+    let x = i32fx8::from_bits(0x12345678);
+
+    write!(&mut wbuf, "{x}").unwrap();
+    assert_eq!(wbuf.take(), "1193046.468");
+
+    write!(&mut wbuf, "{x:11.1}").unwrap();
+    assert_eq!(wbuf.take(), "  1193046.4");
+
+    write!(&mut wbuf, "{x:1.6}").unwrap();
+    assert_eq!(wbuf.take(), "1193046.468750");
+
+    let x = x.neg();
+    write!(&mut wbuf, "{x}").unwrap();
+    assert_eq!(wbuf.take(), "-1193046.468");
+
+    let x = i16fx14::from_bits(0x6544 as i16);
+    write!(&mut wbuf, "{x}").unwrap();
+    assert_eq!(wbuf.take(), "1.58227");
+
+    let x = x.neg();
+    write!(&mut wbuf, "{x:.10}").unwrap();
+    assert_eq!(wbuf.take(), "-1.5822753906");
+
+    write!(&mut wbuf, "{x:9.1}").unwrap();
+    assert_eq!(wbuf.take(), "     -1.5");
+
+    let x = x.add(i16fx14::wrapping_from(1));
+    write!(&mut wbuf, "{x:9.2}").unwrap();
+    assert_eq!(wbuf.take(), "    -0.58");
+  }
+}
