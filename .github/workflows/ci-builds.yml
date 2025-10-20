@@ -55,3 +55,4 @@ jobs:
         with:
           toolchain: ${{ matrix.rust.toolchain }}
           command: test
+          args: --lib
