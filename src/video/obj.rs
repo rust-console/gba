@@ -19,10 +19,11 @@
 //! has one field for each 16-bit group of attributes: [ObjAttr0], [ObjAttr1],
 //! [ObjAttr2].
 //!
-//! When you've got an object's data configured how you want, use either the
-//! [`OBJ_ATTR_ALL`] control (to write all fields at once) or the [`OBJ_ATTR0`],
-//! [`OBJ_ATTR1`], and/or [`OBJ_ATTR2`] controls (to write just some of the
-//! fields).
+//! When you've got an object's data configured how you want, use the `write`
+//! function on the [ObjAttr] struct, the [ObjAttrWriteExt] extension trait for
+//! the [`OBJ_ATTR_ALL`] control (to write all fields at once), or the
+//! [`OBJ_ATTR0`], [`OBJ_ATTR1`], and/or [`OBJ_ATTR2`] controls (to write just
+//! some of the fields).
 //!
 //! **Note:** When the GBA first boots, the object layer will be off but the
 //! object entries in OAM will *not* be set to prevent individual objects from
@@ -30,8 +31,17 @@
 //! the [ObjDisplayStyle] of all [ObjAttr0] fields so that any objects you're
 //! not using don't appear on the screen. Otherwise, you'll end up with
 //! un-configured objects appearing in the upper left corner of the display.
+//!
+//! [`OBJ_ATTR_ALL`] is defined as read-only because writing to OAM requires
+//! halfword alignment, and at higher compiler optimization levels the compiler
+//! will generate a `memcpy` call which may do byte-wise writes. To avoid this,
+//! use the `write` function on the [ObjAttr] struct, the `write` function on
+//! the [ObjAttrWriteExt] trait implemented for the [`OBJ_ATTR_ALL`] control,
+//! or write to the individual [`OBJ_ATTR0`], [`OBJ_ATTR1`], and [`OBJ_ATTR2`]
+//! controls.
 
 use super::*;
+use voladdress::{Safe, VolAddress};
 
 /// How the object should be displayed.
 ///
@@ -156,5 +166,25 @@ impl ObjAttr {
   #[inline]
   pub fn set_palbank(&mut self, palbank: u16) {
     self.2 = self.2.with_palbank(palbank);
+  }
+  #[inline]
+  pub fn write(&self, addr: VolAddress<ObjAttr, Safe, ()>) {
+    unsafe {
+      let addr: *mut u16 = addr.as_usize() as *mut u16;
+      core::ptr::write_volatile(addr.add(0), self.0 .0);
+      core::ptr::write_volatile(addr.add(1), self.1 .0);
+      core::ptr::write_volatile(addr.add(2), self.2 .0);
+    }
+  }
+}
+
+pub trait ObjAttrWriteExt {
+  fn write(&self, attr: ObjAttr);
+}
+
+impl ObjAttrWriteExt for VolAddress<ObjAttr, Safe, ()> {
+  #[inline]
+  fn write(&self, attr: ObjAttr) {
+    attr.write(*self);
   }
 }
