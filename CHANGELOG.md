@@ -1,5 +1,11 @@
 # Changelog
 
+#### 0.15.0
+
+* **Breaking:** adjusted how `OBJ_ATTR_ALL` works, the previous
+  way caused LLVM to emit illegal writes because it used (effectively)
+  an access of `[u16; 3]`, which isn't a natural machine access size. 
+
 #### 0.14.1
 
 * Fixed the `#[naked]` functions to use `naked_asm!` instead of `asm!`, which
