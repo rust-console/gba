@@ -2,9 +2,11 @@
 
 #[cfg(feature = "on_gba")]
 pub use crate::{
-  asm_runtime::*, bios::*, dma::*, gba_cell::*, mgba::*, mmio::*,
-  RUST_IRQ_HANDLER,
+  bios::*, dma::*, gba_cell::*, mgba::*, mmio::*, RUST_IRQ_HANDLER,
 };
+
+#[cfg(feature = "asm_runtime")]
+pub use crate::asm_runtime::*;
 
 pub use crate::{
   builtin_art::*,

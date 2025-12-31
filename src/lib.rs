@@ -101,7 +101,7 @@ mod macros;
 #[cfg(test)]
 mod test_harness;
 
-#[cfg(feature = "on_gba")]
+#[cfg(feature = "asm_runtime")]
 mod asm_runtime;
 #[cfg(feature = "on_gba")]
 pub mod bios;

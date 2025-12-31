@@ -7,7 +7,8 @@ edition = "2021"
 license = "Zlib OR Apache-2.0 OR MIT"
 
 [features]
-default = ["track_caller", "on_gba"]
+default = ["track_caller", "on_gba", "asm_runtime"]
+asm_runtime = []
 track_caller = []
 on_gba = []
 fixed = ["dep:fixed"]
