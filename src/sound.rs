@@ -14,12 +14,22 @@ impl SweepControl {
 }
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[repr(u16)]
+pub enum DutyRatio {
+  _12_5 = 0,
+  _25 = 1,
+  #[default]
+  _50 = 2,
+  _75 = 3,
+}
+
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[repr(transparent)]
 pub struct TonePattern(u16);
 impl TonePattern {
   pub_const_fn_new_zeroed!();
   u16_int_field!(0 - 5, length, with_length);
-  u16_int_field!(6 - 7, duty, with_duty);
+  u16_enum_field!(6 - 7: DutyRatio, duty, with_duty);
   u16_int_field!(8 - 10, step_time, with_step_time);
   u16_bool_field!(11, step_increasing, with_step_increasing);
   u16_int_field!(12 - 15, volume, with_volume);
